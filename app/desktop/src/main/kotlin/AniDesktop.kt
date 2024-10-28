@@ -253,12 +253,10 @@ object AniDesktop {
                 cacheDir = File(projectDirectories.cacheDir).resolve("jcef-cache"),
                 proxyServer = proxySettings?.url,
                 proxyAuthUsername = proxySettings?.authorization?.username,
-                proxyAuthPassword = proxySettings?.authorization?.password
+                proxyAuthPassword = proxySettings?.authorization?.password,
             )
-        }
-        
-        // 预先加载 VLC, https://github.com/open-ani/ani/issues/618
-        coroutineScope.launch {
+
+            // 预先加载 VLC, https://github.com/open-ani/ani/issues/618
             kotlin.runCatching {
                 VlcjVideoPlayerState.prepareLibraries()
             }.onFailure {
