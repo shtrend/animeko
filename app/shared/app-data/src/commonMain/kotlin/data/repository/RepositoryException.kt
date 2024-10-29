@@ -38,5 +38,11 @@ class RepositoryNetworkException(message: String? = null, cause: Throwable? = nu
 class RepositoryServiceUnavailableException(message: String? = null, cause: Throwable? = null) :
     RepositoryException(message, cause)
 
+/**
+ * 服务不可用
+ */
+class RepositoryRateLimitedException(message: String? = null, cause: Throwable? = null) :
+    RepositoryException(message, cause)
+
 val PagingSource.LoadResult.Error<*, *>.repositoryException: RepositoryException?
     get() = throwable as? RepositoryException

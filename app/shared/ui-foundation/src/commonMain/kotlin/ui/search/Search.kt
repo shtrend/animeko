@@ -70,6 +70,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOf
 import me.him188.ani.app.data.repository.RepositoryAuthorizationException
 import me.him188.ani.app.data.repository.RepositoryNetworkException
+import me.him188.ani.app.data.repository.RepositoryRateLimitedException
 import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.tools.paging.exceptions
@@ -335,6 +336,15 @@ object SearchDefaults {
                     )
                 }
 
+                SearchProblem.RateLimited -> {
+                    ListItem(
+                        leadingContent = { Icon(Icons.Rounded.ErrorOutline, null) },
+                        headlineContent = { Text("操作过快，请重试") },
+                        trailingContent = retryButton,
+                        colors = listItemColors,
+                    )
+                }
+
                 SearchProblem.ServiceUnavailable -> {
                     ListItem(
                         leadingContent = { Icon(Icons.Rounded.CloudOff, null) },
@@ -428,6 +438,19 @@ object SearchDefaults {
             }
 
             // Neutral message
+            SearchProblem.RateLimited -> {
+                val colors = CardDefaults.elevatedCardColors(
+                    containerColor = containerColor,
+                )
+                ElevatedCard(
+                    modifier, shape = shape,
+                    colors = colors,
+                ) {
+                    content(colors)
+                }
+            }
+
+            // Unimportant message
             SearchProblem.NoResults -> {
                 val colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                 ElevatedCard(
@@ -484,6 +507,7 @@ sealed class SearchProblem {
     data object RequiresLogin : SearchProblem()
     data object NetworkError : SearchProblem()
     data object ServiceUnavailable : SearchProblem()
+    data object RateLimited : SearchProblem()
     data class UnknownError(val throwable: Throwable?) : SearchProblem()
 
     companion object {
@@ -493,14 +517,11 @@ sealed class SearchProblem {
             }
             val exceptions = states.exceptions()
             for (e in exceptions) {
-                if (e is RepositoryAuthorizationException) {
-                    return RequiresLogin
-                }
-                if (e is RepositoryNetworkException) {
-                    return NetworkError
-                }
-                if (e is RepositoryServiceUnavailableException) {
-                    return ServiceUnavailable
+                when (e) {
+                    is RepositoryAuthorizationException -> return RequiresLogin
+                    is RepositoryNetworkException -> return NetworkError
+                    is RepositoryServiceUnavailableException -> return ServiceUnavailable
+                    is RepositoryRateLimitedException -> return RateLimited
                 }
             }
             return UnknownError(exceptions.firstOrNull())
