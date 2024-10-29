@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldDefaults
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -53,6 +52,7 @@ import me.him188.ani.app.navigation.NavRoutes
 import me.him188.ani.app.navigation.OverrideNavigation
 import me.him188.ani.app.navigation.SettingsTab
 import me.him188.ani.app.platform.LocalContext
+import me.him188.ani.app.ui.adaptive.navigation.AniNavigationSuiteDefaults
 import me.him188.ani.app.ui.cache.CacheManagementPage
 import me.him188.ani.app.ui.cache.CacheManagementViewModel
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPage
@@ -179,7 +179,7 @@ private fun AniAppContentImpl(
             ) { backStack ->
                 val route = backStack.toRoute<NavRoutes.Main>()
                 val navigationLayoutType =
-                    NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(
+                    AniNavigationSuiteDefaults.calculateLayoutType(
                         currentWindowAdaptiveInfo(),
                     )
                 var currentPage by rememberSaveable { mutableStateOf(route.initialPage) }
