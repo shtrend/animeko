@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -90,6 +91,7 @@ fun SubjectCollectionsColumn(
     items: LazyPagingItems<SubjectCollectionInfo>,
     item: @Composable (item: SubjectCollectionInfo) -> Unit,
     modifier: Modifier = Modifier,
+    gridState: LazyGridState = rememberLazyGridState(),
     enableAnimation: Boolean = true,
 ) {
     val isCompact = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.COMPACT
@@ -98,7 +100,7 @@ fun SubjectCollectionsColumn(
     LazyVerticalGrid(
         GridCells.Adaptive(360.dp),
         modifier,
-        rememberLazyGridState(),
+        gridState,
         verticalArrangement = Arrangement.spacedBy(spacedBy),
         horizontalArrangement = Arrangement.spacedBy(spacedBy),
         contentPadding = PaddingValues(horizontal = spacedBy),

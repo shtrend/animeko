@@ -63,10 +63,13 @@ import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
+import androidx.paging.compose.launchAsLazyPagingItemsIn
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import me.him188.ani.app.data.repository.RepositoryAuthorizationException
 import me.him188.ani.app.data.repository.RepositoryNetworkException
@@ -122,6 +125,16 @@ fun <T : Any> SearchState<T>.collectItemsWithLifecycle(): LazyPagingItems<T> {
     @Suppress("UNCHECKED_CAST")
     return (pager ?: emptyPager as Flow<PagingData<T>>).collectAsLazyPagingItemsWithLifecycle()
 }
+
+/**
+ * 收集当前搜索的物品.
+ */
+fun <T : Any> SearchState<T>.launchAsItemsIn(
+    scope: CoroutineScope,
+): LazyPagingItems<T> = pagerFlow.flatMapLatest { pager ->
+    @Suppress("UNCHECKED_CAST")
+    pager ?: emptyPager as Flow<PagingData<T>>
+}.launchAsLazyPagingItemsIn(scope)
 
 /**
  * 当搜索请求不为空时为 `true`.

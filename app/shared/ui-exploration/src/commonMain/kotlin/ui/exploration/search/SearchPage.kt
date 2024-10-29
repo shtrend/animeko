@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -68,7 +69,6 @@ import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.TopAppBarGoBackButton
 import me.him188.ani.app.ui.search.SearchDefaults
 import me.him188.ani.app.ui.search.collectHasQueryAsState
-import me.him188.ani.app.ui.search.collectItemsWithLifecycle
 
 @Composable
 fun SearchPage(
@@ -85,7 +85,7 @@ fun SearchPage(
     }
 
     val focusRequester = remember { FocusRequester() }
-    val items = state.searchState.collectItemsWithLifecycle()
+    val items = state.items
     SearchPageLayout(
         navigator,
         windowInsets,
@@ -126,6 +126,7 @@ fun SearchPage(
                         }
                     }
                 }, // collect only once
+                state = state.gridState,
             )
         },
         detailContent = {
@@ -155,8 +156,8 @@ internal fun SearchPageResultColumn(
     onSelect: (index: Int) -> Unit,
     onPlay: (info: SubjectPreviewItemInfo) -> Unit,
     modifier: Modifier = Modifier,
+    state: LazyStaggeredGridState = rememberLazyStaggeredGridState()
 ) {
-    val state = rememberLazyStaggeredGridState()
     var height by remember { mutableIntStateOf(0) }
 
     val bringIntoViewRequesters = remember { mutableStateMapOf<Int, BringIntoViewRequester>() }

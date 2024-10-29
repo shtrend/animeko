@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.exploration.search
 
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
@@ -24,6 +25,7 @@ import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.search.PagingSearchState
 import me.him188.ani.app.ui.search.SearchState
 import me.him188.ani.app.ui.search.TestSearchState
+import me.him188.ani.app.ui.search.launchAsItemsIn
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Stable
@@ -51,6 +53,9 @@ class SearchPageState(
             onStartSearch(query)
         },
     )
+    val gridState = LazyStaggeredGridState()
+
+    val items = searchState.launchAsItemsIn(backgroundScope)
 
     var selectedItemIndex: Int by mutableIntStateOf(0)
 

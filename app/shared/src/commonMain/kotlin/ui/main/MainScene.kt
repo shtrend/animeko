@@ -163,11 +163,13 @@ private fun MainSceneContent(
                         val vm = viewModel<UserCollectionsViewModel> { UserCollectionsViewModel() }
                         CollectionPage(
                             state = vm.state,
+                            items = vm.items,
                             windowInsets = windowInsets,
                             onClickSearch = { onNavigateToPage(MainScenePage.Search) },
                             onClickSettings = { navigator.navigateSettings() },
                             Modifier.fillMaxSize(),
                             enableAnimation = vm.myCollectionsSettings.enableListAnimation,
+                            lazyGridState = vm.lazyGridState,
                         )
                     }
 
