@@ -11,6 +11,8 @@ package me.him188.ani.app.ui.exploration.search
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,7 +22,8 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.Text
@@ -58,6 +61,7 @@ import me.him188.ani.app.ui.foundation.interaction.keyboardDirectionToSelectItem
 import me.him188.ani.app.ui.foundation.interaction.keyboardPageToScroll
 import me.him188.ani.app.ui.foundation.layout.AniListDetailPaneScaffold
 import me.him188.ani.app.ui.foundation.layout.compareTo
+import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
@@ -147,7 +151,7 @@ internal fun SearchPageResultColumn(
     onPlay: (info: SubjectPreviewItemInfo) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val lazyListState = rememberLazyListState()
+    val state = rememberLazyStaggeredGridState()
     var height by remember { mutableIntStateOf(0) }
 
     val bringIntoViewRequesters = remember { mutableStateMapOf<Int, BringIntoViewRequester>() }
@@ -165,11 +169,19 @@ internal fun SearchPageResultColumn(
         modifier
             .focusGroup()
             .onSizeChanged { height = it.height }
-            .keyboardDirectionToSelectItem(selectedItemIndex, onSelect, lazyListState)
-            .keyboardPageToScroll({ height.toFloat() }, lazyListState),
-        lazyListState = lazyListState,
+            .keyboardDirectionToSelectItem(
+                selectedItemIndex,
+            ) {
+                state.animateScrollToItem(it)
+                onSelect(it)
+            }
+            .keyboardPageToScroll({ height.toFloat() }) {
+                state.animateScrollBy(it)
+            },
+        lazyStaggeredGridState = state,
+        horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding),
     ) {
-        item {
+        item(span = StaggeredGridItemSpan.FullLine) {
             SearchDefaults.SearchSummaryItem(
                 items,
                 Modifier.animateItem(

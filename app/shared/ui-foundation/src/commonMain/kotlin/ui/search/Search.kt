@@ -9,7 +9,9 @@
 
 package me.him188.ani.app.ui.search
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,11 +19,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.Login
 import androidx.compose.material.icons.rounded.CloudOff
@@ -174,49 +177,58 @@ object SearchDefaults {
     @Composable
     fun <T : Any> ResultColumn(
         items: LazyPagingItems<T>,
-        problem: @Composable LazyItemScope.(problem: SearchProblem?) -> Unit,
+        problem: @Composable (problem: SearchProblem?) -> Unit,
         modifier: Modifier = Modifier,
-        lazyListState: LazyListState = rememberLazyListState(),
+        cells: StaggeredGridCells.Adaptive = StaggeredGridCells.Adaptive(300.dp),
+        lazyStaggeredGridState: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
         listItemColors: ListItemColors = ListItemDefaults.colors(containerColor = Color.Unspecified),
-        content: LazyListScope.() -> Unit,
+        horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(0.dp),
+        content: LazyStaggeredGridScope.() -> Unit,
     ) {
-        LazyColumn(modifier.fillMaxWidth(), lazyListState) {
-            stickyHeader {
-                FastLinearProgressIndicator(
-                    items.isLoadingFirstPage,
-                    Modifier.padding(vertical = 4.dp),
-                    minimumDurationMillis = 300,
-                )
-            }
-
-            item { Spacer(Modifier.height(Dp.Hairline)) } // 如果空白内容, 它可能会有 bug
-
-            content()
+        Column(modifier) {
+            FastLinearProgressIndicator(
+                items.isLoadingFirstPage,
+                Modifier.padding(vertical = 4.dp),
+                minimumDurationMillis = 300,
+            )
 
             if (items.loadState.hasError) {
-                item {
-                    Box(
-                        Modifier.sizeIn(
-                            minHeight = Dp.Hairline,
+                Box(
+                    Modifier
+                        .sizeIn(
+                            minHeight = Dp.Hairline,// 保证最小大小, 否则 LazyColumn 滑动可能有 bug
                             minWidth = Dp.Hairline,
-                        ), // 保证最小大小, 否则 LazyColumn 滑动可能有 bug
-                    ) {
-                        val value = items.rememberSearchErrorState().value
-                        problem(value)
-                    }
+                            maxWidth = 360.dp,
+                        )
+                        .padding(bottom = 8.dp),
+                ) {
+                    val value = items.rememberSearchErrorState().value
+                    problem(value)
                 }
             }
 
-            item {
-                if (items.isLoadingFirstOrNextPage && !items.isLoadingFirstPage) {
-                    ListItem(
-                        headlineContent = {
-                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
-                        },
-                        colors = listItemColors,
-                    )
+            LazyVerticalStaggeredGrid(
+                cells,
+                Modifier.fillMaxWidth(),
+                lazyStaggeredGridState,
+                horizontalArrangement = horizontalArrangement,
+            ) {
+                // 用于保持刷新时在顶部
+                item(span = StaggeredGridItemSpan.FullLine) { Spacer(Modifier.height(Dp.Hairline)) } // 如果空白内容, 它可能会有 bug
+
+                content()
+
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    if (items.isLoadingNextPage) {
+                        ListItem(
+                            headlineContent = {
+                                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator()
+                                }
+                            },
+                            colors = listItemColors,
+                        )
+                    }
                 }
             }
         }
