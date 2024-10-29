@@ -232,7 +232,6 @@ object SearchDefaults {
                         .sizeIn(
                             minHeight = Dp.Hairline,// 保证最小大小, 否则 LazyColumn 滑动可能有 bug
                             minWidth = Dp.Hairline,
-                            maxWidth = 360.dp,
                         )
                         .padding(bottom = 8.dp),
                 ) {
