@@ -346,7 +346,7 @@ object SearchDefaults {
                 is SearchProblem.UnknownError -> {
                     ListItem(
                         leadingContent = { Icon(Icons.Rounded.ErrorOutline, null) },
-                        headlineContent = { Text("位置错误") },
+                        headlineContent = { Text("未知错误") },
                         trailingContent = {
                             Row {
                                 if (currentAniBuildConfig.isDebug) {
