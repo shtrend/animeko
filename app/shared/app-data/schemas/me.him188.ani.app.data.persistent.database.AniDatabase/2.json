@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "e31dbda53b286ee6ab95337e8aacf9b8",
+    "identityHash": "9a75048d4b3b55da3ad9767f5dbb83ac",
     "entities": [
       {
         "tableName": "search_history",
@@ -26,7 +26,29 @@
           "columnNames": [
             "sequence"
           ]
-        }
+        },
+        "indices": [
+          {
+            "name": "distinct_content",
+            "unique": true,
+            "columnNames": [
+              "content"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `distinct_content` ON `${TABLE_NAME}` (`content`)"
+          },
+          {
+            "name": "sequence_desc",
+            "unique": false,
+            "columnNames": [
+              "sequence"
+            ],
+            "orders": [
+              "DESC"
+            ],
+            "createSql": "CREATE INDEX IF NOT EXISTS `sequence_desc` ON `${TABLE_NAME}` (`sequence` DESC)"
+          }
+        ]
       },
       {
         "tableName": "search_tag",
@@ -418,7 +440,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e31dbda53b286ee6ab95337e8aacf9b8')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9a75048d4b3b55da3ad9767f5dbb83ac')"
     ]
   }
 }

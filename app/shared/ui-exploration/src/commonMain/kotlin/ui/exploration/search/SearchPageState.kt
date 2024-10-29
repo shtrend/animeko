@@ -31,9 +31,10 @@ class SearchPageState(
     searchHistoryState: State<List<String>>,
     suggestionsState: State<List<String>>,
     val onRequestPlay: suspend (SubjectPreviewItemInfo) -> EpisodeTarget?,
-    queryState: MutableState<String> = mutableStateOf(""),
     val searchState: SearchState<SubjectPreviewItemInfo>,
     backgroundScope: CoroutineScope,
+    queryState: MutableState<String> = mutableStateOf(""),
+    private val onStartSearch: (String) -> Unit = {},
 ) {
     // to navigate to episode page
     data class EpisodeTarget(
@@ -41,12 +42,14 @@ class SearchPageState(
         val episodeId: Int,
     )
 
-    val query by queryState
     val suggestionSearchBarState = SuggestionSearchBarState(
         historyState = searchHistoryState,
         suggestionsState = suggestionsState,
-        queryState = queryState,
         searchState = searchState,
+        queryState = queryState,
+        onStartSearch = { query ->
+            onStartSearch(query)
+        },
     )
 
     var selectedItemIndex: Int by mutableIntStateOf(0)
