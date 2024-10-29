@@ -66,7 +66,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import me.him188.ani.app.data.repository.RepositoryAuthorizationException
 import me.him188.ani.app.data.repository.RepositoryNetworkException
 import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
@@ -114,12 +114,16 @@ fun <T : Any> SearchState<T>.collectItemsWithLifecycle(): LazyPagingItems<T> {
     val pager by pagerFlow.collectAsStateWithLifecycle(
         initialValue = pagerFlow.value,
     )
-    return (pager ?: emptyFlow()).collectAsLazyPagingItemsWithLifecycle()
+    @Suppress("UNCHECKED_CAST")
+    return (pager ?: emptyPager as Flow<PagingData<T>>).collectAsLazyPagingItemsWithLifecycle()
 }
 
 @Stable
+private val emptyPager: Flow<PagingData<Any>> = flowOf(PagingData.from(emptyList()))
+
+@Stable
 val LazyPagingItems<*>.isLoadingFirstPage: Boolean
-    get() = !loadState.isIdle && itemCount == 0
+    get() = !loadState.isIdle && !loadState.hasError && itemCount == 0
 
 @Stable
 val LazyPagingItems<*>.isLoadingFirstOrNextPage: Boolean
