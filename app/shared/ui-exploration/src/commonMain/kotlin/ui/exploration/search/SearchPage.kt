@@ -170,7 +170,14 @@ internal fun SearchPageResultColumn(
         lazyListState = lazyListState,
     ) {
         item {
-            SearchDefaults.SearchSummaryItem(items)
+            SearchDefaults.SearchSummaryItem(
+                items,
+                Modifier.animateItem(
+                    fadeInSpec = AniThemeDefaults.feedItemFadeInSpec,
+                    placementSpec = AniThemeDefaults.feedItemPlacementSpec,
+                    fadeOutSpec = AniThemeDefaults.feedItemFadeOutSpec,
+                ),
+            )
         }
 
         items(
@@ -195,6 +202,11 @@ internal fun SearchPageResultColumn(
                     onPlay = { onPlay(info) },
                     info = info,
                     Modifier
+                        .animateItem(
+                            fadeInSpec = AniThemeDefaults.feedItemFadeInSpec,
+                            placementSpec = AniThemeDefaults.feedItemPlacementSpec,
+                            fadeOutSpec = AniThemeDefaults.feedItemFadeOutSpec,
+                        )
                         .fillMaxWidth()
                         .bringIntoViewRequester(requester)
                         .padding(vertical = currentWindowAdaptiveInfo().windowSizeClass.paneVerticalPadding / 2),

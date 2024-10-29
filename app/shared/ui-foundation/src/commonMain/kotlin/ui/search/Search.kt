@@ -397,24 +397,26 @@ object SearchDefaults {
     }
 
     @Composable
-    fun SearchSummaryItem(items: LazyPagingItems<*>) {
-        when {
-            items.isFinishedAndEmpty -> {
-                ListItem(
-                    headlineContent = { Text("无搜索结果") },
-                    colors = ListItemDefaults.colors(containerColor = Color.Unspecified),
-                )
-            }
+    fun SearchSummaryItem(items: LazyPagingItems<*>, modifier: Modifier = Modifier) {
+        Box(modifier) {
+            when {
+                items.isFinishedAndEmpty -> {
+                    ListItem(
+                        headlineContent = { Text("无搜索结果") },
+                        colors = ListItemDefaults.colors(containerColor = Color.Unspecified),
+                    )
+                }
 
-            items.hasFirstPage -> {
-                ListItem(
-                    headlineContent = { Text("搜索到 ${items.itemCount} 个结果") },
-                    colors = ListItemDefaults.colors(containerColor = Color.Unspecified),
-                )
-            }
+                items.hasFirstPage -> {
+                    ListItem(
+                        headlineContent = { Text("搜索到 ${items.itemCount} 个结果") },
+                        colors = ListItemDefaults.colors(containerColor = Color.Unspecified),
+                    )
+                }
 
-            else -> {
-                Spacer(Modifier.height(Dp.Hairline))
+                else -> {
+                    Spacer(Modifier.height(Dp.Hairline)) // 如果空白内容, 它可能会有 bug
+                }
             }
         }
     }
