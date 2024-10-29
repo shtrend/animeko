@@ -10,29 +10,51 @@
 package me.him188.ani.app.ui.search
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.Login
+import androidx.compose.material.icons.rounded.CloudOff
+import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.Refresh
+import androidx.compose.material.icons.rounded.WifiOff
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
@@ -42,6 +64,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import me.him188.ani.app.data.repository.RepositoryAuthorizationException
+import me.him188.ani.app.data.repository.RepositoryNetworkException
+import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
+import me.him188.ani.app.platform.currentAniBuildConfig
+import me.him188.ani.app.tools.paging.exceptions
+import me.him188.ani.app.ui.foundation.icons.Passkey_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24
 import me.him188.ani.app.ui.foundation.widgets.FastLinearProgressIndicator
 import me.him188.ani.utils.platform.annotations.TestOnly
 
@@ -106,12 +134,6 @@ val LazyPagingItems<*>.hasFirstPage: Boolean
 val LazyPagingItems<*>.isFinishedAndEmpty: Boolean
     get() = itemCount == 0 && loadState.isIdle
 
-@Immutable
-sealed class SearchStage {
-    data object Idle : SearchStage()
-    data object Searching : SearchStage()
-    data object Finished : SearchStage()
-}
 
 @Stable
 class PagingSearchState<T : Any>(
@@ -146,9 +168,13 @@ class TestSearchState<T : Any>(
 
 @Stable
 object SearchDefaults {
+    /**
+     * @param problem [SearchProblemCard]
+     */
     @Composable
     fun <T : Any> ResultColumn(
         items: LazyPagingItems<T>,
+        problem: @Composable LazyItemScope.(problem: SearchProblem?) -> Unit,
         modifier: Modifier = Modifier,
         lazyListState: LazyListState = rememberLazyListState(),
         listItemColors: ListItemColors = ListItemDefaults.colors(containerColor = Color.Unspecified),
@@ -165,24 +191,21 @@ object SearchDefaults {
 
             item { Spacer(Modifier.height(Dp.Hairline)) } // 如果空白内容, 它可能会有 bug
 
-            item {
-                ListItem(
-                    headlineContent = {
-                        when {
-                            items.isFinishedAndEmpty -> {
-                                Text("无搜索记录")
-                            }
-
-                            items.hasFirstPage -> {
-                                Text("搜索到 ${items.itemCount} 个结果")
-                            }
-                        }
-                    },
-                    colors = listItemColors,
-                )
-            }
-
             content()
+
+            if (items.loadState.hasError) {
+                item {
+                    Box(
+                        Modifier.sizeIn(
+                            minHeight = Dp.Hairline,
+                            minWidth = Dp.Hairline,
+                        ), // 保证最小大小, 否则 LazyColumn 滑动可能有 bug
+                    ) {
+                        val value = items.rememberSearchErrorState().value
+                        problem(value)
+                    }
+                }
+            }
 
             item {
                 if (items.isLoadingFirstOrNextPage && !items.isLoadingFirstPage) {
@@ -196,6 +219,244 @@ object SearchDefaults {
                     )
                 }
             }
+        }
+    }
+
+    /**
+     * 一个卡片, 展示搜索时遇到的问题, 例如网络错误, 无搜索结果等.
+     *
+     * 提供按钮来解决错误, 例如 [onRetry].
+     *
+     * @param problem See [rememberSearchErrorState]
+     * @param onRetry 当用户点击重试时调用. 只会在 [SearchProblem.NetworkError], [SearchProblem.ServiceUnavailable], [SearchProblem.UnknownError] 时调用.
+     * @param onLogin 当用户点击登录时调用. 只会在 [SearchProblem.RequiresLogin] 时调用. 如果你的功能不需要登录, 可以传递一个空函数给此参数.
+     */ // https://www.figma.com/design/LET1n9mmDa6npDTIlUuJjU/Main?node-id=239-2230&node-type=section&t=moZBMAKgeQpptXRI-0
+    @Composable
+    fun SearchProblemCard(
+        problem: SearchProblem?,
+        onRetry: () -> Unit,
+        onLogin: () -> Unit,
+        modifier: Modifier = Modifier,
+        shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
+        containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ) {
+        if (problem == null) return
+
+
+        @Composable
+        fun IconTextButton(
+            onClick: () -> Unit,
+            icon: @Composable (Modifier) -> Unit,
+            text: @Composable () -> Unit
+        ) {
+            TextButton(
+                onClick,
+                contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+            ) {
+                icon(Modifier.size(ButtonDefaults.IconSize))
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                text()
+            }
+        }
+
+        val retryButton = @Composable {
+            IconTextButton(
+                onRetry,
+                icon = { iconModifier ->
+                    Icon(
+                        Icons.Rounded.Refresh, null,
+                        iconModifier,
+                    )
+                },
+                text = { Text("重试") },
+            )
+        }
+
+        val content = @Composable { cardColors: CardColors ->
+            val listItemColors = ListItemDefaults.colors(
+                containerColor = cardColors.containerColor,
+                leadingIconColor = cardColors.contentColor,
+                trailingIconColor = cardColors.contentColor,
+                headlineColor = cardColors.contentColor,
+            )
+
+            when (problem) {
+                SearchProblem.NetworkError -> {
+                    ListItem(
+                        leadingContent = { Icon(Icons.Rounded.WifiOff, null) },
+                        headlineContent = { Text("网络错误") },
+                        trailingContent = retryButton,
+                        colors = listItemColors,
+                    )
+                }
+
+                SearchProblem.ServiceUnavailable -> {
+                    ListItem(
+                        leadingContent = { Icon(Icons.Rounded.CloudOff, null) },
+                        headlineContent = { Text("服务暂不可用") },
+                        trailingContent = retryButton,
+                        colors = listItemColors,
+                    )
+                }
+
+                SearchProblem.NoResults -> {
+                    ListItem(
+                        leadingContent = { Spacer(Modifier.size(24.dp)) }, // spacer
+                        headlineContent = { Text("无搜索结果") },
+                        colors = listItemColors,
+                    )
+                }
+
+                SearchProblem.RequiresLogin -> {
+                    ListItem(
+                        leadingContent = { Icon(Icons.Outlined.Passkey_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24, null) },
+                        headlineContent = { Text("此功能需要登录") },
+                        trailingContent = {
+                            IconTextButton(
+                                onLogin,
+                                icon = { iconModifier ->
+                                    Icon(
+                                        Icons.AutoMirrored.Rounded.Login, null,
+                                        iconModifier,
+                                    )
+                                },
+                                text = { Text("登录") },
+                            )
+                        },
+                        colors = listItemColors,
+                    )
+                }
+
+                is SearchProblem.UnknownError -> {
+                    ListItem(
+                        leadingContent = { Icon(Icons.Rounded.ErrorOutline, null) },
+                        headlineContent = { Text("位置错误") },
+                        trailingContent = {
+                            Row {
+                                if (currentAniBuildConfig.isDebug) {
+                                    TextButton({ problem.throwable?.printStackTrace() }) {
+                                        Text("Dump Trace", fontStyle = FontStyle.Italic)
+                                    }
+                                }
+
+                                retryButton()
+                            }
+                        },
+                        colors = listItemColors,
+                    )
+                }
+
+                null -> {}
+            }
+        }
+
+
+        when (problem) {
+            // Important error
+            is SearchProblem.UnknownError,
+            SearchProblem.ServiceUnavailable,
+            SearchProblem.NetworkError -> {
+                val colors = CardDefaults.elevatedCardColors(
+                    containerColor = containerColor,
+                    contentColor = MaterialTheme.colorScheme.error,
+                )
+                ElevatedCard(
+                    modifier, shape = shape,
+                    colors = colors,
+                ) {
+                    content(colors)
+                }
+            }
+
+            // Suggestive message
+            SearchProblem.RequiresLogin -> {
+                val colors = CardDefaults.elevatedCardColors(
+                    containerColor = containerColor,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                )
+                ElevatedCard(
+                    modifier, shape = shape,
+                    colors = colors,
+                ) {
+                    content(colors)
+                }
+            }
+
+            // Neutral message
+            SearchProblem.NoResults -> {
+                val colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                ElevatedCard(
+                    modifier,
+                    colors = colors, // no 'boxing'
+                    elevation = CardDefaults.cardElevation(), // no elevation
+                ) {
+                    content(colors)
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun SearchSummaryItem(items: LazyPagingItems<*>) {
+        when {
+            items.isFinishedAndEmpty -> {
+                ListItem(
+                    headlineContent = { Text("无搜索结果") },
+                    colors = ListItemDefaults.colors(containerColor = Color.Unspecified),
+                )
+            }
+
+            items.hasFirstPage -> {
+                ListItem(
+                    headlineContent = { Text("搜索到 ${items.itemCount} 个结果") },
+                    colors = ListItemDefaults.colors(containerColor = Color.Unspecified),
+                )
+            }
+
+            else -> {
+                Spacer(Modifier.height(Dp.Hairline))
+            }
+        }
+    }
+}
+
+@Composable
+private fun <T : Any> LazyPagingItems<T>.rememberSearchErrorState(): State<SearchProblem?> {
+    return remember(this) {
+        derivedStateOf {
+            SearchProblem.compute(loadState)
+        }
+    }
+}
+
+/**
+ * 搜索时遇到的问题.
+ */
+sealed class SearchProblem {
+    data object NoResults : SearchProblem()
+    data object RequiresLogin : SearchProblem()
+    data object NetworkError : SearchProblem()
+    data object ServiceUnavailable : SearchProblem()
+    data class UnknownError(val throwable: Throwable?) : SearchProblem()
+
+    companion object {
+        fun compute(states: CombinedLoadStates): SearchProblem? {
+            if (!states.hasError) {
+                return null
+            }
+            val exceptions = states.exceptions()
+            for (e in exceptions) {
+                if (e is RepositoryAuthorizationException) {
+                    return RequiresLogin
+                }
+                if (e is RepositoryNetworkException) {
+                    return NetworkError
+                }
+                if (e is RepositoryServiceUnavailableException) {
+                    return ServiceUnavailable
+                }
+            }
+            return UnknownError(exceptions.firstOrNull())
         }
     }
 }

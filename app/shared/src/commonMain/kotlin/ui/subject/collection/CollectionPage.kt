@@ -142,7 +142,7 @@ class UserCollectionsState(
 
     val collectionCounts: SubjectCollectionCounts? by collectionCountsState
 
-    fun updateQuery(query: CollectionsFilterQuery.() -> CollectionsFilterQuery) {
+    private fun updateQuery(query: CollectionsFilterQuery.() -> CollectionsFilterQuery) {
         val current = filterQueryPair
         filterQueryPair = current.copy(current.first, current.second.let(query))
     }

@@ -154,6 +154,14 @@ internal fun SearchPageResultColumn(
 
     SearchDefaults.ResultColumn(
         items,
+        problem = {
+            SearchDefaults.SearchProblemCard(
+                problem = it,
+                onRetry = { items.retry() },
+                onLogin = {}, // noop
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
         modifier
             .focusGroup()
             .onSizeChanged { height = it.height }
@@ -161,6 +169,10 @@ internal fun SearchPageResultColumn(
             .keyboardPageToScroll({ height.toFloat() }, lazyListState),
         lazyListState = lazyListState,
     ) {
+        item {
+            SearchDefaults.SearchSummaryItem(items)
+        }
+
         items(
             items.itemCount,
             key = items.itemKey { it.subjectId },
