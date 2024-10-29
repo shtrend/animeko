@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.CombinedLoadStates
 import androidx.paging.LoadState
+import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
@@ -91,6 +92,9 @@ abstract class SearchState<T : Any> {
     /**
      * 当前搜索的 pager. 如果搜索未开始, 则此 flow 会 emit `null`.
      * 当清空搜索结果或重新开始搜索时, 此 flow 都会立即 emit `null` 以清空旧数据.
+     *
+     * @see collectItemsWithLifecycle
+     * @see collectHasQueryAsState
      */
     abstract val pagerFlow: StateFlow<Flow<PagingData<T>>?>
 
@@ -118,8 +122,33 @@ fun <T : Any> SearchState<T>.collectItemsWithLifecycle(): LazyPagingItems<T> {
     return (pager ?: emptyPager as Flow<PagingData<T>>).collectAsLazyPagingItemsWithLifecycle()
 }
 
+/**
+ * 当搜索请求不为空时为 `true`.
+ */
+@Composable
+fun <T : Any> SearchState<T>.collectHasQueryAsState(): State<Boolean> {
+    val value by pagerFlow.collectAsStateWithLifecycle(
+        initialValue = pagerFlow.value,
+    )
+
+    return remember {
+        derivedStateOf {
+            value != null
+        }
+    }
+}
+
 @Stable
-private val emptyPager: Flow<PagingData<Any>> = flowOf(PagingData.from(emptyList()))
+private val emptyPager: Flow<PagingData<Any>> = flowOf(
+    PagingData.from(
+        emptyList(),
+        sourceLoadStates = LoadStates(
+            LoadState.NotLoading(endOfPaginationReached = true),
+            LoadState.NotLoading(endOfPaginationReached = true),
+            LoadState.NotLoading(endOfPaginationReached = true),
+        ),
+    ),
+)
 
 @Stable
 val LazyPagingItems<*>.isLoadingFirstPage: Boolean

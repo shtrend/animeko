@@ -67,6 +67,7 @@ import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.TopAppBarGoBackButton
 import me.him188.ani.app.ui.search.SearchDefaults
+import me.him188.ani.app.ui.search.collectHasQueryAsState
 import me.him188.ani.app.ui.search.collectItemsWithLifecycle
 
 @Composable
@@ -104,8 +105,11 @@ fun SearchPage(
         searchResultList = {
             val aniNavigator = LocalNavigator.current
             val scope = rememberCoroutineScope()
+
+            val hasQuery by state.searchState.collectHasQueryAsState()
             SearchPageResultColumn(
                 items = items,
+                showSummary = { hasQuery },
                 selectedItemIndex = { state.selectedItemIndex },
                 onSelect = { index ->
                     state.selectedItemIndex = index
@@ -146,6 +150,7 @@ fun SearchPage(
 @Composable
 internal fun SearchPageResultColumn(
     items: LazyPagingItems<SubjectPreviewItemInfo>,
+    showSummary: () -> Boolean, // 可在还没发起任何搜索时不展示
     selectedItemIndex: () -> Int,
     onSelect: (index: Int) -> Unit,
     onPlay: (info: SubjectPreviewItemInfo) -> Unit,
@@ -181,15 +186,17 @@ internal fun SearchPageResultColumn(
         lazyStaggeredGridState = state,
         horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding),
     ) {
-        item(span = StaggeredGridItemSpan.FullLine) {
-            SearchDefaults.SearchSummaryItem(
-                items,
-                Modifier.animateItem(
-                    fadeInSpec = AniThemeDefaults.feedItemFadeInSpec,
-                    placementSpec = AniThemeDefaults.feedItemPlacementSpec,
-                    fadeOutSpec = AniThemeDefaults.feedItemFadeOutSpec,
-                ),
-            )
+        if (showSummary()) {
+            item(span = StaggeredGridItemSpan.FullLine) {
+                SearchDefaults.SearchSummaryItem(
+                    items,
+                    Modifier.animateItem(
+                        fadeInSpec = AniThemeDefaults.feedItemFadeInSpec,
+                        placementSpec = AniThemeDefaults.feedItemPlacementSpec,
+                        fadeOutSpec = AniThemeDefaults.feedItemFadeOutSpec,
+                    ),
+                )
+            }
         }
 
         items(

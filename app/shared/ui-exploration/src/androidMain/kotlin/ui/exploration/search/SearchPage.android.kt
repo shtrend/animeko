@@ -99,6 +99,7 @@ fun PreviewSearchPageResultColumn() = ProvideFoundationCompositionLocalsForPrevi
         val state = createTestFinishedSubjectSearchState()
         SearchPageResultColumn(
             items = state.collectItemsWithLifecycle(),
+            showSummary = { true },
             selectedItemIndex = { 1 },
             onSelect = {},
             onPlay = {},
