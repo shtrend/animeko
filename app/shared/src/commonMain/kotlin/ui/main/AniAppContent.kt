@@ -30,7 +30,6 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -132,8 +131,8 @@ private fun AniAppContentImpl(
                     slideInHorizontally(
                         tween(
                             enterDuration,
-                            easing = enterEasing
-                        )
+                            easing = enterEasing,
+                        ),
                     ) { (it * (1f / 5)).roundToInt() }
                         .plus(fadeIn(tween(enterDuration, easing = enterEasing)))
                 }
@@ -154,8 +153,8 @@ private fun AniAppContentImpl(
                     slideOutHorizontally(
                         tween(
                             exitDuration,
-                            easing = exitEasing
-                        )
+                            easing = exitEasing,
+                        ),
                     ) { (it * (1f / 7)).roundToInt() }
                         .plus(fadeOut(tween(exitDuration, easing = exitEasing)))
                 }
@@ -213,7 +212,7 @@ private fun AniAppContentImpl(
             ) {
                 BangumiOAuthScene(
                     viewModel { BangumiOAuthViewModel() },
-                    windowInsets = windowInsets
+                    windowInsets = windowInsets,
                 )
             }
             composable<NavRoutes.BangumiTokenAuth>(
@@ -238,8 +237,11 @@ private fun AniAppContentImpl(
                 val vm = viewModel<SubjectDetailsViewModel>(key = details.subjectId.toString()) {
                     SubjectDetailsViewModel(details.subjectId)
                 }
-                SideEffect { vm.navigator = aniNavigator }
-                SubjectDetailsScene(vm, windowInsets = windowInsets)
+                SubjectDetailsScene(
+                    vm,
+                    onPlay = { aniNavigator.navigateEpisodeDetails(details.subjectId, it) },
+                    windowInsets = windowInsets,
+                )
             }
             composable<NavRoutes.EpisodeDetail>(
                 enterTransition = enterTransition,

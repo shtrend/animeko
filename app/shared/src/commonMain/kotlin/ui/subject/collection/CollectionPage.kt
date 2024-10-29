@@ -428,6 +428,11 @@ private fun SubjectCollectionItem(
                 } else {
                     SubjectProgressButton(
                         subjectProgressState,
+                        onPlay = {
+                            subjectProgressState.episodeIdToPlay?.let {
+                                navigator.navigateEpisodeDetails(subjectCollection.subjectId, it)
+                            }
+                        },
                     )
                 }
             }

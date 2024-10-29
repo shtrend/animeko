@@ -63,9 +63,6 @@ class UserCollectionsViewModel : AbstractViewModel(), KoinComponent {
     )
     private val subjectProgressStateFactory: SubjectProgressStateFactory = SubjectProgressStateFactory(
         episodeProgressRepository,
-        onPlay = { subjectId: Int, episodeId ->
-            navigator.navigateEpisodeDetails(subjectId, episodeId)
-        },
     )
 
     val myCollectionsSettings: MyCollectionsSettings by settingsRepository.uiSettings.flow

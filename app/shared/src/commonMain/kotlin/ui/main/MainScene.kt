@@ -189,9 +189,16 @@ private fun MainSceneContent(
                             vm.searchPageState,
                             windowInsets,
                             detailContent = {
-                                vm.subjectDetailsViewModel?.let {
-                                    it.navigator = LocalNavigator.current
-                                    SubjectDetailsScene(it)
+                                vm.subjectDetailsViewModel?.let { subjectDetailsViewModel ->
+                                    SubjectDetailsScene(
+                                        subjectDetailsViewModel,
+                                        onPlay = { episodeId ->
+                                            navigator.navigateEpisodeDetails(
+                                                subjectDetailsViewModel.subjectDetailsState.info.subjectId,
+                                                episodeId,
+                                            )
+                                        },
+                                    )
                                 }
                             },
                             Modifier.fillMaxSize(),
