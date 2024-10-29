@@ -130,7 +130,7 @@ object AniTopAppBarDefaults {
 }
 
 @Composable
-private fun AdaptiveSearchBar(
+fun AdaptiveSearchBar(
     windowSizeClass: WindowSizeClass,
     searchIconButton: @Composable (() -> Unit)?,
     modifier: Modifier = Modifier,
@@ -152,6 +152,7 @@ private fun AdaptiveSearchBar(
                     if (searchBar != null) {
                         Box(
                             Modifier.sizeIn(minWidth = 240.dp, maxWidth = 360.dp),
+                            contentAlignment = Alignment.CenterEnd,
                         ) {
                             searchBar()
                         }
@@ -161,6 +162,7 @@ private fun AdaptiveSearchBar(
                     if (searchBar != null) {
                         Box(
                             Modifier.sizeIn(minWidth = 360.dp, maxWidth = 480.dp),
+                            contentAlignment = Alignment.CenterEnd,
                         ) {
 
                             searchBar()
