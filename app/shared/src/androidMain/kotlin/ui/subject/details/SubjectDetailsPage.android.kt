@@ -15,6 +15,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import kotlinx.coroutines.flow.MutableStateFlow
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.layout.rememberConnectedScrollState
 import me.him188.ani.app.ui.foundation.stateOf
@@ -43,12 +47,14 @@ internal fun PreviewSubjectDetails() {
     ProvideFoundationCompositionLocalsForPreview {
         val state = remember {
             SubjectDetailsState(
-                subjectInfoState = stateOf(TestSubjectInfo),
+                info = TestSubjectInfo,
                 selfCollectionTypeState = stateOf(UnifiedCollectionType.WISH),
                 airingLabelState = createTestAiringLabelState(),
-                charactersState = stateOf(TestSubjectCharacterList),
-                personsState = stateOf(emptyList()),
-                relatedSubjectsState = stateOf(TestRelatedSubjects),
+                charactersPager = createTestPager(TestSubjectCharacterList),
+                totalCharactersCountState = stateOf(TestSubjectCharacterList.size),
+                staffPager = createTestPager(emptyList()),
+                totalStaffCountState = stateOf(0),
+                relatedSubjectsPager = createTestPager(TestRelatedSubjects),
             )
         }
         val connectedScrollState = rememberConnectedScrollState()
@@ -81,9 +87,11 @@ internal fun PreviewSubjectDetails() {
             detailsTab = {
                 SubjectDetailsDefaults.DetailsTab(
                     info = TestSubjectInfo,
-                    staff = TestSubjectStaffInfo,
-                    characters = TestSubjectCharacterList,
-                    relatedSubjects = TestRelatedSubjects,
+                    staff = rememberTestLazyPagingItems(TestSubjectStaffInfo),
+                    totalStaffCount = TestSubjectStaffInfo.size,
+                    characters = rememberTestLazyPagingItems(TestSubjectCharacterList),
+                    totalCharactersCount = TestSubjectCharacterList.size,
+                    relatedSubjects = rememberTestLazyPagingItems(TestRelatedSubjects),
                     Modifier.nestedScroll(connectedScrollState.nestedScrollConnection),
                 )
             },
@@ -102,3 +110,12 @@ internal fun PreviewSubjectDetails() {
         )
     }
 }
+
+@TestOnly
+@Composable
+fun <T : Any> rememberTestLazyPagingItems(list: List<T>): LazyPagingItems<T> {
+    return createTestPager(list).collectAsLazyPagingItems()
+}
+
+@TestOnly
+fun <T : Any> createTestPager(list: List<T>) = MutableStateFlow(PagingData.from(list))

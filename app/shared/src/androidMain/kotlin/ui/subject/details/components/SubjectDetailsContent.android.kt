@@ -21,6 +21,7 @@ import me.him188.ani.app.ui.subject.details.TestRelatedSubjects
 import me.him188.ani.app.ui.subject.details.TestSubjectCharacterList
 import me.him188.ani.app.ui.subject.details.TestSubjectInfo
 import me.him188.ani.app.ui.subject.details.TestSubjectStaffInfo
+import me.him188.ani.app.ui.subject.details.rememberTestLazyPagingItems
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Composable
@@ -30,9 +31,11 @@ private fun PreviewDetailsTab() {
         Scaffold {
             SubjectDetailsDefaults.DetailsTab(
                 TestSubjectInfo,
-                TestSubjectStaffInfo,
-                TestSubjectCharacterList,
-                TestRelatedSubjects,
+                rememberTestLazyPagingItems(TestSubjectStaffInfo),
+                totalStaffCount = TestSubjectStaffInfo.size,
+                rememberTestLazyPagingItems(TestSubjectCharacterList),
+                totalCharactersCount = TestSubjectCharacterList.size,
+                rememberTestLazyPagingItems(TestRelatedSubjects),
                 Modifier.padding(it),
             )
         }

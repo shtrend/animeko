@@ -29,7 +29,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.BottomSheetDefaults
@@ -53,6 +52,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import me.him188.ani.app.data.models.subject.PersonInfo
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
 import me.him188.ani.app.data.models.subject.RelatedPersonInfo
@@ -73,9 +75,11 @@ object SubjectDetailsDefaults
 @Composable
 fun SubjectDetailsDefaults.DetailsTab(
     info: SubjectInfo,
-    staff: List<RelatedPersonInfo>,
-    characters: List<RelatedCharacterInfo>,
-    relatedSubjects: List<RelatedSubjectInfo>,
+    staff: LazyPagingItems<RelatedPersonInfo>,
+    totalStaffCount: Int?,
+    characters: LazyPagingItems<RelatedCharacterInfo>,
+    totalCharactersCount: Int?,
+    relatedSubjects: LazyPagingItems<RelatedSubjectInfo>,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
     horizontalPadding: Dp = 16.dp,
@@ -119,7 +123,11 @@ fun SubjectDetailsDefaults.DetailsTab(
         item("characters") {
             PersonCardList(
                 values = characters,
-                sheetTitle = { Text("角色 ${characters.size}") },
+                sheetTitle = {
+                    Text(
+                        if (totalCharactersCount == null) "角色" else "角色 $totalCharactersCount",
+                    )
+                },
                 modifier = Modifier.padding(horizontal = horizontalPadding),
                 exposedValues = { list ->
                     // 显示前六个主角, 否则显示前六个
@@ -149,14 +157,18 @@ fun SubjectDetailsDefaults.DetailsTab(
         item("staff") {
             PersonCardList(
                 values = staff,
-                sheetTitle = { Text("制作人员 ${staff.size}") },
+                sheetTitle = {
+                    Text(
+                        if (totalStaffCount == null) "制作人员" else "制作人员 $totalStaffCount",
+                    )
+                },
                 modifier = Modifier.padding(horizontal = horizontalPadding),
                 exposedValues = { it.take(6) },
                 itemContent = { PersonCard(it) },
             )
         }
 
-        if (relatedSubjects.isNotEmpty()) {
+        if (relatedSubjects.itemCount != 0) {
             item("related subjects title") {
                 Text(
                     "关联条目",
@@ -267,8 +279,8 @@ private fun TagsList(
 }
 
 @Composable
-private fun <T> PersonCardList(
-    values: List<T>,
+private fun <T : Any> PersonCardList(
+    values: LazyPagingItems<T>,
     sheetTitle: @Composable RowScope.() -> Unit,
     modifier: Modifier = Modifier,
     exposedValues: (List<T>) -> List<T>,
@@ -278,8 +290,13 @@ private fun <T> PersonCardList(
 ) {
     Column(modifier) {
         val valuesUpdated by rememberUpdatedState(values)
-        val showStaff by remember { derivedStateOf { valuesUpdated.let(exposedValues) } }
-        val hasMore by remember { derivedStateOf { valuesUpdated.size > showStaff.size } }
+        val showStaff by remember {
+            derivedStateOf {
+                @Suppress("UselessCallOnCollection") // false positive
+                valuesUpdated.itemSnapshotList.filterNotNull().let(exposedValues)
+            }
+        }
+        val hasMore by remember { derivedStateOf { valuesUpdated.itemSnapshotList.size > showStaff.size } }
 
         var showSheet by rememberSaveable { mutableStateOf(false) }
         FlowRow(
@@ -318,8 +335,10 @@ private fun <T> PersonCardList(
                         horizontalArrangement = Arrangement.spacedBy(itemSpacing),
                         verticalArrangement = Arrangement.spacedBy(itemSpacing),
                     ) {
-                        items(values) {
-                            itemContent(it)
+                        items(values.itemCount, values.itemKey(), contentType = values.itemContentType()) { index ->
+                            values[index]?.let {
+                                itemContent(it)
+                            }
                         }
                     }
                 }

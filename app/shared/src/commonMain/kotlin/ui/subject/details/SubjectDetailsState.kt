@@ -13,6 +13,8 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
 import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.RelatedSubjectInfo
@@ -25,42 +27,20 @@ import me.him188.ani.datasources.api.topic.UnifiedCollectionType
  */
 @Stable
 class SubjectDetailsState(
-    // headers 信息, 如果这些非 null, 就直接显示, 没有渐入动画
-    subjectInfoState: State<SubjectInfo?>,
-    selfCollectionTypeState: State<UnifiedCollectionType?>,
-    personsState: State<List<RelatedPersonInfo>?>,
-
-    // 附加信息
-    charactersState: State<List<RelatedCharacterInfo>?>,
-    relatedSubjectsState: State<List<RelatedSubjectInfo>?>,
+    val info: SubjectInfo,
+    selfCollectionTypeState: State<UnifiedCollectionType>,
     val airingLabelState: AiringLabelState,
+
+    // 附加信息, pager
+    val staffPager: Flow<PagingData<RelatedPersonInfo>>,
+    val totalStaffCountState: State<Int?>,
+    val charactersPager: Flow<PagingData<RelatedCharacterInfo>>,
+    val totalCharactersCountState: State<Int?>,
+    val relatedSubjectsPager: Flow<PagingData<RelatedSubjectInfo>>,
 ) {
-    val info by derivedStateOf { subjectInfoState.value ?: SubjectInfo.Empty }
-
-    val coverImageUrl by derivedStateOf { info.imageLarge }
-
+    val coverImageUrl get() = this.info.imageLarge
     private val selfCollectionTypeOrNull by selfCollectionTypeState
-    val selfCollectionType by derivedStateOf { selfCollectionTypeOrNull ?: UnifiedCollectionType.WISH }
+    val selfCollectionType by derivedStateOf { selfCollectionTypeOrNull }
 
     val selfCollected by derivedStateOf { this.selfCollectionType != UnifiedCollectionType.NOT_COLLECTED }
-
-    private val charactersOrNull by charactersState
-    val characters by derivedStateOf { charactersOrNull ?: emptyList() }
-
-    private val personsOrNull by personsState
-    val persons by derivedStateOf { personsOrNull ?: emptyList() }
-
-    private val relatedSubjectsOrNull by relatedSubjectsState
-    val relatedSubjects by derivedStateOf { relatedSubjectsOrNull ?: emptyList() }
-
-    /**
-     * 有任何一个数据为空
-     */
-    val isLoading: Boolean by derivedStateOf {
-        selfCollectionTypeOrNull == null
-                || charactersOrNull == null || info === SubjectInfo.Empty
-                || personsOrNull == null
-                || relatedSubjectsOrNull == null
-                || airingLabelState.isLoading
-    }
 }

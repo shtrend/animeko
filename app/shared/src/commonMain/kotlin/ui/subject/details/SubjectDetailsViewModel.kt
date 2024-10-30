@@ -11,19 +11,24 @@ package me.him188.ani.app.ui.subject.details
 
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.preference.EpisodeListProgressTheme
 import me.him188.ani.app.data.models.subject.RatingInfo
-import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
-import me.him188.ani.app.data.models.subject.RelatedPersonInfo
-import me.him188.ani.app.data.models.subject.RelatedSubjectInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
@@ -37,6 +42,7 @@ import me.him188.ani.app.navigation.BrowserNavigator
 import me.him188.ani.app.platform.ContextMP
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.foundation.AuthState
+import me.him188.ani.app.ui.foundation.produceState
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.subject.collection.components.AiringLabelState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
@@ -86,24 +92,45 @@ class SubjectDetailsViewModel(
         }
     }
 
-    val subjectDetailsState = kotlin.run {
-        SubjectDetailsState(
-            subjectInfoState = subjectInfo.produceState(null),
-            selfCollectionTypeState = subjectCollectionFlow.map { it.collectionType }.produceState(null),
-            airingLabelState = AiringLabelState(
-                subjectCollectionFlow.map { it.airingInfo }.produceState(null),
-                subjectProgressInfoState,
-            ),
-            personsState = bangumiRelatedPeopleService.relatedPersonsFlow(subjectId).map {
-                RelatedPersonInfo.sortList(it)
-            }.onCompletion { if (it != null) emit(emptyList()) }.produceState(null),
-            charactersState = bangumiRelatedPeopleService.relatedCharactersFlow(subjectId).map {
-                RelatedCharacterInfo.sortList(it)
-            }.produceState(null),
-            relatedSubjectsState = bangumiRelatedPeopleService.relatedSubjectsFlow(subjectId).map {
-                RelatedSubjectInfo.sortList(it)
-            }.produceState(null),
-        )
+    val subjectDetailsState: StateFlow<SubjectDetailsState?> = kotlin.run {
+        subjectInfo.transformLatest { subjectInfo ->
+            val totalStaffCountState = mutableStateOf<Int?>(null)
+            val totalCharactersCountState = mutableStateOf<Int?>(null)
+            coroutineScope {
+                emit(
+                    SubjectDetailsState(
+                        info = subjectInfo,
+                        selfCollectionTypeState = subjectCollectionFlow.map { it.collectionType }
+                            .stateIn(this)
+                            .produceState(scope = this),
+                        airingLabelState = AiringLabelState(
+                            subjectCollectionFlow.map { it.airingInfo }.produceState(null, scope = this),
+                            subjectProgressInfoState,
+                        ),
+                        staffPager = bangumiRelatedPeopleService.relatedPersonsFlow(subjectId)
+                            .onEach {
+                                withContext(Dispatchers.Main) { totalStaffCountState.value = it.size }
+                            }
+                            .map {
+                                PagingData.from(it)
+                            }
+                            .cachedIn(this),
+                        totalStaffCountState = totalStaffCountState,
+                        charactersPager = bangumiRelatedPeopleService.relatedCharactersFlow(subjectId)
+                            .onEach {
+                                withContext(Dispatchers.Main) { totalCharactersCountState.value = it.size }
+                            }.map {
+                                PagingData.from(it)
+                            }
+                            .cachedIn(this),
+                        totalCharactersCountState = totalCharactersCountState,
+                        relatedSubjectsPager = bangumiRelatedPeopleService.relatedSubjectsFlow(subjectId).map {
+                            PagingData.from(it)
+                        },
+                    ),
+                )
+            }
+        }.stateInBackground(initialValue = null)
     }
 
     val episodeListState by lazy {

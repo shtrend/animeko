@@ -194,7 +194,7 @@ private fun MainSceneContent(
                                         subjectDetailsViewModel,
                                         onPlay = { episodeId ->
                                             navigator.navigateEpisodeDetails(
-                                                subjectDetailsViewModel.subjectDetailsState.info.subjectId,
+                                                subjectDetailsViewModel.subjectDetailsState.value!!.info.subjectId,
                                                 episodeId,
                                             )
                                         },
