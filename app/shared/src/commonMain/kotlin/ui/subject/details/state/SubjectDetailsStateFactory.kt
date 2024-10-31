@@ -52,7 +52,7 @@ import me.him188.ani.app.domain.session.SessionManager
 import me.him188.ani.app.domain.session.launchAuthorize
 import me.him188.ani.app.ui.foundation.produceState
 import me.him188.ani.app.ui.foundation.stateOf
-import me.him188.ani.app.ui.subject.collection.components.AiringLabelState
+import me.him188.ani.app.ui.subject.AiringLabelState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.progress.EpisodeListState
 import me.him188.ani.app.ui.subject.collection.progress.EpisodeListStateFactory

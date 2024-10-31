@@ -71,9 +71,9 @@ import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
 import me.him188.ani.app.ui.media.renderProperties
+import me.him188.ani.app.ui.subject.AiringLabel
+import me.him188.ani.app.ui.subject.AiringLabelState
 import me.him188.ani.app.ui.subject.collection.SubjectCollectionTypeSuggestions
-import me.him188.ani.app.ui.subject.collection.components.AiringLabel
-import me.him188.ani.app.ui.subject.collection.components.AiringLabelState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeDialogsHost
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.details.SubjectDetailsPage

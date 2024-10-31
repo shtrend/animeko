@@ -52,8 +52,8 @@ import me.him188.ani.app.ui.foundation.OutlinedTag
 import me.him188.ani.app.ui.foundation.animation.SharedTransitionKeys
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
-import me.him188.ani.app.ui.subject.collection.components.AiringLabel
-import me.him188.ani.app.ui.subject.collection.components.AiringLabelState
+import me.him188.ani.app.ui.subject.AiringLabel
+import me.him188.ani.app.ui.subject.AiringLabelState
 import me.him188.ani.app.ui.subject.renderSubjectSeason
 
 const val COVER_WIDTH_TO_HEIGHT_RATIO = 849 / 1200f

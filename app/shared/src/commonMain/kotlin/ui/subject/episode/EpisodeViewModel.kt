@@ -71,7 +71,7 @@ import me.him188.ani.app.ui.foundation.HasBackgroundScope
 import me.him188.ani.app.ui.foundation.launchInBackground
 import me.him188.ani.app.ui.foundation.launchInMain
 import me.him188.ani.app.ui.settings.danmaku.DanmakuRegexFilterState
-import me.him188.ani.app.ui.subject.collection.components.AiringLabelState
+import me.him188.ani.app.ui.subject.AiringLabelState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.components.comment.CommentContext
 import me.him188.ani.app.ui.subject.components.comment.CommentEditorState

@@ -10,9 +10,11 @@
 package me.him188.ani.app.ui.main
 
 import androidx.compose.runtime.Stable
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.network.TrendsRepository
+import me.him188.ani.app.data.repository.subject.FollowedSubjectsRepository
 import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
 import me.him188.ani.app.domain.session.userInfo
@@ -28,6 +30,7 @@ import org.koin.core.component.inject
 class ExplorationPageViewModel : AbstractViewModel(), KoinComponent {
     private val trendsRepository: TrendsRepository by inject()
     private val sessionManager: SessionManager by inject()
+    private val followedSubjectsRepository: FollowedSubjectsRepository by inject()
     private val authState = AuthState()
 
     @OptIn(OpaqueSession::class)
@@ -44,5 +47,8 @@ class ExplorationPageViewModel : AbstractViewModel(), KoinComponent {
                 .map { it?.subjects }
                 .produceState(null),
         ),
+        followedSubjectsPager = followedSubjectsRepository.followedSubjectsFlow().map {
+            PagingData.from(it)
+        },
     )
 }

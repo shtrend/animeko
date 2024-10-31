@@ -15,11 +15,11 @@ import me.him188.ani.app.domain.session.createTestAuthState
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.search.createTestPager
 import me.him188.ani.app.ui.subject.collection.TestSubjectCollections
-import me.him188.ani.app.ui.subject.collection.components.createTestAiringLabelState
 import me.him188.ani.app.ui.subject.collection.components.createTestEditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.progress.createTestEpisodeListState
 import me.him188.ani.app.ui.subject.collection.progress.createTestSubjectProgressState
 import me.him188.ani.app.ui.subject.components.comment.createTestCommentState
+import me.him188.ani.app.ui.subject.createTestAiringLabelState
 import me.him188.ani.app.ui.subject.details.TestRelatedSubjects
 import me.him188.ani.app.ui.subject.details.TestSubjectCharacterList
 import me.him188.ani.app.ui.subject.details.TestSubjectInfo

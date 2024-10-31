@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -59,6 +60,33 @@ fun CarouselItemScope.CarouselItem(
     image: @Composable () -> Unit,
 ) {
     val maskShape = rememberMaskShape(shape)
+    BasicCarouselItem(
+        label,
+        modifier,
+        supportingText,
+        overlay,
+        colors,
+        maskShape,
+        image,
+    )
+}
+
+/**
+ * @param label see [CarouselItemDefaults.Text]
+ * @param supportingText see [CarouselItemDefaults.Text]
+ *
+ * @see CarouselItemDefaults.itemSize
+ */
+@Composable // Preview: PreviewTrendingSubjectsCarousel
+fun BasicCarouselItem(
+    label: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    supportingText: @Composable () -> Unit = {},
+    overlay: @Composable () -> Unit = {},
+    colors: CarouselItemColors = CarouselItemDefaults.colors(),
+    maskShape: Shape = RectangleShape,
+    image: @Composable () -> Unit,
+) {
     Box(modifier) {
         Box(Modifier.clip(maskShape)) {
             image()
@@ -87,6 +115,7 @@ fun CarouselItemScope.CarouselItem(
         overlay()
     }
 }
+
 
 @Immutable
 data class CarouselItemColors(

@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import me.him188.ani.app.data.models.subject.RatingInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.data.models.subject.TestSelfRatingInfo
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.subject.details.TestSubjectInfo
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -126,16 +127,6 @@ fun EditableRating(
         modifier = modifier,
     )
 }
-
-
-@TestOnly
-internal val TestSelfRatingInfo
-    get() = SelfRatingInfo(
-        score = 7,
-        comment = "test",
-        tags = listOf("My tag"),
-        isPrivate = false,
-    )
 
 @Composable
 @TestOnly
