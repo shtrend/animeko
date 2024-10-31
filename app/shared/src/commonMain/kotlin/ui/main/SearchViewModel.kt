@@ -62,6 +62,7 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
         ),
         backgroundScope = backgroundScope,
         onStartSearch = { query ->
+            subjectDetailsStateLoader.clear()
             launchInBackground {
                 searchHistoryRepository.addHistory(query)
             }
