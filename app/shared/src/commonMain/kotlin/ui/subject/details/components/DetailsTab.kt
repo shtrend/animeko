@@ -299,6 +299,7 @@ private fun <T : Any> PersonCardList(
 ) {
     Column(modifier) {
         val valuesUpdated by rememberUpdatedState(values)
+        valuesUpdated[0] // get first page
         val showStaff by remember {
             derivedStateOf {
                 @Suppress("UselessCallOnCollection") // false positive
