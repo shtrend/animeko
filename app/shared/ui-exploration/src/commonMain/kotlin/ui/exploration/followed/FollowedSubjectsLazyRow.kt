@@ -39,6 +39,7 @@ import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.layout.BasicCarouselItem
 import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults
 import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
+import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.subject.AiringLabelState
 
@@ -48,8 +49,11 @@ fun FollowedSubjectsLazyRow(
     items: LazyPagingItems<FollowedSubjectInfo>, // null means placeholder
     onClick: (FollowedSubjectInfo) -> Unit,
     modifier: Modifier = Modifier,
-    imageSize: DpSize = if (currentWindowAdaptiveInfo().isHeightAtLeastMedium) DpSize(160.dp, (160.dp) / 9 * 16)
-    else DpSize(120.dp, (120.dp) / 9 * 16),
+    imageSize: DpSize = if (currentWindowAdaptiveInfo().run { isHeightAtLeastMedium && isWidthAtLeastMedium }) {
+        DpSize(160.dp, (160.dp) / 9 * 16)
+    } else {
+        DpSize(120.dp, (120.dp) / 9 * 16)
+    },
     lazyListState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(16.dp),
