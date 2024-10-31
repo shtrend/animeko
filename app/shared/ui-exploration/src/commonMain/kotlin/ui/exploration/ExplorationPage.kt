@@ -87,6 +87,11 @@ fun ExplorationPage(
                         Icon(Icons.Rounded.Search, "搜索")
                     }
                 },
+                searchBar = {
+                    IconButton(onSearch) {
+                        Icon(Icons.Rounded.Search, "搜索")
+                    }
+                },
                 actions = {
                     if (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass.isAtLeastMedium) {
                         IconButton(onClick = onClickSettings) {
