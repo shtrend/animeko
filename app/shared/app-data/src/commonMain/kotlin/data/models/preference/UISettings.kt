@@ -21,7 +21,7 @@ data class UISettings(
     /**
      * 启动 App 时的初始页面
      */
-    val mainSceneInitialPage: MainScenePage = MainScenePage.Collection,
+    val mainSceneInitialPage: MainScenePage = MainScenePage.Exploration,
     val theme: ThemeSettings = ThemeSettings.Default,
     val myCollections: MyCollectionsSettings = MyCollectionsSettings.Default,
     val searchSettings: SearchSettings = SearchSettings.Default,
