@@ -9,12 +9,15 @@
 
 package me.him188.ani.app.ui.exploration.trends
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
+import androidx.compose.material3.carousel.CarouselDefaults
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
@@ -51,10 +54,10 @@ fun TrendingSubjectsCarousel(
         preferredItemWidth = size.preferredWidth,
         modifier.padding(contentPadding).fillMaxWidth(),
         itemSpacing = itemSpacing,
-//        flingBehavior = CarouselDefaults.multiBrowseFlingBehavior(
-//            carouselState,
-//            snapAnimationSpec = spring(stiffness = Spring.StiffnessMedium),
-//        ),
+        flingBehavior = CarouselDefaults.multiBrowseFlingBehavior(
+            carouselState,
+            snapAnimationSpec = spring(stiffness = Spring.StiffnessMedium),
+        ),
     ) { index ->
         val item = state.subjects.getOrNull(index)
         CarouselItem(
