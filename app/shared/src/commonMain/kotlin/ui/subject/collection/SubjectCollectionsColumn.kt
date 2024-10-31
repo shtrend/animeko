@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.ui.subject.collection
 
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,11 +61,9 @@ import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.ui.foundation.AsyncImage
-import me.him188.ani.app.ui.foundation.animation.StandardAccelerate
-import me.him188.ani.app.ui.foundation.animation.StandardDecelerate
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.stateOf
-import me.him188.ani.app.ui.foundation.theme.EasingDurations
+import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.search.isLoadingNextPage
 import me.him188.ani.app.ui.subject.collection.components.AiringLabel
 import me.him188.ani.app.ui.subject.collection.components.AiringLabelState
@@ -116,12 +113,9 @@ fun SubjectCollectionsColumn(
                         .padding(all = spacedBy / 2)
                         .ifThen(enableAnimation) {
                             animateItem(
-                                fadeInSpec = tween(
-                                    EasingDurations.standardAccelerate,
-                                    delayMillis = EasingDurations.standardDecelerate,
-                                    easing = StandardAccelerate,
-                                ),
-                                fadeOutSpec = tween(EasingDurations.standardDecelerate, easing = StandardDecelerate),
+                                fadeInSpec = AniThemeDefaults.feedItemFadeInSpec,
+                                placementSpec = AniThemeDefaults.feedItemPlacementSpec,
+                                fadeOutSpec = AniThemeDefaults.feedItemFadeOutSpec,
                             )
                         },
                 ) {
