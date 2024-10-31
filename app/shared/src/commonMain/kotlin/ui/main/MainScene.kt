@@ -174,7 +174,7 @@ private fun MainSceneContent(
                             onClickSearch = { onNavigateToPage(MainScenePage.Search) },
                             onClickSettings = { navigator.navigateSettings() },
                             Modifier.fillMaxSize(),
-                            enableAnimation = vm.myCollectionsSettings.enableListAnimation,
+                            enableAnimation = vm.myCollectionsSettings.enableListAnimation1,
                             lazyGridState = vm.lazyGridState,
                         )
                     }

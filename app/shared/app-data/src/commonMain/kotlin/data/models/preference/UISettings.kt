@@ -58,7 +58,7 @@ enum class DarkMode {
 @Serializable
 @Immutable
 data class MyCollectionsSettings(
-    val enableListAnimation: Boolean = false,
+    val enableListAnimation1: Boolean = true,
 ) {
     companion object {
         @Stable
