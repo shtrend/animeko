@@ -16,10 +16,13 @@ import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.search.SearchProblem
+import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.platform.annotations.TestOnly
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -29,8 +32,9 @@ import kotlin.coroutines.cancellation.CancellationException
 @Stable
 class SubjectDetailsStateLoader(
     private val subjectDetailsStateFactory: SubjectDetailsStateFactory,
-    backgroundScope: CoroutineScope,
+    private val backgroundScope: CoroutineScope,
 ) {
+    private var runningFlowScope: CoroutineScope? = null
     private val tasker = MonoTasker(backgroundScope)
 
     val isLoading get() = tasker.isRunning
@@ -42,19 +46,22 @@ class SubjectDetailsStateLoader(
             withContext(Dispatchers.Main) {
                 subjectDetailsStateProblem = null
             }
+            runningFlowScope?.cancel()
+            val flowScope = backgroundScope.childScope()
+            runningFlowScope = flowScope
             val resp = try {
-                subjectDetailsStateFactory.create(subjectId).first()
+                subjectDetailsStateFactory.create(subjectId).stateIn(flowScope)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     subjectDetailsStateProblem = SearchProblem.fromException(e)
-                    subjectDetailsState = null
+                    subjectDetailsStateFlow = null
                 }
                 return@launch
             }
             withContext(Dispatchers.Main) {
-                subjectDetailsState = resp
+                subjectDetailsStateFlow = resp
             }
         }
     }
@@ -62,12 +69,14 @@ class SubjectDetailsStateLoader(
     fun clear() {
         tasker.cancel()
         subjectDetailsStateProblem = null
-        subjectDetailsState = null
+        runningFlowScope?.cancel()
+        runningFlowScope = null
+        subjectDetailsStateFlow = null
     }
 
     var subjectDetailsStateProblem: SearchProblem? by mutableStateOf(null)
         private set
-    var subjectDetailsState: SubjectDetailsState? by mutableStateOf(null)
+    var subjectDetailsStateFlow: StateFlow<SubjectDetailsState>? by mutableStateOf(null)
         private set
 }
 

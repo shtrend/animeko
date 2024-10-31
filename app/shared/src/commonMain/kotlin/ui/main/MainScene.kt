@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import me.him188.ani.app.navigation.LocalNavigator
@@ -196,7 +197,8 @@ private fun MainSceneContent(
                             vm.searchPageState,
                             windowInsets,
                             detailContent = {
-                                vm.subjectDetailsStateLoader.subjectDetailsState?.let { state ->
+                                vm.subjectDetailsStateLoader.subjectDetailsStateFlow?.let { stateFlow ->
+                                    val state by stateFlow.collectAsStateWithLifecycle()
                                     SubjectDetailsPage(
                                         state,
                                         onPlay = { episodeId ->

@@ -40,8 +40,10 @@ class SubjectDetailsState(
 
     // 附加信息, pager
     val staffPager: Flow<PagingData<RelatedPersonInfo>>,
+    val exposedStaffPager: Flow<PagingData<RelatedPersonInfo>>,
     val totalStaffCountState: State<Int?>,
     val charactersPager: Flow<PagingData<RelatedCharacterInfo>>,
+    val exposedCharactersPager: Flow<PagingData<RelatedCharacterInfo>>,
     val totalCharactersCountState: State<Int?>,
     val relatedSubjectsPager: Flow<PagingData<RelatedSubjectInfo>>,
     val episodeListState: EpisodeListState,

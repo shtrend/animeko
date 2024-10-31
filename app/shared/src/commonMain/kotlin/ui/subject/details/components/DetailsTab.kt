@@ -42,7 +42,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -85,8 +84,10 @@ object SubjectDetailsDefaults {
 fun SubjectDetailsDefaults.DetailsTab(
     info: SubjectInfo,
     staff: LazyPagingItems<RelatedPersonInfo>,
+    exposedStaff: LazyPagingItems<RelatedPersonInfo>,
     totalStaffCount: Int?,
     characters: LazyPagingItems<RelatedCharacterInfo>,
+    exposedCharacters: LazyPagingItems<RelatedCharacterInfo>,
     totalCharactersCount: Int?,
     relatedSubjects: LazyPagingItems<RelatedSubjectInfo>,
     modifier: Modifier = Modifier,
@@ -131,26 +132,14 @@ fun SubjectDetailsDefaults.DetailsTab(
 
         item("characters") {
             PersonCardList(
-                values = characters,
+                allValues = characters,
+                exposedCharacters,
                 sheetTitle = {
                     Text(
                         if (totalCharactersCount == null) "角色" else "角色 $totalCharactersCount",
                     )
                 },
                 modifier = Modifier.padding(horizontal = horizontalPadding),
-                exposedValues = { list ->
-                    // 显示前六个主角, 否则显示前六个
-                    if (list.any { it.isMainCharacter() }) {
-                        val res = list.asSequence().filter { it.isMainCharacter() }.take(6).toList()
-                        if (res.size >= 4 || list.size < 4) {
-                            res // 有至少四个主角
-                        } else {
-                            list.take(4) // 主角不足四个, 就显示前四个包含非主角的
-                        }
-                    } else {
-                        list.take(6) // 没有主角
-                    }
-                },
                 itemContent = { PersonCard(it) },
             )
         }
@@ -165,14 +154,14 @@ fun SubjectDetailsDefaults.DetailsTab(
 
         item("staff") {
             PersonCardList(
-                values = staff,
+                allValues = staff,
+                exposedStaff,
                 sheetTitle = {
                     Text(
                         if (totalStaffCount == null) "制作人员" else "制作人员 $totalStaffCount",
                     )
                 },
                 modifier = Modifier.padding(horizontal = horizontalPadding),
-                exposedValues = { it.take(6) },
                 itemContent = { PersonCard(it) },
             )
         }
@@ -289,44 +278,33 @@ private fun TagsList(
 
 @Composable
 private fun <T : Any> PersonCardList(
-    values: LazyPagingItems<T>,
+    allValues: LazyPagingItems<T>,
+    exposedValues: LazyPagingItems<T>,
     sheetTitle: @Composable RowScope.() -> Unit,
     modifier: Modifier = Modifier,
-    exposedValues: (List<T>) -> List<T>,
     maxItemsInEachRow: Int = 2,
     itemSpacing: Dp = 12.dp,
     itemContent: @Composable (T) -> Unit,
 ) {
     Column(modifier) {
-        val valuesUpdated by rememberUpdatedState(values)
-        valuesUpdated[0] // get first page
-        val showStaff by remember {
-            derivedStateOf {
-                @Suppress("UselessCallOnCollection") // false positive
-                valuesUpdated.itemSnapshotList.filterNotNull().let(exposedValues)
-            }
-        }
-        val hasMore by remember { derivedStateOf { valuesUpdated.itemSnapshotList.size > showStaff.size } }
-
         var showSheet by rememberSaveable { mutableStateOf(false) }
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(itemSpacing),
             verticalArrangement = Arrangement.spacedBy(itemSpacing),
             maxItemsInEachRow = maxItemsInEachRow,
         ) {
-            for (item in showStaff) {
+            for (i in 0 until exposedValues.itemCount) {
+                val item = exposedValues[i] ?: continue
                 Box(Modifier.weight(1f)) {
                     itemContent(item)
                 }
             }
         }
-        if (hasMore) {
-            TextButton(
-                { showSheet = true },
-                Modifier.padding(top = 8.dp).align(Alignment.End),
-            ) {
-                Text("查看全部")
-            }
+        TextButton(
+            { showSheet = true },
+            Modifier.padding(top = 8.dp).align(Alignment.End),
+        ) {
+            Text("查看全部")
         }
 
         if (showSheet) {
@@ -345,8 +323,12 @@ private fun <T : Any> PersonCardList(
                         horizontalArrangement = Arrangement.spacedBy(itemSpacing),
                         verticalArrangement = Arrangement.spacedBy(itemSpacing),
                     ) {
-                        items(values.itemCount, values.itemKey(), contentType = values.itemContentType()) { index ->
-                            values[index]?.let {
+                        items(
+                            allValues.itemCount,
+                            allValues.itemKey(),
+                            contentType = allValues.itemContentType(),
+                        ) { index ->
+                            allValues[index]?.let {
                                 itemContent(it)
                             }
                         }

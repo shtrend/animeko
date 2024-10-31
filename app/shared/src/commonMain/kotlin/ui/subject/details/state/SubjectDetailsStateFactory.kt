@@ -10,10 +10,13 @@
 package me.him188.ani.app.ui.subject.details.state
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +24,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
@@ -32,6 +36,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.preference.EpisodeListProgressTheme
+import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
@@ -103,8 +108,10 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
                             authState,
                         ),
                     )
+                    awaitCancellation()
                 }
             }
+            awaitCancellation()
         }
     }
 
@@ -126,6 +133,7 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
                     authState,
                 ),
             )
+            awaitCancellation()
         }
     }
 
@@ -145,6 +153,7 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
                     authState,
                 ),
             )
+            awaitCancellation()
         }
     }
 
@@ -274,6 +283,24 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
             backgroundScope = this,
         )
 
+        val relatedPersonsFlow = bangumiRelatedPeopleService.relatedPersonsFlow(subjectId)
+            .onEach {
+                withContext(Dispatchers.Main) { totalStaffCountState.value = it.size }
+            }
+            .stateIn(this, SharingStarted.Eagerly, null)
+
+        val loadingState = LoadStates(
+            refresh = LoadState.Loading,
+            prepend = LoadState.NotLoading(false),
+            append = LoadState.NotLoading(false),
+        )
+
+        val relatedCharactersFlow = bangumiRelatedPeopleService.relatedCharactersFlow(subjectId)
+            .onEach {
+                withContext(Dispatchers.Main) { totalCharactersCountState.value = it.size }
+            }
+            .stateIn(this, SharingStarted.Eagerly, null)
+
         val state = SubjectDetailsState(
             info = subjectInfo,
             selfCollectionTypeState = selfCollectionTypeStateFlow
@@ -282,26 +309,39 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
                 subjectCollectionFlow.map { it.airingInfo }.produceState(null, scope = this),
                 subjectProgressInfoState,
             ),
-            staffPager = bangumiRelatedPeopleService.relatedPersonsFlow(subjectId)
-                .onEach {
-                    withContext(Dispatchers.Main) { totalStaffCountState.value = it.size }
+            staffPager = relatedPersonsFlow
+                .map {
+                    PagingData.from(
+                        it ?: emptyList(),
+                        sourceLoadStates = loadingState,
+                    )
                 }
+                .cachedIn(this),
+            exposedStaffPager = relatedPersonsFlow
+                .filterNotNull()
+                .map { list ->
+                    list.take(6)
+                }
+                .map { PagingData.from(it) }
+                .cachedIn(this),
+            totalStaffCountState = totalStaffCountState,
+            charactersPager = relatedCharactersFlow.map {
+                PagingData.from(
+                    it ?: emptyList(),
+                    sourceLoadStates = loadingState,
+                )
+            }.cachedIn(this),
+            totalCharactersCountState = totalCharactersCountState,
+            relatedSubjectsPager = bangumiRelatedPeopleService.relatedSubjectsFlow(subjectId)
                 .map {
                     PagingData.from(it)
                 }
                 .cachedIn(this),
-            totalStaffCountState = totalStaffCountState,
-            charactersPager = bangumiRelatedPeopleService.relatedCharactersFlow(subjectId)
-                .onEach {
-                    withContext(Dispatchers.Main) { totalCharactersCountState.value = it.size }
-                }.map {
-                    PagingData.from(it)
-                }
+            exposedCharactersPager = relatedCharactersFlow
+                .filterNotNull()
+                .map { it.computeExposed() }
+                .map { PagingData.from(it) }
                 .cachedIn(this),
-            totalCharactersCountState = totalCharactersCountState,
-            relatedSubjectsPager = bangumiRelatedPeopleService.relatedSubjectsFlow(subjectId).map {
-                PagingData.from(it)
-            },
             episodeListState = episodeListState,
             authState = authState,
             editableSubjectCollectionTypeState = editableSubjectCollectionTypeState,
@@ -388,4 +428,19 @@ class TestSubjectDetailsStateFactory : SubjectDetailsStateFactory {
         throw UnsupportedOperationException()
     }
 
+}
+
+private fun List<RelatedCharacterInfo>.computeExposed(): List<RelatedCharacterInfo> {
+    val list = this
+    // 显示前六个主角, 否则显示前六个
+    return if (list.any { it.isMainCharacter() }) {
+        val res = list.asSequence().filter { it.isMainCharacter() }.take(6).toList()
+        if (res.size >= 4 || list.size < 4) {
+            res // 有至少四个主角
+        } else {
+            list.take(4) // 主角不足四个, 就显示前四个包含非主角的
+        }
+    } else {
+        list.take(6) // 没有主角
+    }
 }

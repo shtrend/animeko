@@ -32,8 +32,10 @@ private fun PreviewDetailsTab() {
             SubjectDetailsDefaults.DetailsTab(
                 TestSubjectInfo,
                 rememberTestLazyPagingItems(TestSubjectStaffInfo),
+                exposedStaff = rememberTestLazyPagingItems(TestSubjectStaffInfo.take(6)),
                 totalStaffCount = TestSubjectStaffInfo.size,
                 rememberTestLazyPagingItems(TestSubjectCharacterList),
+                exposedCharacters = rememberTestLazyPagingItems(TestSubjectCharacterList.take(6)),
                 totalCharactersCount = TestSubjectCharacterList.size,
                 rememberTestLazyPagingItems(TestRelatedSubjects),
                 Modifier.padding(it),

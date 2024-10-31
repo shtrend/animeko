@@ -60,6 +60,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
 import kotlinx.coroutines.launch
 import me.him188.ani.app.navigation.LocalNavigator
@@ -105,8 +106,9 @@ fun SharedTransitionScope.SubjectDetailsPage(
     showBlurredBackground: Boolean = true,
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
-    val state = vm.stateLoader.subjectDetailsState
-    if (state != null) {
+    val stateFlow = vm.stateLoader.subjectDetailsStateFlow
+    if (stateFlow != null) {
+        val state by stateFlow.collectAsStateWithLifecycle()
         SubjectDetailsPage(
             state,
             onPlay = onPlay,
@@ -180,8 +182,10 @@ fun SharedTransitionScope.SubjectDetailsPage(
             SubjectDetailsDefaults.DetailsTab(
                 info = state.info,
                 staff = state.staffPager.collectAsLazyPagingItemsWithLifecycle(),
+                exposedStaff = state.exposedStaffPager.collectAsLazyPagingItemsWithLifecycle(),
                 totalStaffCount = state.totalStaffCountState.value,
                 characters = state.charactersPager.collectAsLazyPagingItemsWithLifecycle(),
+                exposedCharacters = state.exposedCharactersPager.collectAsLazyPagingItemsWithLifecycle(),
                 totalCharactersCount = state.totalCharactersCountState.value,
                 relatedSubjects = state.relatedSubjectsPager.collectAsLazyPagingItemsWithLifecycle(),
                 Modifier
