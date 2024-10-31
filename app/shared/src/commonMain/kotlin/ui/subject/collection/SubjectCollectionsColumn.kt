@@ -101,9 +101,7 @@ fun SubjectCollectionsColumn(
         GridCells.Adaptive(360.dp),
         modifier,
         gridState,
-        verticalArrangement = Arrangement.spacedBy(spacedBy),
-        horizontalArrangement = Arrangement.spacedBy(spacedBy),
-        contentPadding = PaddingValues(horizontal = spacedBy),
+        contentPadding = PaddingValues(all = spacedBy / 2),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(1.dp)) } // 添加新 item 时保持到顶部
 
@@ -114,16 +112,18 @@ fun SubjectCollectionsColumn(
         ) { index ->
             items[index]?.let {
                 Box(
-                    Modifier.ifThen(enableAnimation) {
-                        animateItem(
-                            fadeInSpec = tween(
-                                EasingDurations.standardAccelerate,
-                                delayMillis = EasingDurations.standardDecelerate,
-                                easing = StandardAccelerate,
-                            ),
-                            fadeOutSpec = tween(EasingDurations.standardDecelerate, easing = StandardDecelerate),
-                        )
-                    },
+                    Modifier
+                        .padding(all = spacedBy / 2)
+                        .ifThen(enableAnimation) {
+                            animateItem(
+                                fadeInSpec = tween(
+                                    EasingDurations.standardAccelerate,
+                                    delayMillis = EasingDurations.standardDecelerate,
+                                    easing = StandardAccelerate,
+                                ),
+                                fadeOutSpec = tween(EasingDurations.standardDecelerate, easing = StandardDecelerate),
+                            )
+                        },
                 ) {
                     item(it)
                 }
