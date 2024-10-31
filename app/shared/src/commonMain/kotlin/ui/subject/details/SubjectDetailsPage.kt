@@ -10,6 +10,8 @@
 package me.him188.ani.app.ui.subject.details
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -94,9 +96,10 @@ import me.him188.ani.app.ui.subject.rating.EditableRating
 import me.him188.ani.utils.platform.isMobile
 
 @Composable
-fun SubjectDetailsPage(
+fun SharedTransitionScope.SubjectDetailsPage(
     vm: SubjectDetailsViewModel,
     onPlay: (episodeId: Int) -> Unit,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
     showBlurredBackground: Boolean = true,
@@ -107,6 +110,7 @@ fun SubjectDetailsPage(
         SubjectDetailsPage(
             state,
             onPlay = onPlay,
+            animatedVisibilityScope,
             modifier,
             showTopBar,
             showBlurredBackground,
@@ -116,9 +120,10 @@ fun SubjectDetailsPage(
 }
 
 @Composable
-fun SubjectDetailsPage(
+fun SharedTransitionScope.SubjectDetailsPage(
     state: SubjectDetailsState,
     onPlay: (episodeId: Int) -> Unit,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
     showBlurredBackground: Boolean = true,
@@ -212,6 +217,7 @@ fun SubjectDetailsPage(
                 }
             }
         },
+        animatedVisibilityScope,
         modifier,
         showTopBar = showTopBar,
         showBlurredBackground = showBlurredBackground,
@@ -233,7 +239,7 @@ enum class SubjectDetailsTab {
  * 一部番的详情页
  */
 @Composable
-fun SubjectDetailsPageLayout(
+fun SharedTransitionScope.SubjectDetailsPageLayout(
     state: SubjectDetailsState,
     collectionData: @Composable () -> Unit,
     collectionActions: @Composable () -> Unit,
@@ -243,6 +249,7 @@ fun SubjectDetailsPageLayout(
     detailsTab: @Composable (contentPadding: PaddingValues) -> Unit,
     commentsTab: @Composable (contentPadding: PaddingValues) -> Unit,
     discussionsTab: @Composable (contentPadding: PaddingValues) -> Unit,
+    animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
     showBlurredBackground: Boolean = true,
@@ -339,6 +346,7 @@ fun SubjectDetailsPageLayout(
                             collectionAction = collectionActions,
                             selectEpisodeButton = selectEpisodeButton,
                             rating = rating,
+                            animatedVisibilityScope,
                             Modifier
                                 .connectedScrollTarget(connectedScrollState)
                                 .fillMaxWidth()

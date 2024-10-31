@@ -69,10 +69,12 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
     )
 
     val subjectDetailsStateLoader = SubjectDetailsStateLoader(subjectDetailsStateFactory, backgroundScope)
-    fun viewSubjectDetails(
+
+    suspend fun viewSubjectDetails(
         subjectId: Int
     ) {
-        subjectDetailsStateLoader.load(subjectId)
+        subjectDetailsStateLoader.clear()
+        subjectDetailsStateLoader.load(subjectId).join()
     }
 
     override fun onCleared() {

@@ -20,6 +20,7 @@ import me.him188.ani.app.data.models.subject.SubjectAiringKind
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.layout.DummySharedTransitionLayout
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.subject.collection.components.AiringLabelState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeButton
@@ -104,8 +105,8 @@ fun PreviewSubjectDetailsHeader(
     airingInfo: SubjectAiringInfo,
     progressInfo: SubjectProgressInfo,
     subjectInfo: SubjectInfo = TestSubjectInfo,
-) {
-    ProvideCompositionLocalsForPreview {
+) = ProvideCompositionLocalsForPreview {
+    DummySharedTransitionLayout {
         SubjectDetailsHeader(
             subjectInfo,
             TestCoverImage,
@@ -130,6 +131,7 @@ fun PreviewSubjectDetailsHeader(
                     state = rememberTestEditableRatingState(),
                 )
             },
+            animatedVisibilityScope,
         )
     }
 }

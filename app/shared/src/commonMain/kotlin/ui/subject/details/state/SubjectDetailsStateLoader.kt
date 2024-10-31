@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.tools.MonoTasker
@@ -36,8 +37,8 @@ class SubjectDetailsStateLoader(
 
     fun load(
         subjectId: Int
-    ) {
-        tasker.launch {
+    ): Job {
+        return tasker.launch {
             withContext(Dispatchers.Main) {
                 subjectDetailsStateProblem = null
             }

@@ -65,6 +65,7 @@ import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.foundation.LocalPlatform
+import me.him188.ani.app.ui.foundation.layout.DummySharedTransitionLayout
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
@@ -146,12 +147,15 @@ fun EpisodeDetails(
                 modifier = Modifier.desktopTitleBarPadding().statusBarsPadding(),
                 contentWindowInsets = { BottomSheetDefaults.windowInsets.add(WindowInsets.desktopTitleBar()) },
             ) {
-                SubjectDetailsPage(
-                    subjectDetailsState,
-                    onPlay = onSwitchEpisode,
-                    showTopBar = false,
-                    showBlurredBackground = false,
-                )
+                DummySharedTransitionLayout {
+                    SubjectDetailsPage(
+                        subjectDetailsState,
+                        onPlay = onSwitchEpisode,
+                        showTopBar = false,
+                        showBlurredBackground = false,
+                        animatedVisibilityScope = animatedVisibilityScope,
+                    )
+                }
             }
         }
     }

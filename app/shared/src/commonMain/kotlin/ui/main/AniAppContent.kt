@@ -191,6 +191,7 @@ private fun AniAppContentImpl(
                 SubjectDetailsPage(
                     vm,
                     onPlay = { aniNavigator.navigateEpisodeDetails(details.subjectId, it) },
+                    animatedVisibilityScope = this,
                     windowInsets = windowInsets,
                 )
             }

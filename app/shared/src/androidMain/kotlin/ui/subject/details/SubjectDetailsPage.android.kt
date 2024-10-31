@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.layout.DummySharedTransitionLayout
 import me.him188.ani.app.ui.foundation.layout.rememberConnectedScrollState
 import me.him188.ani.app.ui.search.rememberTestLazyPagingItems
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeButton
@@ -38,10 +39,10 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @Preview
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
 @Composable
-internal fun PreviewSubjectDetails() {
-    ProvideFoundationCompositionLocalsForPreview {
-        val state = createTestSubjectDetailsState(rememberCoroutineScope())
-        val connectedScrollState = rememberConnectedScrollState()
+internal fun PreviewSubjectDetails() = ProvideFoundationCompositionLocalsForPreview {
+    val state = createTestSubjectDetailsState(rememberCoroutineScope())
+    val connectedScrollState = rememberConnectedScrollState()
+    DummySharedTransitionLayout {
         SubjectDetailsPageLayout(
             state = state,
             collectionData = {
@@ -90,6 +91,7 @@ internal fun PreviewSubjectDetails() {
                 )
             },
             discussionsTab = {},
+            animatedVisibilityScope = animatedVisibilityScope,
         )
     }
 }
