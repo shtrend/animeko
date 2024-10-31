@@ -90,6 +90,8 @@ import me.him188.ani.app.domain.session.unverifiedAccessToken
 import me.him188.ani.app.domain.session.username
 import me.him188.ani.app.domain.torrent.TorrentManager
 import me.him188.ani.app.domain.update.UpdateManager
+import me.him188.ani.app.ui.subject.details.state.DefaultSubjectDetailsStateFactory
+import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateFactory
 import me.him188.ani.app.ui.subject.episode.video.TorrentMediaCacheProgressState
 import me.him188.ani.app.videoplayer.torrent.TorrentVideoData
 import me.him188.ani.app.videoplayer.ui.state.CacheProgressStateFactoryManager
@@ -309,6 +311,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
     }
 
     single<MeteredNetworkDetector> { createMeteredNetworkDetector(getContext()) }
+    single<SubjectDetailsStateFactory> { DefaultSubjectDetailsStateFactory() }
 }
 
 

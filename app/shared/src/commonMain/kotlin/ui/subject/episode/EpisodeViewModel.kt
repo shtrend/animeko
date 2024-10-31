@@ -43,7 +43,6 @@ import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.data.network.BangumiCommentService
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
-import me.him188.ani.app.data.repository.episode.EpisodeProgressRepository
 import me.him188.ani.app.data.repository.media.EpisodePreferencesRepository
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepository
 import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepository
@@ -80,6 +79,8 @@ import me.him188.ani.app.ui.subject.components.comment.CommentLoader
 import me.him188.ani.app.ui.subject.components.comment.CommentMapperContext
 import me.him188.ani.app.ui.subject.components.comment.CommentState
 import me.him188.ani.app.ui.subject.components.comment.EditCommentSticker
+import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateFactory
+import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateLoader
 import me.him188.ani.app.ui.subject.episode.details.EpisodeCarouselState
 import me.him188.ani.app.ui.subject.episode.details.EpisodeDetailsState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorPresentation
@@ -241,6 +242,7 @@ private class EpisodeViewModelImpl(
     }.stateInBackground(null)
 
     private val episodeInfo = episodeCollection.map { it?.episodeInfo }
+    private val subjectDetailsStateFactory: SubjectDetailsStateFactory by inject()
 
     // Media Selection
 
@@ -441,6 +443,7 @@ private class EpisodeViewModelImpl(
                 subjectCollection.map { SubjectProgressInfo.compute(it.subjectInfo, it.episodes, getCurrentDate()) }
                     .produceState(null),
             ),
+            subjectDetailsStateLoader = SubjectDetailsStateLoader(subjectDetailsStateFactory, backgroundScope),
         )
     }
 

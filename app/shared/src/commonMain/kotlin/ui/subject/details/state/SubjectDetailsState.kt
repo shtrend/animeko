@@ -7,8 +7,9 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.subject.details
+package me.him188.ani.app.ui.subject.details.state
 
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
@@ -19,7 +20,13 @@ import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
 import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.RelatedSubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.ui.subject.collection.components.AiringLabelState
+import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
+import me.him188.ani.app.ui.subject.collection.progress.EpisodeListState
+import me.him188.ani.app.ui.subject.collection.progress.SubjectProgressState
+import me.him188.ani.app.ui.subject.components.comment.CommentState
+import me.him188.ani.app.ui.subject.rating.EditableRatingState
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 
 /**
@@ -37,10 +44,19 @@ class SubjectDetailsState(
     val charactersPager: Flow<PagingData<RelatedCharacterInfo>>,
     val totalCharactersCountState: State<Int?>,
     val relatedSubjectsPager: Flow<PagingData<RelatedSubjectInfo>>,
+    val episodeListState: EpisodeListState,
+    val authState: AuthState,
+    val editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState,
+    val editableRatingState: EditableRatingState,
+    val subjectProgressState: SubjectProgressState,
+    val subjectCommentState: CommentState,
 ) {
     val coverImageUrl get() = this.info.imageLarge
     private val selfCollectionTypeOrNull by selfCollectionTypeState
     val selfCollectionType by derivedStateOf { selfCollectionTypeOrNull }
 
     val selfCollected by derivedStateOf { this.selfCollectionType != UnifiedCollectionType.NOT_COLLECTED }
+
+    val detailsTabLazyListState = LazyListState()
+    val commentTabLazyListState = LazyListState()
 }

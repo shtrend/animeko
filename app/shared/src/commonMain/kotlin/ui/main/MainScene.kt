@@ -61,7 +61,7 @@ import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.subject.collection.CollectionPage
 import me.him188.ani.app.ui.subject.collection.UserCollectionsViewModel
-import me.him188.ani.app.ui.subject.details.SubjectDetailsScene
+import me.him188.ani.app.ui.subject.details.SubjectDetailsPage
 import me.him188.ani.utils.platform.isAndroid
 
 
@@ -189,12 +189,12 @@ private fun MainSceneContent(
                             vm.searchPageState,
                             windowInsets,
                             detailContent = {
-                                vm.subjectDetailsViewModel?.let { subjectDetailsViewModel ->
-                                    SubjectDetailsScene(
-                                        subjectDetailsViewModel,
+                                vm.subjectDetailsStateLoader.subjectDetailsState?.let { state ->
+                                    SubjectDetailsPage(
+                                        state,
                                         onPlay = { episodeId ->
                                             navigator.navigateEpisodeDetails(
-                                                subjectDetailsViewModel.subjectDetailsState.value!!.info.subjectId,
+                                                state.info.subjectId,
                                                 episodeId,
                                             )
                                         },

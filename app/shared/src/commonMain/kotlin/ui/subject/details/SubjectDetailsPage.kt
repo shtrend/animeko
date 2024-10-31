@@ -58,11 +58,9 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
 import kotlinx.coroutines.launch
 import me.him188.ani.app.navigation.LocalNavigator
-import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.ui.foundation.ImageViewer
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.ifThen
@@ -90,30 +88,51 @@ import me.him188.ani.app.ui.subject.details.components.SubjectBlurredBackground
 import me.him188.ani.app.ui.subject.details.components.SubjectCommentColumn
 import me.him188.ani.app.ui.subject.details.components.SubjectDetailsDefaults
 import me.him188.ani.app.ui.subject.details.components.SubjectDetailsHeader
+import me.him188.ani.app.ui.subject.details.state.SubjectDetailsState
 import me.him188.ani.app.ui.subject.episode.list.EpisodeListDialog
 import me.him188.ani.app.ui.subject.rating.EditableRating
 import me.him188.ani.utils.platform.isMobile
 
 @Composable
-fun SubjectDetailsScene(
+fun SubjectDetailsPage(
     vm: SubjectDetailsViewModel,
-    modifier: Modifier = Modifier,
     onPlay: (episodeId: Int) -> Unit,
+    modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
     showBlurredBackground: Boolean = true,
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
 ) {
-    val context = LocalContext.current
+    val state = vm.stateLoader.subjectDetailsState
+    if (state != null) {
+        SubjectDetailsPage(
+            state,
+            onPlay = onPlay,
+            modifier,
+            showTopBar,
+            showBlurredBackground,
+            windowInsets,
+        )
+    }
+}
+
+@Composable
+fun SubjectDetailsPage(
+    state: SubjectDetailsState,
+    onPlay: (episodeId: Int) -> Unit,
+    modifier: Modifier = Modifier,
+    showTopBar: Boolean = true,
+    showBlurredBackground: Boolean = true,
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
+) {
     val toaster = LocalToaster.current
     val browserNavigator = LocalUriHandler.current
 
     var showSelectEpisode by rememberSaveable { mutableStateOf(false) }
-    val subjectDetailsState = vm.subjectDetailsState.collectAsStateWithLifecycle(null).value ?: return
     if (showSelectEpisode) {
         EpisodeListDialog(
-            vm.episodeListState,
+            state.episodeListState,
             title = {
-                Text(subjectDetailsState.info.displayName)
+                Text(state.info.displayName)
             },
             onDismissRequest = { showSelectEpisode = false },
         )
@@ -124,30 +143,29 @@ fun SubjectDetailsScene(
     val imageViewer = rememberImageViewerHandler()
     BackHandler(enabled = imageViewer.viewing.value) { imageViewer.clear() }
 
-    SubjectDetailsPage(
-        subjectDetailsState,
-        onClickOpenExternal = { vm.browseSubjectBangumi(context) },
+    SubjectDetailsPageLayout(
+        state,
         collectionData = {
             SubjectDetailsDefaults.CollectionData(
-                collectionStats = subjectDetailsState.info.collectionStats,
+                collectionStats = state.info.collectionStats,
             )
         },
         collectionActions = {
-            if (vm.authState.isKnownExpired) {
+            if (state.authState.isKnownExpired) {
                 val navigator = LocalNavigator.current
-                OutlinedButton({ vm.authState.launchAuthorize(navigator) }) {
+                OutlinedButton({ state.authState.launchAuthorize(navigator) }) {
                     Text("登录后可收藏")
                 }
             } else {
-                EditableSubjectCollectionTypeButton(vm.editableSubjectCollectionTypeState)
+                EditableSubjectCollectionTypeButton(state.editableSubjectCollectionTypeState)
             }
         },
         rating = {
-            EditableRating(vm.editableRatingState)
+            EditableRating(state.editableRatingState)
         },
         selectEpisodeButton = {
             SubjectDetailsDefaults.SelectEpisodeButtons(
-                vm.subjectProgressState,
+                state.subjectProgressState,
                 onShowEpisodeList = { showSelectEpisode = true },
                 onPlay = onPlay,
             )
@@ -155,29 +173,29 @@ fun SubjectDetailsScene(
         connectedScrollState = connectedScrollState,
         detailsTab = { contentPadding ->
             SubjectDetailsDefaults.DetailsTab(
-                info = subjectDetailsState.info,
-                staff = subjectDetailsState.staffPager.collectAsLazyPagingItemsWithLifecycle(),
-                totalStaffCount = subjectDetailsState.totalStaffCountState.value,
-                characters = subjectDetailsState.charactersPager.collectAsLazyPagingItemsWithLifecycle(),
-                totalCharactersCount = subjectDetailsState.totalCharactersCountState.value,
-                relatedSubjects = subjectDetailsState.relatedSubjectsPager.collectAsLazyPagingItemsWithLifecycle(),
+                info = state.info,
+                staff = state.staffPager.collectAsLazyPagingItemsWithLifecycle(),
+                totalStaffCount = state.totalStaffCountState.value,
+                characters = state.charactersPager.collectAsLazyPagingItemsWithLifecycle(),
+                totalCharactersCount = state.totalCharactersCountState.value,
+                relatedSubjects = state.relatedSubjectsPager.collectAsLazyPagingItemsWithLifecycle(),
                 Modifier
-                    .nestedScrollWorkaround(vm.detailsTabLazyListState, connectedScrollState)
+                    .nestedScrollWorkaround(state.detailsTabLazyListState, connectedScrollState)
                     .nestedScroll(connectedScrollState.nestedScrollConnection),
-                vm.detailsTabLazyListState,
+                state.detailsTabLazyListState,
                 contentPadding = contentPadding,
             )
         },
         commentsTab = { contentPadding ->
             SubjectDetailsDefaults.SubjectCommentColumn(
-                state = vm.subjectCommentState,
+                state = state.subjectCommentState,
                 onClickUrl = {
                     RichTextDefaults.checkSanityAndOpen(it, browserNavigator, toaster)
                 },
                 onClickImage = { imageViewer.viewImage(it) },
                 connectedScrollState,
                 Modifier.fillMaxSize(),
-                lazyListState = vm.commentTabLazyListState,
+                lazyListState = state.commentTabLazyListState,
                 contentPadding = contentPadding,
             )
         },
@@ -215,9 +233,8 @@ enum class SubjectDetailsTab {
  * 一部番的详情页
  */
 @Composable
-fun SubjectDetailsPage(
+fun SubjectDetailsPageLayout(
     state: SubjectDetailsState,
-    onClickOpenExternal: () -> Unit,
     collectionData: @Composable () -> Unit,
     collectionActions: @Composable () -> Unit,
     rating: @Composable () -> Unit,
@@ -234,6 +251,11 @@ fun SubjectDetailsPage(
     val scope = rememberCoroutineScope()
     val backgroundColor = AniThemeDefaults.pageContentBackgroundColor
     val stickyTopBarColor = AniThemeDefaults.navigationContainerColor
+
+    val urlHandler = LocalUriHandler.current
+    val onClickOpenExternal = {
+        urlHandler.openUri("https://bgm.tv/subject/${state.info.subjectId}")
+    }
     Scaffold(
         topBar = {
             if (showTopBar) {

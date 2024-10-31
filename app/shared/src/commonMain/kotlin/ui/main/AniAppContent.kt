@@ -76,7 +76,7 @@ import me.him188.ani.app.ui.settings.tabs.media.torrent.peer.PeerFilterSettingsP
 import me.him188.ani.app.ui.settings.tabs.media.torrent.peer.PeerFilterSettingsViewModel
 import me.him188.ani.app.ui.subject.cache.SubjectCacheScene
 import me.him188.ani.app.ui.subject.cache.SubjectCacheViewModelImpl
-import me.him188.ani.app.ui.subject.details.SubjectDetailsScene
+import me.him188.ani.app.ui.subject.details.SubjectDetailsPage
 import me.him188.ani.app.ui.subject.details.SubjectDetailsViewModel
 import me.him188.ani.app.ui.subject.episode.EpisodeScene
 import me.him188.ani.app.ui.subject.episode.EpisodeViewModel
@@ -237,7 +237,7 @@ private fun AniAppContentImpl(
                 val vm = viewModel<SubjectDetailsViewModel>(key = details.subjectId.toString()) {
                     SubjectDetailsViewModel(details.subjectId)
                 }
-                SubjectDetailsScene(
+                SubjectDetailsPage(
                     vm,
                     onPlay = { aniNavigator.navigateEpisodeDetails(details.subjectId, it) },
                     windowInsets = windowInsets,

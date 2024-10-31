@@ -60,7 +60,6 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.domain.session.AuthState
@@ -75,8 +74,8 @@ import me.him188.ani.app.ui.subject.collection.components.AiringLabel
 import me.him188.ani.app.ui.subject.collection.components.AiringLabelState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeDialogsHost
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
-import me.him188.ani.app.ui.subject.details.SubjectDetailsScene
-import me.him188.ani.app.ui.subject.details.SubjectDetailsViewModel
+import me.him188.ani.app.ui.subject.details.SubjectDetailsPage
+import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateLoader
 import me.him188.ani.app.ui.subject.episode.EpisodePresentation
 import me.him188.ani.app.ui.subject.episode.details.components.DanmakuMatchInfoGrid
 import me.him188.ani.app.ui.subject.episode.details.components.EpisodeWatchStatusButton
@@ -98,12 +97,16 @@ import me.him188.ani.utils.platform.isDesktop
 class EpisodeDetailsState(
     episodePresentation: State<EpisodePresentation>,
     subjectInfo: State<SubjectInfo>,
-    val airingLabelState: AiringLabelState
+    val airingLabelState: AiringLabelState,
+    val subjectDetailsStateLoader: SubjectDetailsStateLoader,
 ) {
     private val episode by episodePresentation
     private val subject by subjectInfo
 
     val subjectId by derivedStateOf { subject.subjectId }
+//    var subjectDetailsState by mutableStateOf<SubjectDetailsState?>(null)
+//    val subjectDetailsStateError: SearchProblem
+
     val episodeTitle by derivedStateOf { episode.title }
     val episodeSort by derivedStateOf { episode.sort }
     val subjectTitle by derivedStateOf { subject.displayName }
@@ -135,17 +138,16 @@ fun EpisodeDetails(
     }
 
     if (state.subjectId != 0) {
-        val subjectDetailsViewModel =
-            viewModel(key = state.subjectId.toString()) { SubjectDetailsViewModel(state.subjectId) }
-        if (showSubjectDetails) {
+        val subjectDetailsState = state.subjectDetailsStateLoader.subjectDetailsState
+        if (showSubjectDetails && subjectDetailsState != null) {
             ModalBottomSheet(
                 { showSubjectDetails = false },
                 sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = LocalPlatform.current.isDesktop()),
                 modifier = Modifier.desktopTitleBarPadding().statusBarsPadding(),
                 contentWindowInsets = { BottomSheetDefaults.windowInsets.add(WindowInsets.desktopTitleBar()) },
             ) {
-                SubjectDetailsScene(
-                    subjectDetailsViewModel,
+                SubjectDetailsPage(
+                    subjectDetailsState,
                     onPlay = onSwitchEpisode,
                     showTopBar = false,
                     showBlurredBackground = false,
@@ -329,6 +331,7 @@ fun EpisodeDetails(
         },
         onExpandSubject = {
             showSubjectDetails = true
+            state.subjectDetailsStateLoader.load(state.subjectId)
         },
         modifier = modifier,
         contentPadding = contentPadding,

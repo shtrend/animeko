@@ -192,9 +192,13 @@ fun rememberTestSubjectProgressState(
     info: SubjectProgressInfo = SubjectProgressInfo.Done,
 ): SubjectProgressState {
     return remember {
-        SubjectProgressState(
-            info = stateOf(info),
-            episodeProgressInfos = mutableStateOf(emptyList()),
-        )
+        createTestSubjectProgressState(info)
     }
 }
+
+@TestOnly
+fun createTestSubjectProgressState(info: SubjectProgressInfo = SubjectProgressInfo.Done) =
+    SubjectProgressState(
+        info = stateOf(info),
+        episodeProgressInfos = mutableStateOf(emptyList()),
+    )

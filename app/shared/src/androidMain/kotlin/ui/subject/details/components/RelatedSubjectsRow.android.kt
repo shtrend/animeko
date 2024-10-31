@@ -16,8 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.search.createTestPager
 import me.him188.ani.app.ui.subject.details.TestRelatedSubjects
-import me.him188.ani.app.ui.subject.details.createTestPager
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @PreviewLightDark

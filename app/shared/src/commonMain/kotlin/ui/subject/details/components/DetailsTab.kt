@@ -68,7 +68,16 @@ import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
 
 
-object SubjectDetailsDefaults
+object SubjectDetailsDefaults {
+    @Composable
+    fun Title(text: String) {
+        Text(
+            text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
 
 
 @Suppress("UnusedReceiverParameter")
