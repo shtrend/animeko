@@ -175,7 +175,7 @@ val LazyPagingItems<*>.isLoadingFirstOrNextPage: Boolean
 
 @Stable
 val LazyPagingItems<*>.isLoadingNextPage: Boolean
-    get() = isLoadingFirstOrNextPage && !isLoadingFirstPage
+    get() = isLoadingFirstOrNextPage
 
 @Stable
 val LazyPagingItems<*>.hasFirstPage: Boolean
