@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
@@ -26,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
+import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
@@ -59,6 +61,9 @@ class ExplorationPageState(
     val followedSubjectsPager: Flow<PagingData<FollowedSubjectInfo>>,
 ) {
     val selfInfo by selfInfoState
+
+    val trendingSubjectsCarouselState = CarouselState(itemCount = { trendingSubjectsState.numItems })
+    val followedSubjectsLazyRowState = LazyListState()
 }
 
 @Composable
@@ -113,6 +118,7 @@ fun ExplorationPage(
                     navigator.navigateSubjectDetails(it.bangumiId)
                 },
                 contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 8.dp),
+                carouselState = state.trendingSubjectsCarouselState,
             )
 
             NavTitleHeader(
@@ -126,6 +132,7 @@ fun ExplorationPage(
                     navigator.navigateSubjectDetails(it.subjectInfo.subjectId)
                 },
                 contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 8.dp),
+                lazyListState = state.followedSubjectsLazyRowState,
             )
         }
     }

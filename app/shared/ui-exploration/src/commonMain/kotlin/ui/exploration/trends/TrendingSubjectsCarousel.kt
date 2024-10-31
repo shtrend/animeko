@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
 import androidx.compose.material3.carousel.CarouselDefaults
+import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.material3.carousel.HorizontalMultiBrowseCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.runtime.Composable
@@ -44,11 +45,11 @@ fun TrendingSubjectsCarousel(
     contentPadding: PaddingValues = PaddingValues(0.dp),
     itemSpacing: Dp = 8.dp,
     modifier: Modifier = Modifier,
-) {
-    val size = CarouselItemDefaults.itemSize()
-    val carouselState = rememberCarouselState(initialItem = 0) {
+    carouselState: CarouselState = rememberCarouselState(initialItem = 0) {
         state.numItems
     }
+) {
+    val size = CarouselItemDefaults.itemSize()
     HorizontalMultiBrowseCarousel(
         carouselState,
         preferredItemWidth = size.preferredWidth,
