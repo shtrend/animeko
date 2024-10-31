@@ -69,7 +69,7 @@ class SubjectPreviewItemInfo(
                 append(
                     (sourceTag + genreTags)
                         .take(3)
-                        .joinToString(" / "),
+                        .joinToString(" / ") { it.name },
                 )
             }
             val staff = relatedPersonList?.let {
