@@ -58,6 +58,12 @@ class SubjectDetailsStateLoader(
         }
     }
 
+    fun clear() {
+        tasker.cancel()
+        subjectDetailsStateProblem = null
+        subjectDetailsState = null
+    }
+
     var subjectDetailsStateProblem: SearchProblem? by mutableStateOf(null)
         private set
     var subjectDetailsState: SubjectDetailsState? by mutableStateOf(null)
