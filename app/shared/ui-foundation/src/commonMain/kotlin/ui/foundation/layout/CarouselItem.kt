@@ -55,7 +55,7 @@ fun CarouselItemScope.CarouselItem(
     supportingText: @Composable () -> Unit = {},
     overlay: @Composable () -> Unit = {},
     colors: CarouselItemColors = CarouselItemDefaults.colors(),
-    shape: Shape = MaterialTheme.shapes.extraLarge,
+    shape: Shape = CarouselItemDefaults.shape,
     image: @Composable () -> Unit,
 ) {
     val maskShape = rememberMaskShape(shape)
@@ -96,6 +96,10 @@ data class CarouselItemColors(
 
 @Stable
 object CarouselItemDefaults {
+    val shape: Shape
+        @Composable
+        get() = MaterialTheme.shapes.extraLarge
+
     @Composable
     fun colors(): CarouselItemColors = aniDarkColorTheme().run {
         return CarouselItemColors(onSurface, onSurface)
