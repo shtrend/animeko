@@ -14,7 +14,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.search.SearchProblem
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -36,17 +38,23 @@ class SubjectDetailsStateLoader(
         subjectId: Int
     ) {
         tasker.launch {
-            subjectDetailsStateProblem = null
+            withContext(Dispatchers.Main) {
+                subjectDetailsStateProblem = null
+            }
             val resp = try {
                 subjectDetailsStateFactory.create(subjectId).first()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                subjectDetailsStateProblem = SearchProblem.fromException(e)
-                subjectDetailsState = null
+                withContext(Dispatchers.Main) {
+                    subjectDetailsStateProblem = SearchProblem.fromException(e)
+                    subjectDetailsState = null
+                }
                 return@launch
             }
-            subjectDetailsState = resp
+            withContext(Dispatchers.Main) {
+                subjectDetailsState = resp
+            }
         }
     }
 
