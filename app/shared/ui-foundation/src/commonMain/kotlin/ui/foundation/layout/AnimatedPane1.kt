@@ -14,8 +14,10 @@ package me.him188.ani.app.ui.foundation.layout
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldScope
@@ -34,6 +36,7 @@ import me.him188.ani.app.ui.foundation.theme.EasingDurations
 @Composable
 fun ThreePaneScaffoldScope.AnimatedPane1(
     modifier: Modifier = Modifier,
+    useSharedTransition: Boolean = false, // changed: for shared transitions
     content: (@Composable AnimatedVisibilityScope.() -> Unit),
 ) {
     val keepShowing =
@@ -52,14 +55,22 @@ fun ThreePaneScaffoldScope.AnimatedPane1(
                 enabled = keepShowing,
             )
             .then(if (keepShowing) Modifier else Modifier.clipToBounds()),
-        enter = fadeIn(
-            tween(
-                EasingDurations.standardAccelerate,
-                delayMillis = EasingDurations.standardDecelerate,
-                easing = StandardAccelerate,
-            ),
-        ), // changed 原生的动画会回弹, 与目前的整个 APP 设计风格相差太多了
-        exit = fadeOut(feedItemFadeOutSpec), // changed
+        enter = if (useSharedTransition) {
+            fadeIn() + expandVertically()
+        } else {
+            fadeIn(
+                tween(
+                    EasingDurations.standardAccelerate,
+                    delayMillis = EasingDurations.standardDecelerate,
+                    easing = StandardAccelerate,
+                ),
+            )
+        }, // changed 原生的动画会回弹, 与目前的整个 APP 设计风格相差太多了
+        exit = if (useSharedTransition) {
+            fadeOut() + shrinkVertically()
+        } else {
+            fadeOut(feedItemFadeOutSpec)
+        }, // changed
     ) {
         this.content()
     }
