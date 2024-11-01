@@ -172,4 +172,4 @@ internal fun createTestAiringLabelState(
 
 
 @TestOnly
-internal val TestSubjectAiringInfo get() = SubjectAiringInfo.EmptyCompleted
+val TestSubjectAiringInfo get() = SubjectAiringInfo.EmptyCompleted
