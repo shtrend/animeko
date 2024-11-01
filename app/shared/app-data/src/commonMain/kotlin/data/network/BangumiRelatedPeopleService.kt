@@ -109,6 +109,7 @@ class BangumiRelatedPeopleService(
     private suspend fun queryGraphQLCharacters(
         ids: Sequence<Int>,
     ) = client.executeGraphQL(
+        "BangumiRelatedPeopleService.queryGraphQLCharacters",
         """
             query MyQuery {
               ${ids.distinct().joinToString("\n") { "c${it}: character(id: ${it}) { ...CharacterFragment }" }}
@@ -132,6 +133,7 @@ class BangumiRelatedPeopleService(
     private suspend fun queryGraphQLPersons(
         ids: Sequence<Int>,
     ) = client.executeGraphQL(
+        "BangumiRelatedPeopleService.queryGraphQLPersons",
         """
             query MyQuery {
               ${ids.joinToString("\n") { "c${it}: person(id: ${it}) { ...CharacterFragment }" }}
