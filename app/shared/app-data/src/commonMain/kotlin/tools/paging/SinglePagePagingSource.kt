@@ -15,12 +15,14 @@ import kotlin.coroutines.cancellation.CancellationException
 
 @Suppress("FunctionName")
 fun <Key : Any, V : Any> SinglePagePagingSource(
-    load: suspend (params: PagingSource.LoadParams<Key>) -> PagingSource.LoadResult<Key, V>
+    load: suspend PagingSource<Key, V>.(params: PagingSource.LoadParams<Key>) -> PagingSource.LoadResult<Key, V>
 ): PagingSource<Key, V> {
+    @Suppress("UnnecessaryVariable", "RedundantSuppression")
+    val load1 = load
     return object : PagingSource<Key, V>() {
         override suspend fun load(params: LoadParams<Key>): LoadResult<Key, V> {
             return try {
-                load(params)
+                load1(params)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

@@ -12,7 +12,9 @@ package me.him188.ani.app.ui.exploration.followed
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -28,12 +30,14 @@ import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
@@ -50,12 +54,16 @@ import me.him188.ani.app.ui.foundation.layout.BasicCarouselItem
 import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults
 import me.him188.ani.app.ui.foundation.layout.compareTo
 import me.him188.ani.app.ui.foundation.stateOf
+import me.him188.ani.app.ui.search.SearchDefaults
+import me.him188.ani.app.ui.search.isLoadingFirstPage
+import me.him188.ani.app.ui.search.rememberSearchErrorState
 import me.him188.ani.app.ui.subject.AiringLabelState
 
 // https://www.figma.com/design/LET1n9mmDa6npDTIlUuJjU/Animeko?node-id=62-4581&node-type=frame&t=Evw0PwXZHXQNgEm3-0
 @Composable
 fun FollowedSubjectsLazyRow(
     items: LazyPagingItems<FollowedSubjectInfo>, // null means placeholder
+//    items: List<FollowedSubjectInfo?>, // null means placeholder
     onClick: (FollowedSubjectInfo) -> Unit,
     onPlay: (FollowedSubjectInfo) -> Unit,
     modifier: Modifier = Modifier,
@@ -73,6 +81,41 @@ fun FollowedSubjectsLazyRow(
         horizontalArrangement = layoutParameters.horizontalArrangement,
         verticalAlignment = verticalAlignment,
     ) {
+//        itemsIndexed(
+//            items,
+//            key = { index, item -> item?.subjectInfo?.subjectId ?: -index },
+//            contentType = { _, item -> item?.subjectProgressInfo?.hasNewEpisodeToPlay == true },
+//        ) { _, item ->
+        when {
+            items.isLoadingFirstPage -> {
+                // placeholders
+                items(8) {
+                    FollowedSubjectItem(
+                        null,
+                        onClick = { },
+                        onPlay = { },
+                        layoutParameters.imageSize,
+                        layoutParameters.shape,
+                    )
+                }
+            }
+
+            items.loadState.hasError -> {
+                item {
+                    Box(
+                        Modifier
+                            .sizeIn(
+                                minHeight = Dp.Hairline,// 保证最小大小, 否则 LazyColumn 滑动可能有 bug
+                                minWidth = Dp.Hairline,
+                            )
+                            .padding(bottom = 8.dp),
+                    ) {
+                        val problem by items.rememberSearchErrorState()
+                        SearchDefaults.SearchProblemCard(problem, {}, {})
+                    }
+                }
+            }
+        }
         items(
             items.itemCount,
             key = items.itemKey { it.subjectInfo.subjectId },

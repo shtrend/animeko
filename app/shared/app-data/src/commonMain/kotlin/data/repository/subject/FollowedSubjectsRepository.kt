@@ -9,8 +9,12 @@
 
 package me.him188.ani.app.data.repository.subject
 
+import androidx.paging.LoadState
+import androidx.paging.LoadStates
+import androidx.paging.PagingData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.emitAll
@@ -21,6 +25,7 @@ import me.him188.ani.app.data.models.subject.FollowedSubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.data.models.subject.hasNewEpisodeToPlay
+import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -39,7 +44,7 @@ class FollowedSubjectsRepository(
 //    private val subjectCollectionDao: SubjectCollectionDao,
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
 ) {
-    fun followedSubjectsFlow(
+    private fun followedSubjectsFlow(
         updatePeriod: Duration = 1.hours,
     ): Flow<List<FollowedSubjectInfo>> {
         require(updatePeriod > Duration.ZERO) { "updatePeriod must be positive" }
@@ -91,8 +96,27 @@ class FollowedSubjectsRepository(
                 .apply {
                     sortWith(sorter)
                 }
+        }.catch {
+            RepositoryException.wrapOrThrowCancellation(it)
         }.flowOn(ioDispatcher)
     }
+
+    fun followedSubjectsPager(
+        updatePeriod: Duration = 1.hours,
+    ) = followedSubjectsFlow()
+        .map {
+            PagingData.from(it)
+        }.catch { e ->
+            emit(
+                PagingData.empty(
+                    sourceLoadStates = LoadStates(
+                        refresh = LoadState.NotLoading(true),
+                        prepend = LoadState.NotLoading(true),
+                        append = LoadState.Error(e),
+                    ),
+                ),
+            )
+        }
 
     private companion object {
         val sorter: Comparator<FollowedSubjectInfo> =

@@ -10,7 +10,6 @@
 package me.him188.ani.app.ui.main
 
 import androidx.compose.runtime.Stable
-import androidx.paging.PagingData
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.network.TrendsRepository
@@ -46,8 +45,9 @@ class ExplorationPageViewModel : AbstractViewModel(), KoinComponent {
                 .map { it.subjects }
                 .produceState(null),
         ),
-        followedSubjectsPager = followedSubjectsRepository.followedSubjectsFlow().map {
-            PagingData.from(it)
-        },
+        followedSubjectsPager = followedSubjectsRepository.followedSubjectsPager(),
+//            .onStart<List<FollowedSubjectInfo?>> {
+//                emit(arrayOfNulls<FollowedSubjectInfo>(10).toList())
+//            }
     )
 }
