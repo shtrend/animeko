@@ -40,11 +40,10 @@ class ExplorationPageViewModel : AbstractViewModel(), KoinComponent {
         authState,
         selfInfoState,
         TrendingSubjectsState(
-            suspend { trendsRepository.getTrending() }
+            suspend { trendsRepository.getTrendsInfo() }
                 .asFlow()
-                .map { it.getOrNull() }
                 .retryUntilSuccess()
-                .map { it?.subjects }
+                .map { it.subjects }
                 .produceState(null),
         ),
         followedSubjectsPager = followedSubjectsRepository.followedSubjectsFlow().map {
