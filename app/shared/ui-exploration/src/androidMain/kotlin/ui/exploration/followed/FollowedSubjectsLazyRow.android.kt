@@ -27,6 +27,7 @@ fun PreviewFollowedSubjectsLazyRow() = ProvideFoundationCompositionLocalsForPrev
         FollowedSubjectsLazyRow(
             items = rememberTestLazyPagingItems(TestFollowedSubjectInfos),
             onClick = {},
+            onPlay = {},
         )
     }
 }

@@ -12,6 +12,7 @@ package me.him188.ani.app.ui.foundation.layout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
@@ -54,7 +55,7 @@ fun CarouselItemScope.CarouselItem(
     label: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     supportingText: @Composable () -> Unit = {},
-    overlay: @Composable () -> Unit = {},
+    overlay: @Composable BoxScope.() -> Unit = {},
     colors: CarouselItemColors = CarouselItemDefaults.colors(),
     shape: Shape = CarouselItemDefaults.shape,
     image: @Composable () -> Unit,
@@ -82,7 +83,7 @@ fun BasicCarouselItem(
     label: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     supportingText: @Composable () -> Unit = {},
-    overlay: @Composable () -> Unit = {},
+    overlay: @Composable BoxScope.() -> Unit = {},
     colors: CarouselItemColors = CarouselItemDefaults.colors(),
     maskShape: Shape = RectangleShape,
     image: @Composable () -> Unit,
@@ -112,7 +113,9 @@ fun BasicCarouselItem(
                 }
             }
         }
-        overlay()
+        Box(Modifier.matchParentSize()) {
+            overlay()
+        }
     }
 }
 

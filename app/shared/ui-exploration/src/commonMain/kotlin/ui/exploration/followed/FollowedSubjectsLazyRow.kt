@@ -16,6 +16,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.PlayArrow
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -53,6 +57,7 @@ import me.him188.ani.app.ui.subject.AiringLabelState
 fun FollowedSubjectsLazyRow(
     items: LazyPagingItems<FollowedSubjectInfo>, // null means placeholder
     onClick: (FollowedSubjectInfo) -> Unit,
+    onPlay: (FollowedSubjectInfo) -> Unit,
     modifier: Modifier = Modifier,
     layoutParameters: FollowedSubjectsLayoutParameters = FollowedSubjectsDefaults.layoutParameters(
         currentWindowAdaptiveInfo(),
@@ -74,7 +79,13 @@ fun FollowedSubjectsLazyRow(
             contentType = items.itemContentType { it.subjectProgressInfo.hasNewEpisodeToPlay },
         ) { index ->
             val item = items[index]
-            FollowedSubjectItem(item, onClick, layoutParameters.imageSize, layoutParameters.shape)
+            FollowedSubjectItem(
+                item,
+                onClick = { item?.let { onClick(it) } },
+                onPlay = { item?.let { onPlay(it) } },
+                layoutParameters.imageSize,
+                layoutParameters.shape,
+            )
         }
     }
 }
@@ -82,7 +93,8 @@ fun FollowedSubjectsLazyRow(
 @Composable
 private fun FollowedSubjectItem(
     item: FollowedSubjectInfo?, // null for placeholder
-    onClick: (FollowedSubjectInfo) -> Unit,
+    onClick: () -> Unit,
+    onPlay: () -> Unit,
     imageSize: DpSize,
     shape: Shape,
     modifier: Modifier = Modifier,
@@ -104,15 +116,28 @@ private fun FollowedSubjectItem(
             }
         },
         maskShape = shape,
+        overlay = {
+            FilledTonalIconButton(
+                onClick = { onPlay() },
+                modifier = Modifier.align(Alignment.BottomEnd),
+            ) {
+                Icon(Icons.Rounded.PlayArrow, null, Modifier.size(24.dp))
+            }
+        },
     ) {
         if (item != null) {
-            Surface({ onClick(item) }) {
+            val image = @Composable {
                 AsyncImage(
                     item.subjectInfo.imageLarge,
                     modifier = Modifier.size(imageSize),
                     contentDescription = item.subjectInfo.displayName,
                     contentScale = ContentScale.Crop,
                 )
+            }
+            if (item.subjectProgressInfo.hasNewEpisodeToPlay) {
+                Surface({ onClick() }, content = image)
+            } else {
+                Surface(content = image)
             }
         } else {
             Box(Modifier.size(imageSize))

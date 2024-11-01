@@ -136,6 +136,14 @@ fun ExplorationPage(
                 onClick = {
                     navigator.navigateSubjectDetails(it.subjectInfo.subjectId)
                 },
+                onPlay = {
+                    it.subjectProgressInfo.nextEpisodeIdToPlay?.let { it1 ->
+                        navigator.navigateEpisodeDetails(
+                            it.subjectInfo.subjectId,
+                            it1,
+                        )
+                    }
+                },
                 contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 8.dp),
                 lazyListState = state.followedSubjectsLazyRowState,
             )
