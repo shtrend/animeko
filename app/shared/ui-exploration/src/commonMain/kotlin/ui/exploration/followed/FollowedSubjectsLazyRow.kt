@@ -136,11 +136,7 @@ private fun FollowedSubjectItem(
                     contentScale = ContentScale.Crop,
                 )
             }
-            if (item.subjectProgressInfo.hasNewEpisodeToPlay) {
-                Surface({ onClick() }, content = image)
-            } else {
-                Surface(content = image)
-            }
+            Surface({ onClick() }, content = image)
         } else {
             Box(Modifier.size(imageSize))
         }
