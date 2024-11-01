@@ -239,6 +239,7 @@ private fun MainSceneContent(
                                     }
                                 }
                             },
+                            navigator = listDetailNavigator,
                         )
                     }
                 }
