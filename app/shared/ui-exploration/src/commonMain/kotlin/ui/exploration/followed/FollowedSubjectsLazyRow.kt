@@ -19,11 +19,15 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
@@ -31,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
+import androidx.window.core.layout.WindowHeightSizeClass
+import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.data.models.subject.FollowedSubjectInfo
 import me.him188.ani.app.data.models.subject.hasNewEpisodeToPlay
 import me.him188.ani.app.data.models.subject.subjectInfo
@@ -38,8 +44,7 @@ import me.him188.ani.app.ui.external.placeholder.placeholder
 import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.layout.BasicCarouselItem
 import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults
-import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
-import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
+import me.him188.ani.app.ui.foundation.layout.compareTo
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.subject.AiringLabelState
 
@@ -49,21 +54,18 @@ fun FollowedSubjectsLazyRow(
     items: LazyPagingItems<FollowedSubjectInfo>, // null means placeholder
     onClick: (FollowedSubjectInfo) -> Unit,
     modifier: Modifier = Modifier,
-    imageSize: DpSize = if (currentWindowAdaptiveInfo().run { isHeightAtLeastMedium && isWidthAtLeastMedium }) {
-        DpSize(160.dp, (160.dp) / 9 * 16)
-    } else {
-        DpSize(120.dp, (120.dp) / 9 * 16)
-    },
+    layoutParameters: FollowedSubjectsLayoutParameters = FollowedSubjectsDefaults.layoutParameters(
+        currentWindowAdaptiveInfo(),
+    ),
     lazyListState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(16.dp),
     verticalAlignment: Alignment.Vertical = Alignment.Top,
 ) {
     LazyRow(
         modifier,
         lazyListState,
         contentPadding,
-        horizontalArrangement = horizontalArrangement,
+        horizontalArrangement = layoutParameters.horizontalArrangement,
         verticalAlignment = verticalAlignment,
     ) {
         items(
@@ -72,38 +74,84 @@ fun FollowedSubjectsLazyRow(
             contentType = items.itemContentType { it.subjectProgressInfo.hasNewEpisodeToPlay },
         ) { index ->
             val item = items[index]
-            BasicCarouselItem(
-                label = { CarouselItemDefaults.Text(item?.subjectInfo?.displayName ?: "") },
-                Modifier.placeholder(item == null, shape = CarouselItemDefaults.shape),
-                supportingText = {
-                    if (item != null) {
-                        val airingState = remember(item) {
-                            AiringLabelState(
-                                stateOf(item.subjectAiringInfo),
-                                stateOf(item.subjectProgressInfo),
-                            )
-                        }
-                        airingState.progressText?.let {
-                            Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        }
-                    }
-                },
-                maskShape = MaterialTheme.shapes.large,
-            ) {
-                if (item != null) {
-                    Surface({ onClick(item) }) {
-                        AsyncImage(
-                            item.subjectInfo.imageLarge,
-                            modifier = Modifier.size(imageSize),
-                            contentDescription = item.subjectInfo.displayName,
-                            contentScale = ContentScale.Crop,
-                        )
-                    }
-                } else {
-                    Box(Modifier.size(imageSize))
-                }
-            }
+            FollowedSubjectItem(item, onClick, layoutParameters.imageSize, layoutParameters.shape)
         }
     }
 }
 
+@Composable
+private fun FollowedSubjectItem(
+    item: FollowedSubjectInfo?, // null for placeholder
+    onClick: (FollowedSubjectInfo) -> Unit,
+    imageSize: DpSize,
+    shape: Shape,
+    modifier: Modifier = Modifier,
+) {
+    BasicCarouselItem(
+        label = { CarouselItemDefaults.Text(item?.subjectInfo?.displayName ?: "") },
+        modifier.placeholder(item == null, shape = shape),
+        supportingText = {
+            if (item != null) {
+                val airingState = remember(item) {
+                    AiringLabelState(
+                        stateOf(item.subjectAiringInfo),
+                        stateOf(item.subjectProgressInfo),
+                    )
+                }
+                airingState.progressText?.let {
+                    Text(it, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        },
+        maskShape = shape,
+    ) {
+        if (item != null) {
+            Surface({ onClick(item) }) {
+                AsyncImage(
+                    item.subjectInfo.imageLarge,
+                    modifier = Modifier.size(imageSize),
+                    contentDescription = item.subjectInfo.displayName,
+                    contentScale = ContentScale.Crop,
+                )
+            }
+        } else {
+            Box(Modifier.size(imageSize))
+        }
+    }
+}
+
+@Immutable
+data class FollowedSubjectsLayoutParameters(
+    val imageSize: DpSize,
+    val horizontalArrangement: Arrangement.Horizontal,
+    val shape: Shape,
+)
+
+@Stable
+object FollowedSubjectsDefaults {
+    @Composable
+    fun layoutParameters(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo()): FollowedSubjectsLayoutParameters {
+        val width = windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass
+        return FollowedSubjectsLayoutParameters(
+            imageSize = imageSize(windowAdaptiveInfo),
+            horizontalArrangement = when {
+                width >= WindowWidthSizeClass.EXPANDED -> Arrangement.spacedBy(16.dp)
+                width >= WindowWidthSizeClass.MEDIUM -> Arrangement.spacedBy(12.dp)
+                else -> Arrangement.spacedBy(8.dp)
+            },
+            shape = MaterialTheme.shapes.large,
+        )
+    }
+
+    private fun imageSize(windowAdaptiveInfo: WindowAdaptiveInfo): DpSize {
+        val windowSizeClass = windowAdaptiveInfo.windowSizeClass
+        val height = windowSizeClass.windowHeightSizeClass
+        val width = windowSizeClass.windowWidthSizeClass
+        val baseSize = when {
+            height >= WindowHeightSizeClass.MEDIUM && width >= WindowWidthSizeClass.EXPANDED -> 160.dp
+            height >= WindowHeightSizeClass.MEDIUM && width >= WindowWidthSizeClass.MEDIUM -> 140.dp
+            else -> 120.dp
+        }
+        return DpSize(baseSize, (baseSize) / 9 * 16)
+    }
+}
