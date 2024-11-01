@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.exploration
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.Settings
@@ -64,6 +66,9 @@ class ExplorationPageState(
 
     val trendingSubjectsCarouselState = CarouselState(itemCount = { trendingSubjectsState.numItems })
     val followedSubjectsLazyRowState = LazyListState()
+
+
+    val pageScrollState = ScrollState(0)
 }
 
 @Composable
@@ -111,7 +116,7 @@ fun ExplorationPage(
             PaddingValues(horizontal = horizontalPadding)
 
         val navigator = LocalNavigator.current
-        Column(Modifier.padding(topBarPadding)) {
+        Column(Modifier.padding(topBarPadding).verticalScroll(state.pageScrollState)) {
             NavTitleHeader(
                 title = { Text("最高热度") },
                 contentPadding = horizontalContentPadding,
