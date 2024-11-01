@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import me.him188.ani.app.data.models.subject.ContinueWatchingStatus
 import me.him188.ani.app.data.models.subject.FollowedSubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
+import me.him188.ani.app.data.models.subject.hasNewEpisodeToPlay
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -99,7 +99,7 @@ class FollowedSubjectsRepository(
             // 不要用最后访问时间排序, 因为刷新后时间会乱
             compareByDescending<FollowedSubjectInfo> { info ->
                 // 1. 现在可以看的 > 现在不能看的
-                info.subjectProgressInfo.continueWatchingStatus.let { it is ContinueWatchingStatus.Continue || it is ContinueWatchingStatus.Start }
+                info.subjectProgressInfo.hasNewEpisodeToPlay
             }.thenByDescending { info ->
                 // 2. 在看 > 想看
                 info.subjectCollectionInfo.collectionType == UnifiedCollectionType.DOING

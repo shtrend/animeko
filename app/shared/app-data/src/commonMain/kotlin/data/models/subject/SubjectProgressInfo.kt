@@ -163,7 +163,7 @@ data class SubjectProgressInfo(
 
 @Stable
 inline val SubjectProgressInfo.hasNewEpisodeToPlay: Boolean
-    get() = nextEpisodeIdToPlay != null
+    get() = continueWatchingStatus is ContinueWatchingStatus.Start || continueWatchingStatus is ContinueWatchingStatus.Continue
 
 sealed class ContinueWatchingStatus {
     data object Start : ContinueWatchingStatus()

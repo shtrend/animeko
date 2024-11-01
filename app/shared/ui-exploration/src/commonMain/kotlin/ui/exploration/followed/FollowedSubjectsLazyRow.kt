@@ -117,11 +117,13 @@ private fun FollowedSubjectItem(
         },
         maskShape = shape,
         overlay = {
-            FilledTonalIconButton(
-                onClick = { onPlay() },
-                modifier = Modifier.align(Alignment.BottomEnd),
-            ) {
-                Icon(Icons.Rounded.PlayArrow, null, Modifier.size(24.dp))
+            if (item?.subjectProgressInfo?.hasNewEpisodeToPlay == true) {
+                FilledTonalIconButton(
+                    onClick = { onPlay() },
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                ) {
+                    Icon(Icons.Rounded.PlayArrow, null, Modifier.size(24.dp))
+                }
             }
         },
     ) {
