@@ -25,7 +25,7 @@ data class SubjectCollectionInfo(
     val collectionType: UnifiedCollectionType,
     val subjectInfo: SubjectInfo,
     val selfRatingInfo: SelfRatingInfo,
-    val episodes: List<EpisodeCollectionInfo>,
+    val episodes: List<EpisodeCollectionInfo>, // sorted by episode sort ascending
     val airingInfo: SubjectAiringInfo,
     val progressInfo: SubjectProgressInfo,
 ) {
