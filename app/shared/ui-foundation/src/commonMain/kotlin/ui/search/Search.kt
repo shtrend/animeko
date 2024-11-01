@@ -504,7 +504,7 @@ object SearchDefaults {
 }
 
 @Composable
-private fun <T : Any> LazyPagingItems<T>.rememberSearchErrorState(): State<SearchProblem?> {
+fun <T : Any> LazyPagingItems<T>.rememberSearchErrorState(): State<SearchProblem?> {
     return remember(this) {
         derivedStateOf {
             SearchProblem.fromCombinedLoadStates(loadState)
