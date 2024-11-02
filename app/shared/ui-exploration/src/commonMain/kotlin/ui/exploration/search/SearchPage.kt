@@ -70,6 +70,8 @@ import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.TopAppBarGoBackButton
 import me.him188.ani.app.ui.search.SearchDefaults
+import me.him188.ani.app.ui.search.SearchProblemCard
+import me.him188.ani.app.ui.search.SearchResultLazyVerticalStaggeredGrid
 import me.him188.ani.app.ui.search.collectHasQueryAsState
 
 @Composable
@@ -165,10 +167,10 @@ internal fun SharedTransitionScope.SearchPageResultColumn(
 
     val bringIntoViewRequesters = remember { mutableStateMapOf<Int, BringIntoViewRequester>() }
 
-    SearchDefaults.ResultColumn(
+    SearchResultLazyVerticalStaggeredGrid(
         items,
         problem = {
-            SearchDefaults.SearchProblemCard(
+            SearchProblemCard(
                 problem = it,
                 onRetry = { items.retry() },
                 onLogin = {}, // noop

@@ -19,7 +19,6 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
-import me.him188.ani.app.ui.search.SearchDefaults.SearchProblemCard
 
 class PreviewSearchProblemProvider : PreviewParameterProvider<SearchProblem?> {
     override val values: Sequence<SearchProblem?>
