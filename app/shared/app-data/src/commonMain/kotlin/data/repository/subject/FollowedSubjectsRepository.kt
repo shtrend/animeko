@@ -103,7 +103,7 @@ class FollowedSubjectsRepository(
 
     fun followedSubjectsPager(
         updatePeriod: Duration = 1.hours,
-    ) = followedSubjectsFlow()
+    ) = followedSubjectsFlow(updatePeriod)
         .map {
             PagingData.from(it)
         }.catch { e ->
