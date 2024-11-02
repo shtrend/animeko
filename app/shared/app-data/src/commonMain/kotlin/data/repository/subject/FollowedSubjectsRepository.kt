@@ -63,7 +63,6 @@ class FollowedSubjectsRepository(
             limit = 64,
             types = listOf(
                 UnifiedCollectionType.DOING,
-                UnifiedCollectionType.WISH,
             ),
         ).combineTransform(ticker) { subjectCollectionInfoList, _ ->
             // 对于每个条目, 获取其最新的集数信息
