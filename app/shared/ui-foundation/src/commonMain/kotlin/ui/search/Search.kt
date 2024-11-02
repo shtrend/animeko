@@ -49,6 +49,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -300,7 +301,7 @@ object SearchDefaults {
         containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         if (problem == null) return
-
+        val role = SearchProblemCardRole.from(problem)
 
         @Composable
         fun IconTextButton(
@@ -419,62 +420,32 @@ object SearchDefaults {
         }
 
 
-        when (problem) {
-            // Important error
-            is SearchProblem.UnknownError,
-            SearchProblem.ServiceUnavailable,
-            SearchProblem.NetworkError -> {
-                val colors = CardDefaults.elevatedCardColors(
-                    containerColor = containerColor,
-                    contentColor = MaterialTheme.colorScheme.error,
-                )
-                ElevatedCard(
-                    modifier, shape = shape,
-                    colors = colors,
-                ) {
-                    content(colors)
-                }
-            }
-
-            // Suggestive message
-            SearchProblem.RequiresLogin -> {
-                val colors = CardDefaults.elevatedCardColors(
-                    containerColor = containerColor,
-                    contentColor = MaterialTheme.colorScheme.primary,
-                )
-                ElevatedCard(
-                    modifier, shape = shape,
-                    colors = colors,
-                ) {
-                    content(colors)
-                }
-            }
-
-            // Neutral message
-            SearchProblem.RateLimited -> {
-                val colors = CardDefaults.elevatedCardColors(
-                    containerColor = containerColor,
-                )
-                ElevatedCard(
-                    modifier, shape = shape,
-                    colors = colors,
-                ) {
-                    content(colors)
-                }
-            }
-
-            // Unimportant message
-            SearchProblem.NoResults -> {
-                val colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                ElevatedCard(
-                    modifier,
-                    colors = colors, // no 'boxing'
-                    elevation = CardDefaults.cardElevation(), // no elevation
-                ) {
-                    content(colors)
-                }
-            }
+        SearchProblemCardLayout(
+            role,
+            modifier = modifier,
+            shape = shape,
+            containerColor = containerColor,
+        ) {
+            content(cardColors)
         }
+    }
+
+
+    /**
+     * 一个卡片, 展示搜索时遇到的问题, 例如网络错误, 无搜索结果等.
+     *
+     * @param role See [rememberSearchErrorState] and [SearchProblemCardRole.from]
+     * @param content 可以是一个 [ListItem]. 使用 [SearchProblemCardScope.listItemColors] 来获取颜色.
+     */
+    @Composable
+    fun SearchProblemCardLayout(
+        role: SearchProblemCardRole,
+        modifier: Modifier = Modifier,
+        shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
+        containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        content: @Composable SearchProblemCardScope.() -> Unit,
+    ) {
+        role.Container(modifier, containerColor, shape, content)
     }
 
     @Composable
@@ -501,7 +472,192 @@ object SearchDefaults {
             }
         }
     }
+
+    @Composable
+    fun IconTextButton(
+        onClick: () -> Unit,
+        icon: @Composable (Modifier) -> Unit,
+        text: @Composable () -> Unit,
+    ) {
+        TextButton(
+            onClick,
+            contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+        ) {
+            icon(Modifier.size(ButtonDefaults.IconSize))
+            Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+            text()
+        }
+    }
 }
+
+/**
+ * @see SearchProblemCardRole.from
+ * @see SearchProblem
+ */
+@Stable
+sealed class SearchProblemCardRole {
+    @Composable
+    internal abstract fun Container(
+        modifier: Modifier = Modifier,
+        containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
+        content: @Composable SearchProblemCardScope.() -> Unit
+    )
+
+    @Stable
+    data object Neural : SearchProblemCardRole() {
+        @Composable
+        override fun Container(
+            modifier: Modifier,
+            containerColor: Color,
+            shape: Shape,
+            content: @Composable SearchProblemCardScope.() -> Unit
+        ) {
+            val colors = CardDefaults.elevatedCardColors(
+                containerColor = containerColor,
+            )
+            val colorsState by rememberUpdatedState(colors)
+            val scope = remember {
+                object : SearchProblemCardScope {
+                    override val cardColors: CardColors @Composable get() = colorsState
+                }
+            }
+            ElevatedCard(
+                modifier, shape = shape,
+                colors = colors,
+            ) {
+                scope.content()
+            }
+        }
+    }
+
+    @Stable
+    data object Unimportant : SearchProblemCardRole() {
+        @Composable
+        override fun Container(
+            modifier: Modifier,
+            containerColor: Color,
+            shape: Shape,
+            content: @Composable SearchProblemCardScope.() -> Unit
+        ) {
+            val colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+            val colorsState by rememberUpdatedState(colors)
+            val scope = remember {
+                object : SearchProblemCardScope {
+                    override val cardColors: CardColors @Composable get() = colorsState
+                }
+            }
+            ElevatedCard(
+                modifier,
+                colors = colors, // no 'boxing'
+                elevation = CardDefaults.cardElevation(), // no elevation
+            ) {
+                scope.content()
+            }
+        }
+    }
+
+    @Stable
+    data object Important : SearchProblemCardRole() {
+        @Composable
+        override fun Container(
+            modifier: Modifier,
+            containerColor: Color,
+            shape: Shape,
+            content: @Composable SearchProblemCardScope.() -> Unit
+        ) {
+            val colors = CardDefaults.elevatedCardColors(
+                containerColor = containerColor,
+                contentColor = MaterialTheme.colorScheme.error,
+            )
+            val colorsState by rememberUpdatedState(colors)
+            val scope = remember {
+                object : SearchProblemCardScope {
+                    override val cardColors: CardColors @Composable get() = colorsState
+                }
+            }
+            ElevatedCard(
+                modifier, shape = shape,
+                colors = colors,
+            ) {
+                scope.content()
+            }
+        }
+    }
+
+    @Stable
+    data object Suggestive : SearchProblemCardRole() {
+        @Composable
+        override fun Container(
+            modifier: Modifier,
+            containerColor: Color,
+            shape: Shape,
+            content: @Composable SearchProblemCardScope.() -> Unit
+        ) {
+            val colors = CardDefaults.elevatedCardColors(
+                containerColor = containerColor,
+                contentColor = MaterialTheme.colorScheme.primary,
+            )
+            val colorsState by rememberUpdatedState(colors)
+            val scope = remember {
+                object : SearchProblemCardScope {
+                    override val cardColors: CardColors @Composable get() = colorsState
+                }
+            }
+            ElevatedCard(
+                modifier, shape = shape,
+                colors = colors,
+            ) {
+                scope.content()
+            }
+        }
+    }
+
+    companion object {
+        fun from(problem: SearchProblem): SearchProblemCardRole {
+            return when (problem) {
+                // Important error
+                is SearchProblem.UnknownError,
+                SearchProblem.ServiceUnavailable,
+                SearchProblem.NetworkError -> {
+                    Important
+                }
+
+                // Suggestive message
+                SearchProblem.RequiresLogin -> {
+                    Suggestive
+                }
+
+                // Neutral message
+                SearchProblem.RateLimited -> {
+                    Neural
+                }
+
+                // Unimportant message
+                SearchProblem.NoResults -> {
+                    Unimportant
+                }
+            }
+        }
+    }
+}
+
+@Stable
+interface SearchProblemCardScope {
+    val cardColors: CardColors
+        @Composable get
+
+    val listItemColors: ListItemColors
+        @Composable get() = cardColors.run {
+            ListItemDefaults.colors(
+                containerColor = containerColor,
+                leadingIconColor = contentColor,
+                trailingIconColor = contentColor,
+                headlineColor = contentColor,
+            )
+        }
+}
+
 
 @Composable
 fun <T : Any> LazyPagingItems<T>.rememberSearchErrorState(): State<SearchProblem?> {
