@@ -19,6 +19,7 @@ import android.os.Bundle
 import android.util.Log
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.him188.ani.android.activity.MainActivity
 import me.him188.ani.app.domain.media.cache.MediaCacheNotificationTask
@@ -31,6 +32,7 @@ import me.him188.ani.app.platform.getCommonKoinModule
 import me.him188.ani.app.platform.startCommonKoinModule
 import me.him188.ani.app.ui.settings.tabs.getLogsDir
 import me.him188.ani.app.ui.settings.tabs.media.DEFAULT_TORRENT_CACHE_DIR_NAME
+import me.him188.ani.utils.coroutines.IO_
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -95,14 +97,9 @@ class AniApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        
+
         val logsDir = applicationContext.getLogsDir().absolutePath
         AndroidLoggingConfigurator.configure(logsDir)
-        runCatching {
-            JvmLogHelper.deleteOldLogs(Paths.get(logsDir))
-        }.onFailure {
-            Log.e("AniApplication", "Failed to delete old logs", it)
-        }
 
         if (processName().contains("torrent_service")) {
             // In service process, we don't need any dependency which is use in app process.
@@ -118,6 +115,13 @@ class AniApplication : Application() {
         instance = Instance()
 
         val scope = createAppRootCoroutineScope()
+        scope.launch(Dispatchers.IO_) {
+            runCatching {
+                JvmLogHelper.deleteOldLogs(Paths.get(logsDir))
+            }.onFailure {
+                Log.e("AniApplication", "Failed to delete old logs", it)
+            }
+        }
 
         val defaultTorrentCacheDir = applicationContext.filesDir
             .resolve(DEFAULT_TORRENT_CACHE_DIR_NAME).apply { mkdir() }
@@ -150,7 +154,7 @@ class AniApplication : Application() {
             // See https://github.com/aosp-mirror/platform_frameworks_base/commit/b57a50bd16ce25db441da5c1b63d48721bb90687
             val getProcessName: Method = activityThread.getDeclaredMethod("currentProcessName")
             return getProcessName.invoke(null) as String
-            
+
         } catch (e: ClassNotFoundException) {
             throw RuntimeException(e)
         } catch (e: NoSuchMethodException) {
