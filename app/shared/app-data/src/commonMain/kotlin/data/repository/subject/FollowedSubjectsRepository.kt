@@ -88,6 +88,8 @@ class FollowedSubjectsRepository(
                         )
                     }.toList()
             }
+            emit(emptyList())
+            return@combineTransform
             emitAll(subjectProgressInfos)
         }.map { followedSubjectInfoList ->
             followedSubjectInfoList
@@ -104,7 +106,10 @@ class FollowedSubjectsRepository(
         updatePeriod: Duration = 1.hours,
     ) = followedSubjectsFlow(updatePeriod)
         .map {
-            PagingData.from(it)
+            PagingData.from(
+                it,
+                NotLoading,
+            )
         }.catch { e ->
             emit(
                 PagingData.empty(
@@ -118,6 +123,12 @@ class FollowedSubjectsRepository(
         }
 
     private companion object {
+        private val NotLoading = LoadStates(
+            refresh = LoadState.NotLoading(true),
+            prepend = LoadState.NotLoading(true),
+            append = LoadState.NotLoading(true),
+        )
+
         val sorter: Comparator<FollowedSubjectInfo> =
             // 不要用最后访问时间排序, 因为刷新后时间会乱
             compareByDescending<FollowedSubjectInfo> { info ->

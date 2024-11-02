@@ -12,7 +12,6 @@ package me.him188.ani.app.ui.exploration.followed
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyListState
@@ -22,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,6 +55,8 @@ import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults
 import me.him188.ani.app.ui.foundation.layout.compareTo
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.search.SearchDefaults
+import me.him188.ani.app.ui.search.SearchProblemCardRole
+import me.him188.ani.app.ui.search.isFinishedAndEmpty
 import me.him188.ani.app.ui.search.isLoadingFirstPage
 import me.him188.ani.app.ui.search.rememberSearchErrorState
 import me.him188.ani.app.ui.subject.AiringLabelState
@@ -107,11 +109,31 @@ fun FollowedSubjectsLazyRow(
                             .sizeIn(
                                 minHeight = Dp.Hairline,// 保证最小大小, 否则 LazyColumn 滑动可能有 bug
                                 minWidth = Dp.Hairline,
-                            )
-                            .padding(bottom = 8.dp),
+                            ),
                     ) {
                         val problem by items.rememberSearchErrorState()
                         SearchDefaults.SearchProblemCard(problem, {}, {})
+                    }
+                }
+            }
+
+            items.isFinishedAndEmpty -> {
+                item {
+                    Box(
+                        Modifier
+                            .sizeIn(
+                                minHeight = Dp.Hairline,// 保证最小大小, 否则 LazyColumn 滑动可能有 bug
+                                minWidth = Dp.Hairline,
+                            ),
+                    ) {
+                        SearchDefaults.SearchProblemCardLayout(
+                            SearchProblemCardRole.Unimportant,
+                        ) {
+                            ListItem(
+                                headlineContent = { Text("将番剧收藏为 \"在看\" 后将在这里显示") },
+                                colors = listItemColors,
+                            )
+                        }
                     }
                 }
             }
