@@ -88,8 +88,6 @@ class FollowedSubjectsRepository(
                         )
                     }.toList()
             }
-            emit(emptyList())
-            return@combineTransform
             emitAll(subjectProgressInfos)
         }.map { followedSubjectInfoList ->
             followedSubjectInfoList
