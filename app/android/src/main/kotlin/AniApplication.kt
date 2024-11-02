@@ -122,14 +122,6 @@ class AniApplication : Application() {
         val defaultTorrentCacheDir = applicationContext.filesDir
             .resolve(DEFAULT_TORRENT_CACHE_DIR_NAME).apply { mkdir() }
 
-        // since 3.5, 删除 libtorrent4j 缓存, 大概保留到 3.8 就可以删除个代码了
-        defaultTorrentCacheDir.resolve("libtorrent4j").let {
-            if (it.exists()) {
-                it.deleteRecursively()
-                Log.w("AniApplication", "Deleted libtorrent4j cache")
-            }
-        }
-
         OkHttp // survive R8
 
         startKoin {
