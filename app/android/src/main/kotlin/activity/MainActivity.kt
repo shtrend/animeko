@@ -10,6 +10,7 @@
 package me.him188.ani.android.activity
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.SystemBarStyle
@@ -28,6 +29,7 @@ import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.configIfEnabledOrNull
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.session.SessionManager
+import me.him188.ani.app.domain.torrent.service.TorrentServiceConnection
 import me.him188.ani.app.navigation.AniNavigator
 import me.him188.ani.app.navigation.NavRoutes
 import me.him188.ani.app.platform.AppStartupTasks
@@ -53,10 +55,17 @@ import org.koin.mp.KoinPlatformTools
 class MainActivity : AniComponentActivity() {
     private val sessionManager: SessionManager by inject()
     private val meteredNetworkDetector: MeteredNetworkDetector by inject()
+    private val torrentServiceConnector: TorrentServiceConnection by inject()
     
     private val logger = logger(MainActivity::class)
 
     private val aniNavigator = AniNavigator()
+    
+    init {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            lifecycle.addObserver(torrentServiceConnector)
+        }
+    }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
@@ -132,5 +141,10 @@ class MainActivity : AniComponentActivity() {
                 logger.error(it)
             }
         }
+    }
+
+    override fun onDestroy() {
+        lifecycle.removeObserver(torrentServiceConnector)
+        super.onDestroy()
     }
 }

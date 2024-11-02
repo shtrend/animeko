@@ -11,13 +11,8 @@ package me.him188.ani.app.torrent.api.pieces
 
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.minus
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.plus
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.suspendCancellableCoroutine
+import me.him188.ani.app.torrent.api.pieces.PieceListSubscriptions.Subscription
 import kotlin.jvm.JvmField
 
 /**
@@ -35,20 +30,18 @@ import kotlin.jvm.JvmField
  *
  * @see Piece
  */
-sealed class PieceList(
+abstract class PieceList(
     // 这些 array 大小必须相同
     /**
      * 每个 piece 的大小 bytes.
      */
-    @PublishedApi
     @JvmField
-    internal val sizes: LongArray, // immutable
+    val sizes: LongArray, // immutable
     /**
      * piece 的数据偏移量, 即在种子文件中的 offset bytes.
      */
-    @PublishedApi
     @JvmField
-    internal val dataOffsets: LongArray,// immutable
+    val dataOffsets: LongArray,// immutable
     /**
      * 第 0 个元素的 piece index. 如果列表为空则为 `0`.
      */
@@ -69,8 +62,7 @@ sealed class PieceList(
     abstract var Piece.state: PieceState
     abstract fun Piece.compareAndSetState(expect: PieceState, update: PieceState): Boolean
 
-    @PublishedApi
-    internal inline val Piece.indexInList get() = pieceIndex - initialPieceIndex
+    inline val Piece.indexInList get() = pieceIndex - initialPieceIndex
 
     /**
      * 该 piece 的数据长度 bytes
@@ -103,9 +95,8 @@ sealed class PieceList(
      * 不会检查是否越界.
      */
     @OptIn(RawPieceConstructor::class)
-    @PublishedApi
     // inline is needed to help compiler vectorization
-    internal inline fun createPieceByListIndexUnsafe(listIndex: Int): Piece =
+    inline fun createPieceByListIndexUnsafe(listIndex: Int): Piece =
         Piece(initialPieceIndex + listIndex)
 
     /**
@@ -153,7 +144,7 @@ sealed class PieceList(
                 pieceOffset += sizes[i]
             }
 
-            return PieceListImpl(sizes, offsets, states, initialPieceIndex)
+            return DefaultPieceList(sizes, offsets, states, initialPieceIndex)
         }
 
         fun create(
@@ -180,30 +171,32 @@ sealed class PieceList(
             sizes[numPieces - 1] = totalSize % pieceSize
             offsets[numPieces - 1] = totalSize - (totalSize % pieceSize) + initialDataOffset
 
-            return PieceListImpl(sizes, offsets, states, initialPieceIndex)
+            return DefaultPieceList(sizes, offsets, states, initialPieceIndex)
         }
 
     }
 }
 
-private class PieceListImpl(
+
+
+class DefaultPieceList(
     sizes: LongArray, // immutable
     dataOffsets: LongArray, // immutable
     private val states: Array<PieceState>, // mutable
     initialPieceIndex: Int, // 第 0 个元素的 piece index
-) : PieceList(sizes, dataOffsets, initialPieceIndex) {
+) : PieceList(sizes, dataOffsets, initialPieceIndex), PieceSubscribable {
     init {
         require(sizes.size == dataOffsets.size) { "sizes.size != dataOffsets.size" }
         require(sizes.size == states.size) { "sizes.size != states.size" }
     }
 
-    private val subscriptions = PieceListSubscriptions()
+    internal val subscriptions = PieceListSubscriptions()
 
     override var Piece.state: PieceState
-        get() = states[pieceIndex]
+        get() = states[indexInList]
         set(value) {
-            states[pieceIndex] = value
-            subscriptions.notifyPieceStateChanges(this@PieceListImpl, this)
+            states[indexInList] = value
+            subscriptions.notifyPieceStateChanges(this@DefaultPieceList, this)
         }
 
     private val lock = SynchronizedObject()
@@ -216,6 +209,20 @@ private class PieceListImpl(
             }
             return false
         }
+    }
+
+    /**
+     * subscribe state changes of all pieces.
+     */
+    override fun subscribePieceState(piece: Piece, onStateChange: PieceList.(Piece, PieceState) -> Unit): Subscription {
+        return subscriptions.subscribe(piece.pieceIndex) { _, p -> onStateChange(p, p.state) }
+    }
+
+    /**
+     * unsubscribe states
+     */
+    override fun unsubscribePieceState(subscription: Subscription) {
+        subscriptions.unsubscribe(subscription)
     }
 
     override suspend fun Piece.awaitFinished() {
@@ -235,47 +242,7 @@ private class PieceListImpl(
     }
 }
 
-class PieceListSubscriptions {
-    // use object identity
-    class Subscription(
-        val pieceIndex: Int,
-        val onStateChange: PieceList.(Subscription, Piece) -> Unit,
-    )
-
-    private val subscriptions: MutableStateFlow<PersistentList<Subscription>> = MutableStateFlow(persistentListOf())
-
-    /**
-     * Call related subscribers
-     */
-    fun notifyPieceStateChanges(pieceList: PieceList, changedPiece: Piece) {
-        val subscriptions = subscriptions.value
-        for (subscription in subscriptions) {
-            if (subscription.pieceIndex == changedPiece.pieceIndex) {
-                subscription.onStateChange(pieceList, subscription, changedPiece)
-            }
-        }
-    }
-
-    fun subscribe(pieceIndex: Int, onStateChange: PieceList.(Subscription, Piece) -> Unit): Subscription {
-        val subscriptions = subscriptions
-        while (true) {
-            val prevValue = subscriptions.value
-            val sub = Subscription(pieceIndex, onStateChange)
-            val nextValue = prevValue.plus(sub)
-            if (subscriptions.compareAndSet(prevValue, nextValue)) {
-                return sub
-            }
-        }
-    }
-
-    fun unsubscribe(subscription: Subscription) {
-        subscriptions.update { list ->
-            list.minus(subscription)
-        }
-    }
-}
-
-private class PieceListSlice(
+class PieceListSlice(
     private val delegate: PieceList,
     startIndex: Int,
     endIndex: Int,
@@ -283,11 +250,12 @@ private class PieceListSlice(
     sizes = delegate.sizes.copyOfRange(startIndex, endIndex),
     dataOffsets = delegate.dataOffsets.copyOfRange(startIndex, endIndex),
     initialPieceIndex = delegate.initialPieceIndex + startIndex,
-) {
+), PieceSubscribable {
     init {
         require(startIndex >= 0) { "startIndex < 0" }
         require(endIndex <= delegate.sizes.size) { "endIndex > list.sizes.size" }
         require(startIndex <= endIndex) { "startIndex >= endIndex" }
+        requireNotNull(delegate as? PieceSubscribable)
     }
 
     override var Piece.state: PieceState
@@ -308,6 +276,16 @@ private class PieceListSlice(
         with(delegate) {
             awaitFinished()
         }
+    }
+
+    // Slice and delegating PieceList share the same Piece index space so we can just forward the call. 
+    // See [Piece] for details.
+    override fun subscribePieceState(piece: Piece, onStateChange: PieceList.(Piece, PieceState) -> Unit): Subscription {
+        return (delegate as PieceSubscribable).subscribePieceState(piece, onStateChange)
+    }
+    
+    override fun unsubscribePieceState(subscription: Subscription) {
+        (delegate as PieceSubscribable).unsubscribePieceState(subscription)
     }
 }
 

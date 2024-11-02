@@ -14,7 +14,6 @@ import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
@@ -49,7 +48,11 @@ import me.him188.ani.app.torrent.api.pieces.last
 import me.him188.ani.app.torrent.api.pieces.maxBy
 import me.him188.ani.app.torrent.api.pieces.minBy
 import me.him188.ani.app.torrent.api.pieces.sumOf
+import me.him188.ani.app.torrent.io.RawTorrentInputConstructorParameter
 import me.him188.ani.app.torrent.io.TorrentInput
+import me.him188.ani.app.torrent.io.TorrentInputParameters
+import me.him188.ani.utils.coroutines.IO_
+import me.him188.ani.utils.io.BufferedInput.Companion.DEFAULT_BUFFER_PER_DIRECTION
 import me.him188.ani.utils.io.SeekableInput
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.absolutePath
@@ -77,7 +80,7 @@ class AnitorrentDownloadSession(
     private val onPostClose: (AnitorrentDownloadSession) -> Unit,
     private val onDelete: (AnitorrentDownloadSession) -> Unit,
     parentCoroutineContext: CoroutineContext,
-    dispatcher: CoroutineContext = Dispatchers.IO,
+    dispatcher: CoroutineContext = Dispatchers.IO_,
 ) : TorrentSession, SynchronizedObject() {
     val logger = logger(this::class)
     val handleId get() = handle.id // 内存地址, 不可持久
@@ -195,7 +198,7 @@ class AnitorrentDownloadSession(
 
             override suspend fun closeAndDelete() {
                 close()
-                withContext(Dispatchers.IO) { deleteEntireTorrentIfNotInUse() }
+                withContext(Dispatchers.IO_) { deleteEntireTorrentIfNotInUse() }
             }
         }
 
@@ -224,7 +227,7 @@ class AnitorrentDownloadSession(
 
         override suspend fun createInput(): SeekableInput {
             val input = resolveDownloadingFile()
-            return withContext(Dispatchers.IO) {
+            return withContext(Dispatchers.IO_) {
                 TorrentInput(
                     input,
                     pieces,
@@ -237,7 +240,20 @@ class AnitorrentDownloadSession(
             }
         }
 
-        private fun updatePieceDeadlinesForSeek(requested: Piece) {
+        /**
+         * 在 Remote TorrentFileEntry 中创建 TorrentInput 实例, 需要获取 TorrentInput 构建参数
+         */
+        @OptIn(RawTorrentInputConstructorParameter::class)
+        suspend fun createTorrentInputParameters(): TorrentInputParameters {
+            return TorrentInputParameters(
+                resolveDownloadingFile(),
+                logicalStartOffset = offset,
+                bufferSize = DEFAULT_BUFFER_PER_DIRECTION,
+                size = length,
+            )
+        }
+
+        fun updatePieceDeadlinesForSeek(requested: Piece) {
             with(pieces) {
                 if (!controller.isDownloading(requested.pieceIndex)) {
                     logger.info { "[TorrentDownloadControl] $torrentId: Resetting deadlines to download ${requested.pieceIndex}" }
@@ -344,7 +360,7 @@ class AnitorrentDownloadSession(
                     saveDirectory = saveDirectory,
                     relativePath = path,
                     isDebug = false,
-                    parentCoroutineContext = Dispatchers.IO,
+                    parentCoroutineContext = Dispatchers.IO_,
                     initialDownloadedBytes = calculateTotalFinishedSize(list).coerceAtMost(size),
                 ).also {
                     currentOffset += size

@@ -17,14 +17,11 @@ import me.him188.ani.app.data.models.preference.AnitorrentConfig
 import me.him188.ani.app.data.models.preference.ProxySettings
 import me.him188.ani.app.data.models.preference.TorrentPeerConfig
 import me.him188.ani.app.data.repository.user.SettingsRepository
-import me.him188.ani.app.domain.torrent.engines.AnitorrentEngine
 import me.him188.ani.app.platform.MeteredNetworkDetector
 import me.him188.ani.datasources.api.topic.FileSize.Companion.kiloBytes
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.resolve
-import me.him188.ani.utils.platform.Platform
-import me.him188.ani.utils.platform.currentPlatform
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -34,8 +31,6 @@ import kotlin.coroutines.CoroutineContext
  * - anitorrent
  */
 interface TorrentManager {
-    val anitorrent: AnitorrentEngine
-
     val engines: List<TorrentEngine>
 }
 
@@ -43,29 +38,30 @@ enum class TorrentEngineType(
     val id: String,
 ) {
     Anitorrent("anitorrent"),
+    RemoteAnitorrent("anitorrent")
 }
 
 class DefaultTorrentManager(
     parentCoroutineContext: CoroutineContext,
+    factory: TorrentEngineFactory,
     private val saveDir: (type: TorrentEngineType) -> SystemPath,
     private val proxySettingsFlow: Flow<ProxySettings>,
     private val anitorrentConfigFlow: Flow<AnitorrentConfig>,
     private val isMeteredNetworkFlow: Flow<Boolean>,
-    private val peerFilterConfig: Flow<TorrentPeerConfig>,
-    val platform: Platform,
+    private val peerFilterConfig: Flow<TorrentPeerConfig>
 ) : TorrentManager {
     private val scope = parentCoroutineContext.childScope()
 
-    override val anitorrent: AnitorrentEngine by lazy {
-        AnitorrentEngine(
+    private val anitorrent: TorrentEngine by lazy {
+        factory.createTorrentEngine(
+            scope.coroutineContext + CoroutineName("AnitorrentEngine"),
             combine(anitorrentConfigFlow, isMeteredNetworkFlow) { config, isMetered ->
-                val isUploadLimited = isMetered && config.limitUploadOnMeteredNetwork 
+                val isUploadLimited = isMetered && config.limitUploadOnMeteredNetwork
                 config.copy(uploadRateLimit = if (isUploadLimited) 1.kiloBytes else config.uploadRateLimit)
             },
             proxySettingsFlow,
             peerFilterConfig,
             saveDir(TorrentEngineType.Anitorrent),
-            scope.coroutineContext + CoroutineName("AnitorrentEngine"),
         )
     }
 
@@ -76,12 +72,7 @@ class DefaultTorrentManager(
         // 
         // 如果要支持多个, 需要考虑将所有 storage 合并成一个 MediaSource.
 
-        when (platform) {
-            is Platform.Desktop -> listOf(anitorrent)
-            is Platform.Android -> listOf(anitorrent)
-            is Platform.Ios -> listOf() // TODO IOS anitorrent
-            else -> error("unreachable")
-        }
+        listOf(anitorrent)
     }
 
     companion object {
@@ -90,11 +81,12 @@ class DefaultTorrentManager(
             settingsRepository: SettingsRepository,
             meteredNetworkDetector: MeteredNetworkDetector,
             baseSaveDir: () -> SystemPath,
-            platform: Platform = currentPlatform(),
+            torrentEngineFactory: TorrentEngineFactory = LocalAnitorrentEngineFactory,
         ): DefaultTorrentManager {
             val saveDirLazy by lazy(baseSaveDir)
             return DefaultTorrentManager(
                 parentCoroutineContext,
+                torrentEngineFactory,
                 { type ->
                     saveDirLazy.resolve(type.id)
                 },
@@ -102,7 +94,6 @@ class DefaultTorrentManager(
                 settingsRepository.anitorrentConfig.flow,
                 meteredNetworkDetector.isMeteredNetworkFlow.distinctUntilChanged(),
                 settingsRepository.torrentPeerConfig.flow,
-                platform,
             )
         }
     }
