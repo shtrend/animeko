@@ -1,12 +1,18 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.client.infrastructure
 
-import io.ktor.http.*
-import io.ktor.util.reflect.*
-import kotlin.collections.List
-import kotlin.collections.Map
-import kotlin.collections.forEach
-import kotlin.collections.mutableMapOf
-import kotlin.collections.set
+import io.ktor.http.Headers
+import io.ktor.http.isSuccess
+import io.ktor.util.reflect.TypeInfo
+import io.ktor.util.reflect.typeInfo
 
 open class HttpResponse<T : Any>(val response: io.ktor.client.statement.HttpResponse, val provider: BodyProvider<T>) {
     val status: Int = response.status.value

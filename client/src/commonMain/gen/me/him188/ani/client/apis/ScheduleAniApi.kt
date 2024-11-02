@@ -24,7 +24,8 @@
 
 package me.him188.ani.client.apis
 
-import me.him188.ani.client.models.AniAniUser
+import me.him188.ani.client.models.AniAnimeSchedule
+import me.him188.ani.client.models.AniAnimeSeasonIdList
 
 import me.him188.ani.client.infrastructure.*
 import io.ktor.client.HttpClient
@@ -37,7 +38,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 
-open class UserAniApi : ApiClient {
+open class ScheduleAniApi : ApiClient {
 
     constructor(
         baseUrl: String = ApiClient.BASE_URL,
@@ -57,16 +58,17 @@ open class UserAniApi : ApiClient {
     ) : super(baseUrl = baseUrl, httpClient = httpClient)
 
     /**
-     * 查看当前用户信息
-     * 查看当前携带的 token 对应用户的信息，包含其 Ani ID，Bangumi 昵称以及 Bangumi 头像 URL。
-     * @return AniAniUser
+     * 获取一个季度的新番时间表
+     * 获取一个季度的新番时间表
+     * @param seasonId 格式为 \&quot;{年份}q{季度序号}\&quot;. 例如 \&quot;2024q3\&quot;. 季度序号范围为 1..3 (包含), 分别对应春季, 夏季, 秋季, 冬季
+     * @return AniAnimeSchedule
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun getUser(): HttpResponse<AniAniUser> {
+    open suspend fun getAnimeSeason(seasonId: kotlin.String): HttpResponse<AniAnimeSchedule> {
 
-        val localVariableAuthNames = listOf<String>("auth-jwt")
+        val localVariableAuthNames = listOf<String>()
 
-        val localVariableBody = 
+        val localVariableBody =
             io.ktor.client.utils.EmptyContent
 
         val localVariableQuery = mutableMapOf<String, List<String>>()
@@ -74,10 +76,42 @@ open class UserAniApi : ApiClient {
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
             RequestMethod.GET,
-            "/v1/me",
+            "/v1/schedule/season/{seasonId}".replace("{" + "seasonId" + "}", "$seasonId"),
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = true,
+            requiresAuthentication = false,
+        )
+
+        return request(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames,
+        ).wrap()
+    }
+
+
+    /**
+     * 获取新番季度列表
+     * 获取新番季度列表
+     * @return AniAnimeSeasonIdList
+     */
+    @Suppress("UNCHECKED_CAST")
+    open suspend fun getAnimeSeasons(): HttpResponse<AniAnimeSeasonIdList> {
+
+        val localVariableAuthNames = listOf<String>()
+
+        val localVariableBody =
+            io.ktor.client.utils.EmptyContent
+
+        val localVariableQuery = mutableMapOf<String, List<String>>()
+        val localVariableHeaders = mutableMapOf<String, String>()
+
+        val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.GET,
+            "/v1/schedule/seasons",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = false,
         )
 
         return request(

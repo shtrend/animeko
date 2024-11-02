@@ -19,7 +19,7 @@
     "ArrayInDataClass",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "UnusedImport",
 )
 
 package me.him188.ani.client.models
@@ -29,15 +29,33 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param trendingSubjects 
+ *
+ * @param aliases
+ * @param bangumiId
+ * @param name
+ * @param begin
+ * @param end
+ * @param mikanId
+ * @param recurrence
  */
 @Serializable
 
-data class AniTrends(
+data class AniOnAirAnimeInfo(
 
-    @SerialName(value = "trendingSubjects") @Required val trendingSubjects: kotlin.collections.List<AniTrendingSubject>
+    @SerialName(value = "aliases") @Required val aliases: kotlin.collections.List<kotlin.String>,
+
+    @SerialName(value = "bangumiId") @Required val bangumiId: kotlin.Int,
+
+    @SerialName(value = "name") @Required val name: kotlin.String,
+
+    @SerialName(value = "begin") val begin: kotlin.String? = null,
+
+    @SerialName(value = "end") val end: kotlin.String? = null,
+
+    @SerialName(value = "mikanId") val mikanId: kotlin.Int? = null,
+
+    @SerialName(value = "recurrence") val recurrence: AniAnimeRecurrence? = null
 
 )
 

@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.map
 import me.him188.ani.app.data.models.preference.configIfEnabledOrNull
 import me.him188.ani.app.data.models.runApiRequest
+import me.him188.ani.app.data.network.AnimeScheduleService
 import me.him188.ani.app.data.network.BangumiBangumiCommentServiceImpl
 import me.him188.ani.app.data.network.BangumiCommentService
 import me.him188.ani.app.data.network.BangumiEpisodeService
@@ -206,6 +207,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
         EpisodePlayHistoryRepositoryImpl(getContext().dataStores.episodeHistoryStore)
     }
     single<BangumiProfileService> { BangumiProfileService() }
+    single<AnimeScheduleService> { AnimeScheduleService(lazy { get<AniAuthClient>().scheduleApi }) }
     single<TrendsRepository> { TrendsRepository(lazy { get<AniAuthClient>().trendsApi }) }
 
     single<DanmakuManager> {

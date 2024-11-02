@@ -19,7 +19,7 @@
     "ArrayInDataClass",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "UnusedImport",
 )
 
 package me.him188.ani.client.models
@@ -29,15 +29,21 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param trendingSubjects 
+ *
+ * @param id
+ * @param season
+ * @param year
  */
 @Serializable
 
-data class AniTrends(
+data class AniAnimeSeasonId(
 
-    @SerialName(value = "trendingSubjects") @Required val trendingSubjects: kotlin.collections.List<AniTrendingSubject>
+    @SerialName(value = "id") @Required val id: kotlin.String,
+
+    @SerialName(value = "season") @Required val season: AniAnimeSeason,
+
+    @SerialName(value = "year") @Required val year: kotlin.Int
 
 )
 

@@ -19,25 +19,29 @@
     "ArrayInDataClass",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "UnusedImport",
 )
 
 package me.him188.ani.client.models
+
 
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param trendingSubjects 
+ *
+ * @param intervalMillis
+ * @param startTime
  */
 @Serializable
 
-data class AniTrends(
+data class AniAnimeRecurrence(
 
-    @SerialName(value = "trendingSubjects") @Required val trendingSubjects: kotlin.collections.List<AniTrendingSubject>
+    @SerialName(value = "intervalMillis") @Required val intervalMillis: kotlin.Long,
+
+    @SerialName(value = "startTime") @Required val startTime: kotlin.String
 
 )
 

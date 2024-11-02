@@ -740,6 +740,110 @@
         },
         "deprecated": false
       }
+    },
+    "/v1/schedule/seasons": {
+      "get": {
+        "tags": [ "Schedule" ],
+        "summary": "获取新番季度列表",
+        "description": "获取新番季度列表",
+        "operationId": "getAnimeSeasons",
+        "parameters": [ ],
+        "responses": {
+          "200": {
+            "description": "获取成功",
+            "headers": { },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimeSeasonIdList"
+                },
+                "examples": {
+                  "example": {
+                    "value": {
+                      "list": [ {
+                        "year": 2024,
+                        "season": "WINTER",
+                        "id": "2024q4"
+                      }, {
+                        "year": 2024,
+                        "season": "AUTUMN",
+                        "id": "2024q3"
+                      }, {
+                        "year": 2024,
+                        "season": "SUMMER",
+                        "id": "2024q2"
+                      } ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v1/schedule/season/{seasonId}": {
+      "get": {
+        "tags": [ "Schedule" ],
+        "summary": "获取一个季度的新番时间表",
+        "description": "获取一个季度的新番时间表",
+        "operationId": "getAnimeSeason",
+        "parameters": [ {
+          "name": "seasonId",
+          "in": "path",
+          "description": "格式为 \"{年份}q{季度序号}\". 例如 \"2024q3\". 季度序号范围为 1..3 (包含), 分别对应春季, 夏季, 秋季, 冬季",
+          "required": true,
+          "deprecated": false,
+          "allowEmptyValue": true,
+          "explode": false,
+          "allowReserved": true,
+          "schema": {
+            "title": "String",
+            "type": "string"
+          },
+          "example": "2024q3"
+        } ],
+        "responses": {
+          "200 OK": {
+            "description": "获取成功",
+            "headers": { },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnimeSchedule"
+                },
+                "examples": {
+                  "example": {
+                    "value": {
+                      "list": [ {
+                        "bangumiId": 404480,
+                        "name": "ラブライブ！スーパースター!!(第3期)",
+                        "aliases": [ "Love Live ! Superstar!!", "Love Live! Superstar!! 第三季", "爱与演唱会!超级明星!! 第三季", "Love Live! Superstar!! 第三季", "LoveLive! SuperStar!! 第三季" ],
+                        "begin": "2024-10-06T08:00:00Z",
+                        "recurrence": {
+                          "startTime": "2024-10-06T08:00:00Z",
+                          "intervalMillis": 604800000
+                        },
+                        "mikanId": 3427
+                      } ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404 Not Found": {
+            "description": "未找到对应季度",
+            "headers": { }
+          },
+          "400 Bad Request": {
+            "description": "seasonId 格式有误",
+            "headers": { }
+          }
+        },
+        "deprecated": false
+      }
     }
   },
   "components": {
@@ -1077,6 +1181,113 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TrendingSubject"
+            }
+          }
+        }
+      },
+      "AnimeSeasonId": {
+        "title": "AnimeSeasonId",
+        "required": [ "id", "season", "year" ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "title": "String",
+            "type": "string"
+          },
+          "season": {
+            "$ref": "#/components/schemas/AnimeSeason"
+          },
+          "year": {
+            "title": "Int",
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "AnimeSeason": {
+        "title": "AnimeSeason",
+        "enum": [ "SPRING", "SUMMER", "AUTUMN", "WINTER" ]
+      },
+      "AnimeSeasonIdList": {
+        "title": "AnimeSeasonIdList",
+        "required": [ "list" ],
+        "type": "object",
+        "properties": {
+          "list": {
+            "title": "List<AnimeSeasonId>",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnimeSeasonId"
+            }
+          }
+        }
+      },
+      "OnAirAnimeInfo": {
+        "title": "OnAirAnimeInfo",
+        "required": [ "aliases", "bangumiId", "name" ],
+        "type": "object",
+        "properties": {
+          "aliases": {
+            "title": "List<String>",
+            "type": "array",
+            "items": {
+              "title": "String",
+              "type": "string"
+            }
+          },
+          "bangumiId": {
+            "title": "Int",
+            "type": "integer",
+            "format": "int32"
+          },
+          "begin": {
+            "title": "String",
+            "type": "string"
+          },
+          "end": {
+            "title": "String",
+            "type": "string"
+          },
+          "mikanId": {
+            "title": "Int",
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "title": "String",
+            "type": "string"
+          },
+          "recurrence": {
+            "$ref": "#/components/schemas/AnimeRecurrence"
+          }
+        }
+      },
+      "AnimeRecurrence": {
+        "title": "AnimeRecurrence",
+        "required": [ "intervalMillis", "startTime" ],
+        "type": "object",
+        "properties": {
+          "intervalMillis": {
+            "title": "Long",
+            "type": "integer",
+            "format": "int64"
+          },
+          "startTime": {
+            "title": "String",
+            "type": "string"
+          }
+        }
+      },
+      "AnimeSchedule": {
+        "title": "AnimeSchedule",
+        "required": [ "list" ],
+        "type": "object",
+        "properties": {
+          "list": {
+            "title": "List<OnAirAnimeInfo>",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OnAirAnimeInfo"
             }
           }
         }

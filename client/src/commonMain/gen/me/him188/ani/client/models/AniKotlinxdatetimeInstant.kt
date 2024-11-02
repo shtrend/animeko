@@ -19,25 +19,29 @@
     "ArrayInDataClass",
     "EnumEntryName",
     "RemoveRedundantQualifierName",
-    "UnusedImport"
+    "UnusedImport",
 )
 
 package me.him188.ani.client.models
+
 
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param trendingSubjects 
+ *
+ * @param epochSeconds
+ * @param nanosecondsOfSecond
  */
 @Serializable
 
-data class AniTrends(
+data class AniKotlinxdatetimeInstant(
 
-    @SerialName(value = "trendingSubjects") @Required val trendingSubjects: kotlin.collections.List<AniTrendingSubject>
+    @SerialName(value = "epochSeconds") @Required val epochSeconds: kotlin.Long,
+
+    @SerialName(value = "nanosecondsOfSecond") @Required val nanosecondsOfSecond: kotlin.Int
 
 )
 
