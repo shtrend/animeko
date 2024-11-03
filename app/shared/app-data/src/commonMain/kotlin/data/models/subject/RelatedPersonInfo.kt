@@ -13,7 +13,7 @@ import androidx.collection.mutableIntObjectMapOf
 import androidx.compose.runtime.Stable
 import kotlin.jvm.JvmInline
 
-class RelatedPersonInfo(
+data class RelatedPersonInfo(
     val index: Int,
     val personInfo: PersonInfo,
     val position: PersonPosition,
