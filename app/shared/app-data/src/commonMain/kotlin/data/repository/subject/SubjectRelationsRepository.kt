@@ -36,8 +36,10 @@ class DefaultSubjectRelationsRepository(
 ) : SubjectRelationsRepository {
     override fun subjectRelatedPersonsFlow(subjectId: Int): Flow<List<RelatedPersonInfo>> {
         return subjectRelationsDao.subjectRelatedPersonsFlow(subjectId).map { list ->
-            list.map {
+            list.mapTo(ArrayList(list.size)) {
                 it.toRelatedPersonInfo()
+            }.apply {
+                sortWith(RelatedPersonInfo.ImportanceOrder)
             }
         }
     }
@@ -46,7 +48,7 @@ class DefaultSubjectRelationsRepository(
         return subjectRelationsDao.subjectRelatedCharactersFlow(subjectId).flatMapLatest { list ->
             subjectRelationsDao.characterActorsFlow(list.mapToIntArray { it.character.characterId })
                 .map { actors ->
-                    list.map { relatedCharacterView ->
+                    list.mapTo(ArrayList(list.size)) { relatedCharacterView ->
                         val characterId = relatedCharacterView.character.characterId
                         relatedCharacterView.toRelatedCharacterInfo(
                             actors = actors
@@ -55,6 +57,8 @@ class DefaultSubjectRelationsRepository(
                                 .map { it.person.toPersonInfo() }
                                 .toList()
                         )
+                    }.apply {
+                        sortWith(RelatedCharacterInfo.ImportanceOrder)
                     }
                 }
         }

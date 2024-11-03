@@ -18,8 +18,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.network.BangumiSubjectService
+import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryRateLimitedException
 import me.him188.ani.app.domain.search.SubjectSearchQuery
@@ -41,7 +41,7 @@ class SubjectSearchRepository(
         searchQuery: SubjectSearchQuery,
         useNewApi: Boolean = false,
         pagingConfig: PagingConfig = Repository.defaultPagingConfig
-    ): Flow<PagingData<SubjectInfo>> = Pager(
+    ): Flow<PagingData<BatchSubjectDetails>> = Pager(
         config = pagingConfig,
         initialKey = 0,
 //        remoteMediator = SubjectSearchRemoteMediator(useNewApi, searchQuery, pagingConfig),
@@ -53,11 +53,11 @@ class SubjectSearchRepository(
     private inner class SubjectSearchPagingSource(
         private val useNewApi: Boolean,
         private val searchQuery: SubjectSearchQuery
-    ) : PagingSource<Int, SubjectInfo>() {
-        override fun getRefreshKey(state: PagingState<Int, SubjectInfo>): Int? = null
+    ) : PagingSource<Int, BatchSubjectDetails>() {
+        override fun getRefreshKey(state: PagingState<Int, BatchSubjectDetails>): Int? = null
         override suspend fun load(
             params: LoadParams<Int>
-        ): LoadResult<Int, SubjectInfo> = withContext(Dispatchers.IO_) {
+        ): LoadResult<Int, BatchSubjectDetails> = withContext(Dispatchers.IO_) {
             val offset = params.key
                 ?: return@withContext LoadResult.Error(IllegalArgumentException("Key is null"))
             return@withContext try {
@@ -89,9 +89,7 @@ class SubjectSearchRepository(
                 val subjectInfos = subjectService.batchGetSubjectDetails(res, withCharacterActors = true)
 
                 return@withContext LoadResult.Page(
-                    subjectInfos.map {
-                        it.subjectInfo
-                    },
+                    subjectInfos,
                     prevKey = if (offset == 0) null else offset,
                     nextKey = if (subjectInfos.isEmpty()) null else offset + params.loadSize,
                 )

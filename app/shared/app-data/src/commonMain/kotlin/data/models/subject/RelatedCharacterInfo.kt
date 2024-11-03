@@ -26,18 +26,16 @@ data class RelatedCharacterInfo(
     val character: CharacterInfo,
     val role: CharacterRole,
 ) {
-    fun isMainCharacter() = role == CharacterRole.MAIN
+    fun isMainCharacter() = role == MAIN
 
     companion object {
-        fun sortList(characterList: List<RelatedCharacterInfo>): List<RelatedCharacterInfo> {
-            return characterList.sortedByDescending {
-                when (it.role) {
-                    CharacterRole.MAIN -> 10
-                    CharacterRole.SUPPORTING -> 9
-                    CharacterRole.GUEST -> 8
-                    else -> {
-                        0
-                    }
+        val ImportanceOrder = compareBy<RelatedCharacterInfo> {
+            when (it.role) {
+                MAIN -> 10
+                SUPPORTING -> 9
+                GUEST -> 8
+                else -> {
+                    0
                 }
             }
         }
