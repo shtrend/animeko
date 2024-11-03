@@ -162,102 +162,19 @@ class RemoteBangumiSubjectService(
         return withContext(ioDispatcher) {
             val resp = client.executeGraphQL(
                 "SubjectCollectionRepositoryImpl.batchGetSubjectDetails",
-                """
-                fragment Ep on Episode {
-                  id
-                  type
-                  name
-                  name_cn
-                  airdate
-                  comment
-                  description
-                  sort
-                }
-                
-                fragment SubjectFragment on Subject {
-                  id
-                  type
-                  name
-                  name_cn
-                  images{large, common}
-                  characters {
-                    order
-                    type
-                    character {
-                      id
-                      name
-                      comment
-                      collects
-                      infobox {
-                        key 
-                        values {k 
-                                v}
-                      }
-                      role
-                      images {
-                        large
-                        medium
-                      }
+                buildString(
+                    capacity = SUBJECT_DETAILS_FRAGMENTS.length + 30 + 55 * ids.size, // big enough to avoid resizing
+                ) {
+                    appendLine(SUBJECT_DETAILS_FRAGMENTS)
+                    appendLine("query BatchGetSubjectQuery {")
+                    for (id in ids) {
+                        append('s')
+                        append(id)
+                        append(":subject(id: ").append(id).append("){...SubjectFragment}")
+                        appendLine()
                     }
-                  }
-                  infobox {
-                    values {
-                      k
-                      v
-                    }
-                    key
-                  }
-                  summary
-                  eps
-                  collection{collect , doing, dropped, on_hold, wish}
-                  airtime{date}
-                  rating{count, rank, score, total}
-                  nsfw
-                  tags{count, name}
-                  
-                  persons {
-                    person {
-                      career
-                      collects
-                      comment
-                      id
-                      images {
-                        large
-                        medium
-                      }
-                      infobox {
-                        key
-                        values {
-                          k
-                          v
-                        } 
-                      }
-                      last_post
-                      lock
-                      name
-                      nsfw
-                      redirect
-                      summary
-                      type
-                    }
-                    position
-                  }
-                
-                  leadingEpisodes : episodes(limit: 100) { ...Ep }
-                  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
-                  # episodes{id, type, name, name_cn, sort, airdate, comment, duration, description, disc, ep, }
-                }
-
-            query BatchGetSubjectQuery {
-              ${
-                    ids.joinToString(separator = "\n") { id ->
-                        """
-                        s$id:subject(id: $id){...SubjectFragment}
-                """
-                    }
-                }
-            }
-        """.trimIndent(),
+                    append("}")
+                },
             )
             resp["errors"]?.let {
                 logger.error("batchGetSubjectDetails failed for query $ids: $it")
@@ -357,6 +274,95 @@ class RemoteBangumiSubjectService(
                 },
             )
         }.flowOn(ioDispatcher)
+    }
+
+    private companion object {
+        private const val SUBJECT_DETAILS_FRAGMENTS = """
+            fragment Ep on Episode {
+                  id
+                  type
+                  name
+                  name_cn
+                  airdate
+                  comment
+                  description
+                  sort
+                }
+                
+                fragment SubjectFragment on Subject {
+                  id
+                  type
+                  name
+                  name_cn
+                  images{large, common}
+                  characters {
+                    order
+                    type
+                    character {
+                      id
+                      name
+                      comment
+                      collects
+                      infobox {
+                        key 
+                        values {k 
+                                v}
+                      }
+                      role
+                      images {
+                        large
+                        medium
+                      }
+                    }
+                  }
+                  infobox {
+                    values {
+                      k
+                      v
+                    }
+                    key
+                  }
+                  summary
+                  eps
+                  collection{collect , doing, dropped, on_hold, wish}
+                  airtime{date}
+                  rating{count, rank, score, total}
+                  nsfw
+                  tags{count, name}
+                  
+                  persons {
+                    person {
+                      career
+                      collects
+                      comment
+                      id
+                      images {
+                        large
+                        medium
+                      }
+                      infobox {
+                        key
+                        values {
+                          k
+                          v
+                        } 
+                      }
+                      last_post
+                      lock
+                      name
+                      nsfw
+                      redirect
+                      summary
+                      type
+                    }
+                    position
+                  }
+                
+                  leadingEpisodes : episodes(limit: 100) { ...Ep }
+                  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
+                  # episodes{id, type, name, name_cn, sort, airdate, comment, duration, description, disc, ep, }
+                }
+        """
     }
 }
 
