@@ -11,8 +11,10 @@ package me.him188.ani.app.data.network
 
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.datasources.api.EpisodeSort
@@ -37,15 +39,17 @@ import me.him188.ani.datasources.bangumi.models.BangumiPatchUserSubjectEpisodeCo
 import me.him188.ani.datasources.bangumi.models.BangumiUserEpisodeCollection
 import me.him188.ani.datasources.bangumi.processing.toCollectionType
 import me.him188.ani.datasources.bangumi.processing.toEpisodeCollectionType
+import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.serialization.BigNum
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.coroutines.CoroutineContext
 
 /**
  * 执行网络请求查询.
  */
-interface BangumiEpisodeService {
+sealed interface BangumiEpisodeService {
     /**
      * 获取用户在这个条目下的所有剧集的收藏状态. 当用户没有收藏此条目时返回 [collectionType] 均为 [UnifiedCollectionType.NOT_COLLECTED].
      *
@@ -84,15 +88,17 @@ interface BangumiEpisodeService {
     ): Boolean
 }
 
-class EpisodeRepositoryImpl : BangumiEpisodeService, KoinComponent {
+class EpisodeRepositoryImpl(
+    private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
+) : BangumiEpisodeService, KoinComponent {
     private val client by inject<BangumiClient>()
     private val logger = logger(EpisodeRepositoryImpl::class)
 
     override suspend fun getEpisodeCollectionInfosBySubjectId(
         subjectId: Int,
         epType: EpisodeType?
-    ): Flow<EpisodeCollectionInfo> {
-        return getSubjectEpisodeCollections(subjectId, epType?.toBangumiEpType())?.map {
+    ): Flow<EpisodeCollectionInfo> = withContext(ioDispatcher) {
+        getSubjectEpisodeCollections(subjectId, epType?.toBangumiEpType())?.map {
             it.toEpisodeCollectionInfo()
         } ?: getEpisodesBySubjectId(subjectId, epType?.toBangumiEpType()).map {
             it.toEpisodeInfo().createNotCollected()
@@ -105,22 +111,27 @@ class EpisodeRepositoryImpl : BangumiEpisodeService, KoinComponent {
         limit: Int?,
         episodeType: BangumiEpType?
     ): Paged<EpisodeCollectionInfo> {
-        return client.getApi().getUserSubjectEpisodeCollection(
-            subjectId,
-            episodeType = episodeType,
-            offset = offset,
-            limit = limit,
-        ).body().run {
-            Paged.processPagedResponse(total, limit ?: 100, data)
-        }.map {
-            it.toEpisodeCollectionInfo()
+        return withContext(ioDispatcher) {
+            client.getApi().getUserSubjectEpisodeCollection(
+                subjectId,
+                episodeType = episodeType,
+                offset = offset,
+                limit = limit,
+            ).body()
+                .run {
+                    Paged.processPagedResponse(total, limit ?: 100, data)
+                }.map {
+                    it.toEpisodeCollectionInfo()
+                }
         }
     }
 
     private fun getEpisodesBySubjectId(subjectId: Int, type: BangumiEpType?): Flow<BangumiEpisode> {
         val episodes = PageBasedPagedSource { page ->
-            client.getApi().getEpisodes(subjectId, type, offset = page * 100, limit = 100).body().run {
-                Paged(this.total ?: 0, !this.data.isNullOrEmpty(), this.data.orEmpty())
+            withContext(ioDispatcher) {
+                client.getApi().getEpisodes(subjectId, type, offset = page * 100, limit = 100).body().run {
+                    Paged(this.total ?: 0, !this.data.isNullOrEmpty(), this.data.orEmpty())
+                }
             }
         }
         return episodes.results
@@ -131,12 +142,14 @@ class EpisodeRepositoryImpl : BangumiEpisodeService, KoinComponent {
         type: BangumiEpType?
     ): Flow<BangumiUserEpisodeCollection>? {
         val firstPage = try {
-            client.getApi().getUserSubjectEpisodeCollection(
-                subjectId,
-                episodeType = type,
-                offset = 0,
-                limit = 100,
-            ).body()
+            withContext(ioDispatcher) {
+                client.getApi().getUserSubjectEpisodeCollection(
+                    subjectId,
+                    episodeType = type,
+                    offset = 0,
+                    limit = 100,
+                ).body()
+            }
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.NotFound
                 || e.response.status == HttpStatusCode.Unauthorized
@@ -150,20 +163,22 @@ class EpisodeRepositoryImpl : BangumiEpisodeService, KoinComponent {
             val resp = if (page == 0) {
                 firstPage
             } else {
-                client.getApi().getUserSubjectEpisodeCollection(
-                    subjectId,
-                    episodeType = type,
-                    offset = page * 100,
-                    limit = 100,
-                ).body()
+                withContext(ioDispatcher) {
+                    client.getApi().getUserSubjectEpisodeCollection(
+                        subjectId,
+                        episodeType = type,
+                        offset = page * 100,
+                        limit = 100,
+                    ).body()
+                }
             }
             Paged.processPagedResponse(resp.total, 100, resp.data)
         }
         return episodes.results
     }
 
-    override suspend fun getEpisodeCollectionById(episodeId: Int): EpisodeCollectionInfo? {
-        return kotlin.runCatching {
+    override suspend fun getEpisodeCollectionById(episodeId: Int): EpisodeCollectionInfo? = withContext(ioDispatcher) {
+        kotlin.runCatching {
             client.getApi().getUserEpisodeCollection(episodeId).body().toEpisodeCollectionInfo()
         }.recoverCatching { e ->
             if (e is ClientRequestException) {
@@ -175,11 +190,11 @@ class EpisodeRepositoryImpl : BangumiEpisodeService, KoinComponent {
             client.getApi().getEpisodeById(episodeId).body().toEpisodeInfo().createNotCollected()
         }.fold(
             onSuccess = { it },
-            onFailure = {
-                if (it is ClientRequestException && it.response.status == HttpStatusCode.NotFound) {
-                    return null
+            onFailure = { e ->
+                if (e is ClientRequestException && e.response.status == HttpStatusCode.NotFound) {
+                    return@fold null
                 }
-                null
+                throw e
             },
         )
     }
@@ -188,7 +203,7 @@ class EpisodeRepositoryImpl : BangumiEpisodeService, KoinComponent {
         subjectId: Int,
         episodeId: List<Int>,
         type: UnifiedCollectionType
-    ): Boolean {
+    ): Boolean = withContext(ioDispatcher) {
         try {
             client.getApi().patchUserSubjectEpisodeCollection(
                 subjectId,
@@ -197,10 +212,10 @@ class EpisodeRepositoryImpl : BangumiEpisodeService, KoinComponent {
                     type.toEpisodeCollectionType(),
                 ),
             ).body()
-            return true
+            true
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.NotFound) {
-                return false
+                return@withContext false
             }
             throw e
         }

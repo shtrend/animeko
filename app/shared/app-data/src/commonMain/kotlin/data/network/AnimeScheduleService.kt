@@ -17,7 +17,6 @@ import me.him188.ani.app.data.models.schedule.AnimeScheduleInfo
 import me.him188.ani.app.data.models.schedule.AnimeSeason
 import me.him188.ani.app.data.models.schedule.AnimeSeasonId
 import me.him188.ani.app.data.models.schedule.OnAirAnimeInfo
-import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.client.apis.ScheduleAniApi
 import me.him188.ani.client.models.AniAnimeRecurrence
 import me.him188.ani.client.models.AniAnimeSeason
@@ -29,7 +28,7 @@ import kotlin.coroutines.CoroutineContext
 class AnimeScheduleService(
     apiLazy: Lazy<ScheduleAniApi>,
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_
-) : Repository {
+) {
     private val api by apiLazy
 
     suspend fun getSeasonIds(): List<AnimeSeasonId> {

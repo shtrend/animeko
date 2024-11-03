@@ -115,7 +115,10 @@ class RemoteBangumiSubjectService(
 ) : BangumiSubjectService, KoinComponent {
     private val logger = logger(this::class)
 
-    override suspend fun getSubject(id: Int): BangumiSubject = client.getApi().getSubjectById(id).body()
+    override suspend fun getSubject(id: Int): BangumiSubject = withContext(ioDispatcher) {
+        client.getApi().getSubjectById(id).body()
+    }
+
     override suspend fun getSubjectCollections(
         type: BangumiSubjectCollectionType?,
         offset: Int,

@@ -10,15 +10,16 @@
 package me.him188.ani.app.data.network
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.ApiResponse
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.data.models.runApiRequest
 import me.him188.ani.datasources.bangumi.BangumiClient
 import me.him188.ani.datasources.bangumi.models.BangumiUser
+import me.him188.ani.utils.coroutines.IO_
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.coroutines.CoroutineContext
 
 interface BangumiProfileService {
     suspend fun getSelfUserInfo(accessToken: String?): ApiResponse<UserInfo>
@@ -28,12 +29,14 @@ fun BangumiProfileService(): BangumiProfileService {
     return BangumiProfileServiceImpl()
 }
 
-internal class BangumiProfileServiceImpl : BangumiProfileService, KoinComponent {
+internal class BangumiProfileServiceImpl(
+    private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
+) : BangumiProfileService, KoinComponent {
     private val client: BangumiClient by inject()
 
     override suspend fun getSelfUserInfo(accessToken: String?): ApiResponse<UserInfo> {
         return runApiRequest {
-            withContext(Dispatchers.IO) {
+            withContext(ioDispatcher) {
                 client.getSelfInfoByToken(accessToken).toUserInfo()
             }
         }

@@ -9,6 +9,8 @@
 
 package me.him188.ani.app.data.network
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.ApiResponse
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.data.models.episode.EpisodeComment
@@ -23,7 +25,10 @@ import me.him188.ani.datasources.bangumi.BangumiClient
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextCreateSubjectEpCommentRequest
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextGetSubjectEpisodeComments200ResponseInner
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextSubjectInterestCommentListInner
+import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.logger
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 
 sealed interface BangumiCommentService {
     fun getSubjectEpisodeComments(episodeId: Int): PagedSource<EpisodeComment>
@@ -34,23 +39,28 @@ sealed interface BangumiCommentService {
 }
 
 class BangumiBangumiCommentServiceImpl(
-    private val client: BangumiClient
+    private val client: BangumiClient,
+    private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
 ) : BangumiCommentService {
     private val logger = logger(BangumiCommentService::class)
 
     override fun getSubjectComments(subjectId: Int): PagedSource<SubjectComment> {
         return PageBasedPagedSource { page ->
             try {
-                val response = client.getNextApi()
-                    .subjectComments(subjectId, 16, page * 16)
-                    .body()
+                withContext(ioDispatcher) {
+                    val response = client.getNextApi()
+                        .subjectComments(subjectId, 16, page * 16)
+                        .body()
 
-                if (totalSize == null) {
-                    setTotalSize(response.total)
+                    if (totalSize == null) {
+                        setTotalSize(response.total)
+                    }
+
+                    val list = response.list.map(BangumiNextSubjectInterestCommentListInner::toSubjectComment)
+                    Paged.processPagedResponse(total = response.total, pageSize = 16, data = list)
                 }
-
-                val list = response.list.map(BangumiNextSubjectInterestCommentListInner::toSubjectComment)
-                Paged.processPagedResponse(total = response.total, pageSize = 16, data = list)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 logger.warn("Exception in getSubjectComments", e)
                 null
@@ -64,14 +74,16 @@ class BangumiBangumiCommentServiceImpl(
         replyToCommentId: Int?
     ): ApiResponse<Unit> {
         return runApiRequest {
-            client.getNextApi().createSubjectEpComment(
-                episodeId,
-                BangumiNextCreateSubjectEpCommentRequest(
-                    "XXXX.DUMMY.TOKEN.XXXX",
-                    content,
-                    replyToCommentId,
-                ),
-            )
+            withContext(ioDispatcher) {
+                client.getNextApi().createSubjectEpComment(
+                    episodeId,
+                    BangumiNextCreateSubjectEpCommentRequest(
+                        "XXXX.DUMMY.TOKEN.XXXX",
+                        content,
+                        replyToCommentId,
+                    ),
+                )
+            }
         }
     }
 
@@ -79,15 +91,19 @@ class BangumiBangumiCommentServiceImpl(
         // 未来这个接口将会支持分页属性
         return PageBasedPagedSource { page ->
             try {
-                if (page == 0) {
-                    val response = client.getNextApi()
-                        .getSubjectEpisodeComments(episodeId)
-                        .body()
-                        .map(BangumiNextGetSubjectEpisodeComments200ResponseInner::toEpisodeComment)
+                withContext(ioDispatcher) {
+                    if (page == 0) {
+                        val response = client.getNextApi()
+                            .getSubjectEpisodeComments(episodeId)
+                            .body()
+                            .map(BangumiNextGetSubjectEpisodeComments200ResponseInner::toEpisodeComment)
 
-                    setTotalSize(response.size)
-                    Paged.processPagedResponse(response.size, response.size, response)
-                } else null
+                        setTotalSize(response.size)
+                        Paged.processPagedResponse(response.size, response.size, response)
+                    } else null
+                }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 logger.warn("Exception in getSubjectEpisodeComments", e)
                 null
