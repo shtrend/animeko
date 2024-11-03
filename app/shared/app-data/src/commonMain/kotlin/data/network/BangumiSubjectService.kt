@@ -21,9 +21,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.put
 import me.him188.ani.app.data.models.subject.RatingCounts
 import me.him188.ani.app.data.models.subject.RatingInfo
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
@@ -31,7 +29,6 @@ import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
 import me.him188.ani.app.data.models.subject.SubjectInfo
-import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryUsernameProvider
 import me.him188.ani.app.data.repository.getOrThrow
 import me.him188.ani.app.domain.search.SubjectType
@@ -163,7 +160,7 @@ class RemoteBangumiSubjectService(
             return emptyList()
         }
         return withContext(ioDispatcher) {
-            val resp = executeQuerySubjectDetails(ids)
+            val resp = BangumiSubjectGraphQLExecutor.executeQuerySubjectDetails(client, ids)
             resp["errors"]?.let {
                 logger.error("batchGetSubjectDetails failed for query $ids: $it")
             }
@@ -196,52 +193,6 @@ class RemoteBangumiSubjectService(
         }
     }
 
-    private suspend fun executeQuerySubjectDetails(ids: List<Int>): JsonObject {
-        val actionName = "SubjectCollectionRepositoryImpl.batchGetSubjectDetails"
-        // 尽量使用 variables
-        return when (ids.size) {
-            1 -> {
-                client.executeGraphQL(
-                    actionName,
-                    SUBJECT_DETAILS_QUERY_1,
-                    variables = buildJsonObject {
-                        put("id", ids.first())
-                    },
-                )
-            }
-
-            Repository.defaultPagingConfig.pageSize -> {
-                client.executeGraphQL(
-                    actionName,
-                    SUBJECT_DETAILS_QUERY_WHOLE_PAGE,
-                    variables = buildJsonObject {
-                        repeat(ids.size) { i ->
-                            put("id$i", ids[i])
-                        }
-                    },
-                )
-            }
-
-            else -> {
-                client.executeGraphQL(
-                    actionName,
-                    buildString(
-                        capacity = SUBJECT_DETAILS_FRAGMENTS.length + 30 + 55 * ids.size, // big enough to avoid resizing
-                    ) {
-                        appendLine(SUBJECT_DETAILS_FRAGMENTS)
-                        appendLine("query BatchGetSubjectQuery {")
-                        for (id in ids) {
-                            append('s')
-                            append(id)
-                            append(":subject(id: ").append(id).append("){...SubjectFragment}")
-                            appendLine()
-                        }
-                        append("}")
-                    },
-                )
-            }
-        }
-    }
 
     override suspend fun patchSubjectCollection(subjectId: Int, payload: BangumiUserSubjectCollectionModifyPayload) {
         withContext(ioDispatcher) {
@@ -312,124 +263,6 @@ class RemoteBangumiSubjectService(
     }
 
     private companion object {
-        private const val SUBJECT_DETAILS_FRAGMENTS = """
-            fragment Ep on Episode {
-                  id
-                  type
-                  name
-                  name_cn
-                  airdate
-                  comment
-                  description
-                  sort
-                }
-                
-                fragment SubjectFragment on Subject {
-                  id
-                  type
-                  name
-                  name_cn
-                  images{large, common}
-                  characters {
-                    order
-                    type
-                    character {
-                      id
-                      name
-                      comment
-                      collects
-                      infobox {
-                        key 
-                        values {k 
-                                v}
-                      }
-                      role
-                      images {
-                        large
-                        medium
-                      }
-                    }
-                  }
-                  infobox {
-                    values {
-                      k
-                      v
-                    }
-                    key
-                  }
-                  summary
-                  eps
-                  collection{collect , doing, dropped, on_hold, wish}
-                  airtime{date}
-                  rating{count, rank, score, total}
-                  nsfw
-                  tags{count, name}
-                  
-                  persons {
-                    person {
-                      career
-                      collects
-                      comment
-                      id
-                      images {
-                        large
-                        medium
-                      }
-                      infobox {
-                        key
-                        values {
-                          k
-                          v
-                        } 
-                      }
-                      last_post
-                      lock
-                      name
-                      nsfw
-                      redirect
-                      summary
-                      type
-                    }
-                    position
-                  }
-                
-                  leadingEpisodes : episodes(limit: 100) { ...Ep }
-                  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
-                  # episodes{id, type, name, name_cn, sort, airdate, comment, duration, description, disc, ep, }
-                }
-        """
-
-        private const val SUBJECT_DETAILS_QUERY_1 = """
-            $SUBJECT_DETAILS_FRAGMENTS
-            query BatchGetSubjectQuery(${'$'}id: Int!) {
-              s0:subject(id: ${'$'}id){...SubjectFragment}
-            }
-        """
-
-        // 服务器会缓存 query 编译, 用 variables 可以让查询更快
-        private val SUBJECT_DETAILS_QUERY_WHOLE_PAGE by lazy {
-            buildString {
-                appendLine(SUBJECT_DETAILS_FRAGMENTS)
-
-                appendLine("query BatchGetSubjectQuery(")
-                repeat(Repository.defaultPagingConfig.pageSize) { i ->
-                    append("\$id").append(i).append(": Int!")
-                    if (i != Repository.defaultPagingConfig.pageSize - 1) {
-                        append(", ")
-                    }
-                }
-                appendLine(") {")
-
-                repeat(Repository.defaultPagingConfig.pageSize) { i ->
-                    append('s')
-                    append(i)
-                    append(":subject(id: \$id").append(i).append("){...SubjectFragment}")
-                    appendLine()
-                }
-
-                append("}")
-            }
-        }
     }
 }
 
