@@ -40,18 +40,35 @@ class TorrentServiceConnection(
     val connected: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val lock = SynchronizedObject()
-    private var lifecycleActive = false
+
+    /**
+     * service 断开连接后是否需要立即重启,
+     */
+    private var shouldRestartServiceImmediately = false
     private val restartServiceIntentFilter = IntentFilter(AniTorrentService.INTENT_STARTUP)
     
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
         when (event) {
             Lifecycle.Event.ON_CREATE -> {
-                lifecycleActive = true
-                bindService()
+                // 立即获取 bind 结果, 并更新 connected 状态
+                // 如果在 ON_START 时 onServiceConnected 还没有回调
+                // 那 ON_START 会尝试重启 service
+                connected.value = bindService()
+            }
+
+            Lifecycle.Event.ON_START -> {
+                shouldRestartServiceImmediately = true
+                // 如果 app 在后台时断开了 service 连接, 需要在切回前台时重新启动
+                if (!connected.value) {
+                    restartService()
+                }
+            }
+
+            Lifecycle.Event.ON_STOP -> {
+                shouldRestartServiceImmediately = false
             }
 
             Lifecycle.Event.ON_DESTROY -> {
-                lifecycleActive = false
                 try {
                     context.unbindService(this)
                 } catch (ex: IllegalArgumentException) {
@@ -90,16 +107,8 @@ class TorrentServiceConnection(
         connected.value = false
 
         // app activity 还存在时必须重启 service
-        if (lifecycleActive) {
-            ContextCompat.registerReceiver(
-                context,
-                this,
-                restartServiceIntentFilter,
-                ContextCompat.RECEIVER_NOT_EXPORTED,
-            )
-
-            logger.debug { "AniTorrentService is disconnected while app is running, restarting." }
-            onRequiredRestartService()
+        if (shouldRestartServiceImmediately) {
+            restartService()
         }
     }
 
@@ -114,6 +123,18 @@ class TorrentServiceConnection(
         logger.debug { "AniTorrentService is restarted, rebinding." }
         bindService()
         this.context.unregisterReceiver(this)
+    }
+
+    private fun restartService() {
+        ContextCompat.registerReceiver(
+            context,
+            this,
+            restartServiceIntentFilter,
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
+
+        logger.debug { "AniTorrentService is disconnected while app is running, restarting." }
+        onRequiredRestartService()
     }
 
     private fun bindService(): Boolean {
