@@ -94,7 +94,7 @@ class SubjectPreviewItemInfo(
                         (mainCharacters + nonMainCharacters)
                             .take(3)
                             // mostSignificantCharacters
-                            .flatMap { it.actors }
+                            .flatMap { it.character.actors }
                             .map { it.displayName }
                             .joinToString(" · "),
                     )

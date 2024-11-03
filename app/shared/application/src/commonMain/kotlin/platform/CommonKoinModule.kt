@@ -58,9 +58,11 @@ import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepository
 import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepositoryImpl
 import me.him188.ani.app.data.repository.player.EpisodeScreenshotRepository
 import me.him188.ani.app.data.repository.player.WhatslinkEpisodeScreenshotRepository
+import me.him188.ani.app.data.repository.subject.DefaultSubjectRelationsRepository
 import me.him188.ani.app.data.repository.subject.FollowedSubjectsRepository
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepositoryImpl
+import me.him188.ani.app.data.repository.subject.SubjectRelationsRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchHistoryRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchHistoryRepositoryImpl
 import me.him188.ani.app.data.repository.subject.SubjectSearchRepository
@@ -156,6 +158,12 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
             api = suspend { client.getApi() }.asFlow(),
             bangumiSubjectService = get(),
             subjectCollectionDao = database.subjectCollection(),
+//            characterDao = database.character(),
+//            characterActorDao = database.characterActor(),
+//            personDao = database.person(),
+//            subjectCharacterRelationDao = database.subjectCharacterRelation(),
+//            subjectPersonRelationDao = database.subjectPersonRelation(),
+            subjectRelationsDao = database.subjectRelations(),
             episodeCollectionRepository = get(),
             usernameProvider = get(),
         )
@@ -174,6 +182,12 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
     }
     single<SubjectSearchHistoryRepository> {
         SubjectSearchHistoryRepositoryImpl(database.searchHistory(), database.searchTag())
+    }
+    single<SubjectRelationsRepository> {
+        DefaultSubjectRelationsRepository(
+            database.subjectCollection(),
+            database.subjectRelations(),
+        )
     }
 
     // Data layer network services

@@ -13,6 +13,7 @@ package me.him188.ani.app.ui.exploration.search
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import me.him188.ani.app.data.models.subject.PersonPosition
 import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import kotlin.jvm.JvmInline
 
@@ -32,7 +33,7 @@ value class RoleSet(
 
         @Stable
         val Default =
-            RoleSet(listOf(Role.AnimeProduction, Role.Director, Role.Script, Role.Music))
+            RoleSet(listOf(Role.ANIMATION_PRODUCTION, Role.DIRECTOR, Role.SCRIPT_WRITER, Role.MUSIC))
     }
 }
 
@@ -41,56 +42,8 @@ value class RoleSet(
  */
 fun List<RelatedPersonInfo>.filter(roleSet: RoleSet): Sequence<RelatedPersonInfo> {
     return asSequence().filter f@{ person ->
-        val role = Role.matchOrNull(person.relation) ?: return@f false
-        role in roleSet
+        person.position in roleSet
     }
 }
 
-@Immutable
-enum class Role(vararg val names: String) {
-    /**
-     * 动画制作
-     */
-    AnimeProduction("动画制作"),
-
-    /**
-     * 原作
-     */
-    OriginalAuthor("原作"),
-
-    /**
-     * 监督
-     */
-    Director("监督", "导演"),
-
-    /**
-     * 脚本, 编剧, 系列构成
-     */
-    Script("系列构成", "脚本", "编剧"),
-
-    Music("音乐"),
-
-    CharacterDesign("人设", "人物设定"),
-
-    ArtDesign("美术设计"),
-
-    AnimationDirector("动作作画监督"),
-    ;
-
-    /*
-                   "动画制作",
-                   "原作",
-                   "监督", "导演",
-                   "脚本", "编剧",
-                   "音乐",
-                   "人设", "人物设定",
-                   "系列构成",
-                   "美术设计",
-                   "动作作画监督",
-        */
-    companion object {
-        fun matchOrNull(name: String): Role? = entries.firstOrNull { role ->
-            role.names.any { it == name }
-        }
-    }
-}
+typealias Role = PersonPosition

@@ -59,6 +59,8 @@ import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
+import me.him188.ani.app.ui.search.SearchProblem
+import me.him188.ani.app.ui.search.SearchProblemCard
 import me.him188.ani.app.ui.search.isLoadingNextPage
 import me.him188.ani.app.ui.subject.AiringLabel
 import me.him188.ani.app.ui.subject.AiringLabelState
@@ -91,6 +93,16 @@ fun SubjectCollectionsColumn(
         contentPadding = PaddingValues(all = spacedBy / 2),
     ) {
         item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(1.dp)) } // 添加新 item 时保持到顶部
+
+        if (items.loadState.hasError) {
+            item {
+                SearchProblemCard(
+                    SearchProblem.fromCombinedLoadStates(items.loadState),
+                    onRetry = { items.refresh() },
+                    onLogin = { }, // should not happen
+                )
+            }
+        }
 
         items(
             items.itemCount,

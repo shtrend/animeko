@@ -29,15 +29,23 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.int
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.isKnownCompleted
+import me.him188.ani.app.data.models.subject.CharacterInfo
+import me.him188.ani.app.data.models.subject.CharacterRole
+import me.him188.ani.app.data.models.subject.PersonInfo
+import me.him188.ani.app.data.models.subject.PersonPosition
+import me.him188.ani.app.data.models.subject.PersonType
 import me.him188.ani.app.data.models.subject.RatingCounts
 import me.him188.ani.app.data.models.subject.RatingInfo
+import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
+import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
@@ -49,7 +57,12 @@ import me.him188.ani.app.data.models.subject.Tag
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
+import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
 import me.him188.ani.app.data.persistent.database.dao.filterMostRecentUpdated
+import me.him188.ani.app.data.persistent.database.entity.CharacterEntity
+import me.him188.ani.app.data.persistent.database.entity.PersonEntity
+import me.him188.ani.app.data.persistent.database.entity.SubjectCharacterRelationEntity
+import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEntity
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
 import me.him188.ani.app.data.repository.RepositoryException
@@ -123,6 +136,7 @@ class SubjectCollectionRepositoryImpl(
     private val api: Flow<BangumiSubjectApi>,
     private val bangumiSubjectService: BangumiSubjectService,
     private val subjectCollectionDao: SubjectCollectionDao,
+    private val subjectRelationsDao: SubjectRelationsDao,
     private val episodeCollectionRepository: EpisodeCollectionRepository,
     private val usernameProvider: RepositoryUsernameProvider,
     private val getCurrentDate: () -> PackedDate = { PackedDate.now() },
@@ -292,14 +306,28 @@ class SubjectCollectionRepositoryImpl(
                     val collections = resp.data.orEmpty()
                     val items = batchGetSubjectDetails(collections.map { it.subjectId })
                         .map { batch ->
+                            val subjectId = batch.subjectInfo.subjectId
                             val collection =
-                                collections.first { it.subjectId == batch.subjectInfo.subjectId }
-                            batch.toEntity(
+                                collections.first { it.subjectId == subjectId }
+
+                            subjectRelationsDao.upsertPersons(batch.relatedPersonInfoList.map { it.personInfo.toEntity() })
+                            subjectRelationsDao.upsertCharacters(batch.relatedCharacterInfoList.map { it.character.toEntity() })
+                            val entity = batch.toEntity(
                                 collection.type.toCollectionType(),
                                 collection.toSelfRatingInfo(),
                             )
+                            subjectCollectionDao.upsert(entity)
+                            // 必须先插入前三个, 再插入 relations, 否则会 violate foreign key constraint
+
+                            subjectRelationsDao.upsertSubjectPersonRelations(
+                                batch.relatedPersonInfoList.map { it.toRelationEntity(subjectId) },
+                            )
+                            subjectRelationsDao.upsertSubjectCharacterRelations(
+                                batch.relatedCharacterInfoList.map { it.toRelationEntity(subjectId) },
+                            )
+
+                            entity
                         }
-                        .also { subjectCollectionDao.upsert(it) }
 
                     MediatorResult.Success(endOfPaginationReached = items.isEmpty())
                 }
@@ -352,48 +380,90 @@ class SubjectCollectionRepositoryImpl(
         val resp = client.executeGraphQL(
             "SubjectCollectionRepositoryImpl.batchGetSubjectDetails",
             """
-            fragment Ep on Episode {
-              id
-              type
-              name
-              name_cn
-              airdate
-              comment
-              description
-              sort
-            }
+fragment Ep on Episode {
+  id
+  type
+  name
+  name_cn
+  airdate
+  comment
+  description
+  sort
+}
 
-            fragment SubjectFragment on Subject {
-              id
-              name
-              name_cn
-              images{large, common}
-              characters {
-                order
-                type
-                character {
-                  id
-                  name
-                }
-              }
-              infobox {
-                values {
-                  k
-                  v
-                }
-                key
-              }
-              summary
-              eps
-              collection{collect , doing, dropped, on_hold, wish}
-              airtime{date}
-              rating{count, rank, score, total}
-              nsfw
-              tags{count, name}
-              
-              leadingEpisodes : episodes(limit: 1) { ...Ep }
-              trailingEpisodes : episodes(limit: 1, offset:-1) { ...Ep }
-            }
+fragment SubjectFragment on Subject {
+  id
+  type
+  name
+  name_cn
+  images{large, common}
+  characters {
+    order
+    type
+    character {
+      id
+      name
+      comment
+      collects
+      infobox {
+        key 
+        values {k 
+                v}
+      }
+      role
+      images {
+        large
+        medium
+      }
+    }
+  }
+  infobox {
+    values {
+      k
+      v
+    }
+    key
+  }
+  summary
+  eps
+  collection{collect , doing, dropped, on_hold, wish}
+  airtime{date}
+  rating{count, rank, score, total}
+  nsfw
+  tags{count, name}
+  
+  persons {
+    person {
+      career
+      collects
+      comment
+      id
+      images {
+        large
+        medium
+      }
+      infobox {
+        key
+        values {
+          k
+          v
+        } 
+      }
+      last_post
+      lock
+      name
+      nsfw
+      redirect
+      summary
+      type
+    }
+    position
+  }
+
+  leadingEpisodes : episodes(limit: 100) { ...Ep }
+  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
+  # episodes{id, type, name, name_cn, sort, airdate, comment, duration, description, disc, ep, }
+}
 
             query BatchGetSubjectQuery {
               ${
@@ -424,6 +494,8 @@ class SubjectCollectionRepositoryImpl(
                                         name = "<$id 错误>",
                                         summary = resp["errors"].toString(),
                                     ),
+                                    relatedCharacterInfoList = emptyList(),
+                                    relatedPersonInfoList = emptyList(),
                                 )
                             } else {
                                 it.jsonObject.toBatchSubjectDetails()
@@ -444,6 +516,46 @@ class SubjectCollectionRepositoryImpl(
     }
 }
 
+private fun CharacterInfo.toEntity(): CharacterEntity {
+    return CharacterEntity(
+        characterId = id,
+        name = name,
+        nameCn = nameCn,
+        imageLarge = imageLarge,
+        imageMedium = imageMedium,
+    )
+}
+
+private fun PersonInfo.toEntity(): PersonEntity {
+    return PersonEntity(
+        personId = id,
+        name = name,
+        nameCn = nameCn,
+        type = type,
+        imageLarge = imageLarge,
+        imageMedium = imageMedium,
+        summary = summary,
+    )
+}
+
+private fun RelatedPersonInfo.toRelationEntity(subjectId: Int): SubjectPersonRelationEntity {
+    return SubjectPersonRelationEntity(
+        subjectId = subjectId,
+        index = index,
+        personId = personInfo.id,
+        position = position,
+    )
+}
+
+private fun RelatedCharacterInfo.toRelationEntity(subjectId: Int): SubjectCharacterRelationEntity {
+    return SubjectCharacterRelationEntity(
+        subjectId = subjectId,
+        index = index,
+        characterId = character.id,
+        role = role,
+    )
+}
+
 data class CollectionsFilterQuery(
     val type: UnifiedCollectionType?,
 ) {
@@ -454,6 +566,8 @@ data class CollectionsFilterQuery(
 
 class BatchSubjectDetails(
     val subjectInfo: SubjectInfo,
+    val relatedCharacterInfoList: List<RelatedCharacterInfo>,
+    val relatedPersonInfoList: List<RelatedPersonInfo>,
 )
 
 private fun BangumiUserSubjectCollection.toSelfRatingInfo(): SelfRatingInfo {
@@ -518,16 +632,16 @@ private fun JsonElement.vSequence(): Sequence<String> {
     }
 }
 
-private fun JsonObject.toBatchSubjectDetails(): BatchSubjectDetails {
-    fun infobox(key: String): Sequence<String> = sequence {
-        for (jsonElement in getOrFail("infobox").jsonArray) {
-            if (jsonElement.jsonObject.getStringOrFail("key") == key) {
-                yieldAll(jsonElement.jsonObject.getOrFail("values").vSequence())
-            }
+private fun JsonObject.infobox(key: String): Sequence<String> = sequence {
+    for (jsonElement in getOrFail("infobox").jsonArray) {
+        if (jsonElement.jsonObject.getStringOrFail("key") == key) {
+            yieldAll(jsonElement.jsonObject.getOrFail("values").vSequence())
         }
     }
+}
 
-    val completionDate = (infobox("播放结束") + infobox("放送结束"))
+private fun JsonObject.toBatchSubjectDetails(): BatchSubjectDetails {
+    val completionDate = (this.infobox("播放结束") + this.infobox("放送结束"))
         .firstOrNull()
         ?.let {
             PackedDate.parseFromDate(
@@ -538,6 +652,53 @@ private fun JsonObject.toBatchSubjectDetails(): BatchSubjectDetails {
         }
         ?: PackedDate.Invalid
 
+    val characters = getOrFail("characters").jsonArray.mapIndexed { index, relatedCharacter ->
+        check(relatedCharacter is JsonObject)
+
+        val role = when (relatedCharacter.getIntOrFail("type")) {
+            1 -> CharacterRole.MAIN
+            2 -> CharacterRole.SUPPORTING
+            3 -> CharacterRole.GUEST
+            else -> throw IllegalStateException("Unexpected character type: $relatedCharacter")
+        }
+
+        val character = relatedCharacter.getOrFail("character").jsonObject
+
+        RelatedCharacterInfo(
+            index = index,
+            character = CharacterInfo(
+                id = character.getIntOrFail("id"),
+                name = character.getStringOrFail("name"),
+                nameCn = character.infobox("简体中文名").firstOrNull() ?: "",
+                actors = emptyList(), // TODO: character actor
+                imageMedium = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("medium") ?: "",
+                imageLarge = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("large") ?: "",
+            ),
+            role = role,
+        )
+    }
+
+    val persons = getOrFail("persons").jsonArray.mapIndexed { index, relatedPerson ->
+        check(relatedPerson is JsonObject)
+        val person = relatedPerson.getOrFail("person").jsonObject
+        RelatedPersonInfo(
+            index,
+            personInfo = PersonInfo(
+                id = person.getIntOrFail("id"),
+                name = person.getStringOrFail("name"),
+                type = PersonType.fromId(person.getIntOrFail("type")),
+//                careers = person.infobox("职业").map { PersonCareer.valueOf(it) }.toList(),
+                careers = emptyList(),
+                imageLarge = person["images"]?.jsonObjectOrNull?.getStringOrFail("large") ?: "",
+                imageMedium = person["images"]?.jsonObjectOrNull?.getStringOrFail("medium") ?: "",
+                summary = person.getString("summary") ?: "",
+                locked = person.getIntOrFail("lock") == 1,
+                nameCn = person.infobox("简体中文名").firstOrNull() ?: "",
+            ),
+            position = PersonPosition(relatedPerson.getIntOrFail("position")),
+        )
+    }
+
     return try {
         BatchSubjectDetails(
             SubjectInfo(
@@ -547,8 +708,7 @@ private fun JsonObject.toBatchSubjectDetails(): BatchSubjectDetails {
                 nameCn = getStringOrFail("name_cn"),
                 summary = getStringOrFail("summary"),
                 nsfw = getBooleanOrFail("nsfw"),
-                imageLarge = getOrFail("images").jsonObjectOrNull?.getString("large")
-                    ?: "", // 有少数没有
+                imageLarge = getOrFail("images").jsonObjectOrNull?.getString("large") ?: "", // 有少数没有
                 totalEpisodes = getIntOrFail("eps"),
                 airDate = PackedDate.parseFromDate(getOrFail("airtime").jsonObject.getStringOrFail("date")),
                 tags = getOrFail("tags").jsonArray.map {
@@ -591,6 +751,8 @@ private fun JsonObject.toBatchSubjectDetails(): BatchSubjectDetails {
                 },
                 completeDate = completionDate,
             ),
+            relatedCharacterInfoList = characters,
+            relatedPersonInfoList = persons,
         )
     } catch (e: Exception) {
         throw IllegalStateException(
@@ -607,7 +769,8 @@ private fun JsonObject.getOrFail(key: String): JsonElement {
 }
 
 private fun JsonObject.getIntOrFail(key: String): Int {
-    return get(key)?.jsonPrimitive?.int ?: throw NoSuchElementException("key $key not found")
+    val field = get(key)?.jsonPrimitive ?: throw NoSuchElementException("key $key not found")
+    return field.intOrNull ?: throw IllegalStateException("Field $key is not an int: $field")
 }
 
 private fun JsonObject.getString(key: String): String? {
@@ -619,7 +782,8 @@ private fun JsonObject.getStringOrFail(key: String): String {
 }
 
 private fun JsonObject.getBooleanOrFail(key: String): Boolean {
-    return get(key)?.jsonPrimitive?.boolean ?: throw NoSuchElementException("key $key not found")
+    val field = get(key)?.jsonPrimitive ?: throw NoSuchElementException("key $key not found")
+    return field.booleanOrNull ?: throw IllegalStateException("Field $key is not a boolean: $field")
 }
 
 private fun SubjectCollectionEntity.toSubjectCollectionInfo(

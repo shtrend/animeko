@@ -26,6 +26,12 @@ import me.him188.ani.app.data.persistent.database.dao.SearchTagDao
 import me.him188.ani.app.data.persistent.database.dao.SearchTagEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
+import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
+import me.him188.ani.app.data.persistent.database.entity.CharacterActorEntity
+import me.him188.ani.app.data.persistent.database.entity.CharacterEntity
+import me.him188.ani.app.data.persistent.database.entity.PersonEntity
+import me.him188.ani.app.data.persistent.database.entity.SubjectCharacterRelationEntity
+import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEntity
 
 @Database(
     entities = [
@@ -33,11 +39,19 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
         SearchTagEntity::class,
         SubjectCollectionEntity::class,
         EpisodeCollectionEntity::class,
+
+        PersonEntity::class, // 4.0.0-alpha04
+        SubjectPersonRelationEntity::class, // 4.0.0-alpha04
+
+        CharacterEntity::class, // 4.0.0-alpha04
+        SubjectCharacterRelationEntity::class, // 4.0.0-alpha04
+        CharacterActorEntity::class, // 4.0.0-alpha04
     ],
-    version = 3,
+    version = 4,
     autoMigrations = [
-        AutoMigration(from = 1, to = 2, spec = Migrations.NoopMigration::class), // 4.0.0-alpha03
-        AutoMigration(from = 2, to = 3, spec = Migrations.Migration_2_3::class), // 4.0.0-alpha03
+        AutoMigration(from = 1, to = 2, spec = Migrations.Migration_1_2::class),
+        AutoMigration(from = 2, to = 3, spec = Migrations.Migration_2_3::class),
+        AutoMigration(from = 3, to = 4, spec = Migrations.Migration_3_4::class),
     ],
 )
 @ConstructedBy(AniDatabaseConstructor::class)
@@ -47,6 +61,11 @@ abstract class AniDatabase : RoomDatabase() {
     abstract fun searchTag(): SearchTagDao
     abstract fun subjectCollection(): SubjectCollectionDao
     abstract fun episodeCollection(): EpisodeCollectionDao
+
+    /**
+     * @since 4.0.0-alpha04
+     */
+    abstract fun subjectRelations(): SubjectRelationsDao
 }
 
 expect object AniDatabaseConstructor : RoomDatabaseConstructor<AniDatabase> {
@@ -56,16 +75,43 @@ expect object AniDatabaseConstructor : RoomDatabaseConstructor<AniDatabase> {
 @Suppress("ClassName")
 internal object Migrations {
 
-    // NOOP, version 2 has only additions.
-    class NoopMigration : AutoMigrationSpec {
+    /**
+     * 只增加了新的表
+     *
+     * @since 4.0.0-alpha03
+     */
+    class Migration_1_2 : AutoMigrationSpec {
         override fun onPostMigrate(connection: SQLiteConnection) {
         }
     }
 
+    /**
+     * @since 4.0.0-alpha03
+     */
     class Migration_2_3 : AutoMigrationSpec {
         override fun onPostMigrate(connection: SQLiteConnection) {
             connection.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `distinct_content` ON `search_history`(`content`)")
             connection.execSQL("CREATE INDEX IF NOT EXISTS `sequence_desc` ON `search_history`(`sequence` DESC)")
+        }
+    }
+
+    /**
+     * 增加了以下表:
+     *
+     * - [PersonEntity]
+     * - [SubjectPersonRelationEntity]
+     *
+     * - [CharacterEntity]
+     * - [SubjectCharacterRelationEntity]
+     * - [CharacterActorEntity]
+     *
+     * DAO:
+     * - [SubjectRelationsDao]
+     *
+     * @since 4.0.0-alpha04
+     */
+    class Migration_3_4 : AutoMigrationSpec {
+        override fun onPostMigrate(connection: SQLiteConnection) {
         }
     }
 }

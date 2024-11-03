@@ -16,8 +16,10 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.TypeConverters
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
+import me.him188.ani.app.data.persistent.database.converters.PackedDateConverter
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.PackedDate
@@ -44,6 +46,7 @@ import me.him188.ani.utils.platform.currentTimeMillis
 //        ),
     ],
 )
+@TypeConverters(PackedDateConverter::class)
 data class EpisodeCollectionEntity(
     val subjectId: Int,
     @PrimaryKey val episodeId: Int,

@@ -1,34 +1,95 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.data.models.subject
 
+import androidx.collection.mutableIntObjectMapOf
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.Stable
+import me.him188.ani.app.data.models.subject.CharacterRole.Companion.GUEST
+import me.him188.ani.app.data.models.subject.CharacterRole.Companion.MAIN
+import me.him188.ani.app.data.models.subject.CharacterRole.Companion.SUPPORTING
+import kotlin.jvm.JvmInline
 
 @Immutable
-class RelatedCharacterInfo(
-    val id: Int,
-    val originalName: String,
-    val type: CharacterType,
-    val relation: String,
-    val images: Images?,
-    val actors: List<PersonInfo>,
-    val chineseName: String = "",
+data class RelatedCharacterInfo(
+    /**
+     * 在条目中的序号, 每个条目的第一个角色为 `0`.
+     */
+    val index: Int,
+    val character: CharacterInfo,
+    val role: CharacterRole,
 ) {
-    val displayName get() = chineseName.takeIf { it.isNotBlank() } ?: originalName
-
-    fun isMainCharacter() = relation == "主角"
+    fun isMainCharacter() = role == CharacterRole.MAIN
 
     companion object {
         fun sortList(characterList: List<RelatedCharacterInfo>): List<RelatedCharacterInfo> {
             return characterList.sortedByDescending {
-                when (it.relation) {
-                    "主角" -> 10
-                    "配角" -> 9
-                    "客串" -> 8
-                    else -> 0
+                when (it.role) {
+                    CharacterRole.MAIN -> 10
+                    CharacterRole.SUPPORTING -> 9
+                    CharacterRole.GUEST -> 8
+                    else -> {
+                        0
+                    }
                 }
             }
         }
     }
 }
+
+@Immutable
+data class CharacterInfo(
+    val id: Int,
+    val name: String,
+    val nameCn: String,
+    val actors: List<PersonInfo>,
+    val imageMedium: String,
+    val imageLarge: String,
+) {
+    val displayName get() = nameCn.takeIf { it.isNotBlank() } ?: name
+}
+
+@JvmInline
+@Immutable
+value class CharacterRole(
+    val id: Int
+) {
+    companion object {
+        /**
+         * 主角
+         */
+        val MAIN = CharacterRole(1)
+
+        /**
+         * 配角
+         */
+        val SUPPORTING = CharacterRole(2)
+
+        /**
+         * 客串
+         */
+        val GUEST = CharacterRole(3)
+    }
+}
+
+private val names by lazy(LazyThreadSafetyMode.PUBLICATION) {
+    mutableIntObjectMapOf<String>().apply {
+        put(MAIN.id, "主角")
+        put(SUPPORTING.id, "配角")
+        put(GUEST.id, "客串")
+    }
+}
+
+@Stable
+val CharacterRole.nameCn
+    get() = names[id] ?: "未知"
 
 @Immutable
 enum class CharacterType {
@@ -49,26 +110,38 @@ data class Images(
 @Immutable
 class PersonInfo(
     val id: Int,
-    val originalName: String,
+    val name: String,
     val type: PersonType,
     val careers: List<PersonCareer>,
-    val images: Images?,
-    val shortSummary: String?,
+    val imageLarge: String,
+    val imageMedium: String,
+    val summary: String,
     val locked: Boolean?,
-    val chineseName: String = "",
+    val nameCn: String = "",
 ) {
-    val displayName get() = chineseName.takeIf { it.isNotBlank() } ?: originalName
+    val displayName get() = nameCn.takeIf { it.isNotBlank() } ?: name
+}
+
+@JvmInline
+@Immutable
+value class PersonType(
+    val id: Int,
+) {
+    companion object {
+        val Individual = PersonType(1)
+        val Corporation = PersonType(2)
+        val Association = PersonType(3)
+
+        val entries by lazy(LazyThreadSafetyMode.PUBLICATION) {
+            listOf(Individual, Corporation, Association)
+        }
+
+        fun fromId(id: Int) = PersonType(id)
+    }
 }
 
 @Immutable
-enum class PersonType {
-    Individual,
-    Corporation,
-    Association;
-}
-
-@Immutable
-enum class PersonCareer {
+enum class PersonCareer { // TODO: 在进数据库之前, 改为 value class
     PRODUCER,
     MANGAKA,
     ARTIST,

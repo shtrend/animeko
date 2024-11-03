@@ -46,6 +46,7 @@ import me.him188.ani.app.data.network.BangumiRelatedPeopleService
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.episode.EpisodeProgressRepository
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
+import me.him188.ani.app.data.repository.subject.SubjectRelationsRepository
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.domain.session.SessionManager
@@ -81,6 +82,7 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
     private val episodeProgressRepository: EpisodeProgressRepository by inject()
     private val episodeCollectionRepository: EpisodeCollectionRepository by inject()
     private val bangumiRelatedPeopleService: BangumiRelatedPeopleService by inject()
+    private val subjectRelationsRepository: SubjectRelationsRepository by inject()
     private val settingsRepository: SettingsRepository by inject()
     private val bangumiCommentService: BangumiCommentService by inject()
 
@@ -283,19 +285,31 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
             backgroundScope = this,
         )
 
-        val relatedPersonsFlow = bangumiRelatedPeopleService.relatedPersonsFlow(subjectId)
-            .onEach {
-                withContext(Dispatchers.Main) { totalStaffCountState.value = it.size }
-            }
-            .stateIn(this, SharingStarted.Eagerly, null)
-
+//        val relatedPersonsFlow = bangumiRelatedPeopleService.relatedPersonsFlow(subjectId)
+//            .onEach {
+//                withContext(Dispatchers.Main) { totalStaffCountState.value = it.size }
+//            }
+//            .stateIn(this, SharingStarted.Eagerly, null)
+//
         val loadingState = LoadStates(
             refresh = LoadState.Loading,
             prepend = LoadState.NotLoading(false),
             append = LoadState.NotLoading(false),
         )
 
-        val relatedCharactersFlow = bangumiRelatedPeopleService.relatedCharactersFlow(subjectId)
+//        val relatedCharactersFlow = bangumiRelatedPeopleService.relatedCharactersFlow(subjectId)
+//            .onEach {
+//                withContext(Dispatchers.Main) { totalCharactersCountState.value = it.size }
+//            }
+//            .stateIn(this, SharingStarted.Eagerly, null)
+
+        val relatedPersonsFlow = subjectRelationsRepository.subjectRelatedPersonsFlow(subjectId)
+            .onEach {
+                withContext(Dispatchers.Main) { totalStaffCountState.value = it.size }
+            }
+            .stateIn(this, SharingStarted.Eagerly, null)
+
+        val relatedCharactersFlow = subjectRelationsRepository.subjectRelatedCharactersFlow(subjectId)
             .onEach {
                 withContext(Dispatchers.Main) { totalCharactersCountState.value = it.size }
             }

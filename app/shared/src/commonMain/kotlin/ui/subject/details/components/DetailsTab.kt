@@ -59,6 +59,7 @@ import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
 import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.RelatedSubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.data.models.subject.nameCn
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.foundation.Tag
 import me.him188.ani.app.ui.foundation.avatar.AvatarImage
@@ -342,9 +343,9 @@ private fun <T : Any> PersonCardList(
 @Composable
 fun PersonCard(info: RelatedPersonInfo, modifier: Modifier = Modifier) {
     PersonCard(
-        avatarUrl = info.personInfo.images?.medium?.takeIf { it.isNotEmpty() },
+        avatarUrl = info.personInfo.imageMedium,
         name = info.personInfo.displayName,
-        relation = info.relation,
+        relation = info.position.nameCn ?: "",
         modifier = modifier,
     )
 }
@@ -352,11 +353,11 @@ fun PersonCard(info: RelatedPersonInfo, modifier: Modifier = Modifier) {
 @Composable
 fun PersonCard(info: RelatedCharacterInfo, modifier: Modifier = Modifier) {
     PersonCard(
-        avatarUrl = info.images?.medium?.takeIf { it.isNotEmpty() },
-        name = info.displayName,
-        relation = info.relation,
+        avatarUrl = info.character.imageMedium,
+        name = info.character.displayName,
+        relation = info.role.nameCn,
         modifier = modifier,
-        actorName = remember(info) { getFirstName(info.actors) },
+        actorName = remember(info) { getFirstName(info.character.actors) },
     )
 }
 
