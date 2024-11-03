@@ -9,10 +9,12 @@
 
 package me.him188.ani.app.domain.torrent.service
 
+import android.content.Context
 import android.content.Intent
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.PowerManager
 import android.os.Process
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
@@ -70,6 +72,10 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
     }
 
     private val notification = ServiceNotification(this)
+    private val wakeLock: PowerManager.WakeLock by lazy {
+        (getSystemService(Context.POWER_SERVICE) as PowerManager)
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AniTorrentService::wake_lock")
+    }
     
     override fun onCreate() {
         super.onCreate()
@@ -103,6 +109,14 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.getBooleanExtra("stopService", false) == true) {
             stopSelf()
+            return super.onStartCommand(intent, flags, startId)
+        }
+        
+        // acquire wake lock when app is stopped.
+        val acquireWakeLock = intent?.getLongExtra("acquireWakeLock", -1L) ?: -1L
+        if (acquireWakeLock != -1L) {
+            wakeLock.acquire(acquireWakeLock)
+            logger.info { "client acquired wake lock with ${acquireWakeLock / 1000} seconds." }
             return super.onStartCommand(intent, flags, startId)
         }
 
@@ -148,6 +162,8 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
         // cancel lifecycle scope
         this.cancel()
         super.onDestroy()
+        // release wake lock if held
+        wakeLock.release()
         // force kill process
         Process.killProcess(Process.myPid())
     }

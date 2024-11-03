@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.domain.torrent.service
 
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
@@ -29,6 +30,8 @@ import me.him188.ani.utils.logging.debug
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 
 class TorrentServiceConnection(
     private val context: Context,
@@ -46,6 +49,12 @@ class TorrentServiceConnection(
      */
     private var shouldRestartServiceImmediately = false
     private val restartServiceIntentFilter = IntentFilter(AniTorrentService.INTENT_STARTUP)
+
+    private val acquireWakeLockIntent by lazy {
+        Intent(context, AniTorrentService::class.java).apply {
+            putExtra("acquireWakeLock", 10.minutes.inWholeMilliseconds)
+        }
+    }
     
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
         when (event) {
@@ -66,6 +75,8 @@ class TorrentServiceConnection(
 
             Lifecycle.Event.ON_STOP -> {
                 shouldRestartServiceImmediately = false
+                // 请求 wake lock, 如果在 app 中息屏可以保证 service 正常跑 10 分钟.
+                context.startService(acquireWakeLockIntent)
             }
 
             Lifecycle.Event.ON_DESTROY -> {
