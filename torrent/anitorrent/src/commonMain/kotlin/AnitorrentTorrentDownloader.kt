@@ -38,6 +38,7 @@ import me.him188.ani.app.torrent.api.TorrentLibInfo
 import me.him188.ani.app.torrent.api.TorrentSession
 import me.him188.ani.app.torrent.api.files.EncodedTorrentInfo
 import me.him188.ani.app.torrent.api.peer.PeerFilter
+import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.SystemPaths
 import me.him188.ani.utils.io.absolutePath
@@ -282,7 +283,7 @@ abstract class AnitorrentTorrentDownloader<THandle : TorrentHandle, TAddInfo : T
             }
 
             is AnitorrentTorrentData.TorrentFile -> {
-                withContext(Dispatchers.IO) {
+                withContext(Dispatchers.IO_) {
                     val tempFile = SystemPaths.createTempFile("anitorrent", ".torrent")
                     tempFile.writeBytes(info.data.data)
                     addInfo.setTorrentFilePath(tempFile.absolutePath)
@@ -311,7 +312,7 @@ abstract class AnitorrentTorrentDownloader<THandle : TorrentHandle, TAddInfo : T
                 scope.launch {
                     // http 下载的 .torrent 文件保存在全局路径, 需要删除
                     info.httpTorrentFilePath?.let(::Path)?.let { cacheFile ->
-                        withContext(Dispatchers.IO) {
+                        withContext(Dispatchers.IO_) {
                             if (cacheFile.inSystem.exists()) {
                                 cacheFile.inSystem.delete()
                             }
