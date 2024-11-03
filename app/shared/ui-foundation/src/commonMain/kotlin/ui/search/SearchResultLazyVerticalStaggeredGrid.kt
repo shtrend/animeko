@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.paging.compose.LazyPagingItems
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.icons.Passkey_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24
@@ -71,51 +72,53 @@ fun <T : Any> SearchResultLazyVerticalStaggeredGrid(
     horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(0.dp),
     content: LazyStaggeredGridScope.() -> Unit,
 ) {
-    Column(modifier) {
-        FastLinearProgressIndicator(
-            items.isLoadingFirstPage,
-            Modifier.padding(vertical = 4.dp),
-            minimumDurationMillis = 300,
-        )
-
-        if (items.loadState.hasError) {
-            Box(
-                Modifier
-                    .sizeIn(
-                        minHeight = Dp.Hairline,// 保证最小大小, 否则 LazyColumn 滑动可能有 bug
-                        minWidth = Dp.Hairline,
-                    )
-                    .padding(bottom = 8.dp),
-            ) {
-                val value = items.rememberSearchProblemState().value
-                problem(value)
+    Box(modifier) {
+        Column(Modifier.zIndex(1f)) {
+            if (items.loadState.hasError) {
+                Box(
+                    Modifier
+                        .sizeIn(
+                            minHeight = Dp.Hairline,// 保证最小大小, 否则 LazyColumn 滑动可能有 bug
+                            minWidth = Dp.Hairline,
+                        )
+                        .padding(vertical = 8.dp),
+                ) {
+                    val value = items.rememberSearchProblemState().value
+                    problem(value)
+                }
             }
-        }
 
-        LazyVerticalStaggeredGrid(
-            cells,
-            Modifier.fillMaxWidth(),
-            lazyStaggeredGridState,
-            horizontalArrangement = horizontalArrangement,
-        ) {
-            // 用于保持刷新时在顶部
-            item(span = StaggeredGridItemSpan.FullLine) { Spacer(Modifier.height(Dp.Hairline)) } // 如果空白内容, 它可能会有 bug
+            LazyVerticalStaggeredGrid(
+                cells,
+                Modifier.fillMaxWidth(),
+                lazyStaggeredGridState,
+                horizontalArrangement = horizontalArrangement,
+            ) {
+                // 用于保持刷新时在顶部
+                item(span = StaggeredGridItemSpan.FullLine) { Spacer(Modifier.height(Dp.Hairline)) } // 如果空白内容, 它可能会有 bug
 
-            content()
+                content()
 
-            item(span = StaggeredGridItemSpan.FullLine) {
-                if (items.isLoadingNextPage) {
-                    ListItem(
-                        headlineContent = {
-                            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator()
-                            }
-                        },
-                        colors = listItemColors,
-                    )
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    if (items.isLoadingNextPage) {
+                        ListItem(
+                            headlineContent = {
+                                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator()
+                                }
+                            },
+                            colors = listItemColors,
+                        )
+                    }
                 }
             }
         }
+
+        FastLinearProgressIndicator(
+            items.isLoadingFirstPage,
+            Modifier.zIndex(2f).align(Alignment.TopStart).fillMaxWidth().padding(vertical = 4.dp),
+            minimumDurationMillis = 300,
+        )
     }
 }
 
