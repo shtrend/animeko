@@ -186,9 +186,11 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
         }
         // cancel lifecycle scope
         this.cancel()
-        super.onDestroy()
         // release wake lock if held
-        wakeLock.release()
+        if (wakeLock.isHeld) {
+            wakeLock.release()
+        }
+        super.onDestroy()
         // force kill process
         Process.killProcess(Process.myPid())
     }
