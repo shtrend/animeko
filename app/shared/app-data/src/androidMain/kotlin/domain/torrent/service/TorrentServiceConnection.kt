@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.domain.torrent.service
 
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
@@ -30,7 +29,6 @@ import me.him188.ani.utils.logging.debug
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
 class TorrentServiceConnection(
@@ -69,6 +67,7 @@ class TorrentServiceConnection(
                 shouldRestartServiceImmediately = true
                 // 如果 app 在后台时断开了 service 连接, 需要在切回前台时重新启动
                 if (!connected.value) {
+                    logger.debug { "AniTorrentService is disconnected while app is switching to foreground, restarting." }
                     restartService()
                 }
             }
@@ -82,6 +81,7 @@ class TorrentServiceConnection(
             Lifecycle.Event.ON_DESTROY -> {
                 try {
                     context.unbindService(this)
+                    connected.value = false
                 } catch (ex: IllegalArgumentException) {
                     logger.warn { "Failed to unregister AniTorrentService service." }
                 }
@@ -119,6 +119,7 @@ class TorrentServiceConnection(
 
         // app activity 还存在时必须重启 service
         if (shouldRestartServiceImmediately) {
+            logger.debug { "AniTorrentService is disconnected while app is running, restarting." }
             restartService()
         }
     }
@@ -144,7 +145,6 @@ class TorrentServiceConnection(
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
 
-        logger.debug { "AniTorrentService is disconnected while app is running, restarting." }
         onRequiredRestartService()
     }
 
