@@ -20,6 +20,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.Icon
 import android.os.Build
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 import me.him188.ani.datasources.api.topic.FileSize
 import me.him188.ani.datasources.api.topic.FileSize.Companion.bytes
 
@@ -28,7 +30,8 @@ class ServiceNotification(
 ) {
     private val notificationService by lazy { context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager }
 
-    private var notificationAppearance = defaultNotificationAppearance
+    var notificationAppearance = defaultNotificationAppearance
+        private set
     private var notificationOpenActivityIntent: Intent? = null
     private val stopServiceIntent by lazy {
         PendingIntent.getService(
@@ -50,6 +53,13 @@ class ServiceNotification(
     }
 
     fun parseNotificationStrategyFromIntent(intent: Intent?) {
+        // parse notification appearance first if present
+        val appearance = intent?.getParcelable<NotificationAppearance>("notification_appearance")
+        if (appearance != null) {
+            notificationAppearance = appearance
+            return
+        }
+        
         val name = intent.getStringOrDefault("app_name") {
             defaultNotificationAppearance.name
         }
@@ -68,13 +78,8 @@ class ServiceNotification(
         }
         val icon = (intent?.getIntExtra("app_icon", -1) ?: -1)
             .let { if (it != -1) defaultNotificationAppearance.icon else Icon.createWithResource(context, it) }
-
-        notificationOpenActivityIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent?.getParcelableExtra("open_activity_intent", Intent::class.java)
-        } else {
-            intent?.getParcelableExtra<Intent>("open_activity_intent")
-        }
-
+        notificationOpenActivityIntent = intent?.getParcelable<Intent>("open_activity_intent")
+        
         notificationAppearance = NotificationAppearance(
             name = name,
             titleIdle = titleIdle,
@@ -159,6 +164,15 @@ class ServiceNotification(
         return if (result == -1) default() else context.getString(result)
     }
 
+    @Suppress("RemoveExplicitTypeArguments", "Deprecation")
+    private inline fun <reified T : Parcelable> Intent.getParcelable(extraName: String): T? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            getParcelableExtra(extraName, T::class.java)
+        } else {
+            getParcelableExtra<T>(extraName)
+        }
+    }
+
     companion object {
         private const val NOTIFICATION_ID = 114
         private const val NOTIFICATION_CHANNEL_ID = "me.him188.ani.app.domain.torrent.service.AniTorrentService"
@@ -174,6 +188,7 @@ class ServiceNotification(
     }
 }
 
+@Parcelize
 class NotificationAppearance(
     val name: String,
     val titleIdle: String,
@@ -181,7 +196,7 @@ class NotificationAppearance(
     val content: String,
     val stopActionText: String,
     val icon: Icon,
-)
+) : Parcelable
 
 sealed class NotificationDisplayStrategy(val downloadSpeed: FileSize, val uploadSpeed: FileSize) {
     class Idle(

@@ -9,13 +9,14 @@
 
 package me.him188.ani.app.domain.torrent.service
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Handler
 import android.os.IBinder
-import android.os.Looper
 import android.os.PowerManager
 import android.os.Process
+import android.os.SystemClock
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.CompletableDeferred
@@ -35,7 +36,6 @@ import me.him188.ani.app.data.models.preference.ProxySettings
 import me.him188.ani.app.data.models.preference.TorrentPeerConfig
 import me.him188.ani.app.domain.torrent.engines.AnitorrentEngine
 import me.him188.ani.app.domain.torrent.service.proxy.TorrentEngineProxy
-import me.him188.ani.app.platform.BuildConfig
 import me.him188.ani.app.torrent.anitorrent.AnitorrentDownloaderFactory
 import me.him188.ani.datasources.api.topic.FileSize.Companion.bytes
 import me.him188.ani.utils.coroutines.IO_
@@ -72,6 +72,7 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
     }
 
     private val notification = ServiceNotification(this)
+    private val alarmService: AlarmManager by lazy { getSystemService(Context.ALARM_SERVICE) as AlarmManager }
     private val wakeLock: PowerManager.WakeLock by lazy {
         (getSystemService(Context.POWER_SERVICE) as PowerManager)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "AniTorrentService::wake_lock")
@@ -89,8 +90,8 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
                     torrentPeerConfig,
                     Path(saveDirDeferred.await()).inSystem,
                     coroutineContext,
-                    AnitorrentDownloaderFactory()
-                )
+                    AnitorrentDownloaderFactory(),
+                ),
             )
             logger.info { "anitorrent is initialized." }
         }
@@ -145,6 +146,30 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
         super.onUnbind(intent)
         logger.info { "client unbind anitorrent." }
         return true
+    }
+
+    /**
+     * 在 app 被从最近任务界面划掉时重启服务
+     *
+     * 一些系统, 比如 MIUI, 会在划掉任务的时候杀死整个 app.
+     */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val restartServicePendingIntent = PendingIntent.getService(
+            this, 1,
+            Intent(this, this::class.java).apply {
+                setPackage(packageName)
+                putExtra("notification_appearance", notification.notificationAppearance)
+            },
+            PendingIntent.FLAG_ONE_SHOT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        logger.info { "Task of Ani app is removed, scheduling restart service." }
+        alarmService.set(
+            AlarmManager.ELAPSED_REALTIME,
+            SystemClock.elapsedRealtime() + 1000,
+            restartServicePendingIntent,
+        )
+
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
