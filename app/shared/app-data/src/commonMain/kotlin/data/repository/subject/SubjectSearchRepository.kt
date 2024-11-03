@@ -39,7 +39,7 @@ class SubjectSearchRepository(
 ) {
     fun searchSubjects(
         searchQuery: SubjectSearchQuery,
-        useNewApi: Boolean = false,
+        useNewApi: suspend () -> Boolean = { false },
         pagingConfig: PagingConfig = Repository.defaultPagingConfig
     ): Flow<PagingData<BatchSubjectDetails>> = Pager(
         config = pagingConfig,
@@ -51,7 +51,7 @@ class SubjectSearchRepository(
     ).flow
 
     private inner class SubjectSearchPagingSource(
-        private val useNewApi: Boolean,
+        private val useNewApi: suspend () -> Boolean,
         private val searchQuery: SubjectSearchQuery
     ) : PagingSource<Int, BatchSubjectDetails>() {
         override fun getRefreshKey(state: PagingState<Int, BatchSubjectDetails>): Int? = null
@@ -62,7 +62,7 @@ class SubjectSearchRepository(
                 ?: return@withContext LoadResult.Error(IllegalArgumentException("Key is null"))
             return@withContext try {
                 val api = searchApi.first()
-                val res = if (useNewApi) {
+                val res = if (useNewApi()) {
                     api.searchSubjectByKeywords(
                         searchQuery.keyword,
                         offset = offset,

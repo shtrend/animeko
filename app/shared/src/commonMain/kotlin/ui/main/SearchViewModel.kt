@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchHistoryRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchRepository
+import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.search.SubjectSearchQuery
 import me.him188.ani.app.ui.exploration.search.SearchPageState
 import me.him188.ani.app.ui.exploration.search.SubjectPreviewItemInfo
@@ -35,6 +36,7 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
     private val episodeCollectionRepository: EpisodeCollectionRepository by inject()
     private val subjectSearchRepository: SubjectSearchRepository by inject()
     private val subjectDetailsStateFactory: SubjectDetailsStateFactory by inject()
+    private val settingsRepository: SettingsRepository by inject()
 
     private val queryState = mutableStateOf("")
 
@@ -50,7 +52,13 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
         queryState = queryState,
         searchState = PagingSearchState(
             createPager = {
-                subjectSearchRepository.searchSubjects(SubjectSearchQuery(keyword = queryState.value)).map { data ->
+                subjectSearchRepository.searchSubjects(
+                    SubjectSearchQuery(keyword = queryState.value),
+                    useNewApi = {
+                        settingsRepository.uiSettings.flow.map { it.searchSettings.enableNewSearchSubjectApi }
+                            .first()
+                    },
+                ).map { data ->
                     data.map {
                         SubjectPreviewItemInfo.compute(
                             it.subjectInfo,
