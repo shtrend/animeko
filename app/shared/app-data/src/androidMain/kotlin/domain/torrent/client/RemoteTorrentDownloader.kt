@@ -19,8 +19,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import me.him188.ani.app.domain.torrent.IRemoteTorrentDownloader
 import me.him188.ani.app.domain.torrent.ITorrentDownloaderStatsCallback
-import me.him188.ani.app.domain.torrent.parcel.PEncodedTorrentInfo
 import me.him188.ani.app.domain.torrent.parcel.PTorrentDownloaderStats
+import me.him188.ani.app.domain.torrent.parcel.toParceled
 import me.him188.ani.app.torrent.api.TorrentDownloader
 import me.him188.ani.app.torrent.api.TorrentLibInfo
 import me.him188.ani.app.torrent.api.TorrentSession
@@ -68,13 +68,13 @@ class RemoteTorrentDownloader(
     ): TorrentSession {
         return withContext(Dispatchers.IO_) {
             RemoteTorrentSession {
-                call { startDownload(PEncodedTorrentInfo(data.data), overrideSaveDir?.absolutePath) }
+                call { startDownload(data.toParceled(), overrideSaveDir?.absolutePath) }
             }
         }
     }
 
     override fun getSaveDirForTorrent(data: EncodedTorrentInfo): SystemPath {
-        val remotePath = call { getSaveDirForTorrent(PEncodedTorrentInfo(data.data)) }
+        val remotePath = call { getSaveDirForTorrent(data.toParceled()) }
         return Path(remotePath).inSystem
     }
 

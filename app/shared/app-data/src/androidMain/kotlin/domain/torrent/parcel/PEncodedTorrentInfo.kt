@@ -9,15 +9,30 @@
 
 package me.him188.ani.app.domain.torrent.parcel
 
+import android.os.Build
 import android.os.Parcelable
+import android.os.SharedMemory
+import androidx.annotation.RequiresApi
 import kotlinx.parcelize.Parcelize
 import me.him188.ani.app.torrent.api.files.EncodedTorrentInfo
 
+@RequiresApi(Build.VERSION_CODES.O_MR1)
 @Parcelize
 class PEncodedTorrentInfo(
-    val data: ByteArray
+    val dataMem: SharedMemory,
+    val length: Int
 ) : Parcelable {
     fun toEncodedTorrentInfo(): EncodedTorrentInfo {
+        val buffer = dataMem.mapReadOnly()
+        val data = ByteArray(length).apply { buffer.get(this) }
+        dataMem.close()
         return EncodedTorrentInfo.createRaw(data)
     }
+}
+
+@RequiresApi(Build.VERSION_CODES.O_MR1)
+fun EncodedTorrentInfo.toParceled(): PEncodedTorrentInfo {
+    val dataMem = SharedMemory.create("encoded_torrent_info${data.hashCode()}", data.size)
+    dataMem.mapReadWrite().apply { put(data, 0, data.size) }
+    return PEncodedTorrentInfo(dataMem, data.size)
 }

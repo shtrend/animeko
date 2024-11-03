@@ -9,9 +9,12 @@
 
 package me.him188.ani.app.domain.torrent.service.proxy
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import me.him188.ani.app.domain.torrent.IDisposableHandle
 import me.him188.ani.app.domain.torrent.IRemoteTorrentDownloader
@@ -20,13 +23,12 @@ import me.him188.ani.app.domain.torrent.ITorrentDownloaderStatsCallback
 import me.him188.ani.app.domain.torrent.parcel.PEncodedTorrentInfo
 import me.him188.ani.app.domain.torrent.parcel.PTorrentDownloaderStats
 import me.him188.ani.app.domain.torrent.parcel.PTorrentLibInfo
+import me.him188.ani.app.domain.torrent.parcel.toParceled
 import me.him188.ani.app.torrent.api.TorrentDownloader
-import me.him188.ani.app.torrent.api.files.EncodedTorrentInfo
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.inSystem
-import me.him188.ani.utils.logging.logger
 import kotlin.coroutines.CoroutineContext
 
 class TorrentDownloaderProxy(
@@ -34,7 +36,6 @@ class TorrentDownloaderProxy(
     context: CoroutineContext,
 ) : IRemoteTorrentDownloader.Stub() {
     private val scope = context.childScope()
-    private val logger = logger<TorrentDownloaderProxy>()
     
     override fun getTotalStatus(flow: ITorrentDownloaderStatsCallback?): IDisposableHandle {
         val job = scope.launch(Dispatchers.IO_) {
@@ -65,25 +66,28 @@ class TorrentDownloaderProxy(
         )
     }
 
+    @RequiresApi(Build.VERSION_CODES.O_MR1)
     override fun fetchTorrent(uri: String?, timeoutSeconds: Int): PEncodedTorrentInfo? {
         if (uri == null) return null
         
         val fetched = runBlocking { delegate.fetchTorrent(uri, timeoutSeconds) }
-        return PEncodedTorrentInfo(fetched.data)
+        return fetched.toParceled()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O_MR1)
     override fun startDownload(data: PEncodedTorrentInfo?, overrideSaveDir: String?): IRemoteTorrentSession? {
         if (data == null) return null
         
         val session = runBlocking { 
             delegate.startDownload(
-                EncodedTorrentInfo.createRaw(data.data), 
-                overrideSaveDir = overrideSaveDir?.run { Path(this).inSystem }
+                withContext(Dispatchers.IO_) { data.toEncodedTorrentInfo() },
+                overrideSaveDir = overrideSaveDir?.run { Path(this).inSystem },
             ) 
         }
         return TorrentSessionProxy(session, scope.coroutineContext)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O_MR1)
     override fun getSaveDirForTorrent(data: PEncodedTorrentInfo?): String? {
         if (data == null) return null
         
