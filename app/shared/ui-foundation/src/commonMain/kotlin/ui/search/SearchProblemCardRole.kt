@@ -31,7 +31,7 @@ sealed class SearchProblemCardRole {
     @Composable
     internal abstract fun Container(
         modifier: Modifier = Modifier,
-        containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        containerColor: Color = SearchDefaults.searchProblemContainerColor,
         shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
         content: @Composable SearchProblemCardScope.() -> Unit,
     )

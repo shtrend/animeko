@@ -140,7 +140,7 @@ fun SearchProblemCard(
     onLogin: () -> Unit,
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    containerColor: Color = SearchDefaults.searchProblemContainerColor,
 ) {
     if (problem == null) return
     val role = SearchProblemCardRole.from(problem)
@@ -267,7 +267,7 @@ fun SearchProblemCardLayout(
     role: SearchProblemCardRole,
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
+    containerColor: Color = SearchDefaults.searchProblemContainerColor,
     content: @Composable SearchProblemCardScope.() -> Unit,
 ) {
     role.Container(modifier, containerColor, shape, content)
@@ -275,6 +275,10 @@ fun SearchProblemCardLayout(
 
 @Stable
 object SearchDefaults {
+    val searchProblemContainerColor
+        @Composable
+        get() = MaterialTheme.colorScheme.surfaceContainerHighest
+
     @Composable
     fun SearchSummaryItem(items: LazyPagingItems<*>, modifier: Modifier = Modifier) {
         Box(modifier) {
