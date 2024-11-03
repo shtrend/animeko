@@ -43,6 +43,7 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
 import me.him188.ani.app.data.persistent.database.dao.filterMostRecentUpdated
+import me.him188.ani.app.data.persistent.database.entity.CharacterActorEntity
 import me.him188.ani.app.data.persistent.database.entity.CharacterEntity
 import me.him188.ani.app.data.persistent.database.entity.PersonEntity
 import me.him188.ani.app.data.persistent.database.entity.SubjectCharacterRelationEntity
@@ -149,21 +150,35 @@ class SubjectCollectionRepositoryImpl(
                     currentDate = getCurrentDate(),
                 )
             } else {
-                val (batch, collection) = bangumiSubjectService.getSubjectCollection(subjectId)
-                batch
-                    .toEntity(
-                        collection?.type.toCollectionType(),
-                        selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
-                    )
-                    .also {
-                        subjectCollectionDao.upsert(it)
-                    }
-                    .toSubjectCollectionInfo(
-                        episodes = getSubjectEpisodeCollections(subjectId),
-                        currentDate = getCurrentDate(),
-                    )
+                // cache miss
+                fetchAndSaveSubject(subjectId)
             }
         }
+
+    private suspend fun fetchAndSaveSubject(subjectId: Int): SubjectCollectionInfo {
+        val (batch, collection) = bangumiSubjectService.getSubjectCollection(subjectId)
+        return batch
+            .toEntity(
+                collection?.type.toCollectionType(),
+                selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
+            )
+            .also { entity ->
+                subjectRelationsDao.upsertPersons(batch.allPersons.map { it.toEntity() }.toList())
+                subjectRelationsDao.upsertCharacters(batch.relatedCharacterInfoList.map { it.character.toEntity() })
+                subjectRelationsDao.upsertCharacterActors(batch.characterActorRelations().toList())
+                subjectCollectionDao.upsert(entity)
+                subjectRelationsDao.upsertSubjectPersonRelations(
+                    batch.relatedPersonInfoList.map { it.toRelationEntity(subjectId) },
+                )
+                subjectRelationsDao.upsertSubjectCharacterRelations(
+                    batch.relatedCharacterInfoList.map { it.toRelationEntity(subjectId) },
+                )
+            }
+            .toSubjectCollectionInfo(
+                episodes = getSubjectEpisodeCollections(subjectId),
+                currentDate = getCurrentDate(),
+            )
+    }
 
     private suspend fun getSubjectEpisodeCollections(subjectId: Int) =
         episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId).first()
@@ -268,23 +283,30 @@ class SubjectCollectionRepositoryImpl(
                         limit = state.config.pageSize,
                     )
 
-                    for (batch in items) {
-                        val subjectId = batch.batchSubjectDetails.subjectInfo.subjectId
-                        subjectRelationsDao.upsertPersons(batch.batchSubjectDetails.relatedPersonInfoList.map { it.personInfo.toEntity() })
-                        subjectRelationsDao.upsertCharacters(batch.batchSubjectDetails.relatedCharacterInfoList.map { it.character.toEntity() })
+                    for (collection in items) {
+                        val subject = collection.batchSubjectDetails
+                        val subjectId = subject.subjectInfo.subjectId
+                        subjectRelationsDao.upsertPersons(
+                            subject.allPersons.map { it.toEntity() }
+                                .toList(),
+                        )
+                        subjectRelationsDao.upsertCharacters(subject.relatedCharacterInfoList.map { it.character.toEntity() })
+                        subjectRelationsDao.upsertCharacterActors(
+                            subject.characterActorRelations().toList(),
+                        )
                         subjectCollectionDao.upsert(
-                            batch.batchSubjectDetails.toEntity(
-                                batch.collection?.type.toCollectionType(),
-                                batch.collection.toSelfRatingInfo(),
+                            subject.toEntity(
+                                collection.collection?.type.toCollectionType(),
+                                collection.collection.toSelfRatingInfo(),
                             ),
                         )
                         // 必须先插入前三个, 再插入 relations, 否则会 violate foreign key constraint
 
                         subjectRelationsDao.upsertSubjectPersonRelations(
-                            batch.batchSubjectDetails.relatedPersonInfoList.map { it.toRelationEntity(subjectId) },
+                            subject.relatedPersonInfoList.map { it.toRelationEntity(subjectId) },
                         )
                         subjectRelationsDao.upsertSubjectCharacterRelations(
-                            batch.batchSubjectDetails.relatedCharacterInfoList.map { it.toRelationEntity(subjectId) },
+                            subject.relatedCharacterInfoList.map { it.toRelationEntity(subjectId) },
                         )
                     }
 
@@ -298,7 +320,6 @@ class SubjectCollectionRepositoryImpl(
                 MediatorResult.Error(e)
             }
         }
-
     }
 
     override suspend fun setSubjectCollectionTypeOrDelete(
@@ -331,6 +352,13 @@ class SubjectCollectionRepositoryImpl(
         val logger = logger<SubjectCollectionRepository>()
     }
 }
+
+private fun BatchSubjectDetails.characterActorRelations() =
+    relatedCharacterInfoList.asSequence().flatMap { relatedCharacterInfo ->
+        relatedCharacterInfo.character.actors.asSequence().map { person ->
+            CharacterActorEntity(relatedCharacterInfo.character.id, person.id)
+        }
+    }
 
 private fun CharacterInfo.toEntity(): CharacterEntity {
     return CharacterEntity(

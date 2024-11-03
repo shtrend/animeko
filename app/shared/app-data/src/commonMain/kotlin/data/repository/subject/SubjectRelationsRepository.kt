@@ -10,6 +10,7 @@
 package me.him188.ani.app.data.repository.subject
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.models.subject.CharacterInfo
 import me.him188.ani.app.data.models.subject.PersonInfo
@@ -22,6 +23,7 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
 import me.him188.ani.app.data.persistent.database.entity.CharacterEntity
 import me.him188.ani.app.data.persistent.database.entity.PersonEntity
 import me.him188.ani.app.data.repository.Repository
+import me.him188.ani.utils.platform.collections.mapToIntArray
 
 sealed interface SubjectRelationsRepository : Repository {
     fun subjectRelatedPersonsFlow(subjectId: Int): Flow<List<RelatedPersonInfo>>
@@ -41,29 +43,41 @@ class DefaultSubjectRelationsRepository(
     }
 
     override fun subjectRelatedCharactersFlow(subjectId: Int): Flow<List<RelatedCharacterInfo>> {
-        return subjectRelationsDao.subjectRelatedCharactersFlow(subjectId).map { list ->
-            list.map {
-                it.toRelatedCharacterInfo()
-            }
+        return subjectRelationsDao.subjectRelatedCharactersFlow(subjectId).flatMapLatest { list ->
+            subjectRelationsDao.characterActorsFlow(list.mapToIntArray { it.character.characterId })
+                .map { actors ->
+                    list.map { relatedCharacterView ->
+                        val characterId = relatedCharacterView.character.characterId
+                        relatedCharacterView.toRelatedCharacterInfo(
+                            actors = actors
+                                .asSequence()
+                                .filter { it.characterId == characterId }
+                                .map { it.person.toPersonInfo() }
+                                .toList()
+                        )
+                    }
+                }
         }
     }
 
 }
 
-private fun RelatedCharacterView.toRelatedCharacterInfo(): RelatedCharacterInfo {
+private fun RelatedCharacterView.toRelatedCharacterInfo(
+    actors: List<PersonInfo>,
+): RelatedCharacterInfo {
     return RelatedCharacterInfo(
         index = index,
-        character = character.toCharacterInfo(),
+        character = character.toCharacterInfo(actors),
         role = role,
     )
 }
 
-private fun CharacterEntity.toCharacterInfo(): CharacterInfo {
+private fun CharacterEntity.toCharacterInfo(actors: List<PersonInfo>): CharacterInfo {
     return CharacterInfo(
         id = characterId,
         name = name,
         nameCn = nameCn,
-        actors = emptyList(), // TODO: CharacterEntity actors
+        actors = actors,
         imageLarge = imageLarge,
         imageMedium = imageMedium,
     )

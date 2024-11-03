@@ -20,7 +20,7 @@ import androidx.room.PrimaryKey
  * @since 4.0.0-alpha04
  */
 @Entity(
-    "related_character",
+    "character_actor",
     indices = [
         Index(value = ["characterId", "actorPersonId"], unique = true),
         Index(value = ["actorPersonId"], orders = [Index.Order.ASC]),

@@ -14,107 +14,47 @@ import kotlinx.serialization.json.put
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.datasources.bangumi.BangumiClient
 
-object BangumiSubjectGraphQLExecutor : AbstractBangumiBatchGraphQLExecutor() {
-    private const val SUBJECT_DETAILS_FRAGMENTS = """
-fragment Ep on Episode {
-  id
-  type
-  name
-  name_cn
-  airdate
+object BangumiPersonGraphQLExecutor : AbstractBangumiBatchGraphQLExecutor() {
+    private const val FRAGMENTS = """
+fragment PF on Person {
+  career
+  collects
   comment
-  description
-  sort
-}
-
-fragment SubjectFragment on Subject {
   id
-  type
-  name
-  name_cn
-  images{large, common}
-  characters {
-    order
-    type
-    character {
-      id
-      name
-      comment
-      collects
-      infobox {
-        key 
-        values {k 
-                v}
-      }
-      role
-      images {
-        large
-        medium
-      }
-    }
+  images {
+    large
+    medium
   }
   infobox {
+    key
     values {
       k
       v
-    }
-    key
+    } 
   }
-  summary
-  eps
-  collection{collect , doing, dropped, on_hold, wish}
-  airtime{date}
-  rating{count, rank, score, total}
+  last_post
+  lock
+  name
   nsfw
-  tags{count, name}
-  
-  persons {
-    person {
-      career
-      collects
-      comment
-      id
-      images {
-        large
-        medium
-      }
-      infobox {
-        key
-        values {
-          k
-          v
-        } 
-      }
-      last_post
-      lock
-      name
-      nsfw
-      redirect
-      summary
-      type
-    }
-    position
-  }
-
-  leadingEpisodes : episodes(limit: 100) { ...Ep }
-  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
-  # episodes{id, type, name, name_cn, sort, airdate, comment, duration, description, disc, ep, }
+  redirect
+  summary
+  type
 }
-        """
+    """
 
     private const val QUERY_1 = """
-$SUBJECT_DETAILS_FRAGMENTS
-query BatchGetSubjectQuery(${'$'}id: Int!) {
-  s0:subject(id: ${'$'}id){...SubjectFragment}
+$FRAGMENTS
+query MyQuery(${'$'}id: Int!) {
+  s0:person(id: ${'$'}id){...PF}
 }
 """
 
     // 服务器会缓存 query 编译, 用 variables 可以让查询更快
     private val QUERY_WHOLE_PAGE by lazy {
         buildString {
-            appendLine(SUBJECT_DETAILS_FRAGMENTS)
+            appendLine(FRAGMENTS)
 
-            appendLine("query BatchGetSubjectQuery(")
+            appendLine("query MyQuery(")
             repeat(Repository.defaultPagingConfig.pageSize) { i ->
                 append("\$id").append(i).append(": Int!")
                 if (i != Repository.defaultPagingConfig.pageSize - 1) {
@@ -126,7 +66,7 @@ query BatchGetSubjectQuery(${'$'}id: Int!) {
             repeat(Repository.defaultPagingConfig.pageSize) { i ->
                 append('s')
                 append(i)
-                append(":subject(id: \$id").append(i).append("){...SubjectFragment}")
+                append(":person(id: \$id").append(i).append("){...PF}")
                 appendLine()
             }
 
@@ -134,8 +74,8 @@ query BatchGetSubjectQuery(${'$'}id: Int!) {
         }
     }
 
-    suspend fun execute(client: BangumiClient, ids: List<Int>): BangumiGraphQLResponse {
-        val actionName = "SubjectCollectionRepositoryImpl.batchGetSubjectDetails"
+    suspend fun execute(client: BangumiClient, ids: IntArray): BangumiGraphQLResponse {
+        val actionName = "BangumiPersonGraphQLExecutor.executeQuerySubjectDetails"
         // 尽量使用 variables
         val resp = when (ids.size) {
             1 -> {
@@ -164,14 +104,14 @@ query BatchGetSubjectQuery(${'$'}id: Int!) {
                 client.executeGraphQL(
                     actionName,
                     buildString(
-                        capacity = SUBJECT_DETAILS_FRAGMENTS.length + 30 + 55 * ids.size, // big enough to avoid resizing
+                        capacity = FRAGMENTS.length + 30 + 55 * ids.size, // big enough to avoid resizing
                     ) {
-                        appendLine(SUBJECT_DETAILS_FRAGMENTS)
-                        appendLine("query BatchGetSubjectQuery {")
+                        appendLine(FRAGMENTS)
+                        appendLine("query MyQuery {")
                         for (id in ids) {
                             append('s')
                             append(id)
-                            append(":subject(id: ").append(id).append("){...SubjectFragment}")
+                            append(":person(id: ").append(id).append("){...PF}")
                             appendLine()
                         }
                         append("}")

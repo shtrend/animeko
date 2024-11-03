@@ -12,6 +12,7 @@ package me.him188.ani.app.data.persistent.database
 import androidx.room.AutoMigration
 import androidx.room.ConstructedBy
 import androidx.room.Database
+import androidx.room.RenameTable
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import androidx.room.TypeConverters
@@ -47,11 +48,12 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEn
         SubjectCharacterRelationEntity::class, // 4.0.0-alpha04
         CharacterActorEntity::class, // 4.0.0-alpha04
     ],
-    version = 4,
+    version = 5,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = Migrations.Migration_1_2::class),
         AutoMigration(from = 2, to = 3, spec = Migrations.Migration_2_3::class),
         AutoMigration(from = 3, to = 4, spec = Migrations.Migration_3_4::class),
+        AutoMigration(from = 4, to = 5, spec = Migrations.Migration_4_5::class),
     ],
 )
 @ConstructedBy(AniDatabaseConstructor::class)
@@ -111,6 +113,17 @@ internal object Migrations {
      * @since 4.0.0-alpha04
      */
     class Migration_3_4 : AutoMigrationSpec {
+        override fun onPostMigrate(connection: SQLiteConnection) {
+        }
+    }
+
+    /**
+     * - [CharacterActorEntity] 改名
+     *
+     * @since 4.0.0-alpha04
+     */
+    @RenameTable("related_character", "character_actor")
+    class Migration_4_5 : AutoMigrationSpec {
         override fun onPostMigrate(connection: SQLiteConnection) {
         }
     }

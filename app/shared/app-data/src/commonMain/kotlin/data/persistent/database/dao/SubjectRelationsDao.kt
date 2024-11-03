@@ -17,6 +17,7 @@ import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import me.him188.ani.app.data.models.subject.CharacterRole
 import me.him188.ani.app.data.models.subject.PersonPosition
+import me.him188.ani.app.data.persistent.database.entity.CharacterActorEntity
 import me.him188.ani.app.data.persistent.database.entity.CharacterEntity
 import me.him188.ani.app.data.persistent.database.entity.PersonEntity
 import me.him188.ani.app.data.persistent.database.entity.SubjectCharacterRelationEntity
@@ -39,6 +40,9 @@ interface SubjectRelationsDao {
     @Upsert
     suspend fun upsertCharacters(list: List<CharacterEntity>)
 
+    @Upsert
+    suspend fun upsertCharacterActors(list: List<CharacterActorEntity>)
+
     @Query(
         """
         SELECT * FROM person NATURAL JOIN subject_person as s
@@ -56,6 +60,15 @@ interface SubjectRelationsDao {
     )
     @Transaction
     fun subjectRelatedCharactersFlow(subjectId: Int): Flow<List<RelatedCharacterView>>
+
+    @Query(
+        """
+        SELECT * FROM character_actor JOIN person ON character_actor.actorPersonId = person.personId
+        WHERE characterId IN (:characterIds)
+    """,
+    )
+    @Transaction
+    fun characterActorsFlow(characterIds: IntArray): Flow<List<CharacterActorView>>
 }
 
 //data class RelatedPersonView(
@@ -89,4 +102,11 @@ data class RelatedCharacterView(
 
     @Embedded
     val character: CharacterEntity,
+)
+
+data class CharacterActorView(
+    val characterId: Int,
+    val actorPersonId: Int,
+    @Embedded
+    val person: PersonEntity,
 )

@@ -94,7 +94,7 @@ interface SubjectCollectionDao {
     /**
      * Retrieves a paginated list of `SubjectCollectionEntity` items, optionally filtered by type.
      *
-     * @param collectionType Optional filter for the `type` of items. If `null`, all items are retrieved.
+     * @param collectionTypes Optional filter for the `type` of items. If `null`, all items are retrieved.
      * @param limit Specifies the maximum number of items to retrieve.
      * @param offset Defines the starting position within the result set, allowing for pagination.
      * @return A `Flow` of a list of `SubjectCollectionEntity` items.
@@ -132,7 +132,7 @@ interface SubjectCollectionDao {
     /**
      * Retrieves a paginated list of `SubjectCollectionEntity` items, optionally filtered by type.
      *
-     * @param collectionTypes Optional filter for the `type` of items. If `null`, all items are retrieved. If empty, no item will be returned.
+     * @param collectionType Optional filter for the `type` of items. If `null`, all items are retrieved. If empty, no item will be returned.
      * @return A `Flow` of a list of `SubjectCollectionEntity` items.
      */
     @Query(

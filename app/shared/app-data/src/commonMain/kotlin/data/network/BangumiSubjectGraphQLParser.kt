@@ -56,11 +56,16 @@ object BangumiSubjectGraphQLParser {
         }
     }
 
-    fun parseBatchSubjectDetails(json: JsonObject): BatchSubjectDetails {
-        return json.toBatchSubjectDetails()
+    fun parseBatchSubjectDetails(
+        element: JsonObject,
+        getActors: (characterId: Int) -> List<PersonInfo>,
+    ): BatchSubjectDetails {
+        return element.toBatchSubjectDetails(getActors)
     }
 
-    private fun JsonObject.toBatchSubjectDetails(): BatchSubjectDetails {
+    private fun JsonObject.toBatchSubjectDetails(
+        getActors: (characterId: Int) -> List<PersonInfo>,
+    ): BatchSubjectDetails {
         val completionDate = (this.infobox("播放结束") + this.infobox("放送结束"))
             .firstOrNull()
             ?.let {
@@ -71,6 +76,8 @@ object BangumiSubjectGraphQLParser {
                 )
             }
             ?: PackedDate.Invalid
+
+        val subjectId = getIntOrFail("id")
 
         val characters = getOrFail("characters").jsonArray.mapIndexed { index, relatedCharacter ->
             check(relatedCharacter is JsonObject)
@@ -84,13 +91,14 @@ object BangumiSubjectGraphQLParser {
 
             val character = relatedCharacter.getOrFail("character").jsonObject
 
+            val characterId = character.getIntOrFail("id")
             RelatedCharacterInfo(
                 index = index,
                 character = CharacterInfo(
-                    id = character.getIntOrFail("id"),
+                    id = characterId,
                     name = character.getStringOrFail("name"),
                     nameCn = character.infobox("简体中文名").firstOrNull() ?: "",
-                    actors = emptyList(), // TODO: character actor
+                    actors = getActors(characterId),
                     imageMedium = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("medium") ?: "",
                     imageLarge = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("large") ?: "",
                 ),
@@ -103,18 +111,7 @@ object BangumiSubjectGraphQLParser {
             val person = relatedPerson.getOrFail("person").jsonObject
             RelatedPersonInfo(
                 index,
-                personInfo = PersonInfo(
-                    id = person.getIntOrFail("id"),
-                    name = person.getStringOrFail("name"),
-                    type = PersonType.fromId(person.getIntOrFail("type")),
-//                careers = person.infobox("职业").map { PersonCareer.valueOf(it) }.toList(),
-                    careers = emptyList(),
-                    imageLarge = person["images"]?.jsonObjectOrNull?.getStringOrFail("large") ?: "",
-                    imageMedium = person["images"]?.jsonObjectOrNull?.getStringOrFail("medium") ?: "",
-                    summary = person.getString("summary") ?: "",
-                    locked = person.getIntOrFail("lock") == 1,
-                    nameCn = person.infobox("简体中文名").firstOrNull() ?: "",
-                ),
+                personInfo = parsePerson(person),
                 position = PersonPosition(relatedPerson.getIntOrFail("position")),
             )
         }
@@ -122,7 +119,7 @@ object BangumiSubjectGraphQLParser {
         return try {
             BatchSubjectDetails(
                 SubjectInfo(
-                    subjectId = getIntOrFail("id"),
+                    subjectId = subjectId,
                     subjectType = SubjectType.ANIME,
                     name = getStringOrFail("name"),
                     nameCn = getStringOrFail("name_cn"),
@@ -182,4 +179,31 @@ object BangumiSubjectGraphQLParser {
         }
     }
 
+    fun parsePerson(person: JsonObject) = PersonInfo(
+        id = person.getIntOrFail("id"),
+        name = person.getStringOrFail("name"),
+        type = PersonType.fromId(person.getIntOrFail("type")),
+        //                careers = person.infobox("职业").map { PersonCareer.valueOf(it) }.toList(),
+        careers = emptyList(),
+        imageLarge = person["images"]?.jsonObjectOrNull?.getStringOrFail("large") ?: "",
+        imageMedium = person["images"]?.jsonObjectOrNull?.getStringOrFail("medium") ?: "",
+        summary = person.getString("summary") ?: "",
+        locked = person.getIntOrFail("lock") == 1,
+        nameCn = person.infobox("简体中文名").firstOrNull() ?: "",
+    )
+
+    inline fun forEachCharacter(
+        element: JsonObject,
+        action: (subjectId: Int, characterId: Int) -> Unit,
+    ) {
+        val subjectId = element.getIntOrFail("id")
+        element.getOrFail("characters").jsonArray
+            .forEach { relatedCharacter ->
+                val characterId = relatedCharacter.jsonObject
+                    .getOrFail("character").jsonObject
+                    .getIntOrFail("id")
+
+                action(subjectId, characterId)
+            }
+    }
 }

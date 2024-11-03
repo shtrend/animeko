@@ -9,19 +9,24 @@
 
 package me.him188.ani.app.data.network
 
+import androidx.collection.IntObjectMap
+import androidx.collection.IntSet
+import androidx.collection.mutableIntObjectMapOf
+import androidx.collection.mutableIntSetOf
 import io.ktor.client.plugins.ResponseException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
+import me.him188.ani.app.data.models.subject.PersonInfo
 import me.him188.ani.app.data.models.subject.RatingCounts
 import me.him188.ani.app.data.models.subject.RatingInfo
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
@@ -39,6 +44,7 @@ import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.datasources.bangumi.BangumiClient
 import me.him188.ani.datasources.bangumi.apis.DefaultApi
 import me.him188.ani.datasources.bangumi.models.BangumiCount
+import me.him188.ani.datasources.bangumi.models.BangumiPerson
 import me.him188.ani.datasources.bangumi.models.BangumiRating
 import me.him188.ani.datasources.bangumi.models.BangumiSubject
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectCollectionType
@@ -48,9 +54,7 @@ import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollectionModi
 import me.him188.ani.datasources.bangumi.processing.toCollectionType
 import me.him188.ani.datasources.bangumi.processing.toSubjectCollectionType
 import me.him188.ani.utils.coroutines.IO_
-import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
-import me.him188.ani.utils.serialization.getOrFail
 import org.koin.core.component.KoinComponent
 import kotlin.coroutines.CoroutineContext
 
@@ -69,7 +73,10 @@ interface BangumiSubjectService {
 
     suspend fun getSubjectCollection(subjectId: Int): BatchSubjectCollection
 
-    suspend fun batchGetSubjectDetails(ids: List<Int>): List<BatchSubjectDetails>
+    suspend fun batchGetSubjectDetails(
+        ids: List<Int>,
+        withCharacterActors: Boolean,
+    ): List<BatchSubjectDetails>
 
     /**
      * 获取用户对这个条目的收藏状态. flow 一定会 emit 至少一个值或抛出异常. 当用户没有收藏这个条目时 emit `null`.
@@ -134,7 +141,7 @@ class RemoteBangumiSubjectService(
         ).body()
 
         val collections = resp.data.orEmpty()
-        val list = batchGetSubjectDetails(collections.map { it.subjectId })
+        val list = batchGetSubjectDetails(collections.map { it.subjectId }, withCharacterActors = true)
 
         list.map {
             val subjectId = it.subjectInfo.subjectId
@@ -150,46 +157,101 @@ class RemoteBangumiSubjectService(
     override suspend fun getSubjectCollection(subjectId: Int): BatchSubjectCollection {
         val collection = subjectCollectionById(subjectId).first()
         return BatchSubjectCollection(
-            batchGetSubjectDetails(listOf(subjectId)).first(),
+            batchGetSubjectDetails(listOf(subjectId), withCharacterActors = true).first(),
             collection,
         )
     }
 
-    override suspend fun batchGetSubjectDetails(ids: List<Int>): List<BatchSubjectDetails> {
+    override suspend fun batchGetSubjectDetails(
+        ids: List<Int>,
+        withCharacterActors: Boolean
+    ): List<BatchSubjectDetails> {
         if (ids.isEmpty()) {
             return emptyList()
         }
         return withContext(ioDispatcher) {
-            val resp = BangumiSubjectGraphQLExecutor.executeQuerySubjectDetails(client, ids)
-            resp["errors"]?.let {
-                logger.error("batchGetSubjectDetails failed for query $ids: $it")
+            val respDeferred = async {
+                BangumiSubjectGraphQLExecutor.execute(client, ids)
             }
-            val list = when (val element = resp.getOrFail("data")) {
-                is JsonObject -> {
-                    element.values.mapIndexed { index, it ->
-                        if (it is JsonNull) { // error
-                            val id = ids[index]
-                            BatchSubjectDetails(
-                                SubjectInfo.Empty.copy(
-                                    subjectId = id, subjectType = SubjectType.ANIME,
-                                    nameCn = "<$id 错误>",
-                                    name = "<$id 错误>",
-                                    summary = resp["errors"].toString(),
-                                ),
-                                relatedCharacterInfoList = emptyList(),
-                                relatedPersonInfoList = emptyList(),
-                            )
-                        } else {
-                            BangumiSubjectGraphQLParser.parseBatchSubjectDetails(it.jsonObject)
+
+            val actorConcurrency = Semaphore(10)
+            // subjectId to List<Character>
+            val subjectIdToActorsDeferred = if (withCharacterActors) {
+                ids.associateWithTo(HashMap(ids.size)) { id ->
+                    // faster query
+                    async {
+                        actorConcurrency.withPermit {
+                            mutableIntObjectMapOf<List<BangumiPerson>>().apply {
+                                for (character in api.first().getRelatedCharactersBySubjectId(id).body()) {
+                                    put(character.id, character.actors.orEmpty())
+                                }
+                            }
                         }
                     }
                 }
+            } else {
+                emptyMap()
+            }
+            val subjectIdToActors = subjectIdToActorsDeferred.mapValues { it.value.await() }
 
-                is JsonNull -> throw IllegalStateException("batchGetSubjectDetails response data is null for ids $ids: $resp")
-                else -> throw IllegalStateException("Unexpected response: $element")
+            // 等待查询条目信息
+            val (response, errors) = respDeferred.await()
+
+            // 获取所有条目的所有配音人员 ID
+            val actorPersonIdSet: IntSet = mutableIntSetOf().apply {
+                for (element in response) {
+                    if (element != null) {
+                        BangumiSubjectGraphQLParser.forEachCharacter(element) { subjectId, characterId ->
+                            subjectIdToActors[subjectId]!![characterId]?.forEach {
+                                add(it.id)
+                            }
+                        }
+                    }
+                }
             }
 
-            list
+            val actorPersonIdArray = actorPersonIdSet.toIntArray()
+
+            // 获取配音人员详情
+            // key is person id
+            val actorPersons: IntObjectMap<PersonInfo> = mutableIntObjectMapOf<PersonInfo>().apply {
+                BangumiPersonGraphQLExecutor.execute(
+                    client,
+                    actorPersonIdArray,
+                ).data.forEachIndexed { index, jsonObject ->
+                    if (jsonObject != null) {
+                        put(actorPersonIdArray[index], BangumiSubjectGraphQLParser.parsePerson(jsonObject))
+                    }
+                }
+            }
+
+            // 解析条目详情
+            response.mapIndexed { index, element ->
+                if (element == null) { // error
+                    val subjectId = ids[index]
+                    BatchSubjectDetails(
+                        SubjectInfo.Empty.copy(
+                            subjectId = subjectId, subjectType = SubjectType.ANIME,
+                            nameCn = "<$subjectId 错误>",
+                            name = "<$subjectId 错误>",
+                            summary = errors,
+                        ),
+                        relatedCharacterInfoList = emptyList(),
+                        relatedPersonInfoList = emptyList(),
+                    )
+                } else {
+                    val subjectId = ids[index]
+                    BangumiSubjectGraphQLParser.parseBatchSubjectDetails(
+                        element,
+                        getActors = {
+                            subjectIdToActors[subjectId]!![it]?.map { person ->
+                                actorPersons[person.id]
+                                    ?: error("Actor (person) ${person.id} not found. Available actors: $actorPersons")
+                            }.orEmpty()
+                        },
+                    )
+                }
+            }
         }
     }
 
@@ -292,7 +354,11 @@ class BatchSubjectDetails(
     val subjectInfo: SubjectInfo,
     val relatedCharacterInfoList: List<RelatedCharacterInfo>,
     val relatedPersonInfoList: List<RelatedPersonInfo>,
-)
+) {
+    val allPersons
+        get() = relatedCharacterInfoList.asSequence()
+            .flatMap { it.character.actors } + relatedPersonInfoList.asSequence().map { it.personInfo }
+}
 
 internal fun BangumiUserSubjectCollection?.toSelfRatingInfo(): SelfRatingInfo {
     if (this == null) {

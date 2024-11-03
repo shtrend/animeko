@@ -86,7 +86,7 @@ class SubjectSearchRepository(
                     }
                 }
 
-                val subjectInfos = subjectService.batchGetSubjectDetails(res)
+                val subjectInfos = subjectService.batchGetSubjectDetails(res, withCharacterActors = true)
 
                 return@withContext LoadResult.Page(
                     subjectInfos.map {
