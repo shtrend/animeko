@@ -53,8 +53,9 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
                 subjectSearchRepository.searchSubjects(SubjectSearchQuery(keyword = queryState.value)).map { data ->
                     data.map {
                         SubjectPreviewItemInfo.compute(
-                            it,
-                            null, null, // TODO: search results
+                            it.subjectInfo,
+                            it.relatedPersonInfoList,
+                            it.relatedCharacterInfoList,
                         )
                     }
                 }

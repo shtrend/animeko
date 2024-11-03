@@ -75,9 +75,12 @@ class SubjectPreviewItemInfo(
             val staff = relatedPersonList?.let {
                 buildString {
                     append("制作:  ")
-                    relatedPersonList.filter(roleSet).take(4).forEach {
-                        append(it.personInfo.displayName)
-                        append(" · ")
+                    val persons = relatedPersonList.filter(roleSet).take(4).toList()
+                    persons.forEachIndexed { index, relatedPersonInfo ->
+                        append(relatedPersonInfo.personInfo.displayName)
+                        if (index != persons.lastIndex) {
+                            append(" · ")
+                        }
                     }
                 }
             }
