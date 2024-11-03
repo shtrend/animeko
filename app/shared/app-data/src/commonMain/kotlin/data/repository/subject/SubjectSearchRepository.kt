@@ -67,9 +67,7 @@ class SubjectSearchRepository(
                         searchQuery.keyword,
                         offset = offset,
                         limit = params.loadSize,
-                    ).page.map {
-                        it.id
-                    }
+                    )
                 } else {
                     try {
                         api.searchSubjectsByKeywordsWithOldApi(

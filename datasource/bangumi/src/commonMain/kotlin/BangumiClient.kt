@@ -38,6 +38,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -48,8 +49,8 @@ import me.him188.ani.datasources.api.paging.Paged
 import me.him188.ani.datasources.api.source.ConnectionStatus
 import me.him188.ani.datasources.bangumi.apis.DefaultApi
 import me.him188.ani.datasources.bangumi.client.BangumiSearchApi
-import me.him188.ani.datasources.bangumi.models.BangumiSubject
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectType
+import me.him188.ani.datasources.bangumi.models.BangumiTag
 import me.him188.ani.datasources.bangumi.models.BangumiUser
 import me.him188.ani.datasources.bangumi.models.search.BangumiSort
 import me.him188.ani.datasources.bangumi.models.subjects.BangumiLegacySubject
@@ -192,7 +193,9 @@ class BangumiClientImpl(
         } catch (e: Exception) {
             // POST https://api.bgm.tv/v0/graphql [Authorized]: 400  in 317.809375ms
             logger.error { "Failed to execute GraphQL query action'$actionName', the query is: \n$query" } // 记录一下 query, 
-            throw e
+            throw e.apply {
+                addSuppressed(IllegalStateException("Callsite"))
+            }
         }
 
         return resp.body()
@@ -260,7 +263,7 @@ class BangumiClientImpl(
     @Serializable
     private data class SearchSubjectByKeywordsResponse(
         val total: Int,
-        val data: List<BangumiSubject>? = null,
+        val data: List<BangumiSearchSubjectNewApi>? = null,
     )
 
     private val subjects = object : BangumiSearchApi {
@@ -275,7 +278,7 @@ class BangumiClientImpl(
             ratings: List<String>?,
             ranks: List<String>?,
             nsfw: Boolean?,
-        ): Paged<BangumiSubject> {
+        ): List<Int> {
             val resp = httpClient.post("$BANGUMI_API_HOST/v0/search/subjects") {
                 parameter("offset", offset)
                 parameter("limit", limit)
@@ -307,13 +310,14 @@ class BangumiClientImpl(
             }
 
             val body = resp.body<SearchSubjectByKeywordsResponse>()
-            return body.run {
-                Paged(
-                    total,
-                    data == null || (offset ?: 0) + data.size < total,
-                    data.orEmpty(),
-                )
-            }
+            return body.data?.map { it.id } ?: return emptyList()
+//            return body.run {
+//                Paged(
+//                    total,
+//                    data == null || (offset ?: 0) + data.size < total,
+//                    data.orEmpty(),
+//                )
+//            }
         }
 
         override suspend fun searchSubjectsByKeywordsWithOldApi(
@@ -395,3 +399,18 @@ class BangumiClientImpl(
 }
 
 class BangumiRateLimitedException : Exception("Rate limited by Bangumi API")
+
+
+// Caused by: kotlinx.serialization.MissingFieldException: Fields [locked, platform, images, volumes, eps, total_episodes, rating, collection] are required for type with serial name 'me.him188.ani.datasources.bangumi.models.BangumiSubject', but they were missing at path: $.data[0]
+@Serializable
+private data class BangumiSearchSubjectNewApi(
+    @SerialName(value = "id") @Required val id: Int,
+    @SerialName(value = "type") @Required val type: BangumiSubjectType,
+    @SerialName(value = "name") @Required val name: String,
+    @SerialName(value = "name_cn") @Required val nameCn: String,
+    @SerialName(value = "summary") @Required val summary: String,
+    @SerialName(value = "nsfw") @Required val nsfw: Boolean,
+    @SerialName(value = "tags") @Required val tags: List<BangumiTag>,
+    /* air date in `YYYY-MM-DD` format */
+    @SerialName(value = "date") val date: String? = null,
+)

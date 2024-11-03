@@ -11,7 +11,6 @@ package me.him188.ani.datasources.bangumi.client
 
 import me.him188.ani.datasources.api.paging.Paged
 import me.him188.ani.datasources.bangumi.BangumiRateLimitedException
-import me.him188.ani.datasources.bangumi.models.BangumiSubject
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectType
 import me.him188.ani.datasources.bangumi.models.search.BangumiSort
 import me.him188.ani.datasources.bangumi.models.subjects.BangumiLegacySubject
@@ -39,7 +38,7 @@ interface BangumiSearchApi {
         ratings: List<String>? = null, // ">=6", "<8"
         ranks: List<String>? = null,
         nsfw: Boolean? = null,
-    ): Paged<BangumiSubject>
+    ): List<Int>
 
     /**
      * Search bangumi subjects by old api.
