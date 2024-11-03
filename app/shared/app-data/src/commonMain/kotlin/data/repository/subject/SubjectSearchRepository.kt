@@ -67,6 +67,7 @@ class SubjectSearchRepository(
                         searchQuery.keyword,
                         offset = offset,
                         limit = params.loadSize,
+                        types = listOf(BangumiSubjectType.Anime),
                     )
                 } else {
                     try {
