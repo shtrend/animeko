@@ -17,6 +17,7 @@ import androidx.paging.PagingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.BatchSubjectDetails
@@ -28,14 +29,15 @@ import me.him188.ani.datasources.bangumi.BangumiRateLimitedException
 import me.him188.ani.datasources.bangumi.client.BangumiSearchApi
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectType
 import me.him188.ani.datasources.bangumi.models.subjects.BangumiSubjectImageSize
-import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
 class SubjectSearchRepository(
     private val searchApi: Flow<BangumiSearchApi>,
     private val subjectService: BangumiSubjectService,
+    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
 ) {
     fun searchSubjects(
         searchQuery: SubjectSearchQuery,
@@ -48,7 +50,7 @@ class SubjectSearchRepository(
         pagingSourceFactory = {
             SubjectSearchPagingSource(useNewApi, searchQuery)
         },
-    ).flow
+    ).flow.flowOn(defaultDispatcher)
 
     private inner class SubjectSearchPagingSource(
         private val useNewApi: suspend () -> Boolean,
@@ -57,7 +59,7 @@ class SubjectSearchRepository(
         override fun getRefreshKey(state: PagingState<Int, BatchSubjectDetails>): Int? = null
         override suspend fun load(
             params: LoadParams<Int>
-        ): LoadResult<Int, BatchSubjectDetails> = withContext(Dispatchers.IO_) {
+        ): LoadResult<Int, BatchSubjectDetails> = withContext(defaultDispatcher) {
             val offset = params.key
                 ?: return@withContext LoadResult.Error(IllegalArgumentException("Key is null"))
             return@withContext try {

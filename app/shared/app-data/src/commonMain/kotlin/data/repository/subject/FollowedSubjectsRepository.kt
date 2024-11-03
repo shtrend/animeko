@@ -42,7 +42,7 @@ class FollowedSubjectsRepository(
     private val episodeCollectionRepository: EpisodeCollectionRepository,
 //    private val subjectProgressRepository: EpisodeProgressRepository,
 //    private val subjectCollectionDao: SubjectCollectionDao,
-    private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
+    private val defaultDispatcher: CoroutineContext = Dispatchers.IO_,
 ) {
     private fun followedSubjectsFlow(
         updatePeriod: Duration = 1.hours,
@@ -97,7 +97,7 @@ class FollowedSubjectsRepository(
                 }
         }.catch {
             RepositoryException.wrapOrThrowCancellation(it)
-        }.flowOn(ioDispatcher)
+        }.flowOn(defaultDispatcher)
     }
 
     fun followedSubjectsPager(
@@ -118,7 +118,7 @@ class FollowedSubjectsRepository(
                     ),
                 ),
             )
-        }
+        }.flowOn(defaultDispatcher)
 
     private companion object {
         private val NotLoading = LoadStates(

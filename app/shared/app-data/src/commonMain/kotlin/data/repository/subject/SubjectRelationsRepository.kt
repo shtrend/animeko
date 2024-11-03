@@ -9,8 +9,10 @@
 
 package me.him188.ani.app.data.repository.subject
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.models.subject.CharacterInfo
 import me.him188.ani.app.data.models.subject.PersonInfo
@@ -24,6 +26,7 @@ import me.him188.ani.app.data.persistent.database.entity.CharacterEntity
 import me.him188.ani.app.data.persistent.database.entity.PersonEntity
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.utils.platform.collections.mapToIntArray
+import kotlin.coroutines.CoroutineContext
 
 sealed interface SubjectRelationsRepository : Repository {
     fun subjectRelatedPersonsFlow(subjectId: Int): Flow<List<RelatedPersonInfo>>
@@ -33,6 +36,7 @@ sealed interface SubjectRelationsRepository : Repository {
 class DefaultSubjectRelationsRepository(
     private val subjectCollectionDao: SubjectCollectionDao,
     private val subjectRelationsDao: SubjectRelationsDao,
+    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
 ) : SubjectRelationsRepository {
     override fun subjectRelatedPersonsFlow(subjectId: Int): Flow<List<RelatedPersonInfo>> {
         return subjectRelationsDao.subjectRelatedPersonsFlow(subjectId).map { list ->
@@ -41,7 +45,7 @@ class DefaultSubjectRelationsRepository(
             }.apply {
                 sortWith(RelatedPersonInfo.ImportanceOrder)
             }
-        }
+        }.flowOn(defaultDispatcher)
     }
 
     override fun subjectRelatedCharactersFlow(subjectId: Int): Flow<List<RelatedCharacterInfo>> {
@@ -61,7 +65,7 @@ class DefaultSubjectRelationsRepository(
                         sortWith(RelatedCharacterInfo.ImportanceOrder)
                     }
                 }
-        }
+        }.flowOn(defaultDispatcher)
     }
 
 }

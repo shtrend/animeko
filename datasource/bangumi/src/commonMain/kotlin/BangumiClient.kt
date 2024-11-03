@@ -33,11 +33,14 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.core.Closeable
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -278,7 +281,7 @@ class BangumiClientImpl(
             ratings: List<String>?,
             ranks: List<String>?,
             nsfw: Boolean?,
-        ): List<Int> {
+        ): List<Int> = withContext(Dispatchers.IO) {
             val resp = httpClient.post("$BANGUMI_API_HOST/v0/search/subjects") {
                 parameter("offset", offset)
                 parameter("limit", limit)
@@ -310,7 +313,7 @@ class BangumiClientImpl(
             }
 
             val body = resp.body<SearchSubjectByKeywordsResponse>()
-            return body.data?.map { it.id } ?: return emptyList()
+            return@withContext body.data?.map { it.id } ?: return@withContext emptyList()
 //            return body.run {
 //                Paged(
 //                    total,
@@ -326,7 +329,7 @@ class BangumiClientImpl(
             responseGroup: BangumiSubjectImageSize?,
             start: Int?,
             maxResults: Int?
-        ): Paged<BangumiLegacySubject> {
+        ): Paged<BangumiLegacySubject> = withContext(Dispatchers.IO) {
             val resp = httpClient.get("$BANGUMI_API_HOST/search/subject".plus("/")) {
                 url {
                     appendPathSegments(keyword)
@@ -342,7 +345,7 @@ class BangumiClientImpl(
             }
 
             if (resp.status == HttpStatusCode.NotFound) {
-                return Paged.empty()
+                return@withContext Paged.empty()
             }
 
             if (resp.contentType() == ContentType.Text.Html) {
@@ -355,19 +358,19 @@ class BangumiClientImpl(
                     https://api.bgm.tv/search/subject/%E6%90%9C%E7%B4%A2%E4%B8%8D%E5%88%B0%E6%90%9C%E7%B4%A2%E4%B8%8D%E5%88%B0%E6%90%9C%E7%B4%A2%E4%B8%8D%E5%88%B0%E6%B5%8B%E8%AF%95?type=2&responseGroup=SMALL&start=0&max_results=90
                      */
                     // 所以我们这里当它为空
-                    return Paged.empty()
+                    return@withContext Paged.empty()
 //                    throw BangumiRateLimitedException()
                 }
             }
 
             val json = resp.body<JsonObject>()
-            return json.run {
+            return@withContext json.run {
                 // results: subject total
                 val results: Int = json["results"]?.toString()?.toInt() ?: 0
                 // code: exception code
                 val code: String = json["code"]?.toString() ?: "-1"
                 // return empty when code exists and not -1 and is 404
-                if ("-1" != code && "404" == code) return Paged.empty()
+                if ("-1" != code && "404" == code) return@run Paged.empty()
                 val legacySubjectsJson: String = json["list"].toString()
                 val legacySubjects: List<BangumiLegacySubject> =
                     this@BangumiClientImpl.json.decodeFromString(legacySubjectsJson)

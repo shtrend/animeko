@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.withContext
@@ -115,7 +116,7 @@ class SubjectCollectionRepositoryImpl(
     private val subjectRelationsDao: SubjectRelationsDao,
     private val episodeCollectionRepository: EpisodeCollectionRepository,
     private val getCurrentDate: () -> PackedDate = { PackedDate.now() },
-    private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
+    private val defaultDispatcher: CoroutineContext = Dispatchers.IO_,
 ) : SubjectCollectionRepository {
     override fun subjectCollectionCountsFlow(): Flow<SubjectCollectionCounts?> {
         return (bangumiSubjectService.subjectCollectionCountsFlow() as Flow<SubjectCollectionCounts?>)
@@ -124,6 +125,7 @@ class SubjectCollectionRepositoryImpl(
                 logger.error("Failed to get subject collection counts", it)
                 emit(null)
             }
+            .flowOn(defaultDispatcher)
 //        return combine(
 //            subjectCollectionDao.countCollected(UnifiedCollectionType.WISH),
 //            subjectCollectionDao.countCollected(UnifiedCollectionType.DOING),
@@ -153,7 +155,7 @@ class SubjectCollectionRepositoryImpl(
                 // cache miss
                 fetchAndSaveSubject(subjectId)
             }
-        }
+        }.flowOn(defaultDispatcher)
 
     private suspend fun fetchAndSaveSubject(subjectId: Int): SubjectCollectionInfo {
         val (batch, collection) = bangumiSubjectService.getSubjectCollection(subjectId)
@@ -181,7 +183,7 @@ class SubjectCollectionRepositoryImpl(
     }
 
     private suspend fun getSubjectEpisodeCollections(subjectId: Int) =
-        episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId).first()
+        episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId).flowOn(defaultDispatcher).first()
 
     override fun mostRecentlyUpdatedSubjectCollectionsFlow(
         limit: Int,
@@ -194,7 +196,7 @@ class SubjectCollectionRepositoryImpl(
                     currentDate = getCurrentDate(),
                 )
             }
-        }
+        }.flowOn(defaultDispatcher)
 
     override fun subjectCollectionsPager(
         query: CollectionsFilterQuery,
@@ -213,7 +215,7 @@ class SubjectCollectionRepositoryImpl(
                 currentDate = getCurrentDate(),
             )
         }
-    }
+    }.flowOn(defaultDispatcher)
 
     override suspend fun updateRating(
         subjectId: Int,
@@ -222,29 +224,31 @@ class SubjectCollectionRepositoryImpl(
         tags: List<String>?,
         isPrivate: Boolean?,
     ) {
-        bangumiSubjectService.patchSubjectCollection(
-            subjectId,
-            BangumiUserSubjectCollectionModifyPayload(
-                rate = score,
-                comment = comment,
-                tags = tags,
-                private = isPrivate,
-            ),
-        )
+        withContext(defaultDispatcher) {
+            bangumiSubjectService.patchSubjectCollection(
+                subjectId,
+                BangumiUserSubjectCollectionModifyPayload(
+                    rate = score,
+                    comment = comment,
+                    tags = tags,
+                    private = isPrivate,
+                ),
+            )
 
-        subjectCollectionDao.updateRating(
-            subjectId,
-            score,
-            comment,
-            tags,
-            isPrivate,
-        )
+            subjectCollectionDao.updateRating(
+                subjectId,
+                score,
+                comment,
+                tags,
+                isPrivate,
+            )
+        }
     }
 
     private inner class SubjectCollectionRemoteMediator<T : Any>(
         private val query: CollectionsFilterQuery,
     ) : RemoteMediator<Int, T>() {
-        override suspend fun initialize(): InitializeAction = withContext(ioDispatcher) {
+        override suspend fun initialize(): InitializeAction = withContext(defaultDispatcher) {
             if ((currentTimeMillis() - subjectCollectionDao.lastUpdated()).milliseconds > 1.hours) {
                 InitializeAction.LAUNCH_INITIAL_REFRESH
             } else {
@@ -257,7 +261,7 @@ class SubjectCollectionRepositoryImpl(
             state: PagingState<Int, T>,
         ): MediatorResult {
             return try {
-                withContext(ioDispatcher) {
+                withContext(defaultDispatcher) {
                     val offset = when (loadType) {
                         LoadType.REFRESH -> {
                             0
@@ -326,13 +330,15 @@ class SubjectCollectionRepositoryImpl(
         subjectId: Int,
         type: UnifiedCollectionType?,
     ) {
-        return if (type == null) {
-            deleteSubjectCollection(subjectId)
-        } else {
-            patchSubjectCollection(
-                subjectId,
-                BangumiUserSubjectCollectionModifyPayload(type.toSubjectCollectionType()),
-            )
+        return withContext(defaultDispatcher) {
+            if (type == null) {
+                deleteSubjectCollection(subjectId)
+            } else {
+                patchSubjectCollection(
+                    subjectId,
+                    BangumiUserSubjectCollectionModifyPayload(type.toSubjectCollectionType()),
+                )
+            }
         }
     }
 
@@ -340,8 +346,10 @@ class SubjectCollectionRepositoryImpl(
         subjectId: Int,
         payload: BangumiUserSubjectCollectionModifyPayload,
     ) {
-        api.first().postUserCollection(subjectId, payload)
-        subjectCollectionDao.updateType(subjectId, payload.type.toCollectionType())
+        withContext(defaultDispatcher) {
+            api.first().postUserCollection(subjectId, payload)
+            subjectCollectionDao.updateType(subjectId, payload.type.toCollectionType())
+        }
     }
 
     private suspend fun deleteSubjectCollection(subjectId: Int) {
