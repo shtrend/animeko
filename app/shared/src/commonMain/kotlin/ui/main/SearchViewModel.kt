@@ -12,7 +12,9 @@ package me.him188.ani.app.ui.main
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateOf
 import androidx.paging.map
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchHistoryRepository
@@ -66,7 +68,7 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
                             it.relatedCharacterInfoList,
                         )
                     }
-                }
+                }.flowOn(Dispatchers.Default)
             },
         ),
         backgroundScope = backgroundScope,
