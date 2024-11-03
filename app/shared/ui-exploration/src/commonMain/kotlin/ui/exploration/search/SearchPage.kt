@@ -53,6 +53,7 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import androidx.window.core.layout.WindowWidthSizeClass
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import me.him188.ani.app.navigation.LocalNavigator
@@ -105,6 +106,11 @@ fun SearchPage(
                 windowInsets = windowInsets,
                 placeholder = { Text("搜索") },
             )
+            if (focusSearchBarByDefault) {
+                LaunchedEffect(focusRequester) {
+                    focusRequester.requestFocusWithRetry()
+                }
+            }
         },
         searchResultList = {
             val aniNavigator = LocalNavigator.current
@@ -145,9 +151,24 @@ fun SearchPage(
         },
         modifier,
     )
-    if (focusSearchBarByDefault) {
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
+}
+
+private suspend fun FocusRequester.requestFocusWithRetry() {
+    try {
+        requestFocus()
+    } catch (_: IllegalStateException) {
+        // focusRequester not initialized
+        delay(500)
+        try {
+            requestFocus()
+        } catch (_: IllegalStateException) {
+            // focusRequester not initialized
+            delay(500)
+            try {
+                requestFocus()
+            } catch (_: IllegalStateException) {
+                // focusRequester not initialized
+            }
         }
     }
 }
