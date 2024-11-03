@@ -31,11 +31,11 @@ data class RelatedCharacterInfo(
     companion object {
         val ImportanceOrder = compareBy<RelatedCharacterInfo> {
             when (it.role) {
-                MAIN -> 10
-                SUPPORTING -> 9
-                GUEST -> 8
+                MAIN -> 0
+                SUPPORTING -> 1
+                GUEST -> 2
                 else -> {
-                    0
+                    Int.MAX_VALUE
                 }
             }
         }
