@@ -115,14 +115,14 @@ internal val TestSubjectStaffInfo
         testRelatedPersonInfo(
             0,
             "CloverWorks",
-            position = PersonPosition.ANIMATION_PRODUCTION,
+            position = PersonPosition.AnimationWork,
             type = PersonType.Corporation,
         ),
-        testRelatedPersonInfo(1, "はまじあき", position = PersonPosition.ORIGINAL_WORK),
-        testRelatedPersonInfo(2, "斎藤圭一郎", position = PersonPosition.DIRECTOR),
-        testRelatedPersonInfo(3, "吉田恵里香", position = PersonPosition.CHARACTER_DESIGN),
-        testRelatedPersonInfo(4, "菊谷知樹", position = PersonPosition.MUSIC),
-        testRelatedPersonInfo(5, "けろりら", position = PersonPosition.CHARACTER_DESIGN),
+        testRelatedPersonInfo(1, "はまじあき", position = PersonPosition.OriginalWork),
+        testRelatedPersonInfo(2, "斎藤圭一郎", position = PersonPosition.Director),
+        testRelatedPersonInfo(3, "吉田恵里香", position = PersonPosition.CharacterDesign),
+        testRelatedPersonInfo(4, "菊谷知樹", position = PersonPosition.Music),
+        testRelatedPersonInfo(5, "けろりら", position = PersonPosition.CharacterDesign),
     )
 
 @TestOnly
