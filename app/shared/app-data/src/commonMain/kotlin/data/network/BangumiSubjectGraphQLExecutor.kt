@@ -33,7 +33,7 @@ fragment SubjectFragment on Subject {
   name
   name_cn
   images{large, common}
-  characters {
+  characters(limit:500) {
     order
     type
     character {
@@ -68,7 +68,7 @@ fragment SubjectFragment on Subject {
   nsfw
   tags{count, name}
   
-  persons {
+  persons(limit:500) {
     person {
       career
       collects
