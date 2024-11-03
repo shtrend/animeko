@@ -138,6 +138,7 @@ query BatchGetSubjectQuery(${'$'}id: Int!) {
         val actionName = "SubjectCollectionRepositoryImpl.batchGetSubjectDetails"
         // 尽量使用 variables
         val resp = when (ids.size) {
+            0 -> return BangumiGraphQLResponse(emptyList(), "")
             1 -> {
                 client.executeGraphQL(
                     actionName,

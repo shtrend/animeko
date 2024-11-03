@@ -78,6 +78,7 @@ query MyQuery(${'$'}id: Int!) {
         val actionName = "BangumiPersonGraphQLExecutor.executeQuerySubjectDetails"
         // 尽量使用 variables
         val resp = when (ids.size) {
+            0 -> return BangumiGraphQLResponse(emptyList(), "")
             1 -> {
                 client.executeGraphQL(
                     actionName,
