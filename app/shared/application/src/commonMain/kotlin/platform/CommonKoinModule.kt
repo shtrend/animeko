@@ -154,7 +154,6 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
     }
     single<SubjectCollectionRepository> {
         SubjectCollectionRepositoryImpl(
-            client = client,
             api = suspend { client.getApi() }.asFlow(),
             bangumiSubjectService = get(),
             subjectCollectionDao = database.subjectCollection(),
@@ -165,7 +164,6 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
 //            subjectPersonRelationDao = database.subjectPersonRelation(),
             subjectRelationsDao = database.subjectRelations(),
             episodeCollectionRepository = get(),
-            usernameProvider = get(),
         )
     }
     single<FollowedSubjectsRepository> {
@@ -177,7 +175,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
     single<SubjectSearchRepository> {
         SubjectSearchRepository(
             searchApi = suspend { client.getSearchApi() }.asFlow(),
-            subjectRepository = get(),
+            subjectService = get(),
         )
     }
     single<SubjectSearchHistoryRepository> {
@@ -191,7 +189,14 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
     }
 
     // Data layer network services
-    single<BangumiSubjectService> { RemoteBangumiSubjectService() }
+    single<BangumiSubjectService> {
+        RemoteBangumiSubjectService(
+            client,
+            suspend { client.getApi() }.asFlow(),
+            sessionManager = get(),
+            usernameProvider = get(),
+        )
+    }
     single<BangumiEpisodeService> { EpisodeRepositoryImpl() }
 
     single<BangumiRelatedPeopleService> { BangumiRelatedPeopleService(get()) }

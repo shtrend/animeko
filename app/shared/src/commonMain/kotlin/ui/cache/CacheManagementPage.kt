@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -115,6 +116,7 @@ class CacheManagementViewModel(
             CacheGroupState(
                 media = firstCache.origin.unwrapCached(),
                 commonInfo = subjectCollectionRepository.subjectCollectionFlow(firstCache.metadata.subjectIdInt) // 既会查缓存, 也会查网络, 基本上不会有查不到的情况
+                    .filterNotNull() // TODO: handle subject not found in cache management
                     .map {
                         createGroupCommonInfo(
                             subjectId = it.subjectId,

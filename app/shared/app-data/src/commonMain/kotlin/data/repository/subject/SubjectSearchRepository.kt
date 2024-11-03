@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryRateLimitedException
 import me.him188.ani.app.domain.search.SubjectSearchQuery
@@ -34,7 +35,7 @@ import kotlin.coroutines.cancellation.CancellationException
 
 class SubjectSearchRepository(
     private val searchApi: Flow<BangumiSearchApi>,
-    private val subjectRepository: SubjectCollectionRepository,
+    private val subjectService: BangumiSubjectService,
 ) {
     fun searchSubjects(
         searchQuery: SubjectSearchQuery,
@@ -85,7 +86,7 @@ class SubjectSearchRepository(
                     }
                 }
 
-                val subjectInfos = subjectRepository.batchGetSubjectDetails(res)
+                val subjectInfos = subjectService.batchGetSubjectDetails(res)
 
                 return@withContext LoadResult.Page(
                     subjectInfos.map {

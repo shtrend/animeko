@@ -24,37 +24,21 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.isKnownCompleted
 import me.him188.ani.app.data.models.subject.CharacterInfo
-import me.him188.ani.app.data.models.subject.CharacterRole
 import me.him188.ani.app.data.models.subject.PersonInfo
-import me.him188.ani.app.data.models.subject.PersonPosition
-import me.him188.ani.app.data.models.subject.PersonType
-import me.him188.ani.app.data.models.subject.RatingCounts
-import me.him188.ani.app.data.models.subject.RatingInfo
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
 import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
 import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
-import me.him188.ani.app.data.models.subject.SubjectCollectionStats
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
-import me.him188.ani.app.data.models.subject.Tag
 import me.him188.ani.app.data.network.BangumiSubjectService
+import me.him188.ani.app.data.network.BatchSubjectDetails
+import me.him188.ani.app.data.network.toSelfRatingInfo
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
@@ -66,21 +50,15 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEn
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
 import me.him188.ani.app.data.repository.RepositoryException
-import me.him188.ani.app.data.repository.RepositoryUsernameProvider
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
-import me.him188.ani.app.data.repository.getOrThrow
 import me.him188.ani.app.domain.search.SubjectType
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
-import me.him188.ani.datasources.bangumi.BangumiClient
 import me.him188.ani.datasources.bangumi.apis.DefaultApi
-import me.him188.ani.datasources.bangumi.models.BangumiSubjectType
-import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollection
 import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollectionModifyPayload
 import me.him188.ani.datasources.bangumi.processing.toCollectionType
 import me.him188.ani.datasources.bangumi.processing.toSubjectCollectionType
 import me.him188.ani.utils.coroutines.IO_
-import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
@@ -127,18 +105,14 @@ sealed interface SubjectCollectionRepository : Repository {
         subjectId: Int,
         type: UnifiedCollectionType?,
     )
-
-    suspend fun batchGetSubjectDetails(ids: List<Int>): List<BatchSubjectDetails>
 }
 
 class SubjectCollectionRepositoryImpl(
-    private val client: BangumiClient,
     private val api: Flow<BangumiSubjectApi>,
     private val bangumiSubjectService: BangumiSubjectService,
     private val subjectCollectionDao: SubjectCollectionDao,
     private val subjectRelationsDao: SubjectRelationsDao,
     private val episodeCollectionRepository: EpisodeCollectionRepository,
-    private val usernameProvider: RepositoryUsernameProvider,
     private val getCurrentDate: () -> PackedDate = { PackedDate.now() },
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
 ) : SubjectCollectionRepository {
@@ -175,8 +149,8 @@ class SubjectCollectionRepositoryImpl(
                     currentDate = getCurrentDate(),
                 )
             } else {
-                val collection = bangumiSubjectService.subjectCollectionById(subjectId).first()
-                batchGetSubjectDetails(listOf(subjectId)).first()
+                val (batch, collection) = bangumiSubjectService.getSubjectCollection(subjectId)
+                batch
                     .toEntity(
                         collection?.type.toCollectionType(),
                         selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
@@ -288,46 +262,31 @@ class SubjectCollectionRepositoryImpl(
                         }
                     }
 
-                    val username = usernameProvider.getOrThrow()
-                    val resp = api.first().getUserCollectionsByUsername(
-                        username,
-                        subjectType = BangumiSubjectType.Anime,
+                    val items = bangumiSubjectService.getSubjectCollections(
                         type = query.type?.toSubjectCollectionType(),
-                        limit = state.config.pageSize,
                         offset = offset,
-                    ).body()
+                        limit = state.config.pageSize,
+                    )
 
-                    // 此时请求成功了
-                    if (loadType == LoadType.REFRESH) {
-                        // 刷新时删除所有数据. 必须在请求成功后才刷新, 否则会导致无网络时删除所有数据且无法获取新数据.
-                        subjectCollectionDao.deleteAll()
+                    for (batch in items) {
+                        val subjectId = batch.batchSubjectDetails.subjectInfo.subjectId
+                        subjectRelationsDao.upsertPersons(batch.batchSubjectDetails.relatedPersonInfoList.map { it.personInfo.toEntity() })
+                        subjectRelationsDao.upsertCharacters(batch.batchSubjectDetails.relatedCharacterInfoList.map { it.character.toEntity() })
+                        subjectCollectionDao.upsert(
+                            batch.batchSubjectDetails.toEntity(
+                                batch.collection?.type.toCollectionType(),
+                                batch.collection.toSelfRatingInfo(),
+                            ),
+                        )
+                        // 必须先插入前三个, 再插入 relations, 否则会 violate foreign key constraint
+
+                        subjectRelationsDao.upsertSubjectPersonRelations(
+                            batch.batchSubjectDetails.relatedPersonInfoList.map { it.toRelationEntity(subjectId) },
+                        )
+                        subjectRelationsDao.upsertSubjectCharacterRelations(
+                            batch.batchSubjectDetails.relatedCharacterInfoList.map { it.toRelationEntity(subjectId) },
+                        )
                     }
-
-                    val collections = resp.data.orEmpty()
-                    val items = batchGetSubjectDetails(collections.map { it.subjectId })
-                        .map { batch ->
-                            val subjectId = batch.subjectInfo.subjectId
-                            val collection =
-                                collections.first { it.subjectId == subjectId }
-
-                            subjectRelationsDao.upsertPersons(batch.relatedPersonInfoList.map { it.personInfo.toEntity() })
-                            subjectRelationsDao.upsertCharacters(batch.relatedCharacterInfoList.map { it.character.toEntity() })
-                            val entity = batch.toEntity(
-                                collection.type.toCollectionType(),
-                                collection.toSelfRatingInfo(),
-                            )
-                            subjectCollectionDao.upsert(entity)
-                            // 必须先插入前三个, 再插入 relations, 否则会 violate foreign key constraint
-
-                            subjectRelationsDao.upsertSubjectPersonRelations(
-                                batch.relatedPersonInfoList.map { it.toRelationEntity(subjectId) },
-                            )
-                            subjectRelationsDao.upsertSubjectCharacterRelations(
-                                batch.relatedCharacterInfoList.map { it.toRelationEntity(subjectId) },
-                            )
-
-                            entity
-                        }
 
                     MediatorResult.Success(endOfPaginationReached = items.isEmpty())
                 }
@@ -366,149 +325,6 @@ class SubjectCollectionRepositoryImpl(
 
     private suspend fun deleteSubjectCollection(subjectId: Int) {
         // TODO: deleteSubjectCollection
-    }
-
-
-    private suspend fun getSubjectDetails(ids: Int): BatchSubjectDetails {
-        return batchGetSubjectDetails(listOf(ids)).first()
-    }
-
-    override suspend fun batchGetSubjectDetails(ids: List<Int>): List<BatchSubjectDetails> {
-        if (ids.isEmpty()) {
-            return emptyList()
-        }
-        val resp = client.executeGraphQL(
-            "SubjectCollectionRepositoryImpl.batchGetSubjectDetails",
-            """
-fragment Ep on Episode {
-  id
-  type
-  name
-  name_cn
-  airdate
-  comment
-  description
-  sort
-}
-
-fragment SubjectFragment on Subject {
-  id
-  type
-  name
-  name_cn
-  images{large, common}
-  characters {
-    order
-    type
-    character {
-      id
-      name
-      comment
-      collects
-      infobox {
-        key 
-        values {k 
-                v}
-      }
-      role
-      images {
-        large
-        medium
-      }
-    }
-  }
-  infobox {
-    values {
-      k
-      v
-    }
-    key
-  }
-  summary
-  eps
-  collection{collect , doing, dropped, on_hold, wish}
-  airtime{date}
-  rating{count, rank, score, total}
-  nsfw
-  tags{count, name}
-  
-  persons {
-    person {
-      career
-      collects
-      comment
-      id
-      images {
-        large
-        medium
-      }
-      infobox {
-        key
-        values {
-          k
-          v
-        } 
-      }
-      last_post
-      lock
-      name
-      nsfw
-      redirect
-      summary
-      type
-    }
-    position
-  }
-
-  leadingEpisodes : episodes(limit: 100) { ...Ep }
-  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
-  # episodes{id, type, name, name_cn, sort, airdate, comment, duration, description, disc, ep, }
-}
-
-            query BatchGetSubjectQuery {
-              ${
-                ids.joinToString(separator = "\n") { id ->
-                    """
-                        s$id:subject(id: $id){...SubjectFragment}
-                """
-                }
-            }
-            }
-        """.trimIndent(),
-        )
-        resp["errors"]?.let {
-            logger.error("batchGetSubjectDetails failed for query $ids: $it")
-        }
-        val list = resp
-            .getOrFail("data")
-            .let { element ->
-                when (element) {
-                    is JsonObject -> {
-                        element.values.mapIndexed { index, it ->
-                            if (it is JsonNull) { // error
-                                val id = ids[index]
-                                BatchSubjectDetails(
-                                    SubjectInfo.Empty.copy(
-                                        subjectId = id, subjectType = SubjectType.ANIME,
-                                        nameCn = "<$id 错误>",
-                                        name = "<$id 错误>",
-                                        summary = resp["errors"].toString(),
-                                    ),
-                                    relatedCharacterInfoList = emptyList(),
-                                    relatedPersonInfoList = emptyList(),
-                                )
-                            } else {
-                                it.jsonObject.toBatchSubjectDetails()
-                            }
-                        }
-                    }
-
-                    is JsonNull -> throw IllegalStateException("batchGetSubjectDetails response data is null for ids $ids: $resp")
-                    else -> throw IllegalStateException("Unexpected response: $element")
-                }
-            }
-
-        return list
     }
 
     private companion object {
@@ -564,46 +380,6 @@ data class CollectionsFilterQuery(
     }
 }
 
-class BatchSubjectDetails(
-    val subjectInfo: SubjectInfo,
-    val relatedCharacterInfoList: List<RelatedCharacterInfo>,
-    val relatedPersonInfoList: List<RelatedPersonInfo>,
-)
-
-private fun BangumiUserSubjectCollection.toSelfRatingInfo(): SelfRatingInfo {
-    return SelfRatingInfo(
-        score = rate,
-        comment = comment.takeUnless { it.isNullOrBlank() },
-        tags = tags,
-        isPrivate = private,
-    )
-}
-
-private fun BatchSubjectDetails.toEntity(
-    collectionType: UnifiedCollectionType,
-    selfRatingInfo: SelfRatingInfo,
-): SubjectCollectionEntity =
-    subjectInfo.run {
-        SubjectCollectionEntity(
-            subjectId = subjectId,
-//            subjectType = SubjectType.ANIME,
-            name = name,
-            nameCn = nameCn,
-            summary = summary,
-            nsfw = nsfw,
-            imageLarge = imageLarge,
-            totalEpisodes = totalEpisodes,
-            airDate = airDate,
-            tags = tags,
-            aliases = aliases,
-            ratingInfo = ratingInfo,
-            collectionStats = collectionStats,
-            completeDate = completeDate,
-            selfRatingInfo = selfRatingInfo,
-            collectionType = collectionType,
-        )
-    }
-
 private fun SubjectCollectionEntity.toSubjectInfo(): SubjectInfo {
     return SubjectInfo(
         subjectId = subjectId,
@@ -621,169 +397,6 @@ private fun SubjectCollectionEntity.toSubjectInfo(): SubjectInfo {
         collectionStats = collectionStats,
         completeDate = completeDate,
     )
-}
-
-private fun JsonElement.vSequence(): Sequence<String> {
-    return when (this) {
-        is JsonArray -> this.asSequence().flatMap { it.vSequence() }
-        is JsonPrimitive -> sequenceOf(content)
-        is JsonObject -> this["v"]?.vSequence() ?: emptySequence()
-        else -> emptySequence()
-    }
-}
-
-private fun JsonObject.infobox(key: String): Sequence<String> = sequence {
-    for (jsonElement in getOrFail("infobox").jsonArray) {
-        if (jsonElement.jsonObject.getStringOrFail("key") == key) {
-            yieldAll(jsonElement.jsonObject.getOrFail("values").vSequence())
-        }
-    }
-}
-
-private fun JsonObject.toBatchSubjectDetails(): BatchSubjectDetails {
-    val completionDate = (this.infobox("播放结束") + this.infobox("放送结束"))
-        .firstOrNull()
-        ?.let {
-            PackedDate.parseFromDate(
-                it.replace('年', '-')
-                    .replace('月', '-')
-                    .removeSuffix("日"),
-            )
-        }
-        ?: PackedDate.Invalid
-
-    val characters = getOrFail("characters").jsonArray.mapIndexed { index, relatedCharacter ->
-        check(relatedCharacter is JsonObject)
-
-        val role = when (relatedCharacter.getIntOrFail("type")) {
-            1 -> CharacterRole.MAIN
-            2 -> CharacterRole.SUPPORTING
-            3 -> CharacterRole.GUEST
-            else -> throw IllegalStateException("Unexpected character type: $relatedCharacter")
-        }
-
-        val character = relatedCharacter.getOrFail("character").jsonObject
-
-        RelatedCharacterInfo(
-            index = index,
-            character = CharacterInfo(
-                id = character.getIntOrFail("id"),
-                name = character.getStringOrFail("name"),
-                nameCn = character.infobox("简体中文名").firstOrNull() ?: "",
-                actors = emptyList(), // TODO: character actor
-                imageMedium = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("medium") ?: "",
-                imageLarge = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("large") ?: "",
-            ),
-            role = role,
-        )
-    }
-
-    val persons = getOrFail("persons").jsonArray.mapIndexed { index, relatedPerson ->
-        check(relatedPerson is JsonObject)
-        val person = relatedPerson.getOrFail("person").jsonObject
-        RelatedPersonInfo(
-            index,
-            personInfo = PersonInfo(
-                id = person.getIntOrFail("id"),
-                name = person.getStringOrFail("name"),
-                type = PersonType.fromId(person.getIntOrFail("type")),
-//                careers = person.infobox("职业").map { PersonCareer.valueOf(it) }.toList(),
-                careers = emptyList(),
-                imageLarge = person["images"]?.jsonObjectOrNull?.getStringOrFail("large") ?: "",
-                imageMedium = person["images"]?.jsonObjectOrNull?.getStringOrFail("medium") ?: "",
-                summary = person.getString("summary") ?: "",
-                locked = person.getIntOrFail("lock") == 1,
-                nameCn = person.infobox("简体中文名").firstOrNull() ?: "",
-            ),
-            position = PersonPosition(relatedPerson.getIntOrFail("position")),
-        )
-    }
-
-    return try {
-        BatchSubjectDetails(
-            SubjectInfo(
-                subjectId = getIntOrFail("id"),
-                subjectType = SubjectType.ANIME,
-                name = getStringOrFail("name"),
-                nameCn = getStringOrFail("name_cn"),
-                summary = getStringOrFail("summary"),
-                nsfw = getBooleanOrFail("nsfw"),
-                imageLarge = getOrFail("images").jsonObjectOrNull?.getString("large") ?: "", // 有少数没有
-                totalEpisodes = getIntOrFail("eps"),
-                airDate = PackedDate.parseFromDate(getOrFail("airtime").jsonObject.getStringOrFail("date")),
-                tags = getOrFail("tags").jsonArray.map {
-                    val obj = it.jsonObject
-                    Tag(
-                        obj.getStringOrFail("name"),
-                        obj.getIntOrFail("count"),
-                    )
-                },
-                aliases = infobox("别名").filter { it.isNotEmpty() }.toList(),
-                ratingInfo = getOrFail("rating").jsonObject.let { rating ->
-                    RatingInfo(
-                        rank = rating.getIntOrFail("rank"),
-                        total = rating.getIntOrFail("total"),
-                        count = rating.getOrFail("count").jsonArray.let { array ->
-                            RatingCounts(
-                                s1 = array[0].jsonPrimitive.int,
-                                s2 = array[1].jsonPrimitive.int,
-                                s3 = array[2].jsonPrimitive.int,
-                                s4 = array[3].jsonPrimitive.int,
-                                s5 = array[4].jsonPrimitive.int,
-                                s6 = array[5].jsonPrimitive.int,
-                                s7 = array[6].jsonPrimitive.int,
-                                s8 = array[7].jsonPrimitive.int,
-                                s9 = array[8].jsonPrimitive.int,
-                                s10 = array[9].jsonPrimitive.int,
-                            )
-                        },
-                        score = rating.getStringOrFail("score"),
-                    )
-                },
-                collectionStats = getOrFail("collection").jsonObject.let { collection ->
-                    SubjectCollectionStats(
-                        wish = collection.getIntOrFail("wish"),
-                        doing = collection.getIntOrFail("doing"),
-                        done = collection.getIntOrFail("collect"),
-                        onHold = collection.getIntOrFail("on_hold"),
-                        dropped = collection.getIntOrFail("dropped"),
-                    )
-                },
-                completeDate = completionDate,
-            ),
-            relatedCharacterInfoList = characters,
-            relatedPersonInfoList = persons,
-        )
-    } catch (e: Exception) {
-        throw IllegalStateException(
-            "Failed to parse subject details for subject id ${this["id"]}: $this",
-            e,
-        )
-    }
-}
-
-private val JsonElement.jsonObjectOrNull get() = (this as? JsonObject)
-
-private fun JsonObject.getOrFail(key: String): JsonElement {
-    return get(key) ?: throw NoSuchElementException("key $key not found")
-}
-
-private fun JsonObject.getIntOrFail(key: String): Int {
-    val field = get(key)?.jsonPrimitive ?: throw NoSuchElementException("key $key not found")
-    return field.intOrNull ?: throw IllegalStateException("Field $key is not an int: $field")
-}
-
-private fun JsonObject.getString(key: String): String? {
-    return get(key)?.jsonPrimitive?.content
-}
-
-private fun JsonObject.getStringOrFail(key: String): String {
-    return getString(key) ?: throw NoSuchElementException("key $key not found")
-}
-
-private fun JsonObject.getBooleanOrFail(key: String): Boolean {
-    val field = get(key)?.jsonPrimitive ?: throw NoSuchElementException("key $key not found")
-    return field.booleanOrNull ?: throw IllegalStateException("Field $key is not a boolean: $field")
 }
 
 private fun SubjectCollectionEntity.toSubjectCollectionInfo(
@@ -816,3 +429,28 @@ private fun SubjectCollectionEntity.toSubjectCollectionInfo(
     )
 }
 
+
+internal fun BatchSubjectDetails.toEntity(
+    collectionType: UnifiedCollectionType,
+    selfRatingInfo: SelfRatingInfo,
+): SubjectCollectionEntity =
+    subjectInfo.run {
+        SubjectCollectionEntity(
+            subjectId = subjectId,
+//            subjectType = SubjectType.ANIME,
+            name = name,
+            nameCn = nameCn,
+            summary = summary,
+            nsfw = nsfw,
+            imageLarge = imageLarge,
+            totalEpisodes = totalEpisodes,
+            airDate = airDate,
+            tags = tags,
+            aliases = aliases,
+            ratingInfo = ratingInfo,
+            collectionStats = collectionStats,
+            completeDate = completeDate,
+            selfRatingInfo = selfRatingInfo,
+            collectionType = collectionType,
+        )
+    }
