@@ -106,11 +106,6 @@ fun SearchPage(
                 windowInsets = windowInsets,
                 placeholder = { Text("搜索") },
             )
-            if (focusSearchBarByDefault) {
-                LaunchedEffect(focusRequester) {
-                    focusRequester.requestFocusWithRetry()
-                }
-            }
         },
         searchResultList = {
             val aniNavigator = LocalNavigator.current
@@ -151,6 +146,13 @@ fun SearchPage(
         },
         modifier,
     )
+
+    // 不能挪到 searchBar 里面, 否则从详情页回来的时候会重复 focus
+    if (focusSearchBarByDefault) {
+        LaunchedEffect(Unit) { // 必须用 Unit, 否则会重复 focus
+            focusRequester.requestFocusWithRetry()
+        }
+    }
 }
 
 private suspend fun FocusRequester.requestFocusWithRetry() {
