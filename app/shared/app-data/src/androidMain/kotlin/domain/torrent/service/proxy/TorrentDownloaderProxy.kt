@@ -9,6 +9,8 @@
 
 package me.him188.ani.app.domain.torrent.service.proxy
 
+import android.os.DeadObjectException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.files.Path
@@ -21,9 +23,12 @@ import me.him188.ani.app.domain.torrent.parcel.PTorrentDownloaderStats
 import me.him188.ani.app.domain.torrent.parcel.PTorrentLibInfo
 import me.him188.ani.app.torrent.api.TorrentDownloader
 import me.him188.ani.app.torrent.api.files.EncodedTorrentInfo
+import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.inSystem
+import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.warn
 import kotlin.coroutines.CoroutineContext
 
 class TorrentDownloaderProxy(
@@ -31,20 +36,25 @@ class TorrentDownloaderProxy(
     context: CoroutineContext,
 ) : IRemoteTorrentDownloader.Stub() {
     private val scope = context.childScope()
+    private val logger = logger<TorrentDownloaderProxy>()
     
     override fun getTotalStatus(flow: ITorrentDownloaderStatsCallback?): IDisposableHandle {
-        val job = scope.launch {
+        val job = scope.launch(Dispatchers.IO_) {
             delegate.totalStats.collect {
-                flow?.onEmit(
-                    PTorrentDownloaderStats(
-                        it.totalSize,
-                        it.downloadedBytes,
-                        it.downloadSpeed,
-                        it.uploadedBytes,
-                        it.uploadSpeed,
-                        it.downloadProgress
+                try {
+                    flow?.onEmit(
+                        PTorrentDownloaderStats(
+                            it.totalSize,
+                            it.downloadedBytes,
+                            it.downloadSpeed,
+                            it.uploadedBytes,
+                            it.uploadSpeed,
+                            it.downloadProgress,
+                        ),
                     )
-                )
+                } catch (doe: DeadObjectException) {
+                    logger.warn(doe) { "Failed to push total stats of downloader to client." }
+                }
             }
         }
         

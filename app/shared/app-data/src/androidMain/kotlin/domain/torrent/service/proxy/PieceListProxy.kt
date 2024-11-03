@@ -10,6 +10,7 @@
 package me.him188.ani.app.domain.torrent.service.proxy
 
 import android.os.Build
+import android.os.DeadObjectException
 import android.os.SharedMemory
 import androidx.annotation.RequiresApi
 import me.him188.ani.app.domain.torrent.IDisposableHandle
@@ -22,6 +23,7 @@ import me.him188.ani.app.torrent.api.pieces.PieceSubscribable
 import me.him188.ani.app.torrent.api.pieces.forEach
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.warn
 import kotlin.coroutines.CoroutineContext
 
 @RequiresApi(Build.VERSION_CODES.O_MR1)
@@ -36,7 +38,6 @@ class PieceListProxy(
     private val pieceStatesRwBuf = pieceStateSharedMem.mapReadWrite()
     
     private val pieceStateSubscriber: PieceListSubscriptions.Subscription
-    private val stateObservers: MutableList<PieceStateObserver> = mutableListOf()
     
     init {
         require(delegate is PieceSubscribable) { "Delegate $delegate is not PieceSubscribable" }
@@ -77,7 +78,13 @@ class PieceListProxy(
 
         val subscription = with(delegate) {
             (this as PieceSubscribable)
-                .subscribePieceState(getByPieceIndex(pieceIndex)) { _, _ -> observer.onUpdate() }
+                .subscribePieceState(getByPieceIndex(pieceIndex)) { _, _ ->
+                    try {
+                        observer.onUpdate()
+                    } catch (doe: DeadObjectException) {
+                        logger.warn(doe) { "Failed to push piece state of piece $pieceIndex to client." }
+                    }
+                }
         }
 
         return DisposableHandleProxy {
@@ -89,6 +96,4 @@ class PieceListProxy(
         (delegate as PieceSubscribable).unsubscribePieceState(pieceStateSubscriber)
         pieceStateSharedMem.close()
     }
-    
-    private class PieceStateObserver(val pieceIndex: Int, val observer: IPieceStateObserver)
 }
