@@ -100,6 +100,7 @@ fun SubjectCollectionsColumn(
                     SearchProblem.fromCombinedLoadStates(items.loadState),
                     onRetry = { items.refresh() },
                     onLogin = { }, // should not happen
+                    Modifier.padding(all = spacedBy / 2),
                 )
             }
         }
