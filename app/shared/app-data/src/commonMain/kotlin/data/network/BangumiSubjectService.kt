@@ -21,7 +21,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.put
 import me.him188.ani.app.data.models.subject.RatingCounts
 import me.him188.ani.app.data.models.subject.RatingInfo
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
@@ -29,6 +31,7 @@ import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryUsernameProvider
 import me.him188.ani.app.data.repository.getOrThrow
 import me.him188.ani.app.domain.search.SubjectType
@@ -160,22 +163,7 @@ class RemoteBangumiSubjectService(
             return emptyList()
         }
         return withContext(ioDispatcher) {
-            val resp = client.executeGraphQL(
-                "SubjectCollectionRepositoryImpl.batchGetSubjectDetails",
-                buildString(
-                    capacity = SUBJECT_DETAILS_FRAGMENTS.length + 30 + 55 * ids.size, // big enough to avoid resizing
-                ) {
-                    appendLine(SUBJECT_DETAILS_FRAGMENTS)
-                    appendLine("query BatchGetSubjectQuery {")
-                    for (id in ids) {
-                        append('s')
-                        append(id)
-                        append(":subject(id: ").append(id).append("){...SubjectFragment}")
-                        appendLine()
-                    }
-                    append("}")
-                },
-            )
+            val resp = executeQuerySubjectDetails(ids)
             resp["errors"]?.let {
                 logger.error("batchGetSubjectDetails failed for query $ids: $it")
             }
@@ -205,6 +193,53 @@ class RemoteBangumiSubjectService(
             }
 
             list
+        }
+    }
+
+    private suspend fun executeQuerySubjectDetails(ids: List<Int>): JsonObject {
+        val actionName = "SubjectCollectionRepositoryImpl.batchGetSubjectDetails"
+        // 尽量使用 variables
+        return when (ids.size) {
+            1 -> {
+                client.executeGraphQL(
+                    actionName,
+                    SUBJECT_DETAILS_QUERY_1,
+                    variables = buildJsonObject {
+                        put("id", ids.first())
+                    },
+                )
+            }
+
+            Repository.defaultPagingConfig.pageSize -> {
+                client.executeGraphQL(
+                    actionName,
+                    SUBJECT_DETAILS_QUERY_WHOLE_PAGE,
+                    variables = buildJsonObject {
+                        repeat(ids.size) { i ->
+                            put("id$i", ids[i])
+                        }
+                    },
+                )
+            }
+
+            else -> {
+                client.executeGraphQL(
+                    actionName,
+                    buildString(
+                        capacity = SUBJECT_DETAILS_FRAGMENTS.length + 30 + 55 * ids.size, // big enough to avoid resizing
+                    ) {
+                        appendLine(SUBJECT_DETAILS_FRAGMENTS)
+                        appendLine("query BatchGetSubjectQuery {")
+                        for (id in ids) {
+                            append('s')
+                            append(id)
+                            append(":subject(id: ").append(id).append("){...SubjectFragment}")
+                            appendLine()
+                        }
+                        append("}")
+                    },
+                )
+            }
         }
     }
 
@@ -363,6 +398,38 @@ class RemoteBangumiSubjectService(
                   # episodes{id, type, name, name_cn, sort, airdate, comment, duration, description, disc, ep, }
                 }
         """
+
+        private const val SUBJECT_DETAILS_QUERY_1 = """
+            $SUBJECT_DETAILS_FRAGMENTS
+            query BatchGetSubjectQuery(${'$'}id: Int!) {
+              s0:subject(id: ${'$'}id){...SubjectFragment}
+            }
+        """
+
+        // 服务器会缓存 query 编译, 用 variables 可以让查询更快
+        private val SUBJECT_DETAILS_QUERY_WHOLE_PAGE by lazy {
+            buildString {
+                appendLine(SUBJECT_DETAILS_FRAGMENTS)
+
+                appendLine("query BatchGetSubjectQuery(")
+                repeat(Repository.defaultPagingConfig.pageSize) { i ->
+                    append("\$id").append(i).append(": Int!")
+                    if (i != Repository.defaultPagingConfig.pageSize - 1) {
+                        append(", ")
+                    }
+                }
+                appendLine(") {")
+
+                repeat(Repository.defaultPagingConfig.pageSize) { i ->
+                    append('s')
+                    append(i)
+                    append(":subject(id: \$id").append(i).append("){...SubjectFragment}")
+                    appendLine()
+                }
+
+                append("}")
+            }
+        }
     }
 }
 
