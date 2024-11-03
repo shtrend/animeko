@@ -73,9 +73,16 @@ class SubjectPreviewItemInfo(
                 )
             }
             val staff = relatedPersonList?.let {
+                val persons = relatedPersonList.asSequence()
+                    .filter(roleSet)
+                    .sortedWith(roleSet)
+                    .take(4)
+                    .toList()
+
+                if (persons.isEmpty()) return@let null
+                
                 buildString {
                     append("制作:  ")
-                    val persons = relatedPersonList.filter(roleSet).take(4).toList()
                     persons.forEachIndexed { index, relatedPersonInfo ->
                         append(relatedPersonInfo.personInfo.displayName)
                         if (index != persons.lastIndex) {
@@ -84,7 +91,7 @@ class SubjectPreviewItemInfo(
                     }
                 }
             }
-            val actors = characters?.let {
+            val actors = characters?.takeIf { it.isNotEmpty() }?.let {
                 buildString {
                     append("配音:  ")
 

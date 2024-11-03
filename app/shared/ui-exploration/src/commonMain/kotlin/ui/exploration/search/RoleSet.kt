@@ -26,6 +26,8 @@ value class RoleSet(
     operator fun minus(other: RoleSet): RoleSet = RoleSet(delegate - other.delegate.toSet())
     operator fun contains(role: Role): Boolean = role in delegate
 
+    fun indexOf(role: Role): Int = delegate.indexOf(role)
+
     @Stable
     companion object {
         @Stable
@@ -40,9 +42,16 @@ value class RoleSet(
 /**
  * 过滤 [RelatedPersonInfo] 中的角色, 返回符合条件的 [RelatedPersonInfo]
  */
-fun List<RelatedPersonInfo>.filter(roleSet: RoleSet): Sequence<RelatedPersonInfo> {
-    return asSequence().filter f@{ person ->
+fun Sequence<RelatedPersonInfo>.filter(roleSet: RoleSet): Sequence<RelatedPersonInfo> {
+    return filter f@{ person ->
         person.position in roleSet
+    }
+}
+
+fun Sequence<RelatedPersonInfo>.sortedWith(roleSet: RoleSet): Sequence<RelatedPersonInfo> {
+    return sortedBy { person ->
+        val index = roleSet.indexOf(person.position)
+        if (index == -1) Int.MAX_VALUE else index
     }
 }
 
