@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.domain.torrent.service.proxy
 
-import android.os.DeadObjectException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -23,7 +22,6 @@ import me.him188.ani.app.torrent.api.TorrentSession
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.logging.logger
-import me.him188.ani.utils.logging.warn
 import kotlin.coroutines.CoroutineContext
 
 class TorrentSessionProxy(
@@ -37,20 +35,16 @@ class TorrentSessionProxy(
         val job = scope.launch(Dispatchers.IO_) { 
             delegate.sessionStats.collect {
                 if (it == null) return@collect
-                try {
-                    flow?.onEmit(
-                        PTorrentSessionStats(
-                            it.totalSizeRequested,
-                            it.downloadedBytes,
-                            it.downloadSpeed,
-                            it.uploadedBytes,
-                            it.uploadSpeed,
-                            it.downloadProgress,
-                        ),
-                    )
-                } catch (doe: DeadObjectException) {
-                    logger.warn(doe) { "Failed to push torrent session stats to client." }
-                }
+                flow?.onEmit(
+                    PTorrentSessionStats(
+                        it.totalSizeRequested,
+                        it.downloadedBytes,
+                        it.downloadSpeed,
+                        it.uploadedBytes,
+                        it.uploadSpeed,
+                        it.downloadProgress,
+                    ),
+                )
             }
         }
         

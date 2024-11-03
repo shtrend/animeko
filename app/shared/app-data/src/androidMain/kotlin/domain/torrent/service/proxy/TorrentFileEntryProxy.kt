@@ -10,7 +10,6 @@
 package me.him188.ani.app.domain.torrent.service.proxy
 
 import android.os.Build
-import android.os.DeadObjectException
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -28,7 +27,6 @@ import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.logging.logger
-import me.him188.ani.utils.logging.warn
 import kotlin.coroutines.CoroutineContext
 
 class TorrentFileEntryProxy(
@@ -41,11 +39,7 @@ class TorrentFileEntryProxy(
     override fun getFileStats(flow: ITorrentFileEntryStatsCallback?): IDisposableHandle {
         val job = scope.launch(Dispatchers.IO_) {
             delegate.fileStats.collect {
-                try {
-                    flow?.onEmit(PTorrentFileEntryStats(it.downloadedBytes, it.downloadProgress))
-                } catch (doe: DeadObjectException) {
-                    logger.warn(doe) { "Failed to push torrent file entry stats to client." }
-                }
+                flow?.onEmit(PTorrentFileEntryStats(it.downloadedBytes, it.downloadProgress))
             }
         }
 
