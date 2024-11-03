@@ -106,7 +106,7 @@ data class Images(
 )
 
 @Immutable
-class PersonInfo(
+data class PersonInfo(
     val id: Int,
     val name: String,
     val type: PersonType,
