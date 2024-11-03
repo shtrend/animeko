@@ -33,7 +33,7 @@ value class RoleSet(
 
         @Stable
         val Default =
-            RoleSet(listOf(Role.ANIMATION_PRODUCTION, Role.DIRECTOR, Role.SCRIPT_WRITER, Role.MUSIC))
+            RoleSet(listOf(Role.AnimationWork, Role.Director, Role.Script, Role.Music))
     }
 }
 
