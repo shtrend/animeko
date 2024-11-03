@@ -134,6 +134,7 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
     }
 
     override fun onDestroy() {
+        logger.info { "AniTorrentService is stopping." }
         val engine = kotlin.runCatching { anitorrent.getCompleted() }.getOrNull() ?: return
         runBlocking(Dispatchers.IO_) {
             val downloader = engine.getDownloader()

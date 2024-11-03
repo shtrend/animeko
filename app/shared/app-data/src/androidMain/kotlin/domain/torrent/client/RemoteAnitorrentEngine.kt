@@ -10,11 +10,12 @@
 package me.him188.ani.app.domain.torrent.client
 
 import android.os.Build
+import android.os.DeadObjectException
+import android.os.IInterface
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -22,7 +23,9 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import me.him188.ani.app.data.models.preference.AnitorrentConfig
 import me.him188.ani.app.data.models.preference.ProxySettings
 import me.him188.ani.app.data.models.preference.TorrentPeerConfig
@@ -33,7 +36,6 @@ import me.him188.ani.app.domain.torrent.parcel.PAnitorrentConfig
 import me.him188.ani.app.domain.torrent.parcel.PProxySettings
 import me.him188.ani.app.domain.torrent.parcel.PTorrentPeerConfig
 import me.him188.ani.app.domain.torrent.service.TorrentServiceConnection
-import me.him188.ani.app.torrent.anitorrent.AnitorrentLibraryLoader
 import me.him188.ani.app.torrent.api.TorrentDownloader
 import me.him188.ani.datasources.api.source.MediaSourceLocation
 import me.him188.ani.utils.coroutines.childScope
@@ -41,6 +43,7 @@ import me.him188.ani.utils.coroutines.onReplacement
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.warn
 import kotlin.coroutines.CoroutineContext
 
 @RequiresApi(Build.VERSION_CODES.O_MR1)
@@ -54,6 +57,7 @@ class RemoteAnitorrentEngine(
     parentCoroutineContext: CoroutineContext,
 ) : TorrentEngine {
     private val childScope = parentCoroutineContext.childScope()
+    private val logger = logger<RemoteAnitorrentEngine>()
     
     override val type: TorrentEngineType = TorrentEngineType.RemoteAnitorrent
 
@@ -69,63 +73,26 @@ class RemoteAnitorrentEngine(
     
     init {
         // transfer from app to service.
-        childScope.launch {
-            val configFlow = proxySettingsFlow.stateIn(this)
-            connection.connected
-                .filter { it }
-                .map {
-                    val proxySettingsCollector = getBinderOrFail().proxySettingsCollector
-                    launch {
-                        configFlow.collect {
-                            val serialized = json.encodeToString(ProxySettings.serializer(), it)
-                            proxySettingsCollector.collect(PProxySettings(serialized))
-                        }
-                    }
-                }
-                .onReplacement { it.cancel() }
-                .collect()
-            
-        }
-        childScope.launch {
-            val configFlow = peerFilterConfig.stateIn(this)
-            connection.connected
-                .filter { it }
-                .map {
-                    val torrentPeerConfigCollector = getBinderOrFail().torrentPeerConfigCollector
-                    launch {
-                        configFlow.collect {
-                            val serialized = json.encodeToString(TorrentPeerConfig.serializer(), it)
-                            torrentPeerConfigCollector.collect(PTorrentPeerConfig(serialized))
-                        }
-                    }
-                }
-                .onReplacement { it.cancel() }
-                .collect()
-
-        }
-        childScope.launch {
-            val configFlow = anitorrentConfigFlow.stateIn(this)
-            connection.connected
-                .filter { it }
-                .map {
-                    val anitorrentConfigCollector = getBinderOrFail().anitorrentConfigCollector
-                    launch {
-                        configFlow.collect {
-                            val serialized = json.encodeToString(AnitorrentConfig.serializer(), it)
-                            anitorrentConfigCollector.collect(PAnitorrentConfig(serialized))
-                        }
-                    }
-                }
-                .onReplacement { it.cancel() }
-                .collect()
-
-        }
-        childScope.launch {
-            connection.connected
-                .filter { it }
-                .onEach { getBinderOrFail().setSaveDir(saveDir.absolutePath) }
-                .collect()
-        }
+        collectSettingsToRemote(
+            settingsFlow = proxySettingsFlow.map { json.encodeToString(ProxySettings.serializer(), it) },
+            getBinder = { getBinderOrFail().proxySettingsCollector },
+            transact = { collect(PProxySettings(it)) },
+        )
+        collectSettingsToRemote(
+            settingsFlow = peerFilterConfig.map { json.encodeToString(TorrentPeerConfig.serializer(), it) },
+            getBinder = { getBinderOrFail().torrentPeerConfigCollector },
+            transact = { collect(PTorrentPeerConfig(it)) },
+        )
+        collectSettingsToRemote(
+            settingsFlow = anitorrentConfigFlow.map { json.encodeToString(AnitorrentConfig.serializer(), it) },
+            getBinder = { getBinderOrFail().anitorrentConfigCollector },
+            transact = { collect(PAnitorrentConfig(it)) },
+        )
+        collectSettingsToRemote(
+            settingsFlow = flowOf(saveDir.absolutePath),
+            getBinder = { getBinderOrFail() },
+            transact = { setSaveDir(it) },
+        )
     }
 
     override suspend fun testConnection(): Boolean {
@@ -144,5 +111,24 @@ class RemoteAnitorrentEngine(
 
     override fun close() {
         childScope.cancel()
+    }
+
+    private inline fun <I : IInterface> collectSettingsToRemote(
+        settingsFlow: Flow<String>,
+        noinline getBinder: suspend () -> I,
+        crossinline transact: I.(String) -> Unit
+    ) = childScope.launch {
+        val stateFlow = settingsFlow.stateIn(this)
+        val remoteCall = RetryRemoteCall { runBlocking { getBinder() } }
+
+        connection.connected
+            .filter { it }
+            .map {
+                launch {
+                    stateFlow.collect { remoteCall.call { transact(it) } }
+                }
+            }
+            .onReplacement { it.cancel() }
+            .collect()
     }
 }
