@@ -142,6 +142,8 @@ abstract class EpisodeViewModel : AbstractViewModel(), HasBackgroundScope {
 
     abstract var isFullscreen: Boolean
 
+    abstract var sidebarVisible: Boolean
+
     abstract val commentLazyListState: LazyListState
 
     /**
@@ -510,6 +512,7 @@ private class EpisodeViewModelImpl(
         )
 
     override var isFullscreen: Boolean by mutableStateOf(initialIsFullscreen)
+    override var sidebarVisible: Boolean by mutableStateOf(true)
     override val commentLazyListState: LazyListState = LazyListState()
 
     fun switchEpisode(episodeId: Int) {

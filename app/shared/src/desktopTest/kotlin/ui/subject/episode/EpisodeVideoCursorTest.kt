@@ -106,6 +106,8 @@ class EpisodeVideoCursorTest {
                             enabled = false,
                         )
                     },
+                    sidebarVisible = true,
+                    onToggleSidebar = {},
                     progressSliderState = progressSliderState,
                     mediaSelectorPresentation = rememberTestMediaSelectorPresentation(),
                     mediaSourceResultsPresentation = rememberTestMediaSourceResults(),

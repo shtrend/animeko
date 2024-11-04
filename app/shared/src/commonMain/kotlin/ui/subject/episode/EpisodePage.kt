@@ -263,7 +263,7 @@ private fun EpisodeSceneTabletVeryWide(
                 },
             )
 
-            if (vm.isFullscreen) {
+            if (vm.isFullscreen || !vm.sidebarVisible) {
                 return@Row
             }
 
@@ -682,6 +682,10 @@ private fun EpisodeVideo(
                 cacheProgressState = vm.playerState.cacheProgress,
                 enabled = false,
             )
+        },
+        sidebarVisible = vm.sidebarVisible,
+        onToggleSidebar = {
+            vm.sidebarVisible = it
         },
         progressSliderState = progressSliderState,
         mediaSelectorPresentation = vm.mediaSelectorPresentation,
