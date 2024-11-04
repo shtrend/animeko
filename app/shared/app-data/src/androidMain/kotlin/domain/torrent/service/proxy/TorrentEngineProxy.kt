@@ -11,6 +11,13 @@ package me.him188.ani.app.domain.torrent.service.proxy
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import me.him188.ani.app.data.models.preference.AnitorrentConfig
@@ -25,6 +32,7 @@ import me.him188.ani.app.domain.torrent.engines.AnitorrentEngine
 import me.him188.ani.app.domain.torrent.parcel.PAnitorrentConfig
 import me.him188.ani.app.domain.torrent.parcel.PProxySettings
 import me.him188.ani.app.domain.torrent.parcel.PTorrentPeerConfig
+import me.him188.ani.app.torrent.api.TorrentDownloader
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -40,6 +48,20 @@ class TorrentEngineProxy(
 ) : IRemoteAniTorrentEngine.Stub() {
     private val logger = logger(this::class)
     private val scope = context.childScope()
+
+    // cache downloader in case clients always get the same downloader proxy instance.
+    private var currentDownloader: TorrentDownloader? = null
+
+    private val downloaderProxy = flow<TorrentDownloader> {
+        val newDownloader = anitorrent.await().getDownloader()
+        if (currentDownloader == null || newDownloader !== currentDownloader) {
+            emit(newDownloader)
+            currentDownloader = newDownloader
+        }
+    }
+        .distinctUntilChanged()
+        .map { TorrentDownloaderProxy(it, scope.coroutineContext) }
+        .stateIn(scope, SharingStarted.Lazily, null)
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -85,7 +107,6 @@ class TorrentEngineProxy(
     }
 
     override fun getDownlaoder(): IRemoteTorrentDownloader {
-        val downloader = runBlocking { anitorrent.await().getDownloader() }
-        return TorrentDownloaderProxy(downloader, scope.coroutineContext)
+        return runBlocking { downloaderProxy.filterNotNull().first() }
     }
 }
