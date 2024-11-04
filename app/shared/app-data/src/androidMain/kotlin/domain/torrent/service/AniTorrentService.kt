@@ -27,6 +27,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -36,8 +37,10 @@ import me.him188.ani.app.data.models.preference.ProxySettings
 import me.him188.ani.app.data.models.preference.TorrentPeerConfig
 import me.him188.ani.app.domain.torrent.engines.AnitorrentEngine
 import me.him188.ani.app.domain.torrent.service.proxy.TorrentEngineProxy
+import me.him188.ani.app.platform.createMeteredNetworkDetector
 import me.him188.ani.app.torrent.anitorrent.AnitorrentDownloaderFactory
 import me.him188.ani.datasources.api.topic.FileSize.Companion.bytes
+import me.him188.ani.datasources.api.topic.FileSize.Companion.kiloBytes
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.sampleWithInitial
 import me.him188.ani.utils.io.inSystem
@@ -57,6 +60,9 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
     private val proxySettings: MutableSharedFlow<ProxySettings> = MutableSharedFlow(1)
     private val torrentPeerConfig: MutableSharedFlow<TorrentPeerConfig> = MutableSharedFlow(1)
     private val anitorrentConfig: MutableSharedFlow<AnitorrentConfig> = MutableSharedFlow(1)
+
+    // detect metered network state.
+    private val meteredNetworkDetector by lazy { createMeteredNetworkDetector(this) }
     
     private val anitorrent: CompletableDeferred<AnitorrentEngine> = CompletableDeferred()
 
@@ -85,7 +91,9 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
             // try to initialize anitorrent engine.
             anitorrent.complete(
                 AnitorrentEngine(
-                    anitorrentConfig,
+                    anitorrentConfig.combine(meteredNetworkDetector.isMeteredNetworkFlow) { config, isMetered ->
+                        if (isMetered) config.copy(uploadRateLimit = 1.kiloBytes) else config
+                    },
                     proxySettings,
                     torrentPeerConfig,
                     Path(saveDirDeferred.await()).inSystem,
@@ -186,6 +194,7 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
         }
         // cancel lifecycle scope
         this.cancel()
+        meteredNetworkDetector.dispose()
         // release wake lock if held
         if (wakeLock.isHeld) {
             wakeLock.release()

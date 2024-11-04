@@ -10,10 +10,11 @@
 package me.him188.ani.app.platform
 
 import android.annotation.SuppressLint
+import android.content.BroadcastReceiver
+import android.content.Intent
+import android.content.IntentFilter
 import android.net.ConnectivityManager
-import android.net.Network
 import android.net.NetworkCapabilities
-import android.net.NetworkRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import me.him188.ani.utils.logging.logger
@@ -22,41 +23,50 @@ import me.him188.ani.utils.logging.logger
 @SuppressLint("MissingPermission")
 private class AndroidMeteredNetworkDetector(
     context: Context
-) : MeteredNetworkDetector {
-    private val connectivityManager = context.getSystemService(ConnectivityManager::class.java)
+) : MeteredNetworkDetector, BroadcastReceiver() {
+    private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val logger by lazy { logger<AndroidMeteredNetworkDetector>() }
 
     private val flow = MutableStateFlow(getCurrentIsMetered())
     override val isMeteredNetworkFlow: Flow<Boolean> get() = flow
 
+    private val unregisterReceiver = { context.unregisterReceiver(this) }
+    
     // Create a NetworkCallback to detect network changes
-    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) { // 连接 WiFi
-            flow.tryEmit(getCurrentIsMetered())
-        }
+    // private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+    //     override fun onAvailable(network: Network) { // 连接 WiFi
+    //         flow.tryEmit(getCurrentIsMetered())
+    //     }
 
-        override fun onLost(network: Network) { // 断开 WiFi
-            flow.tryEmit(getCurrentIsMetered())
-        }
+    //     override fun onLost(network: Network) { // 断开 WiFi
+    //         flow.tryEmit(getCurrentIsMetered())
+    //     }
 
-        // WiFi 设置变更 (设置为计费网络)
-        // 连接/断开 WiFi 不会触发 onCapabilitiesChanged
-        override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
-            val isMetered = !networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-            log { "onCapabilitiesChanged: isMetered=$isMetered" }
-            flow.tryEmit(isMetered)
-        }
-    }
+    //     // WiFi 设置变更 (设置为计费网络)
+    //     // 连接/断开 WiFi 不会触发 onCapabilitiesChanged
+    //     override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+    //         val isMetered = !networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+    //         log { "onCapabilitiesChanged: isMetered=$isMetered" }
+    //         flow.tryEmit(isMetered)
+    //     }
+    // }
 
     init {
         // Register the NetworkCallback instead of using BroadcastReceiver
-        val networkRequest = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
-            .build()
-        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+        // val networkRequest = NetworkRequest.Builder()
+        //     .addTransportType(NetworkCapabilities.TRANSPORT_WIFI)
+        //     .addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+        //     .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)
+        //     .build()
+        // connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
 
+        context.registerReceiver(this, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
         // Emit the first value
-        flow.tryEmit(getCurrentIsMetered())
+        flow.value = getCurrentIsMetered()
+    }
+
+    override fun onReceive(context: android.content.Context?, intent: Intent?) {
+        flow.value = getCurrentIsMetered()
     }
 
     private fun getCurrentIsMetered(): Boolean {
@@ -71,7 +81,8 @@ private class AndroidMeteredNetworkDetector(
 
     override fun dispose() {
         // Unregister the network callback when no longer needed
-        connectivityManager.unregisterNetworkCallback(networkCallback)
+        // connectivityManager.unregisterNetworkCallback(networkCallback)
+        unregisterReceiver()
     }
 
     private inline fun log(message: () -> String) {
