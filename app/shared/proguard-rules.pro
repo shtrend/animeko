@@ -71,3 +71,7 @@
 
 # anitorrent
 -keep class me.him188.ani.app.torrent.anitorrent.binding.** { *; }
+
+# Android AIDL for torrent service.
+-keep class me.him188.ani.app.domain.torrent.I* { *; }
+-keep class me.him188.ani.app.domain.torrent.parcel.** { *; }
