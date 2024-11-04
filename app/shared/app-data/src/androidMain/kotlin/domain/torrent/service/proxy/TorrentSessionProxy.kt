@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.domain.torrent.service.proxy
 
+import android.os.DeadObjectException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -19,6 +20,7 @@ import me.him188.ani.app.domain.torrent.ITorrentSessionStatsCallback
 import me.him188.ani.app.domain.torrent.parcel.PPeerInfo
 import me.him188.ani.app.domain.torrent.parcel.PTorrentSessionStats
 import me.him188.ani.app.torrent.api.TorrentSession
+import me.him188.ani.utils.coroutines.CancellationException
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.logging.logger
@@ -35,16 +37,20 @@ class TorrentSessionProxy(
         val job = scope.launch(Dispatchers.IO_) { 
             delegate.sessionStats.collect {
                 if (it == null) return@collect
-                flow?.onEmit(
-                    PTorrentSessionStats(
-                        it.totalSizeRequested,
-                        it.downloadedBytes,
-                        it.downloadSpeed,
-                        it.uploadedBytes,
-                        it.uploadSpeed,
-                        it.downloadProgress,
-                    ),
-                )
+                try {
+                    flow?.onEmit(
+                        PTorrentSessionStats(
+                            it.totalSizeRequested,
+                            it.downloadedBytes,
+                            it.downloadSpeed,
+                            it.uploadedBytes,
+                            it.uploadSpeed,
+                            it.downloadProgress,
+                        ),
+                    )
+                } catch (doe: DeadObjectException) {
+                    throw CancellationException("Cancelled collecting session stats.", doe)
+                }
             }
         }
         

@@ -10,6 +10,7 @@
 package me.him188.ani.app.domain.torrent.service.proxy
 
 import android.os.Build
+import android.os.DeadObjectException
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,6 +26,7 @@ import me.him188.ani.app.domain.torrent.parcel.PTorrentDownloaderStats
 import me.him188.ani.app.domain.torrent.parcel.PTorrentLibInfo
 import me.him188.ani.app.domain.torrent.parcel.toParceled
 import me.him188.ani.app.torrent.api.TorrentDownloader
+import me.him188.ani.utils.coroutines.CancellationException
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.io.absolutePath
@@ -40,16 +42,20 @@ class TorrentDownloaderProxy(
     override fun getTotalStatus(flow: ITorrentDownloaderStatsCallback?): IDisposableHandle {
         val job = scope.launch(Dispatchers.IO_) {
             delegate.totalStats.collect {
-                flow?.onEmit(
-                    PTorrentDownloaderStats(
-                        it.totalSize,
-                        it.downloadedBytes,
-                        it.downloadSpeed,
-                        it.uploadedBytes,
-                        it.uploadSpeed,
-                        it.downloadProgress,
-                    ),
-                )
+                try {
+                    flow?.onEmit(
+                        PTorrentDownloaderStats(
+                            it.totalSize,
+                            it.downloadedBytes,
+                            it.downloadSpeed,
+                            it.uploadedBytes,
+                            it.uploadSpeed,
+                            it.downloadProgress,
+                        ),
+                    )
+                } catch (doe: DeadObjectException) {
+                    throw CancellationException("Cancelled collecting downloader total stats.", doe)
+                }
             }
         }
         
