@@ -77,7 +77,7 @@ class ServiceNotification(
             defaultNotificationAppearance.stopActionText
         }
         val icon = (intent?.getIntExtra("app_icon", -1) ?: -1)
-            .let { if (it != -1) defaultNotificationAppearance.icon else Icon.createWithResource(context, it) }
+            .let { if (it == -1) defaultNotificationAppearance.icon else Icon.createWithResource(context, it) }
         notificationOpenActivityIntent = intent?.getParcelable<Intent>("open_activity_intent")
         
         notificationAppearance = NotificationAppearance(
