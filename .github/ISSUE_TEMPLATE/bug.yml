@@ -1,8 +1,8 @@
 name: Bug 报告
 description: 提交一个 bug
 labels:
-  - "t: bug"
   - "N"
+type: Bug
 
 body:
   - type: markdown
@@ -31,7 +31,7 @@ body:
     id: version-ani
     attributes:
       label: Ani 版本号
-      description: 你使用的 Ani 版本号，可在 "设置-界面与应用" 中找到，如 `3.0.0`。
+      description: 你使用的 Ani 版本号，可在 "设置-界面与应用" 中找到，如 `4.0.0`。
       placeholder: "例如: 3.0.0"
     validations:
       required: true
@@ -61,5 +61,10 @@ body:
       placeholder: |
         请在这里粘贴日志内容，或拖拽文件到这里。
         请同时说明问题的发生时间，最好精确到分钟 (例如 19:43 左右)。
+      value: |
+        ```
+        
+        
+        ```
     validations:
       required: false
