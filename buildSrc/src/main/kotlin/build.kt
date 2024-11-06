@@ -43,7 +43,13 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.io.File
 
 fun Project.sharedAndroidProguardRules(): Array<File> {
-    return arrayOf(file(project(":app:shared").projectDir.resolve("proguard-rules.pro")))
+    val dir = project(":app:shared").projectDir
+    return listOf(
+        dir.resolve("proguard-rules.pro"),
+        dir.resolve("proguard-rules-keep-names.pro"),
+    ).filter {
+        it.exists()
+    }.toTypedArray()
 }
 
 val testOptInAnnotations = arrayOf(

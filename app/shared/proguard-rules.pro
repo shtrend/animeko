@@ -75,3 +75,7 @@
 # Android AIDL for torrent service.
 -keepnames class me.him188.ani.app.domain.torrent.I* { *; }
 -keepnames class me.him188.ani.app.domain.torrent.parcel.** { *; }
+
+-keepattributes LineNumberTable,SourceFile
+-renamesourcefileattribute SourceFile
+-keepnames class me.him188.ani.** { *; }
