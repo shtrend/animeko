@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.toList
@@ -37,8 +38,8 @@ import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfi
 import me.him188.ani.app.domain.episode.EpisodeCollections
 import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
-import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.platform.currentTimeMillis
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -47,6 +48,7 @@ class EpisodeCollectionRepository(
     private val episodeCollectionDao: EpisodeCollectionDao,
     private val bangumiEpisodeService: BangumiEpisodeService,
     private val enableAllEpisodeTypes: Flow<Boolean>,
+    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
 ) : Repository {
     private val epTypeFilter get() = enableAllEpisodeTypes.map { if (it) null else MainStory }
 
@@ -63,7 +65,7 @@ class EpisodeCollectionRepository(
                         }
                         ?: throw NoSuchElementException("Episode $episodeId not found")
                 }
-        }
+        }.flowOn(defaultDispatcher)
     }
 
     /**
@@ -88,7 +90,7 @@ class EpisodeCollectionRepository(
                     episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
                 }
         }
-    }
+    }.flowOn(defaultDispatcher)
 
     fun subjectEpisodeCollectionsPager(
         subjectId: Int,
@@ -106,12 +108,12 @@ class EpisodeCollectionRepository(
         data.map {
             it.toEpisodeCollectionInfo()
         }
-    }
+    }.flowOn(defaultDispatcher)
 
     /**
      * 设置指定条目的所有剧集为已看.
      */
-    suspend fun setAllEpisodesWatched(subjectId: Int) {
+    suspend fun setAllEpisodesWatched(subjectId: Int) = withContext(defaultDispatcher) {
         val episodeIds = subjectEpisodeCollectionInfosFlow(subjectId)
             .first()
             .map { it.episodeId }
@@ -120,7 +122,11 @@ class EpisodeCollectionRepository(
         episodeCollectionDao.setAllEpisodesWatched(subjectId)
     }
 
-    suspend fun setEpisodeCollectionType(subjectId: Int, episodeId: Int, collectionType: UnifiedCollectionType) {
+    suspend fun setEpisodeCollectionType(
+        subjectId: Int,
+        episodeId: Int,
+        collectionType: UnifiedCollectionType
+    ) = withContext(defaultDispatcher) {
         bangumiEpisodeService.setEpisodeCollection(subjectId, listOf(episodeId), collectionType)
         episodeCollectionDao.updateSelfCollectionType(subjectId, episodeId, collectionType)
     }
@@ -134,40 +140,41 @@ class EpisodeCollectionRepository(
         val subjectId: Int,
     ) : RemoteMediator<Int, T>() {
         override suspend fun initialize(): InitializeAction {
-            if ((currentTimeMillis() - episodeCollectionDao.lastUpdated()).milliseconds > 1.hours) {
-                return InitializeAction.LAUNCH_INITIAL_REFRESH
+            return withContext(defaultDispatcher) {
+                if ((currentTimeMillis() - episodeCollectionDao.lastUpdated()).milliseconds > 1.hours) {
+                    InitializeAction.LAUNCH_INITIAL_REFRESH
+                } else {
+                    InitializeAction.SKIP_INITIAL_REFRESH
+                }
             }
-            return InitializeAction.SKIP_INITIAL_REFRESH
         }
 
         override suspend fun load(
             loadType: LoadType,
             state: PagingState<Int, T>,
-        ): MediatorResult {
-            return withContext(Dispatchers.IO_) {
-                val offset = when (loadType) {
-                    LoadType.REFRESH -> 0
-                    LoadType.PREPEND -> return@withContext MediatorResult.Success(endOfPaginationReached = true)
-                    LoadType.APPEND -> state.pages.size * state.config.pageSize
-                }
-
-                val episodeType = epTypeFilter.first()
-
-                val episodes = episodeService.getEpisodeCollectionInfosPaged(
-                    subjectId,
-                    episodeType = episodeType?.toBangumiEpType(),
-                    offset = offset,
-                    limit = state.config.pageSize,
-                )
-
-                episodes.page.takeIf { it.isNotEmpty() }?.let { list ->
-                    episodeCollectionDao.upsert(
-                        list.map { it.toEntity(subjectId) },
-                    )
-                }
-
-                MediatorResult.Success(endOfPaginationReached = episodes.page.isEmpty())
+        ): MediatorResult = withContext(defaultDispatcher) {
+            val offset = when (loadType) {
+                LoadType.REFRESH -> 0
+                LoadType.PREPEND -> return@withContext MediatorResult.Success(endOfPaginationReached = true)
+                LoadType.APPEND -> state.pages.size * state.config.pageSize
             }
+
+            val episodeType = epTypeFilter.first()
+
+            val episodes = episodeService.getEpisodeCollectionInfosPaged(
+                subjectId,
+                episodeType = episodeType?.toBangumiEpType(),
+                offset = offset,
+                limit = state.config.pageSize,
+            )
+
+            episodes.page.takeIf { it.isNotEmpty() }?.let { list ->
+                episodeCollectionDao.upsert(
+                    list.map { it.toEntity(subjectId) },
+                )
+            }
+
+            MediatorResult.Success(endOfPaginationReached = episodes.page.isEmpty())
         }
     }
 }
