@@ -33,8 +33,8 @@ import kotlinx.io.files.Path
 import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.MediaCacheState
 import me.him188.ani.app.domain.media.resolver.TorrentVideoSourceResolver
-import me.him188.ani.app.tools.toProgress
 import me.him188.ani.app.domain.torrent.TorrentEngine
+import me.him188.ani.app.tools.toProgress
 import me.him188.ani.app.torrent.api.TorrentSession
 import me.him188.ani.app.torrent.api.files.EncodedTorrentInfo
 import me.him188.ani.app.torrent.api.files.FilePriority
@@ -82,8 +82,8 @@ class TorrentMediaCacheEngine(
         val EXTRA_TORRENT_CACHE_DIR = MetadataKey("torrentCacheDir") // 种子的缓存目录, 注意, 一个 MediaCache 可能只对应该种子资源的其中一个文件
 
         private val logger = logger<TorrentMediaCacheEngine>()
-        private val unspecifiedFileStatsFlow = flowOf(_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.FileStats.Unspecified)
-        private val unspecifiedSessionStatsFlow = flowOf(_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.SessionStats.Unspecified)
+        private val unspecifiedFileStatsFlow = flowOf(MediaCache.FileStats.Unspecified)
+        private val unspecifiedSessionStatsFlow = flowOf(MediaCache.SessionStats.Unspecified)
         private val unspecifiedFileSizeFlow = flowOf(FileSize.Unspecified)
     }
 
@@ -119,9 +119,10 @@ class TorrentMediaCacheEngine(
          */
         override val metadata: MediaCacheMetadata, // 注意, 我们不能写 check 检查这些属性, 因为可能会有旧版本的数据
         val lazyFileHandle: LazyFileHandle
-    ) : _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache, SynchronizedObject() {
-        override val state: MutableStateFlow<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState> = MutableStateFlow(
-            _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState.IN_PROGRESS)
+    ) : MediaCache, SynchronizedObject() {
+        override val state: MutableStateFlow<MediaCacheState> = MutableStateFlow(
+            MediaCacheState.IN_PROGRESS,
+        )
 
         override suspend fun getCachedMedia(): CachedMedia {
             logger.info { "getCachedMedia: start" }
@@ -153,11 +154,11 @@ class TorrentMediaCacheEngine(
             } ?: false
         }
 
-        override val fileStats: Flow<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.FileStats> = lazyFileHandle.entry.flatMapLatest { entry ->
+        override val fileStats: Flow<MediaCache.FileStats> = lazyFileHandle.entry.flatMapLatest { entry ->
             if (entry == null) return@flatMapLatest unspecifiedFileStatsFlow
 
             entry.fileStats.map { stats ->
-                _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.FileStats(
+                MediaCache.FileStats(
                     totalSize = entry.length.bytes,
                     downloadedBytes = stats.downloadedBytes.bytes,
                     downloadProgress = stats.downloadProgress.toProgress(),
@@ -165,12 +166,12 @@ class TorrentMediaCacheEngine(
             }
         }.flowOn(flowDispatcher)
 
-        override val sessionStats: Flow<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.SessionStats> = lazyFileHandle.session.flatMapLatest { handle ->
+        override val sessionStats: Flow<MediaCache.SessionStats> = lazyFileHandle.session.flatMapLatest { handle ->
             if (handle == null) return@flatMapLatest unspecifiedSessionStatsFlow
             handle.sessionStats
                 .map { stats ->
-                    if (stats == null) return@map _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.SessionStats.Unspecified
-                    _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.SessionStats(
+                    if (stats == null) return@map MediaCache.SessionStats.Unspecified
+                    MediaCache.SessionStats(
                         totalSize = stats.totalSizeRequested.bytes,
                         downloadedBytes = stats.downloadedBytes.bytes,
                         downloadSpeed = stats.downloadSpeed.bytes,
@@ -184,7 +185,7 @@ class TorrentMediaCacheEngine(
         override suspend fun pause() {
             if (isDeleted.value) return
             lazyFileHandle.handle.first()?.pause()
-            state.value = _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState.PAUSED
+            state.value = MediaCacheState.PAUSED
         }
 
         override suspend fun close() {
@@ -195,7 +196,7 @@ class TorrentMediaCacheEngine(
         override suspend fun resume() {
             if (isDeleted.value) return
             val file = lazyFileHandle.handle.first()
-            state.value = _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState.IN_PROGRESS
+            state.value = MediaCacheState.IN_PROGRESS
             logger.info { "Resuming file: $file" }
             file?.resume(FilePriority.NORMAL)
         }
@@ -260,7 +261,7 @@ class TorrentMediaCacheEngine(
         origin: Media,
         metadata: MediaCacheMetadata,
         parentContext: CoroutineContext
-    ): _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache? {
+    ): MediaCache? {
         if (!supports(origin)) throw UnsupportedOperationException("Media is not supported by this engine $this: ${origin.download}")
         val data = metadata.extra[EXTRA_TORRENT_DATA]?.hexToByteArray() ?: return null
         return TorrentMediaCache(
@@ -335,7 +336,7 @@ class TorrentMediaCacheEngine(
         origin: Media,
         metadata: MediaCacheMetadata,
         parentContext: CoroutineContext
-    ): _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache {
+    ): MediaCache {
         if (!supports(origin)) throw UnsupportedOperationException("Media is not supported by this engine $this: ${origin.download}")
         val downloader = torrentEngine.getDownloader()
         val data = downloader.fetchTorrent(origin.download.uri)
@@ -354,7 +355,7 @@ class TorrentMediaCacheEngine(
     }
 
     @OptIn(ExperimentalStdlibApi::class)
-    override suspend fun deleteUnusedCaches(all: List<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache>) {
+    override suspend fun deleteUnusedCaches(all: List<MediaCache>) {
         val downloader = torrentEngine.getDownloader()
         val allowedAbsolute = buildSet(capacity = all.size) {
             for (mediaCache in all) {

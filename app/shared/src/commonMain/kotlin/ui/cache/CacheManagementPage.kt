@@ -50,7 +50,9 @@ import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.supervisorScope
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
+import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.MediaCacheManager
+import me.him188.ani.app.domain.media.cache.MediaCacheState
 import me.him188.ani.app.domain.media.cache.engine.MediaStats
 import me.him188.ani.app.domain.media.cache.engine.sum
 import me.him188.ani.app.navigation.AniNavigator
@@ -108,7 +110,7 @@ class CacheManagementViewModel(
         }.produceState(emptyList()),
     )
 
-    private fun CoroutineScope.createCacheGroupStates(allCaches: List<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache>) =
+    private fun CoroutineScope.createCacheGroupStates(allCaches: List<MediaCache>) =
         allCaches.groupBy { it.origin.unwrapCached().mediaId }.map { (_, episodes) ->
             check(episodes.isNotEmpty())
 
@@ -162,7 +164,7 @@ class CacheManagementViewModel(
 
     private fun createGroupCommonInfo(
         subjectId: Int,
-        firstCache: _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache,
+        firstCache: MediaCache,
         subjectDisplayName: String,
         imageUrl: String?,
     ) = CacheGroupCommonInfo(
@@ -173,7 +175,7 @@ class CacheManagementViewModel(
         imageUrl = imageUrl,
     )
 
-    private fun CoroutineScope.createCacheEpisode(mediaCache: _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache): CacheEpisodeState {
+    private fun CoroutineScope.createCacheEpisode(mediaCache: MediaCache): CacheEpisodeState {
         val fileStats = mediaCache.fileStats
             .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
         return CacheEpisodeState(
@@ -202,8 +204,8 @@ class CacheManagementViewModel(
                 .produceState(CacheEpisodeState.Stats.Unspecified, this),
             state = mediaCache.state.map {
                 when (it) {
-                    _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState.IN_PROGRESS -> CacheEpisodePaused.IN_PROGRESS
-                    _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState.PAUSED -> CacheEpisodePaused.PAUSED
+                    MediaCacheState.IN_PROGRESS -> CacheEpisodePaused.IN_PROGRESS
+                    MediaCacheState.PAUSED -> CacheEpisodePaused.PAUSED
                 }
             }.produceState(CacheEpisodePaused.IN_PROGRESS, this),
             onPause = { mediaCache.pause() },

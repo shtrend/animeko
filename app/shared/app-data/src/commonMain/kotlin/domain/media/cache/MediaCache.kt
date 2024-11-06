@@ -42,9 +42,9 @@ interface MediaCache {
      */
     val cacheId: String
         get() {
-            return _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.Companion.calculateCacheId(
+            return calculateCacheId(
                 origin.mediaId,
-                metadata
+                metadata,
             )
         }
 
@@ -58,7 +58,7 @@ interface MediaCache {
      */
     val metadata: MediaCacheMetadata
 
-    val state: StateFlow<me.him188.ani.app.domain.media.cache.MediaCacheState>
+    val state: StateFlow<MediaCacheState>
 
     /**
      * Returns the [CachedMedia] instance for this cache.
@@ -112,10 +112,10 @@ interface MediaCache {
 
         companion object {
             val Unspecified =
-                _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.FileStats(
+                FileStats(
                     FileSize.Unspecified,
                     FileSize.Unspecified,
-                    Progress.Unspecified
+                    Progress.Unspecified,
                 )
         }
     }
@@ -123,7 +123,7 @@ interface MediaCache {
     /**
      * 当前文件的下载状态.
      */
-    val fileStats: Flow<me.him188.ani.app.domain.media.cache.MediaCache.FileStats>
+    val fileStats: Flow<FileStats>
 
     /**
      * 所属的 [Media] 的下载状态, 也就是会包含其他剧集的下载状态.
@@ -176,7 +176,7 @@ interface MediaCache {
     ) {
         companion object {
             val Unspecified =
-                _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.SessionStats(
+                SessionStats(
                     FileSize.Unspecified,
                     FileSize.Unspecified,
                     FileSize.Unspecified,
@@ -192,7 +192,7 @@ interface MediaCache {
      *
      * 因为每个 [MediaCache] 只对应单个文件 (剧集), 而 [Media] 可能包含多个文件 (剧集).
      */
-    val sessionStats: Flow<me.him188.ani.app.domain.media.cache.MediaCache.SessionStats>
+    val sessionStats: Flow<SessionStats>
 
     /**
      * 请求暂停下载.
@@ -245,7 +245,7 @@ interface MediaCache {
     }
 }
 
-suspend inline fun me.him188.ani.app.domain.media.cache.MediaCache.isFinished(): Boolean = sessionStats.first().downloadProgress.isFinished
+suspend inline fun MediaCache.isFinished(): Boolean = sessionStats.first().downloadProgress.isFinished
 
 enum class MediaCacheState {
     IN_PROGRESS,
@@ -255,29 +255,29 @@ enum class MediaCacheState {
 open class TestMediaCache(
     val media: CachedMedia,
     override val metadata: MediaCacheMetadata,
-    override val sessionStats: MutableStateFlow<me.him188.ani.app.domain.media.cache.MediaCache.SessionStats> =
+    override val sessionStats: MutableStateFlow<MediaCache.SessionStats> =
         MutableStateFlow(
-            _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.SessionStats(
+            MediaCache.SessionStats(
                 0.bytes,
                 0.bytes,
                 0.bytes,
                 0.bytes,
                 0.bytes,
-                0f.toProgress()
-            )
+                0f.toProgress(),
+            ),
         ),
-    override val fileStats: MutableStateFlow<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.FileStats> =
+    override val fileStats: MutableStateFlow<MediaCache.FileStats> =
         MutableStateFlow(
-            _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.FileStats(
+            MediaCache.FileStats(
                 FileSize.Unspecified,
                 FileSize.Unspecified,
-                0f.toProgress()
-            )
+                0f.toProgress(),
+            ),
         ),
-) : _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache {
+) : MediaCache {
     override val origin: Media get() = media.origin
-    override val state: MutableStateFlow<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState> = MutableStateFlow(
-        _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState.IN_PROGRESS
+    override val state: MutableStateFlow<MediaCacheState> = MutableStateFlow(
+        MediaCacheState.IN_PROGRESS,
     )
 
     override suspend fun getCachedMedia(): CachedMedia = media
