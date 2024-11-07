@@ -233,9 +233,9 @@ object AniDesktop {
                                 .plus(HttpStreamingVideoSourceResolver())
                                 .plus(
                                     DesktopWebVideoSourceResolver(
-                                        context, 
-                                        get<MediaSourceManager>().webVideoMatcherLoader
-                                    )
+                                        context,
+                                        get<MediaSourceManager>().webVideoMatcherLoader,
+                                    ),
                                 ),
                         )
                     }
@@ -248,13 +248,13 @@ object AniDesktop {
         }.startCommonKoinModule(coroutineScope)
 
         // Initialize CEF application.
-        coroutineScope.launch { 
+        coroutineScope.launch {
             val proxySettings = koin.koin.get<SettingsRepository>()
                 .proxySettings.flow
                 .firstOrNull()
                 ?.default
                 ?.configIfEnabledOrNull
-            
+
             AniCefApp.initialize(
                 logDir = File(projectDirectories.dataDir).resolve("logs"),
                 cacheDir = File(projectDirectories.cacheDir).resolve("jcef-cache"),
@@ -302,12 +302,12 @@ object AniDesktop {
                 windowState = windowState,
                 saved = savedWindowState,
                 update = {
-                    coroutineScope.launch {
+                    runBlocking {
                         windowStateRepository.update(it)
                     }
                 },
-            ) 
-            
+            )
+
             Window(
                 onCloseRequest = { exitApplication() },
                 state = windowState,
