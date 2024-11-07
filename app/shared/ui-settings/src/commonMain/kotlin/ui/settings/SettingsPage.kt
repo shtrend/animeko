@@ -146,7 +146,7 @@ fun SettingsPage(
                 .padding(horizontal = currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding - 8.dp)
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 when (currentTab) {
-                    SettingsTab.ABOUT -> AboutTab(tabModifier)
+                    SettingsTab.ABOUT -> AboutTab({ vm.debugTriggerState.triggerDebugMode() }, tabModifier)
                     SettingsTab.DEBUG -> DebugTab(
                         vm.debugSettingsState,
                         tabModifier,

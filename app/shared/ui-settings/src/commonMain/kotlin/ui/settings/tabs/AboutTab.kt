@@ -145,9 +145,9 @@ private const val MIKAN = "https://mikanime.tv/"
 @OptIn(DelicateCoroutinesApi::class, TestOnly::class)
 @Composable
 fun AboutTab(
+    onTriggerDebugMode: () -> Unit,
     modifier: Modifier = Modifier,
     vm: AboutTabViewModel = viewModel { AboutTabViewModel() },
-    onTriggerDebugMode: () -> Unit = { },
 ) {
     val context by rememberUpdatedState(LocalContext.current)
     val toaster = LocalToaster.current
