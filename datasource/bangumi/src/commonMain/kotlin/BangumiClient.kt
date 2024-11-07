@@ -64,6 +64,7 @@ import me.him188.ani.utils.ktor.proxy
 import me.him188.ani.utils.ktor.registerLogging
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.platform.collections.mapToIntArray
 import me.him188.ani.utils.serialization.toJsonArray
 import kotlin.coroutines.CoroutineContext
 
@@ -281,7 +282,7 @@ class BangumiClientImpl(
             ratings: List<String>?,
             ranks: List<String>?,
             nsfw: Boolean?,
-        ): List<Int> = withContext(Dispatchers.IO) {
+        ): IntArray = withContext(Dispatchers.IO) {
             val resp = httpClient.post("$BANGUMI_API_HOST/v0/search/subjects") {
                 parameter("offset", offset)
                 parameter("limit", limit)
@@ -313,7 +314,7 @@ class BangumiClientImpl(
             }
 
             val body = resp.body<SearchSubjectByKeywordsResponse>()
-            return@withContext body.data?.map { it.id } ?: return@withContext emptyList()
+            return@withContext body.data?.mapToIntArray { it.id } ?: return@withContext intArrayOf()
 //            return body.run {
 //                Paged(
 //                    total,

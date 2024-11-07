@@ -68,6 +68,10 @@ data class SubjectCollectionEntity(
 
     @ColumnInfo(defaultValue = "CURRENT_TIMESTAMP")
     val lastUpdated: Long = currentTimeMillis(),
+    @ColumnInfo(defaultValue = "0")
+    val cachedStaffUpdated: Long = 0,
+    @ColumnInfo(defaultValue = "0")
+    val cachedCharactersUpdated: Long = 0,
 )
 
 @Dao
@@ -160,6 +164,9 @@ interface SubjectCollectionDao {
      */
     @Query("""SELECT COUNT(*) FROM subject_collection WHERE (collectionType is NOT NULL AND (:collectionType IS NULL OR collectionType = :collectionType))""")
     fun countCollected(collectionType: UnifiedCollectionType?): Flow<Int>
+
+    @Query("""UPDATE subject_collection SET cachedStaffUpdated = :time, cachedCharactersUpdated = :time WHERE subjectId = :subjectId""")
+    suspend fun updateCachedRelationsUpdated(subjectId: Int, time: Long = currentTimeMillis())
 }
 
 fun SubjectCollectionDao.filterMostRecentUpdated(

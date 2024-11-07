@@ -15,6 +15,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import me.him188.ani.app.data.models.subject.PersonPosition
 import me.him188.ani.app.data.models.subject.RelatedPersonInfo
+import me.him188.ani.app.data.network.LightRelatedPersonInfo
 import kotlin.jvm.JvmInline
 
 @Immutable
@@ -42,13 +43,13 @@ value class RoleSet(
 /**
  * 过滤 [RelatedPersonInfo] 中的角色, 返回符合条件的 [RelatedPersonInfo]
  */
-fun Sequence<RelatedPersonInfo>.filter(roleSet: RoleSet): Sequence<RelatedPersonInfo> {
+fun Sequence<LightRelatedPersonInfo>.filterByRoleSet(roleSet: RoleSet): Sequence<LightRelatedPersonInfo> {
     return filter f@{ person ->
         person.position in roleSet
     }
 }
 
-fun Sequence<RelatedPersonInfo>.sortedWith(roleSet: RoleSet): Sequence<RelatedPersonInfo> {
+fun Sequence<LightRelatedPersonInfo>.sortedWithRoleSet(roleSet: RoleSet): Sequence<LightRelatedPersonInfo> {
     return sortedBy { person ->
         val index = roleSet.indexOf(person.position)
         if (index == -1) Int.MAX_VALUE else index

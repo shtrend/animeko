@@ -64,8 +64,8 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
                     data.map {
                         SubjectPreviewItemInfo.compute(
                             it.subjectInfo,
-                            it.relatedPersonInfoList,
-                            it.relatedCharacterInfoList,
+                            it.lightSubjectRelations.lightRelatedPersonInfoList,
+                            it.lightSubjectRelations.lightRelatedCharacterInfoList,
                         )
                     }
                 }.flowOn(Dispatchers.Default)

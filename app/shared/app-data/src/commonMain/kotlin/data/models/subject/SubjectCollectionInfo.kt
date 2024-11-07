@@ -28,6 +28,8 @@ data class SubjectCollectionInfo(
     val episodes: List<EpisodeCollectionInfo>, // sorted by episode sort ascending
     val airingInfo: SubjectAiringInfo,
     val progressInfo: SubjectProgressInfo,
+    val cachedStaffUpdated: Long,
+    val cachedCharactersUpdated: Long,
 ) {
     val subjectId: Int get() = subjectInfo.subjectId
 }
@@ -105,19 +107,21 @@ private fun testSubjectCollection(
     collectionType: UnifiedCollectionType,
 ): SubjectCollectionInfo {
     val subjectInfo = SubjectInfo.Empty.copy(
-        id,
+        subjectId = id,
         nameCn = "中文条目名称",
         name = "Subject Name",
     )
     return SubjectCollectionInfo(
-        subjectInfo = subjectInfo,
-        episodes = episodes,
         collectionType = collectionType,
+        subjectInfo = subjectInfo,
         selfRatingInfo = TestSelfRatingInfo,
+        episodes = episodes,
         airingInfo = SubjectAiringInfo.computeFromEpisodeList(
             episodes.map { it.episodeInfo },
             airDate = subjectInfo.airDate,
         ),
         progressInfo = SubjectProgressInfo.compute(subjectInfo, episodes, PackedDate.now()),
+        cachedStaffUpdated = 0,
+        cachedCharactersUpdated = 0,
     )
 }

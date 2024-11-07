@@ -50,6 +50,8 @@ data class RelatedPersonInfo(
 @JvmInline // 节省内存，避免创建过多的子类。
 value class PersonPosition(val id: Int) {
     companion object {
+        val Invalid = PersonPosition(-1)
+        
         /**
          * 原作
          */
@@ -464,6 +466,22 @@ value class PersonPosition(val id: Int) {
          * 主动画师
          */
         val MainAnimator = PersonPosition(92)
+
+        val entryRange = 1..92
+
+        /**
+         * 根据中文名查找职位
+         *
+         * @return maybe [Invalid]
+         */
+        fun findByName(name: String): PersonPosition {
+            for (i in entryRange) {
+                if (PersonPosition(i).nameCn == name) {
+                    return PersonPosition(i)
+                }
+            }
+            return Invalid
+        }
     }
 }
 

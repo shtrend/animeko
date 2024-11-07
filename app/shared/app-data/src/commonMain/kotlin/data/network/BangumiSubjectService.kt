@@ -26,7 +26,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
+import me.him188.ani.app.data.models.subject.CharacterInfo
+import me.him188.ani.app.data.models.subject.CharacterRole
 import me.him188.ani.app.data.models.subject.PersonInfo
+import me.him188.ani.app.data.models.subject.PersonPosition
 import me.him188.ani.app.data.models.subject.RatingCounts
 import me.him188.ani.app.data.models.subject.RatingInfo
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
@@ -55,6 +58,7 @@ import me.him188.ani.datasources.bangumi.processing.toCollectionType
 import me.him188.ani.datasources.bangumi.processing.toSubjectCollectionType
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.platform.collections.mapToIntArray
 import org.koin.core.component.KoinComponent
 import kotlin.coroutines.CoroutineContext
 
@@ -74,9 +78,14 @@ interface BangumiSubjectService {
     suspend fun getSubjectCollection(subjectId: Int): BatchSubjectCollection
 
     suspend fun batchGetSubjectDetails(
-        ids: List<Int>,
-        withCharacterActors: Boolean,
+        ids: IntArray,
+        withCharacterActors: Boolean = true,
     ): List<BatchSubjectDetails>
+
+    suspend fun batchGetSubjectRelations(
+        ids: IntArray,
+        withCharacterActors: Boolean,
+    ): List<BatchSubjectRelations>
 
     /**
      * 获取用户对这个条目的收藏状态. flow 一定会 emit 至少一个值或抛出异常. 当用户没有收藏这个条目时 emit `null`.
@@ -141,7 +150,7 @@ class RemoteBangumiSubjectService(
         ).body()
 
         val collections = resp.data.orEmpty()
-        val list = batchGetSubjectDetails(collections.map { it.subjectId }, withCharacterActors = true)
+        val list = batchGetSubjectDetails(collections.mapToIntArray { it.subjectId })
 
         list.map {
             val subjectId = it.subjectInfo.subjectId
@@ -157,13 +166,13 @@ class RemoteBangumiSubjectService(
     override suspend fun getSubjectCollection(subjectId: Int): BatchSubjectCollection {
         val collection = subjectCollectionById(subjectId).first()
         return BatchSubjectCollection(
-            batchGetSubjectDetails(listOf(subjectId), withCharacterActors = true).first(),
+            batchGetSubjectDetails(intArrayOf(subjectId)).first(),
             collection,
         )
     }
 
     override suspend fun batchGetSubjectDetails(
-        ids: List<Int>,
+        ids: IntArray,
         withCharacterActors: Boolean
     ): List<BatchSubjectDetails> {
         if (ids.isEmpty()) {
@@ -172,6 +181,44 @@ class RemoteBangumiSubjectService(
         return withContext(ioDispatcher) {
             val respDeferred = async {
                 BangumiSubjectGraphQLExecutor.execute(client, ids)
+            }
+
+            // 等待查询条目信息
+            val (response, errors) = respDeferred.await()
+
+            // 解析条目详情
+            response.mapIndexed { index, element ->
+                if (element == null) { // error
+                    val subjectId = ids[index]
+                    BatchSubjectDetails(
+                        SubjectInfo.Empty.copy(
+                            subjectId = subjectId, subjectType = SubjectType.ANIME,
+                            nameCn = "<$subjectId 错误>",
+                            name = "<$subjectId 错误>",
+                            summary = errors,
+                        ),
+                        LightSubjectRelations(
+                            emptyList(),
+                            emptyList(),
+                        ),
+                    )
+                } else {
+                    BangumiSubjectGraphQLParser.parseBatchSubjectDetails(element)
+                }
+            }
+        }
+    }
+
+    override suspend fun batchGetSubjectRelations(
+        ids: IntArray,
+        withCharacterActors: Boolean
+    ): List<BatchSubjectRelations> {
+        if (ids.isEmpty()) {
+            return emptyList()
+        }
+        return withContext(ioDispatcher) {
+            val respDeferred = async {
+                BangumiSubjectRelationsGraphQLExecutor.execute(client, ids)
             }
 
             val actorConcurrency = Semaphore(10)
@@ -229,19 +276,27 @@ class RemoteBangumiSubjectService(
             response.mapIndexed { index, element ->
                 if (element == null) { // error
                     val subjectId = ids[index]
-                    BatchSubjectDetails(
-                        SubjectInfo.Empty.copy(
-                            subjectId = subjectId, subjectType = SubjectType.ANIME,
-                            nameCn = "<$subjectId 错误>",
-                            name = "<$subjectId 错误>",
-                            summary = errors,
+                    BatchSubjectRelations(
+                        subjectId = subjectId,
+                        listOf(
+                            RelatedCharacterInfo(
+                                0,
+                                CharacterInfo(
+                                    id = 0,
+                                    nameCn = "<错误>",
+                                    name = "<错误>",
+                                    actors = emptyList(),
+                                    imageMedium = "",
+                                    imageLarge = "",
+                                ),
+                                CharacterRole.MAIN,
+                            ),
                         ),
-                        relatedCharacterInfoList = emptyList(),
-                        relatedPersonInfoList = emptyList(),
+                        emptyList(),
                     )
                 } else {
                     val subjectId = ids[index]
-                    BangumiSubjectGraphQLParser.parseBatchSubjectDetails(
+                    BangumiSubjectGraphQLParser.parseBatchSubjectRelations(
                         element,
                         getActors = {
                             subjectIdToActors[subjectId]!![it]?.map { person ->
@@ -350,8 +405,30 @@ private fun BangumiCount.toRatingCounts() = RatingCounts(
 )
 
 
-class BatchSubjectDetails(
+data class BatchSubjectDetails(
     val subjectInfo: SubjectInfo,
+    val lightSubjectRelations: LightSubjectRelations,
+)
+
+data class LightSubjectRelations(
+    val lightRelatedPersonInfoList: List<LightRelatedPersonInfo>,
+    val lightRelatedCharacterInfoList: List<LightRelatedCharacterInfo>,
+)
+
+data class LightRelatedPersonInfo(
+    val name: String,
+    val position: PersonPosition,
+)
+
+data class LightRelatedCharacterInfo(
+    val id: Int,
+    val name: String,
+    val nameCn: String,
+    val role: CharacterRole,
+)
+
+data class BatchSubjectRelations(
+    val subjectId: Int,
     val relatedCharacterInfoList: List<RelatedCharacterInfo>,
     val relatedPersonInfoList: List<RelatedPersonInfo>,
 ) {

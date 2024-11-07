@@ -27,10 +27,6 @@ import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.isKnownCompleted
-import me.him188.ani.app.data.models.subject.CharacterInfo
-import me.him188.ani.app.data.models.subject.PersonInfo
-import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
-import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
@@ -44,11 +40,6 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
 import me.him188.ani.app.data.persistent.database.dao.filterMostRecentUpdated
-import me.him188.ani.app.data.persistent.database.entity.CharacterActorEntity
-import me.him188.ani.app.data.persistent.database.entity.CharacterEntity
-import me.him188.ani.app.data.persistent.database.entity.PersonEntity
-import me.him188.ani.app.data.persistent.database.entity.SubjectCharacterRelationEntity
-import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEntity
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
 import me.him188.ani.app.data.repository.RepositoryException
@@ -165,16 +156,7 @@ class SubjectCollectionRepositoryImpl(
                 selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
             )
             .also { entity ->
-                subjectRelationsDao.upsertPersons(batch.allPersons.map { it.toEntity() }.toList())
-                subjectRelationsDao.upsertCharacters(batch.relatedCharacterInfoList.map { it.character.toEntity() })
-                subjectRelationsDao.upsertCharacterActors(batch.characterActorRelations().toList())
                 subjectCollectionDao.upsert(entity)
-                subjectRelationsDao.upsertSubjectPersonRelations(
-                    batch.relatedPersonInfoList.map { it.toRelationEntity(subjectId) },
-                )
-                subjectRelationsDao.upsertSubjectCharacterRelations(
-                    batch.relatedCharacterInfoList.map { it.toRelationEntity(subjectId) },
-                )
             }
             .toSubjectCollectionInfo(
                 episodes = getSubjectEpisodeCollections(subjectId),
@@ -289,28 +271,11 @@ class SubjectCollectionRepositoryImpl(
 
                     for (collection in items) {
                         val subject = collection.batchSubjectDetails
-                        val subjectId = subject.subjectInfo.subjectId
-                        subjectRelationsDao.upsertPersons(
-                            subject.allPersons.map { it.toEntity() }
-                                .toList(),
-                        )
-                        subjectRelationsDao.upsertCharacters(subject.relatedCharacterInfoList.map { it.character.toEntity() })
-                        subjectRelationsDao.upsertCharacterActors(
-                            subject.characterActorRelations().toList(),
-                        )
                         subjectCollectionDao.upsert(
                             subject.toEntity(
                                 collection.collection?.type.toCollectionType(),
                                 collection.collection.toSelfRatingInfo(),
                             ),
-                        )
-                        // 必须先插入前三个, 再插入 relations, 否则会 violate foreign key constraint
-
-                        subjectRelationsDao.upsertSubjectPersonRelations(
-                            subject.relatedPersonInfoList.map { it.toRelationEntity(subjectId) },
-                        )
-                        subjectRelationsDao.upsertSubjectCharacterRelations(
-                            subject.relatedCharacterInfoList.map { it.toRelationEntity(subjectId) },
                         )
                     }
 
@@ -361,53 +326,6 @@ class SubjectCollectionRepositoryImpl(
     }
 }
 
-private fun BatchSubjectDetails.characterActorRelations() =
-    relatedCharacterInfoList.asSequence().flatMap { relatedCharacterInfo ->
-        relatedCharacterInfo.character.actors.asSequence().map { person ->
-            CharacterActorEntity(relatedCharacterInfo.character.id, person.id)
-        }
-    }
-
-private fun CharacterInfo.toEntity(): CharacterEntity {
-    return CharacterEntity(
-        characterId = id,
-        name = name,
-        nameCn = nameCn,
-        imageLarge = imageLarge,
-        imageMedium = imageMedium,
-    )
-}
-
-private fun PersonInfo.toEntity(): PersonEntity {
-    return PersonEntity(
-        personId = id,
-        name = name,
-        nameCn = nameCn,
-        type = type,
-        imageLarge = imageLarge,
-        imageMedium = imageMedium,
-        summary = summary,
-    )
-}
-
-private fun RelatedPersonInfo.toRelationEntity(subjectId: Int): SubjectPersonRelationEntity {
-    return SubjectPersonRelationEntity(
-        subjectId = subjectId,
-        index = index,
-        personId = personInfo.id,
-        position = position,
-    )
-}
-
-private fun RelatedCharacterInfo.toRelationEntity(subjectId: Int): SubjectCharacterRelationEntity {
-    return SubjectCharacterRelationEntity(
-        subjectId = subjectId,
-        index = index,
-        characterId = character.id,
-        role = role,
-    )
-}
-
 data class CollectionsFilterQuery(
     val type: UnifiedCollectionType?,
 ) {
@@ -444,11 +362,11 @@ private fun SubjectCollectionEntity.toSubjectCollectionInfo(
         collectionType = collectionType,
         subjectInfo = subjectInfo,
         selfRatingInfo = selfRatingInfo,
+        episodes = episodes,
         airingInfo = SubjectAiringInfo.computeFromEpisodeList(
             episodes.map { it.episodeInfo },
             airDate,
         ),
-        episodes = episodes,
         progressInfo = SubjectProgressInfo.compute(
             subjectStarted = currentDate > subjectInfo.airDate,
             episodes = episodes.map {
@@ -462,6 +380,8 @@ private fun SubjectCollectionEntity.toSubjectCollectionInfo(
             },
             subjectAirDate = subjectInfo.airDate,
         ),
+        cachedStaffUpdated = cachedStaffUpdated,
+        cachedCharactersUpdated = cachedCharactersUpdated,
     )
 }
 

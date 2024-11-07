@@ -31,6 +31,7 @@ import me.him188.ani.datasources.bangumi.models.BangumiSubjectType
 import me.him188.ani.datasources.bangumi.models.subjects.BangumiSubjectImageSize
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.platform.collections.mapToIntArray
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -79,7 +80,7 @@ class SubjectSearchRepository(
                             responseGroup = BangumiSubjectImageSize.SMALL,
                             start = offset,
                             maxResults = params.loadSize,
-                        ).page.map {
+                        ).page.mapToIntArray {
                             it.id
                         }
                     } catch (e: BangumiRateLimitedException) {
@@ -87,7 +88,7 @@ class SubjectSearchRepository(
                     }
                 }
 
-                val subjectInfos = subjectService.batchGetSubjectDetails(res, withCharacterActors = true)
+                val subjectInfos = subjectService.batchGetSubjectDetails(res)
 
                 return@withContext LoadResult.Page(
                     subjectInfos,

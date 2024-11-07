@@ -18,13 +18,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import me.him188.ani.app.data.models.subject.CanonicalTagKind
 import me.him188.ani.app.data.models.subject.RatingCounts
 import me.him188.ani.app.data.models.subject.RatingInfo
-import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
-import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.computeTotalEpisodeText
 import me.him188.ani.app.data.models.subject.kind
 import me.him188.ani.app.data.models.subject.nameCnOrName
+import me.him188.ani.app.data.network.LightRelatedCharacterInfo
+import me.him188.ani.app.data.network.LightRelatedPersonInfo
 import me.him188.ani.app.ui.rating.RatingText
 import me.him188.ani.app.ui.subject.renderSubjectSeason
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -42,8 +42,8 @@ class SubjectPreviewItemInfo(
     companion object {
         fun compute(
             subjectInfo: SubjectInfo,
-            relatedPersonList: List<RelatedPersonInfo>?,
-            characters: List<RelatedCharacterInfo>?,
+            relatedPersonList: List<LightRelatedPersonInfo>?,
+            characters: List<LightRelatedCharacterInfo>?,
             roleSet: RoleSet = RoleSet.Default,
         ): SubjectPreviewItemInfo {
             val airingInfo = SubjectAiringInfo.computeFromSubjectInfo(subjectInfo)
@@ -74,42 +74,43 @@ class SubjectPreviewItemInfo(
             }
             val staff = relatedPersonList?.let {
                 val persons = relatedPersonList.asSequence()
-                    .filter(roleSet)
-                    .sortedWith(roleSet)
+                    .filterByRoleSet(roleSet)
+                    .sortedWithRoleSet(roleSet)
                     .take(4)
                     .toList()
 
                 if (persons.isEmpty()) return@let null
-                
+
                 buildString {
                     append("制作:  ")
                     persons.forEachIndexed { index, relatedPersonInfo ->
-                        append(relatedPersonInfo.personInfo.displayName)
+                        append(relatedPersonInfo.name)
                         if (index != persons.lastIndex) {
                             append(" · ")
                         }
                     }
                 }
             }
-            val actors = characters?.takeIf { it.isNotEmpty() }?.let {
-                buildString {
-                    append("配音:  ")
-
-                    val mainCharacters = characters.asSequence()
-                        .filter { it.isMainCharacter() }
-                    val nonMainCharacters = characters.asSequence()
-                        .filter { !it.isMainCharacter() }
-
-                    append(
-                        (mainCharacters + nonMainCharacters)
-                            .take(3)
-                            // mostSignificantCharacters
-                            .flatMap { it.character.actors }
-                            .map { it.displayName }
-                            .joinToString(" · "),
-                    )
-                }
-            }
+//            val actors = characters?.takeIf { it.isNotEmpty() }?.let {
+//                buildString {
+//                    append("配音:  ")
+//
+//                    val mainCharacters = characters.asSequence()
+//                        .filter { it.role == CharacterRole.MAIN }
+//                    val nonMainCharacters = characters.asSequence()
+//                        .filter { it.role != CharacterRole.MAIN }
+//
+//                    append(
+//                        (mainCharacters + nonMainCharacters)
+//                            .take(3)
+//                            // mostSignificantCharacters
+//                            .flatMap { it.actor }
+//                            .map { it.name }
+//                            .joinToString(" · "),
+//                    )
+//                }
+//            }
+            val actors = null
 
             return SubjectPreviewItemInfo(
                 subjectId = subjectInfo.subjectId,

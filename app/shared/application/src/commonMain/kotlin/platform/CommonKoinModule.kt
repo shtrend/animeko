@@ -185,6 +185,8 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
         DefaultSubjectRelationsRepository(
             database.subjectCollection(),
             database.subjectRelations(),
+            bangumiSubjectService = get(),
+            subjectCollectionRepository = get(),
         )
     }
 

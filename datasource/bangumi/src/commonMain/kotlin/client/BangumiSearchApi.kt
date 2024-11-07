@@ -38,7 +38,7 @@ interface BangumiSearchApi {
         ratings: List<String>? = null, // ">=6", "<8"
         ranks: List<String>? = null,
         nsfw: Boolean? = null,
-    ): List<Int>
+    ): IntArray
 
     /**
      * Search bangumi subjects by old api.

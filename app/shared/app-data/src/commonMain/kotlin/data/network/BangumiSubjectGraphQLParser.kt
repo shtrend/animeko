@@ -58,14 +58,67 @@ object BangumiSubjectGraphQLParser {
 
     fun parseBatchSubjectDetails(
         element: JsonObject,
-        getActors: (characterId: Int) -> List<PersonInfo>,
     ): BatchSubjectDetails {
-        return element.toBatchSubjectDetails(getActors)
+        return element.toBatchSubjectDetails()
     }
 
-    private fun JsonObject.toBatchSubjectDetails(
+    fun parseBatchSubjectRelations(
+        element: JsonObject,
         getActors: (characterId: Int) -> List<PersonInfo>,
-    ): BatchSubjectDetails {
+    ): BatchSubjectRelations {
+        try {
+            val id = element.getIntOrFail("id")
+            val characters = element.getOrFail("characters").jsonArray.mapIndexed { index, relatedCharacter ->
+                check(relatedCharacter is JsonObject)
+
+                val role = when (relatedCharacter.getIntOrFail("type")) {
+                    1 -> CharacterRole.MAIN
+                    2 -> CharacterRole.SUPPORTING
+                    3 -> CharacterRole.GUEST
+                    else -> throw IllegalStateException("Unexpected character type: $relatedCharacter")
+                }
+
+                val character = relatedCharacter.getOrFail("character").jsonObject
+
+                val characterId = character.getIntOrFail("id")
+                RelatedCharacterInfo(
+                    index = index,
+                    character = CharacterInfo(
+                        id = characterId,
+                        name = character.getStringOrFail("name"),
+                        nameCn = character.infobox("简体中文名").firstOrNull() ?: "",
+                        actors = getActors(characterId),
+                        imageMedium = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("medium") ?: "",
+                        imageLarge = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("large") ?: "",
+                    ),
+                    role = role,
+                )
+            }
+
+            val persons = element.getOrFail("persons").jsonArray.mapIndexed { index, relatedPerson ->
+                check(relatedPerson is JsonObject)
+                val person = relatedPerson.getOrFail("person").jsonObject
+                RelatedPersonInfo(
+                    index,
+                    personInfo = parsePerson(person),
+                    position = PersonPosition(relatedPerson.getIntOrFail("position")),
+                )
+            }
+
+            return BatchSubjectRelations(
+                subjectId = id,
+                relatedCharacterInfoList = characters,
+                relatedPersonInfoList = persons,
+            )
+        } catch (e: Exception) {
+            throw IllegalStateException(
+                "Failed to parse subject relations for subject id ${element["id"]}: $element",
+                e,
+            )
+        }
+    }
+
+    private fun JsonObject.toBatchSubjectDetails(): BatchSubjectDetails {
         val completionDate = (this.infobox("播放结束") + this.infobox("放送结束"))
             .firstOrNull()
             ?.let {
@@ -79,7 +132,7 @@ object BangumiSubjectGraphQLParser {
 
         val subjectId = getIntOrFail("id")
 
-        val characters = getOrFail("characters").jsonArray.mapIndexed { index, relatedCharacter ->
+        val characters = getOrFail("characters").jsonArray.mapIndexed { _, relatedCharacter ->
             check(relatedCharacter is JsonObject)
 
             val role = when (relatedCharacter.getIntOrFail("type")) {
@@ -92,28 +145,23 @@ object BangumiSubjectGraphQLParser {
             val character = relatedCharacter.getOrFail("character").jsonObject
 
             val characterId = character.getIntOrFail("id")
-            RelatedCharacterInfo(
-                index = index,
-                character = CharacterInfo(
-                    id = characterId,
-                    name = character.getStringOrFail("name"),
-                    nameCn = character.infobox("简体中文名").firstOrNull() ?: "",
-                    actors = getActors(characterId),
-                    imageMedium = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("medium") ?: "",
-                    imageLarge = character.getOrFail("images").jsonObjectOrNull?.getStringOrFail("large") ?: "",
-                ),
+            LightRelatedCharacterInfo(
+                id = characterId,
+                name = character.getStringOrFail("name"),
+                nameCn = character.infobox("简体中文名").firstOrNull() ?: "",
                 role = role,
             )
         }
 
-        val persons = getOrFail("persons").jsonArray.mapIndexed { index, relatedPerson ->
-            check(relatedPerson is JsonObject)
-            val person = relatedPerson.getOrFail("person").jsonObject
-            RelatedPersonInfo(
-                index,
-                personInfo = parsePerson(person),
-                position = PersonPosition(relatedPerson.getIntOrFail("position")),
-            )
+        val persons = buildList {
+            for (jsonElement in getOrFail("infobox").jsonArray) {
+                val position = PersonPosition.findByName(jsonElement.jsonObject.getStringOrFail("key"))
+                if (position != PersonPosition.Invalid) {
+                    jsonElement.jsonObject.getOrFail("values").vSequence().forEach {
+                        add(LightRelatedPersonInfo(it, position))
+                    }
+                }
+            }
         }
 
         return try {
@@ -168,8 +216,10 @@ object BangumiSubjectGraphQLParser {
                     },
                     completeDate = completionDate,
                 ),
-                relatedCharacterInfoList = characters,
-                relatedPersonInfoList = persons,
+                LightSubjectRelations(
+                    lightRelatedPersonInfoList = persons,
+                    lightRelatedCharacterInfoList = characters,
+                ),
             )
         } catch (e: Exception) {
             throw IllegalStateException(
