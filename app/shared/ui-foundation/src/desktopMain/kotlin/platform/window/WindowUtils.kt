@@ -11,6 +11,7 @@ package me.him188.ani.app.platform.window
 
 import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.window.WindowState
 import me.him188.ani.app.platform.PlatformWindow
 import me.him188.ani.utils.platform.Platform
 import java.awt.Cursor
@@ -27,7 +28,7 @@ interface WindowUtils {
         return false
     }
 
-    fun setUndecoratedFullscreen(window: PlatformWindow, undecorated: Boolean) {
+    suspend fun setUndecoratedFullscreen(window: PlatformWindow, windowState: WindowState, undecorated: Boolean) {
     }
 
     fun setPreventScreenSaver(prevent: Boolean) {

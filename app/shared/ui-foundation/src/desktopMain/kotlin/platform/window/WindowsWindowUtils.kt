@@ -1,9 +1,19 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.platform.window
 
 import androidx.annotation.Keep
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.window.WindowState
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.platform.win32.Kernel32
@@ -20,7 +30,7 @@ import com.sun.jna.ptr.IntByReference
 import com.sun.jna.win32.StdCallLibrary
 import com.sun.jna.win32.W32APIOptions
 import me.him188.ani.app.platform.PlatformWindow
-import me.him188.ani.app.platform.SavedWindowState
+import me.him188.ani.app.platform.SavedWindowsWindowState
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.MONITOR_DEFAULTTONEAREST
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.SC_RESTORE
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.SWP_NOACTIVATE
@@ -68,7 +78,11 @@ class WindowsWindowUtils : AwtWindowUtils() {
     }
 
     // https://learn.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles
-    override fun setUndecoratedFullscreen(window: PlatformWindow, undecorated: Boolean) {
+    override suspend fun setUndecoratedFullscreen(
+        window: PlatformWindow,
+        windowState: WindowState,
+        undecorated: Boolean
+    ) {
         // copied from vlcj
         // uk.co.caprica.vlcj.player.embedded.fullscreen.windows.Win32FullScreenHandler
 
@@ -92,7 +106,7 @@ class WindowsWindowUtils : AwtWindowUtils() {
             }
 
             // 保存原始窗口状态
-            window.savedWindowState = SavedWindowState(
+            window.savedWindowsWindowState = SavedWindowsWindowState(
                 style = currentStyle,
                 exStyle = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE),
                 rect = WinDef.RECT().apply {
@@ -133,7 +147,7 @@ class WindowsWindowUtils : AwtWindowUtils() {
                 return
             }
 
-            val savedWindowState = checkNotNull(window.savedWindowState) {
+            val savedWindowState = checkNotNull(window.savedWindowsWindowState) {
                 "window.savedWindowState is null, cannot restore window state"
             }
             User32.INSTANCE.SetWindowLong(hwnd, WinUser.GWL_STYLE, savedWindowState.style)
@@ -153,7 +167,7 @@ class WindowsWindowUtils : AwtWindowUtils() {
                     WinDef.LPARAM(0),
                 )
             }
-            window.savedWindowState = null
+            window.savedWindowsWindowState = null
             window.isUndecoratedFullscreen = false
         }
     }
