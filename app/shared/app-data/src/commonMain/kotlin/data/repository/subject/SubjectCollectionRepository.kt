@@ -18,12 +18,16 @@ import androidx.paging.RemoteMediator
 import androidx.paging.map
 import io.ktor.client.plugins.ResponseException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retry
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.isKnownCompleted
@@ -55,6 +59,7 @@ import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -164,8 +169,11 @@ class SubjectCollectionRepositoryImpl(
             )
     }
 
-    private suspend fun getSubjectEpisodeCollections(subjectId: Int) =
-        episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId).flowOn(defaultDispatcher).first()
+    private suspend fun getSubjectEpisodeCollections(
+        subjectId: Int,
+        allowCached: Boolean = true,
+    ) = episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId, allowCached).flowOn(defaultDispatcher)
+        .first()
 
     override fun mostRecentlyUpdatedSubjectCollectionsFlow(
         limit: Int,
@@ -193,7 +201,7 @@ class SubjectCollectionRepositoryImpl(
     ).flow.map { data ->
         data.map { entity ->
             entity.toSubjectCollectionInfo(
-                episodes = getSubjectEpisodeCollections(entity.subjectId),
+                episodes = getSubjectEpisodeCollections(entity.subjectId), // 通常会读取缓存, 因为 [SubjectCollectionRemoteMediator] 会提前查询这个
                 currentDate = getCurrentDate(),
             )
         }
@@ -269,14 +277,38 @@ class SubjectCollectionRepositoryImpl(
                         limit = state.config.pageSize,
                     )
 
-                    for (collection in items) {
-                        val subject = collection.batchSubjectDetails
-                        subjectCollectionDao.upsert(
-                            subject.toEntity(
-                                collection.collection?.type.toCollectionType(),
-                                collection.collection.toSelfRatingInfo(),
-                            ),
-                        )
+                    coroutineScope {
+                        // 提前'批量'查询剧集收藏状态, 防止在收藏页显示结果时一个一个查导致太慢
+                        val concurrency = Semaphore(4)
+                        items.forEach { subjectCollection ->
+                            launch {
+                                try {
+                                    subjectCollection.collection?.subjectId?.let { subjectId ->
+                                        concurrency.withPermit {
+                                            getSubjectEpisodeCollections(
+                                                subjectId,
+                                                allowCached = false, // SubjectCollectionRemoteMediator 是强制刷新
+                                            ) // side-effect: update database
+                                        }
+                                    }
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (e: Exception) {
+                                    // 这里我们只是批量提前查询, 不一定需要成功. 后面等收藏页真正需要时再来重试和处理对应异常
+                                    logger.error("Failed to fetch episode collections", e)
+                                }
+                            }
+                        }
+
+                        for (collection in items) {
+                            val subject = collection.batchSubjectDetails
+                            subjectCollectionDao.upsert(
+                                subject.toEntity(
+                                    collection.collection?.type.toCollectionType(),
+                                    collection.collection.toSelfRatingInfo(),
+                                ),
+                            )
+                        }
                     }
 
                     MediatorResult.Success(endOfPaginationReached = items.isEmpty())

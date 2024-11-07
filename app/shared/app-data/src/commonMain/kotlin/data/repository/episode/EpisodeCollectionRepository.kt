@@ -40,6 +40,7 @@ import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -49,6 +50,7 @@ class EpisodeCollectionRepository(
     private val bangumiEpisodeService: BangumiEpisodeService,
     private val enableAllEpisodeTypes: Flow<Boolean>,
     private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
+    private val cacheExpiry: Duration = 1.hours,
 ) : Repository {
     private val epTypeFilter get() = enableAllEpisodeTypes.map { if (it) null else MainStory }
 
@@ -72,14 +74,16 @@ class EpisodeCollectionRepository(
      * 获取指定条目的所有剧集信息, 如果没有则从网络获取并缓存
      */
     fun subjectEpisodeCollectionInfosFlow(
-        subjectId: Int
+        subjectId: Int,
+        allowCached: Boolean = true,
     ): Flow<List<EpisodeCollectionInfo>> = epTypeFilter.flatMapLatest { epType ->
         if (subjectDao.findById(subjectId).first()?.totalEpisodes == 0) {
             return@flatMapLatest flowOf(emptyList())
         }
         episodeCollectionDao.filterBySubjectId(subjectId, epType).mapLatest { episodes ->
-            if (episodes.isNotEmpty() &&
-                (currentTimeMillis() - (episodes.maxOfOrNull { it.lastUpdated } ?: 0)).milliseconds <= 1.hours
+            if (allowCached &&
+                episodes.isNotEmpty() &&
+                (currentTimeMillis() - (episodes.maxOfOrNull { it.lastUpdated } ?: 0)).milliseconds <= cacheExpiry
             ) {
                 // 有有效缓存则直接返回
                 return@mapLatest episodes.map { it.toEpisodeCollectionInfo() }
@@ -141,7 +145,7 @@ class EpisodeCollectionRepository(
     ) : RemoteMediator<Int, T>() {
         override suspend fun initialize(): InitializeAction {
             return withContext(defaultDispatcher) {
-                if ((currentTimeMillis() - episodeCollectionDao.lastUpdated()).milliseconds > 1.hours) {
+                if ((currentTimeMillis() - episodeCollectionDao.lastUpdated()).milliseconds > cacheExpiry) {
                     InitializeAction.LAUNCH_INITIAL_REFRESH
                 } else {
                     InitializeAction.SKIP_INITIAL_REFRESH
