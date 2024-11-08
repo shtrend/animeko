@@ -21,9 +21,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
@@ -140,35 +143,28 @@ class SubjectCollectionRepositoryImpl(
     }
 
     override fun subjectCollectionFlow(subjectId: Int): Flow<SubjectCollectionInfo> =
-        subjectCollectionDao.findById(subjectId).map { entity ->
-            if (entity != null) {
-                return@map entity.toSubjectCollectionInfo(
-                    episodes = getSubjectEpisodeCollections(subjectId),
+        subjectCollectionDao.findById(subjectId)
+            .onEach {
+                // 如果没有缓存, 则 fetch 然后插入 subject 缓存
+                if (it == null) {
+                    val (batch, collection) = bangumiSubjectService.getSubjectCollection(subjectId)
+                    val entity = batch.toEntity(
+                        collection?.type.toCollectionType(),
+                        selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
+                    )
+                    subjectCollectionDao.upsert(entity) // 插入后, `subjectCollectionDao.findById(subjectId)` 会重新 emit
+                }
+            }
+            .filterNotNull()
+            // 有 subject 缓存后才能从 episodeCollectionRepository fetch episodes
+            .combine(episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId)) { entity, episodes ->
+                entity.toSubjectCollectionInfo(
+                    episodes = episodes,
                     currentDate = getCurrentDate(),
                 )
-            } else {
-                // cache miss
-                fetchAndSaveSubject(subjectId)
-            }
-        }.flowOn(defaultDispatcher)
+            }.flowOn(defaultDispatcher)
 
-    private suspend fun fetchAndSaveSubject(subjectId: Int): SubjectCollectionInfo {
-        val (batch, collection) = bangumiSubjectService.getSubjectCollection(subjectId)
-        return batch
-            .toEntity(
-                collection?.type.toCollectionType(),
-                selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
-            )
-            .also { entity ->
-                subjectCollectionDao.upsert(entity)
-            }
-            .toSubjectCollectionInfo(
-                episodes = getSubjectEpisodeCollections(subjectId),
-                currentDate = getCurrentDate(),
-            )
-    }
-
-    private suspend fun getSubjectEpisodeCollections(
+    private suspend fun getSubjectEpisodeCollectionsSnapshot(
         subjectId: Int,
         allowCached: Boolean = true,
     ) = episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId, allowCached).flowOn(defaultDispatcher)
@@ -181,7 +177,7 @@ class SubjectCollectionRepositoryImpl(
         subjectCollectionDao.filterMostRecentUpdated(types, limit).map { list ->
             list.map { entity ->
                 entity.toSubjectCollectionInfo(
-                    episodes = getSubjectEpisodeCollections(entity.subjectId),
+                    episodes = getSubjectEpisodeCollectionsSnapshot(entity.subjectId),
                     currentDate = getCurrentDate(),
                 )
             }
@@ -200,7 +196,7 @@ class SubjectCollectionRepositoryImpl(
     ).flow.map { data ->
         data.map { entity ->
             entity.toSubjectCollectionInfo(
-                episodes = getSubjectEpisodeCollections(entity.subjectId), // 通常会读取缓存, 因为 [SubjectCollectionRemoteMediator] 会提前查询这个
+                episodes = getSubjectEpisodeCollectionsSnapshot(entity.subjectId), // 通常会读取缓存, 因为 [SubjectCollectionRemoteMediator] 会提前查询这个
                 currentDate = getCurrentDate(),
             )
         }
@@ -284,7 +280,7 @@ class SubjectCollectionRepositoryImpl(
                                 try {
                                     subjectCollection.collection?.subjectId?.let { subjectId ->
                                         concurrency.withPermit {
-                                            getSubjectEpisodeCollections(
+                                            getSubjectEpisodeCollectionsSnapshot(
                                                 subjectId,
                                                 allowCached = false, // SubjectCollectionRemoteMediator 是强制刷新
                                             ) // side-effect: update database

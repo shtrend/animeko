@@ -92,6 +92,7 @@ class EpisodeCollectionRepository(
                 .toList() // 目前先直接全拿了, 反正一般情况下剧集数量很少
                 .also { list ->
                     episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
+                    // 插入后会立即触发 filterBySubjectId 更新 (emit 新的)
                 }
         }
     }.flowOn(defaultDispatcher)
