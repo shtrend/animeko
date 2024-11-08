@@ -18,6 +18,7 @@ import androidx.paging.RemoteMediator
 import androidx.paging.map
 import io.ktor.client.plugins.ResponseException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -28,7 +29,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retry
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
@@ -39,9 +40,11 @@ import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
 import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
+import me.him188.ani.app.data.network.BangumiEpisodeService
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.network.toSelfRatingInfo
+import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
@@ -50,6 +53,8 @@ import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
 import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
+import me.him188.ani.app.data.repository.episode.toEntity
+import me.him188.ani.app.data.repository.episode.toEpisodeCollectionInfo
 import me.him188.ani.app.domain.search.SubjectType
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -61,7 +66,6 @@ import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -113,6 +117,8 @@ class SubjectCollectionRepositoryImpl(
     private val subjectCollectionDao: SubjectCollectionDao,
     private val subjectRelationsDao: SubjectRelationsDao,
     private val episodeCollectionRepository: EpisodeCollectionRepository,
+    private val bangumiEpisodeService: BangumiEpisodeService,
+    private val episodeCollectionDao: EpisodeCollectionDao,
     private val getCurrentDate: () -> PackedDate = { PackedDate.now() },
     private val defaultDispatcher: CoroutineContext = Dispatchers.IO_,
 ) : SubjectCollectionRepository {
@@ -194,10 +200,11 @@ class SubjectCollectionRepositoryImpl(
             subjectCollectionDao.filterByCollectionTypePaging(query.type)
         },
     ).flow.map { data ->
-        data.map { entity ->
+        data.map { (entity, episodes) ->
+            val date = getCurrentDate()
             entity.toSubjectCollectionInfo(
-                episodes = getSubjectEpisodeCollectionsSnapshot(entity.subjectId), // 通常会读取缓存, 因为 [SubjectCollectionRemoteMediator] 会提前查询这个
-                currentDate = getCurrentDate(),
+                episodes = episodes.map { it.toEpisodeCollectionInfo() },
+                currentDate = date,
             )
         }
     }.flowOn(defaultDispatcher)
@@ -273,28 +280,7 @@ class SubjectCollectionRepositoryImpl(
                     )
 
                     coroutineScope {
-                        // 提前'批量'查询剧集收藏状态, 防止在收藏页显示结果时一个一个查导致太慢
-                        val concurrency = Semaphore(4)
-                        items.forEach { subjectCollection ->
-                            launch {
-                                try {
-                                    subjectCollection.collection?.subjectId?.let { subjectId ->
-                                        concurrency.withPermit {
-                                            getSubjectEpisodeCollectionsSnapshot(
-                                                subjectId,
-                                                allowCached = false, // SubjectCollectionRemoteMediator 是强制刷新
-                                            ) // side-effect: update database
-                                        }
-                                    }
-                                } catch (e: CancellationException) {
-                                    throw e
-                                } catch (e: Exception) {
-                                    // 这里我们只是批量提前查询, 不一定需要成功. 后面等收藏页真正需要时再来重试和处理对应异常
-                                    logger.error("Failed to fetch episode collections", e)
-                                }
-                            }
-                        }
-
+                        // 先插入好条目信息
                         for (collection in items) {
                             val subject = collection.batchSubjectDetails
                             subjectCollectionDao.upsert(
@@ -303,6 +289,27 @@ class SubjectCollectionRepositoryImpl(
                                     collection.collection.toSelfRatingInfo(),
                                 ),
                             )
+                        }
+
+                        // 必须先插入好条目信息, 否则插入 episode 会 foreign key constraint failed
+                        // 提前'批量'查询剧集收藏状态, 防止在收藏页显示结果时一个一个查导致太慢
+                        val concurrency = Semaphore(4)
+                        items.mapNotNull { subjectCollection ->
+                            subjectCollection.collection?.subjectId?.let { subjectId ->
+                                async {
+                                    concurrency.withPermit {
+                                        bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null)
+                                            .map {
+                                                it.toEntity(subjectId)
+                                            }
+                                            .toList()
+                                    }
+                                }
+                            }
+                        }.flatMap {
+                            it.await()
+                        }.let { list ->
+                            episodeCollectionDao.upsert(list)
                         }
                     }
 

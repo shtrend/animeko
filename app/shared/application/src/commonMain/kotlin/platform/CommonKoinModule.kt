@@ -164,6 +164,8 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
 //            subjectPersonRelationDao = database.subjectPersonRelation(),
             subjectRelationsDao = database.subjectRelations(),
             episodeCollectionRepository = get(),
+            bangumiEpisodeService = get(),
+            episodeCollectionDao = database.episodeCollection(),
         )
     }
     single<FollowedSubjectsRepository> {

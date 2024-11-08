@@ -17,6 +17,8 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Relation
+import androidx.room.Transaction
 import androidx.room.TypeConverters
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
@@ -80,6 +82,7 @@ interface SubjectCollectionDao {
     suspend fun upsert(item: SubjectCollectionEntity)
 
     @Upsert
+    @Transaction
     suspend fun upsert(item: List<SubjectCollectionEntity>)
 
     @Query("""UPDATE subject_collection SET collectionType = :collectionType, lastUpdated = :lastUpdated WHERE subjectId = :subjectId""")
@@ -146,9 +149,10 @@ interface SubjectCollectionDao {
         order by _index
         """,
     )
+    @Transaction
     fun filterByCollectionTypePaging(
         collectionType: UnifiedCollectionType? = null,
-    ): PagingSource<Int, SubjectCollectionEntity>
+    ): PagingSource<Int, SubjectCollectionAndEpisodes>
 
     @Query("""SELECT * FROM subject_collection WHERE subjectId = :subjectId""")
     fun findById(subjectId: Int): Flow<SubjectCollectionEntity?>
@@ -167,6 +171,21 @@ interface SubjectCollectionDao {
 
     @Query("""UPDATE subject_collection SET cachedStaffUpdated = :time, cachedCharactersUpdated = :time WHERE subjectId = :subjectId""")
     suspend fun updateCachedRelationsUpdated(subjectId: Int, time: Long = currentTimeMillis())
+}
+
+data class SubjectCollectionAndEpisodes(
+    @Embedded
+    val collection: SubjectCollectionEntity,
+    @Relation(
+        entity = EpisodeCollectionEntity::class,
+        parentColumn = "subjectId",
+        entityColumn = "subjectId",
+    )
+    val episodes: List<EpisodeCollectionEntity>,
+) {
+    override fun toString(): String {
+        return "SubjectCollectionAndEpisodes(collection.nameCn=${collection.nameCn}, episodes.size=${episodes.size})"
+    }
 }
 
 fun SubjectCollectionDao.filterMostRecentUpdated(

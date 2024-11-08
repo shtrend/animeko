@@ -200,7 +200,7 @@ suspend inline fun EpisodeCollectionRepository.setEpisodeWatched(subjectId: Int,
         if (watched) UnifiedCollectionType.DONE else UnifiedCollectionType.WISH,
     )
 
-private fun EpisodeCollectionInfo.toEntity(subjectId: Int): EpisodeCollectionEntity {
+fun EpisodeCollectionInfo.toEntity(subjectId: Int): EpisodeCollectionEntity {
     return EpisodeCollectionEntity(
         subjectId = subjectId,
         episodeId = episodeId,
@@ -216,7 +216,7 @@ private fun EpisodeCollectionInfo.toEntity(subjectId: Int): EpisodeCollectionEnt
     )
 }
 
-private fun EpisodeCollectionEntity.toEpisodeCollectionInfo() =
+fun EpisodeCollectionEntity.toEpisodeCollectionInfo() =
     EpisodeCollectionInfo(
         episodeInfo = toEpisodeInfo(),
         collectionType = selfCollectionType,

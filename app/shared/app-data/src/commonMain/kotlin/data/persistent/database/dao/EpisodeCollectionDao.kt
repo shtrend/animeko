@@ -16,6 +16,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.TypeConverters
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
@@ -104,6 +105,7 @@ interface EpisodeCollectionDao {
     suspend fun upsert(item: EpisodeCollectionEntity)
 
     @Upsert
+    @Transaction
     suspend fun upsert(item: List<EpisodeCollectionEntity>)
 
     @Query("""UPDATE episode_collection SET selfCollectionType = :type WHERE subjectId = :subjectId AND episodeId = :episodeId""")
