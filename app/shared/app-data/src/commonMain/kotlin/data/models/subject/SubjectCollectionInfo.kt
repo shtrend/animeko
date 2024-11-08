@@ -30,6 +30,11 @@ data class SubjectCollectionInfo(
     val progressInfo: SubjectProgressInfo,
     val cachedStaffUpdated: Long,
     val cachedCharactersUpdated: Long,
+
+    /**
+     * 最后更新时间
+     */
+    val lastUpdated: Long,
 ) {
     val subjectId: Int get() = subjectInfo.subjectId
 }
@@ -123,5 +128,6 @@ private fun testSubjectCollection(
         progressInfo = SubjectProgressInfo.compute(subjectInfo, episodes, PackedDate.now()),
         cachedStaffUpdated = 0,
         cachedCharactersUpdated = 0,
+        lastUpdated = 0,
     )
 }

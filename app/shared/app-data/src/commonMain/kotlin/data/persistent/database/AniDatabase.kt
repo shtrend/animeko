@@ -12,6 +12,7 @@ package me.him188.ani.app.data.persistent.database
 import androidx.room.AutoMigration
 import androidx.room.ConstructedBy
 import androidx.room.Database
+import androidx.room.DeleteColumn
 import androidx.room.RenameTable
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
@@ -48,13 +49,14 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEn
         SubjectCharacterRelationEntity::class, // 4.0.0-alpha04
         CharacterActorEntity::class, // 4.0.0-alpha04
     ],
-    version = 6,
+    version = 7,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = Migrations.Migration_1_2::class),
         AutoMigration(from = 2, to = 3, spec = Migrations.Migration_2_3::class),
         AutoMigration(from = 3, to = 4, spec = Migrations.Migration_3_4::class),
         AutoMigration(from = 4, to = 5, spec = Migrations.Migration_4_5::class),
         AutoMigration(from = 5, to = 6, spec = Migrations.Migration_5_6::class),
+        AutoMigration(from = 6, to = 7, spec = Migrations.Migration_6_7::class),
     ],
 )
 @ConstructedBy(AniDatabaseConstructor::class)
@@ -136,6 +138,18 @@ internal object Migrations {
      * @since 4.0.0-alpha04
      */
     class Migration_5_6 : AutoMigrationSpec {
+        override fun onPostMigrate(connection: SQLiteConnection) {
+        }
+    }
+
+    /**
+     * - Removed [SubjectCollectionEntity].`_index`. Primary key changed to [SubjectCollectionEntity.subjectId].
+     * - Removed [SubjectCollectionEntity] index `Index(value = ["subjectId"], unique = true),`
+     * - [SubjectCollectionDao.filterByCollectionTypePaging] 使用 [SubjectCollectionEntity.lastUpdated] 排序.
+     * @since 4.0.0-beta01
+     */
+    @DeleteColumn("subject_collection", "_index")
+    class Migration_6_7 : AutoMigrationSpec {
         override fun onPostMigrate(connection: SQLiteConnection) {
         }
     }

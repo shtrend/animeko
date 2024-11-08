@@ -38,14 +38,12 @@ import me.him188.ani.utils.platform.currentTimeMillis
 @Entity(
     tableName = "subject_collection",
     indices = [
-        Index(value = ["subjectId"], unique = true),
         Index(value = ["lastUpdated"], unique = false, orders = [Index.Order.DESC]),
     ],
 )
 @TypeConverters(PackedDateConverter::class)
 data class SubjectCollectionEntity(
-    @PrimaryKey(autoGenerate = true) val _index: Long = 0, // 用于按插入顺序排序
-    val subjectId: Int,
+    @PrimaryKey val subjectId: Int,
 
     // SubjectInfo
     val name: String,
@@ -149,7 +147,7 @@ interface SubjectCollectionDao {
         """
         select * from subject_collection 
         where (collectionType is NOT NULL AND (:collectionType IS NULL OR collectionType = :collectionType))
-        order by _index
+        order by lastUpdated DESC
         """,
     )
     @Transaction

@@ -157,6 +157,7 @@ class SubjectCollectionRepositoryImpl(
                     val entity = batch.toEntity(
                         collection?.type.toCollectionType(),
                         selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
+                        lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
                     )
                     subjectCollectionDao.upsert(entity) // 插入后, `subjectCollectionDao.findById(subjectId)` 会重新 emit
                 }
@@ -318,6 +319,7 @@ class SubjectCollectionRepositoryImpl(
                     subject.toEntity(
                         collection.collection?.type.toCollectionType(),
                         collection.collection.toSelfRatingInfo(),
+                        lastUpdated = collection.collection?.updatedAt?.toEpochMilliseconds() ?: 0,
                     )
                 }.let { list ->
                     subjectCollectionDao.upsert(list)
@@ -414,6 +416,7 @@ private fun SubjectCollectionEntity.toSubjectCollectionInfo(
         progressInfo = SubjectProgressInfo.compute(subjectInfo, episodes, currentDate),
         cachedStaffUpdated = cachedStaffUpdated,
         cachedCharactersUpdated = cachedCharactersUpdated,
+        lastUpdated = lastUpdated,
     )
 }
 
@@ -421,6 +424,7 @@ private fun SubjectCollectionEntity.toSubjectCollectionInfo(
 internal fun BatchSubjectDetails.toEntity(
     collectionType: UnifiedCollectionType,
     selfRatingInfo: SelfRatingInfo,
+    lastUpdated: Long,
 ): SubjectCollectionEntity =
     subjectInfo.run {
         SubjectCollectionEntity(
@@ -440,5 +444,6 @@ internal fun BatchSubjectDetails.toEntity(
             completeDate = completeDate,
             selfRatingInfo = selfRatingInfo,
             collectionType = collectionType,
+            lastUpdated = lastUpdated,
         )
     }
