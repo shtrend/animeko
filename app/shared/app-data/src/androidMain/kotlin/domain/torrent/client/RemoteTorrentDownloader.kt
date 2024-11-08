@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
+import me.him188.ani.app.domain.torrent.IDisposableHandle
 import me.him188.ani.app.domain.torrent.IRemoteTorrentDownloader
 import me.him188.ani.app.domain.torrent.ITorrentDownloaderStatsCallback
 import me.him188.ani.app.domain.torrent.parcel.PTorrentDownloaderStats
@@ -33,24 +34,31 @@ import kotlin.coroutines.CoroutineContext
 
 @RequiresApi(Build.VERSION_CODES.O_MR1)
 class RemoteTorrentDownloader(
+    connectivityAware: ConnectivityAware,
     getRemote: () -> IRemoteTorrentDownloader
-) : TorrentDownloader, RemoteCall<IRemoteTorrentDownloader> by RetryRemoteCall(getRemote) {
-    override val totalStats: Flow<TorrentDownloader.Stats>
-        get() = callbackFlow {
-            val disposable = call {
-                getTotalStatus(
-                    object : ITorrentDownloaderStatsCallback.Stub() {
-                        override fun onEmit(stat: PTorrentDownloaderStats?) {
-                            if (stat != null) trySend(stat.toStats())
-                        }
-                    },
-                )
-            }
-
-            awaitClose {
-                disposable.callOnceOrNull { dispose() }
+) : TorrentDownloader,
+    RemoteCall<IRemoteTorrentDownloader> by RetryRemoteCall(getRemote),
+    ConnectivityAware by connectivityAware {
+    override val totalStats: Flow<TorrentDownloader.Stats> = callbackFlow {
+        var disposable: IDisposableHandle? = null
+        val callback = object : ITorrentDownloaderStatsCallback.Stub() {
+            override fun onEmit(stat: PTorrentDownloaderStats?) {
+                if (stat != null) trySend(stat.toStats())
             }
         }
+
+        // todo: not thread-safe
+        disposable = call { getTotalStatus(callback) }
+        val transform = registerStateTransform(false, true) {
+            disposable?.callOnceOrNull { dispose() }
+            disposable = call { getTotalStatus(callback) }
+        }
+
+        awaitClose {
+            disposable?.callOnceOrNull { dispose() }
+            unregister(transform)
+        }
+    }
 
     override val vendor: TorrentLibInfo get() = call { vendor.toTorrentLibInfo() }
 
@@ -67,7 +75,7 @@ class RemoteTorrentDownloader(
         overrideSaveDir: SystemPath?
     ): TorrentSession {
         return withContext(Dispatchers.IO_) {
-            RemoteTorrentSession {
+            RemoteTorrentSession(this@RemoteTorrentDownloader) {
                 call { startDownload(data.toParceled(), overrideSaveDir?.absolutePath) }
             }
         }

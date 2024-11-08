@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
+import me.him188.ani.app.domain.torrent.IDisposableHandle
 import me.him188.ani.app.domain.torrent.IRemoteTorrentFileEntry
 import me.him188.ani.app.domain.torrent.ITorrentFileEntryStatsCallback
 import me.him188.ani.app.domain.torrent.parcel.PTorrentFileEntryStats
@@ -33,33 +34,42 @@ import java.io.RandomAccessFile
 
 @RequiresApi(Build.VERSION_CODES.O_MR1)
 class RemoteTorrentFileEntry(
+    connectivityAware: ConnectivityAware,
     getRemote: () -> IRemoteTorrentFileEntry
-) : TorrentFileEntry, RemoteCall<IRemoteTorrentFileEntry> by RetryRemoteCall(getRemote) {
-    override val fileStats: Flow<TorrentFileEntry.Stats>
-        get() = callbackFlow {
-            val disposable = call {
-                getFileStats(
-                    object : ITorrentFileEntryStatsCallback.Stub() {
-                        override fun onEmit(stat: PTorrentFileEntryStats?) {
-                            if (stat != null) trySend(stat.toStats())
-                        }
-                    },
-                )
+) : TorrentFileEntry,
+    RemoteCall<IRemoteTorrentFileEntry> by RetryRemoteCall(getRemote),
+    ConnectivityAware by connectivityAware {
+    override val fileStats: Flow<TorrentFileEntry.Stats> = callbackFlow {
+        var disposable: IDisposableHandle? = null
+        val callback = object : ITorrentFileEntryStatsCallback.Stub() {
+            override fun onEmit(stat: PTorrentFileEntryStats?) {
+                if (stat != null) trySend(stat.toStats())
             }
-
-            awaitClose { disposable.callOnceOrNull { dispose() } }
         }
+
+        // todo: not thread-safe
+        disposable = call { getFileStats(callback) }
+        val transform = registerStateTransform(false, true) {
+            disposable?.callOnceOrNull { dispose() }
+            disposable = call { getFileStats(callback) }
+        }
+
+        awaitClose {
+            disposable?.callOnceOrNull { dispose() }
+            unregister(transform)
+        }
+    }
 
     override val length: Long get() = call { length }
 
     override val pathInTorrent: String get() = call { pathInTorrent }
 
-    override val pieces: PieceList = RemotePieceList { call { pieces } }
+    override val pieces: PieceList get() = RemotePieceList(this, call { pieces })
 
     override val supportsStreaming: Boolean get() = call { supportsStreaming }
 
     override fun createHandle(): TorrentFileHandle {
-        return RemoteTorrentFileHandle { call { createHandle() } }
+        return RemoteTorrentFileHandle(this) { call { createHandle() } }
     }
 
     override suspend fun resolveFile(): SystemPath {

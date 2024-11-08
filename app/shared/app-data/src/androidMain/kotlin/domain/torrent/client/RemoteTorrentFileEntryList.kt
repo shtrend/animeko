@@ -11,17 +11,19 @@ package me.him188.ani.app.domain.torrent.client
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import me.him188.ani.app.domain.torrent.IRemoteTorrentFileEntry
 import me.him188.ani.app.domain.torrent.IRemoteTorrentFileEntryList
 import me.him188.ani.app.torrent.api.files.TorrentFileEntry
 
 @RequiresApi(Build.VERSION_CODES.O_MR1)
 class RemoteTorrentFileEntryList(
+    connectivityAware: ConnectivityAware,
     getRemote: () -> IRemoteTorrentFileEntryList
-) : AbstractList<TorrentFileEntry>(), RemoteCall<IRemoteTorrentFileEntryList> by RetryRemoteCall(getRemote) {
+) : AbstractList<TorrentFileEntry>(),
+    RemoteCall<IRemoteTorrentFileEntryList> by RetryRemoteCall(getRemote),
+    ConnectivityAware by connectivityAware {
     override val size: Int get() = call { size }
 
     override fun get(index: Int): TorrentFileEntry {
-        return RemoteTorrentFileEntry { call { get(index) } }
+        return RemoteTorrentFileEntry(this) { call { get(index) } }
     }
 }

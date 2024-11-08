@@ -10,7 +10,6 @@
 package me.him188.ani.app.domain.torrent.client
 
 import android.os.Build
-import android.os.DeadObjectException
 import android.os.IInterface
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.cancel
@@ -19,13 +18,10 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
 import me.him188.ani.app.data.models.preference.AnitorrentConfig
 import me.him188.ani.app.data.models.preference.ProxySettings
 import me.him188.ani.app.data.models.preference.TorrentPeerConfig
@@ -43,21 +39,23 @@ import me.him188.ani.utils.coroutines.onReplacement
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.logging.logger
-import me.him188.ani.utils.logging.warn
 import kotlin.coroutines.CoroutineContext
 
 @RequiresApi(Build.VERSION_CODES.O_MR1)
 class RemoteAnitorrentEngine(
     private val connection: TorrentServiceConnection,
-
-    private val anitorrentConfigFlow: Flow<AnitorrentConfig>,
-    private val proxySettingsFlow: Flow<ProxySettings>,
-    private val peerFilterConfig: Flow<TorrentPeerConfig>,
-    private val saveDir: SystemPath,
+    anitorrentConfigFlow: Flow<AnitorrentConfig>,
+    proxySettingsFlow: Flow<ProxySettings>,
+    peerFilterConfig: Flow<TorrentPeerConfig>,
+    saveDir: SystemPath,
     parentCoroutineContext: CoroutineContext,
 ) : TorrentEngine {
     private val childScope = parentCoroutineContext.childScope()
     private val logger = logger<RemoteAnitorrentEngine>()
+    private val connectivityAware = DefaultConnectivityAware(
+        parentCoroutineContext.childScope(),
+        connection.connected,
+    )
     
     override val type: TorrentEngineType = TorrentEngineType.RemoteAnitorrent
 
@@ -100,7 +98,7 @@ class RemoteAnitorrentEngine(
     }
     
     override suspend fun getDownloader(): TorrentDownloader {
-        return RemoteTorrentDownloader {
+        return RemoteTorrentDownloader(connectivityAware) {
             runBlocking { getBinderOrFail() }.downlaoder
         }
     }
@@ -125,7 +123,9 @@ class RemoteAnitorrentEngine(
             .filter { it }
             .map {
                 launch {
-                    stateFlow.collect { remoteCall.call { transact(it) } }
+                    stateFlow.collect {
+                        remoteCall.call { transact(it) }
+                    }
                 }
             }
             .onReplacement { it.cancel() }

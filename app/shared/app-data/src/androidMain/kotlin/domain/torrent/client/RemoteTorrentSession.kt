@@ -16,6 +16,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
+import me.him188.ani.app.domain.torrent.IDisposableHandle
 import me.him188.ani.app.domain.torrent.IRemoteTorrentSession
 import me.him188.ani.app.domain.torrent.ITorrentSessionStatsCallback
 import me.him188.ani.app.domain.torrent.parcel.PTorrentSessionStats
@@ -26,31 +27,40 @@ import me.him188.ani.utils.coroutines.IO_
 
 @RequiresApi(Build.VERSION_CODES.O_MR1)
 class RemoteTorrentSession(
+    connectivityAware: ConnectivityAware,
     getRemote: () -> IRemoteTorrentSession
-) : TorrentSession, RemoteCall<IRemoteTorrentSession> by RetryRemoteCall(getRemote) {
-    override val sessionStats: Flow<TorrentSession.Stats?>
-        get() = callbackFlow {
-            val disposable = call {
-                getSessionStats(
-                    object : ITorrentSessionStatsCallback.Stub() {
-                        override fun onEmit(stat: PTorrentSessionStats?) {
-                            if (stat != null) trySend(stat.toStats())
-                        }
-                    },
-                )
-            }
-
-            awaitClose {
-                disposable.callOnceOrNull { dispose() }
+) : TorrentSession,
+    RemoteCall<IRemoteTorrentSession> by RetryRemoteCall(getRemote),
+    ConnectivityAware by connectivityAware {
+    override val sessionStats: Flow<TorrentSession.Stats?> = callbackFlow {
+        var disposable: IDisposableHandle? = null
+        val callback = object : ITorrentSessionStatsCallback.Stub() {
+            override fun onEmit(stat: PTorrentSessionStats?) {
+                if (stat != null) trySend(stat.toStats())
             }
         }
+
+        // todo: not thread-safe
+        disposable = call { getSessionStats(callback) }
+        val transform = registerStateTransform(false, true) {
+            disposable?.callOnceOrNull { dispose() }
+            disposable = call { getSessionStats(callback) }
+        }
+
+        awaitClose {
+            disposable?.callOnceOrNull { dispose() }
+            unregister(transform)
+        }
+    }
 
     override suspend fun getName(): String {
         return withContext(Dispatchers.IO_) { call { name } }
     }
 
     override suspend fun getFiles(): List<TorrentFileEntry> {
-        return withContext(Dispatchers.IO_) { RemoteTorrentFileEntryList { call { files } } }
+        return withContext(Dispatchers.IO_) {
+            RemoteTorrentFileEntryList(this@RemoteTorrentSession) { call { files } }
+        }
     }
 
     override fun getPeers(): List<PeerInfo> {
