@@ -127,12 +127,6 @@ fun SubjectCollectionsColumn(
             }
         }
 
-        if (items.loadState.hasError) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-            }
-        }
-
-
         if (items.isLoadingNextPage) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
