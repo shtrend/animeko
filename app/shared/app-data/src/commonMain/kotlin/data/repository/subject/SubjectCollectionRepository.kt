@@ -281,14 +281,15 @@ class SubjectCollectionRepositoryImpl(
 
                     coroutineScope {
                         // 先插入好条目信息
-                        for (collection in items) {
+                        items.map { collection ->
                             val subject = collection.batchSubjectDetails
-                            subjectCollectionDao.upsert(
-                                subject.toEntity(
-                                    collection.collection?.type.toCollectionType(),
-                                    collection.collection.toSelfRatingInfo(),
-                                ),
+                            subject.toEntity(
+                                collection.collection?.type.toCollectionType(),
+                                collection.collection.toSelfRatingInfo(),
                             )
+                        }.let { list ->
+                            // 批量插入
+                            subjectCollectionDao.upsert(list)
                         }
 
                         // 必须先插入好条目信息, 否则插入 episode 会 foreign key constraint failed
