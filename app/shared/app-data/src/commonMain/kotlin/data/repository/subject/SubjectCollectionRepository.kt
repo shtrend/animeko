@@ -16,7 +16,6 @@ import androidx.paging.PagingData
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.paging.map
-import io.ktor.client.plugins.ResponseException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -48,6 +47,7 @@ import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
+import me.him188.ani.app.data.persistent.database.dao.deleteAll
 import me.him188.ani.app.data.persistent.database.dao.filterMostRecentUpdated
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
@@ -251,78 +251,87 @@ class SubjectCollectionRepositoryImpl(
         override suspend fun load(
             loadType: LoadType,
             state: PagingState<Int, T>,
-        ): MediatorResult {
-            return try {
-                withContext(defaultDispatcher) {
-                    val offset = when (loadType) {
-                        LoadType.REFRESH -> {
-                            0
-                        }
-
-                        LoadType.PREPEND -> return@withContext MediatorResult.Success(
-                            endOfPaginationReached = true,
-                        )
-
-                        LoadType.APPEND -> {
-                            val lastLoadedPage = state.pages.lastOrNull()
-                            if (lastLoadedPage != null) {
-                                lastLoadedPage.itemsBefore + lastLoadedPage.data.size
-                            } else {
-                                0
-                            }
-                        }
+        ): MediatorResult = try {
+            withContext(defaultDispatcher) {
+                val offset = when (loadType) {
+                    LoadType.REFRESH -> {
+                        0
                     }
 
-                    val items = bangumiSubjectService.getSubjectCollections(
-                        type = query.type?.toSubjectCollectionType(),
-                        offset = offset,
-                        limit = state.config.pageSize,
+                    LoadType.PREPEND -> return@withContext MediatorResult.Success(
+                        endOfPaginationReached = true,
                     )
 
-                    coroutineScope {
-                        // 先插入好条目信息
-                        items.map { collection ->
-                            val subject = collection.batchSubjectDetails
-                            subject.toEntity(
-                                collection.collection?.type.toCollectionType(),
-                                collection.collection.toSelfRatingInfo(),
-                            )
-                        }.let { list ->
-                            // 批量插入
-                            subjectCollectionDao.upsert(list)
-                        }
-
-                        // 必须先插入好条目信息, 否则插入 episode 会 foreign key constraint failed
-                        // 提前'批量'查询剧集收藏状态, 防止在收藏页显示结果时一个一个查导致太慢
-                        val concurrency = Semaphore(4)
-                        items.mapNotNull { subjectCollection ->
-                            subjectCollection.collection?.subjectId?.let { subjectId ->
-                                async {
-                                    concurrency.withPermit {
-                                        bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null)
-                                            .map {
-                                                it.toEntity(subjectId)
-                                            }
-                                            .toList()
-                                    }
-                                }
-                            }
-                        }.flatMap {
-                            it.await()
-                        }.let { list ->
-                            episodeCollectionDao.upsert(list)
+                    LoadType.APPEND -> {
+                        val lastLoadedPage = state.pages.lastOrNull()
+//                        logger.warn { "Mediator APPEND, lastLoadedPage ${}" }
+                        if (lastLoadedPage != null) {
+                            lastLoadedPage.itemsBefore + lastLoadedPage.data.size
+                        } else {
+                            0
                         }
                     }
-
-                    MediatorResult.Success(endOfPaginationReached = items.isEmpty())
                 }
-            } catch (e: RepositoryException) {
-                MediatorResult.Error(e)
-            } catch (e: ResponseException) {
-                MediatorResult.Error(e)
-            } catch (e: Exception) {
-                MediatorResult.Error(e)
+
+                // 执行网络请求查询好需要的 subject 和 episodes
+
+                val items = bangumiSubjectService.getSubjectCollections(
+                    type = query.type?.toSubjectCollectionType(),
+                    offset = offset,
+                    limit = state.config.pageSize,
+                )
+
+                // 提前'批量'查询剧集收藏状态, 防止在收藏页显示结果时一个一个查导致太慢
+                val episodes = coroutineScope {
+                    // 并发
+                    val concurrency = Semaphore(4)
+                    items.mapNotNull { subjectCollection ->
+                        subjectCollection.collection?.subjectId?.let { subjectId ->
+                            async {
+                                concurrency.withPermit {
+                                    bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null)
+                                        .map {
+                                            it.toEntity(subjectId)
+                                        }
+                                        .toList()
+                                }
+                            }
+                        }
+                    }.flatMap {
+                        it.await()
+                    }
+                }
+
+                if (loadType == LoadType.REFRESH) {
+                    // 仅在网络请求成功后才删除缓存, 否则会导致无网络时清空缓存
+                    // 必须清除缓存, 让顺序与服务器同步, 否则会死循环刷新
+                    subjectCollectionDao.deleteAll(query.type)
+                }
+
+                if (items.isEmpty()) {
+                    return@withContext MediatorResult.Success(endOfPaginationReached = items.isEmpty())
+                }
+
+                // 批量插入条目信息
+                items.map { collection ->
+                    val subject = collection.batchSubjectDetails
+                    subject.toEntity(
+                        collection.collection?.type.toCollectionType(),
+                        collection.collection.toSelfRatingInfo(),
+                    )
+                }.let { list ->
+                    subjectCollectionDao.upsert(list)
+                }
+
+                // 必须先插入好条目信息, 否则插入 episode 会 foreign key constraint failed
+                episodes.let { list ->
+                    episodeCollectionDao.upsert(list)
+                }
+
+                MediatorResult.Success(endOfPaginationReached = items.isEmpty())
             }
+        } catch (e: Exception) {
+            MediatorResult.Error(RepositoryException.wrapOrThrowCancellation(e))
         }
     }
 

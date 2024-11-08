@@ -95,6 +95,9 @@ interface SubjectCollectionDao {
     @Query("""DELETE FROM subject_collection WHERE subjectId = :subjectId""")
     suspend fun delete(subjectId: Int)
 
+    @Query("""DELETE FROM subject_collection WHERE collectionType = :type""")
+    suspend fun deleteAll(type: UnifiedCollectionType)
+
     @Query("""DELETE FROM subject_collection""")
     suspend fun deleteAll()
 
@@ -171,6 +174,14 @@ interface SubjectCollectionDao {
 
     @Query("""UPDATE subject_collection SET cachedStaffUpdated = :time, cachedCharactersUpdated = :time WHERE subjectId = :subjectId""")
     suspend fun updateCachedRelationsUpdated(subjectId: Int, time: Long = currentTimeMillis())
+}
+
+suspend inline fun SubjectCollectionDao.deleteAll(type: UnifiedCollectionType?) {
+    if (type == null) {
+        deleteAll()
+    } else {
+        deleteAll(type)
+    }
 }
 
 data class SubjectCollectionAndEpisodes(
