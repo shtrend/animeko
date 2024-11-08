@@ -30,7 +30,6 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
-import me.him188.ani.app.data.models.episode.isKnownCompleted
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
@@ -399,19 +398,7 @@ private fun SubjectCollectionEntity.toSubjectCollectionInfo(
             episodes.map { it.episodeInfo },
             airDate,
         ),
-        progressInfo = SubjectProgressInfo.compute(
-            subjectStarted = currentDate > subjectInfo.airDate,
-            episodes = episodes.map {
-                SubjectProgressInfo.Episode(
-                    it.episodeId,
-                    it.collectionType,
-                    it.episodeInfo.sort,
-                    it.episodeInfo.airDate,
-                    it.episodeInfo.isKnownCompleted,
-                )
-            },
-            subjectAirDate = subjectInfo.airDate,
-        ),
+        progressInfo = SubjectProgressInfo.compute(subjectInfo, episodes, currentDate),
         cachedStaffUpdated = cachedStaffUpdated,
         cachedCharactersUpdated = cachedCharactersUpdated,
     )
