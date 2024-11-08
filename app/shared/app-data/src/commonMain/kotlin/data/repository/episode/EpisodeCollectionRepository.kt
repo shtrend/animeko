@@ -33,6 +33,7 @@ import me.him188.ani.app.data.network.toBangumiEpType
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
+import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
 import me.him188.ani.app.domain.episode.EpisodeCollections
@@ -71,7 +72,9 @@ class EpisodeCollectionRepository(
     }
 
     /**
-     * 获取指定条目的所有剧集信息, 如果没有则从网络获取并缓存
+     * 获取指定条目的所有剧集信息, 如果没有则从网络获取.
+     *
+     * 如果 [subjectId] 对应的 [SubjectCollectionEntity] 缓存存在, 则获取到的剧集信息还会插入到缓存 ([EpisodeCollectionEntity]). 否则不会操作缓存 (因为 foreign key).
      */
     fun subjectEpisodeCollectionInfosFlow(
         subjectId: Int,
@@ -91,8 +94,10 @@ class EpisodeCollectionRepository(
             bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, epType)
                 .toList() // 目前先直接全拿了, 反正一般情况下剧集数量很少
                 .also { list ->
-                    episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
-                    // 插入后会立即触发 filterBySubjectId 更新 (emit 新的)
+                    if (subjectDao.findById(subjectId).first() != null) {
+                        // 插入后会立即触发 filterBySubjectId 更新 (emit 新的)
+                        episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
+                    }
                 }
         }
     }.flowOn(defaultDispatcher)
