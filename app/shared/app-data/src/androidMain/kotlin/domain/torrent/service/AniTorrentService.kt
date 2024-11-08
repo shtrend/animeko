@@ -107,7 +107,7 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
         launch {
             val anitorrentDownloader = anitorrent.await().getDownloader()
             anitorrentDownloader.openSessions
-            anitorrentDownloader.totalStats.sampleWithInitial(1000).collect { stat ->
+            anitorrentDownloader.totalStats.sampleWithInitial(5000).collect { stat ->
                 notification.updateNotification(
                     NotificationDisplayStrategy.Idle(stat.downloadSpeed.bytes, stat.uploadSpeed.bytes),
                 )

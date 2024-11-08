@@ -50,7 +50,7 @@ class TorrentServiceConnection(
 
     private val acquireWakeLockIntent by lazy {
         Intent(context, AniTorrentService::class.java).apply {
-            putExtra("acquireWakeLock", 10.minutes.inWholeMilliseconds)
+            putExtra("acquireWakeLock", 1.minutes.inWholeMilliseconds)
         }
     }
     
