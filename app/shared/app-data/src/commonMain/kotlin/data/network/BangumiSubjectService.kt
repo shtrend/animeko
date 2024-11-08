@@ -13,6 +13,7 @@ import androidx.collection.IntObjectMap
 import androidx.collection.IntSet
 import androidx.collection.mutableIntObjectMapOf
 import androidx.collection.mutableIntSetOf
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.ResponseException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
@@ -141,15 +142,23 @@ class RemoteBangumiSubjectService(
         limit: Int
     ): List<BatchSubjectCollection> = withContext(ioDispatcher) {
         val username = usernameProvider.getOrThrow()
-        val resp = api.first().getUserCollectionsByUsername(
-            username,
-            subjectType = BangumiSubjectType.Anime,
-            type = type,
-            limit = limit,
-            offset = offset,
-        ).body()
+        val collections = try {
+            api.first().getUserCollectionsByUsername(
+                username,
+                subjectType = BangumiSubjectType.Anime,
+                type = type,
+                limit = limit,
+                offset = offset,
+            ).body().data.orEmpty()
+        } catch (e: ClientRequestException) {
+            // invalid: 400 . Text: "{"title":"Bad Request","details":{"path":"/v0/users/him188/collections","method":"GET","query_string":"subject_type=2&type=1&limit=30&offset=35"},"request_id":".","description":"offset should be less than or equal to 34"}
+            if (e.response.status == HttpStatusCode.BadRequest) {
+                emptyList()
+            } else {
+                throw e
+            }
+        }
 
-        val collections = resp.data.orEmpty()
         val list = batchGetSubjectDetails(collections.mapToIntArray { it.subjectId })
 
         list.map {
