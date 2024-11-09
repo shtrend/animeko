@@ -232,15 +232,20 @@ class SubjectCollectionRepositoryImpl(
         type: UnifiedCollectionType?,
         offset: Int
     ) {
-        withContext(defaultDispatcher) {
-            // 只允许同时一个请求. 防止多个请求浪费带宽.
-            // 一般来说不会有多个请求. 最常见的并行请求可能是用户刚刚打开 APP 进入探索页自动刷新"继续观看"栏目, 在刷新还在进行时切换到收藏页触发自动刷新.
-            updateRecentlyUpdatedSubjectCollectionsMutex.withLock {
-                fetchAndSaveSubjectCollectionsWithEpisodes(type, limit, offset)
+        try {
+            withContext(defaultDispatcher) {
+                // 只允许同时一个请求. 防止多个请求浪费带宽.
+                // 一般来说不会有多个请求. 最常见的并行请求可能是用户刚刚打开 APP 进入探索页自动刷新"继续观看"栏目, 在刷新还在进行时切换到收藏页触发自动刷新.
+                updateRecentlyUpdatedSubjectCollectionsMutex.withLock {
+                    fetchAndSaveSubjectCollectionsWithEpisodes(type, limit, offset)
+                }
             }
+        } catch (e: Exception) {
+            throw RepositoryException.wrapOrThrowCancellation(e)
         }
     }
 
+    // transparent exception
     /**
      * 执行网络查询条目收藏及其剧集列表, 在所有网络请求都成功后调用 [onFetched], 然后保存查询结果到数据库.
      *

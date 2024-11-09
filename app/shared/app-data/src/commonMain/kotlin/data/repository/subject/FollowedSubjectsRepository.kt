@@ -71,7 +71,11 @@ class FollowedSubjectsRepository(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.error(e) { """Failed to update recently updated subject collections, ignoring. 这只会导致探索页的继续观看栏目可能显示旧结果. """ }
+                if (e is RepositoryException) {
+                    logger.error { """Failed to update recently updated subject collections due to ${e}, ignoring. 这只会导致探索页的继续观看栏目可能显示旧结果. """ }
+                } else {
+                    logger.error(e) { """Failed to update recently updated subject collections due to unknown error, ignoring. 这只会导致探索页的继续观看栏目可能显示旧结果. """ }
+                }
             }
 
             // 先查询完成 (插入数据库) 再返回 flow 去查数据库. 前端会展示 placeholder 所以延迟没问题.

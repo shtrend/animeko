@@ -20,7 +20,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
@@ -90,8 +89,9 @@ import me.him188.ani.app.domain.session.AniAuthClient
 import me.him188.ani.app.domain.session.BangumiSessionManager
 import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
+import me.him188.ani.app.domain.session.SessionStatus
+import me.him188.ani.app.domain.session.finalState
 import me.him188.ani.app.domain.session.unverifiedAccessToken
-import me.him188.ani.app.domain.session.username
 import me.him188.ani.app.domain.torrent.TorrentManager
 import me.him188.ani.app.domain.update.UpdateManager
 import me.him188.ani.app.ui.subject.details.state.DefaultSubjectDetailsStateFactory
@@ -148,8 +148,14 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
 
     single<RepositoryUsernameProvider> {
         RepositoryUsernameProvider {
-            @OptIn(OpaqueSession::class)
-            get<SessionManager>().username.filterNotNull().first()
+            when (val finalState = get<SessionManager>().finalState.first()) {
+                SessionStatus.Guest -> null
+                SessionStatus.Expired -> null
+                SessionStatus.NetworkError -> null
+                SessionStatus.NoToken -> null
+                SessionStatus.ServiceUnavailable -> null
+                is SessionStatus.Verified -> finalState.userInfo.username
+            }
         }
     }
     single<SubjectCollectionRepository> {

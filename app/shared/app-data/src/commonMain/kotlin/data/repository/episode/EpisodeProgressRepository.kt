@@ -9,17 +9,21 @@
 
 package me.him188.ani.app.data.repository.episode
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.models.episode.EpisodeProgressInfo
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.domain.media.cache.MediaCacheManager
+import kotlin.coroutines.CoroutineContext
 
 class EpisodeProgressRepository(
     private val episodeCollectionRepository: EpisodeCollectionRepository,
     private val cacheManager: MediaCacheManager,
+    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
 ) : Repository {
     fun subjectEpisodeProgressesInfoFlow(subjectId: Int): Flow<List<EpisodeProgressInfo>> {
         return episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId).flatMapLatest { list ->
@@ -33,6 +37,6 @@ class EpisodeProgressRepository(
             ) {
                 it.toList()
             }
-        }
+        }.flowOn(defaultDispatcher)
     }
 }

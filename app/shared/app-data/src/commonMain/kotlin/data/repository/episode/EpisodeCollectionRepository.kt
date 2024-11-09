@@ -42,6 +42,7 @@ import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -76,6 +77,8 @@ class EpisodeCollectionRepository(
      * 获取指定条目的所有剧集信息, 如果没有则从网络获取.
      *
      * 如果 [subjectId] 对应的 [SubjectCollectionEntity] 缓存存在, 则获取到的剧集信息还会插入到缓存 ([EpisodeCollectionEntity]). 否则不会操作缓存 (因为 foreign key).
+     *
+     * 当网络错误时, 总是会使用缓存.
      */
     fun subjectEpisodeCollectionInfosFlow(
         subjectId: Int,
@@ -93,19 +96,24 @@ class EpisodeCollectionRepository(
                 emit(episodes.map { it.toEpisodeCollectionInfo() })
                 return@transformLatest
             }
+
             try {
-                bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, epType)
-                    .toList() // 目前先直接全拿了, 反正一般情况下剧集数量很少
-                    .also { list ->
-                        if (subjectDao.findById(subjectId).first() != null) {
-                            // 插入后会立即触发 filterBySubjectId 更新 (emit 新的)
-                            episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
-                        }
-                    }
+                emit(
+                    bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, epType)
+                        .toList() // 目前先直接全拿了, 反正一般情况下剧集数量很少
+                        .also { list ->
+                            if (subjectDao.findById(subjectId).first() != null) {
+                                // 插入后会立即触发 filterBySubjectId 更新 (emit 新的)
+                                episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
+                            }
+                        },
+                )
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                // 如果网络请求失败, 则返回缓存
+                // 失败则返回缓存
                 emit(episodes.map { it.toEpisodeCollectionInfo() })
-                throw RepositoryException.wrapOrThrowCancellation(e)
+                return@transformLatest
             }
         }
     }.flowOn(defaultDispatcher)
