@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
+import kotlinx.io.IOException
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.data.models.subject.SubjectInfo
@@ -56,6 +57,7 @@ import me.him188.ani.utils.coroutines.cancellableCoroutineScope
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.warn
 import me.him188.ani.utils.platform.collections.EnumMap
 import me.him188.ani.utils.platform.collections.ImmutableEnumMap
 import kotlin.coroutines.CoroutineContext
@@ -198,19 +200,23 @@ class MediaSourceMediaFetcher(
                     .flatMapMerge { sources ->
                         sources.results.map { it.media }
                     }
-                    .catch {
-                        state.value = MediaSourceFetchState.Failed(it, restartCount)
-                        when (it) {
+                    .catch { exception ->
+                        state.value = MediaSourceFetchState.Failed(exception, restartCount)
+                        when (exception) {
                             is ServerResponseException -> {
-                                logger.error { "Failed to fetch media from $mediaSourceId because of ${it.response.status}" }
+                                logger.error { "Failed to fetch media from $mediaSourceId due to ${exception.response.status}" }
+                            }
+
+                            is IOException -> {
+                                logger.warn { "Failed to fetch media from $mediaSourceId due to network error" }
                             }
 
                             is CancellationException -> {
-                                logger.error { "Failed to fetch media from $mediaSourceId because of CancellationException" }
+                                logger.error { "Failed to fetch media from $mediaSourceId due to CancellationException" }
                             }
 
                             else -> {
-                                logger.error(it) { "Failed to fetch media from $mediaSourceId because of upstream error" }
+                                logger.error(exception) { "Failed to fetch media from $mediaSourceId due to upstream error" }
                             }
                         }
                     }
@@ -227,7 +233,7 @@ class MediaSourceMediaFetcher(
                                 // downstream (collector) failure
                                 state.value = MediaSourceFetchState.Abandoned(exception, restartCount)
                                 if (exception !is CancellationException) {
-                                    logger.error(exception) { "Failed to fetch media from $mediaSourceId because of downstream error" }
+                                    logger.error(exception) { "Failed to fetch media from $mediaSourceId due to downstream error" }
                                 }
                             }
                             // upstream failure re-caught here
