@@ -62,7 +62,6 @@ import me.him188.ani.datasources.bangumi.next.apis.SubjectBangumiNextApi
 import me.him188.ani.utils.ktor.ClientProxyConfig
 import me.him188.ani.utils.ktor.proxy
 import me.him188.ani.utils.ktor.registerLogging
-import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.collections.mapToIntArray
 import me.him188.ani.utils.serialization.toJsonArray
@@ -196,9 +195,8 @@ class BangumiClientImpl(
             }
         } catch (e: Exception) {
             // POST https://api.bgm.tv/v0/graphql [Authorized]: 400  in 317.809375ms
-            logger.error { "Failed to execute GraphQL query action'$actionName', the query is: \n$query" } // 记录一下 query, 
             throw e.apply {
-                addSuppressed(IllegalStateException("Callsite"))
+                addSuppressed(IllegalStateException("Failed to execute GraphQL query action'$actionName', the query is: \n$query"))
             }
         }
 
