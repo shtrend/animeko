@@ -115,19 +115,20 @@ configure<KotlinMultiplatformExtension> {
     }
 
     if (android != null && composeExtension != null) {
+        val composeVersion = versionCatalogs.named("libs").findVersion("jetpack-compose").get()
         listOf(
             sourceSets.getByName("androidInstrumentedTest"),
             sourceSets.getByName("androidUnitTest"),
         ).forEach { sourceSet ->
             sourceSet.dependencies {
                 // https://developer.android.com/develop/ui/compose/testing#setup
-                implementation("androidx.compose.ui:ui-test-junit4-android:1.7.0")
-                implementation("androidx.compose.ui:ui-test-manifest:1.7.0")
+                implementation("androidx.compose.ui:ui-test-junit4-android:${composeVersion}")
+                implementation("androidx.compose.ui:ui-test-manifest:${composeVersion}")
             }
         }
 
         dependencies {
-            "debugImplementation"("androidx.compose.ui:ui-test-manifest:1.7.0")
+            "debugImplementation"("androidx.compose.ui:ui-test-manifest:${composeVersion}")
         }
     }
     
