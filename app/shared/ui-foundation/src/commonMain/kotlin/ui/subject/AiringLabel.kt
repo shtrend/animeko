@@ -33,6 +33,7 @@ import me.him188.ani.app.data.models.subject.TestSubjectProgressInfos
 import me.him188.ani.app.data.models.subject.computeTotalEpisodeText
 import me.him188.ani.app.data.models.subject.isOnAir
 import me.him188.ani.app.ui.foundation.stateOf
+import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 // Test: AiringProgressTests
@@ -72,7 +73,7 @@ class AiringLabelState(
             SubjectAiringKind.ON_AIR -> {
                 when (val s = progressInfo.continueWatchingStatus) {
                     ContinueWatchingStatus.Done -> "已看完"
-                    is ContinueWatchingStatus.Watched -> "看过 ${s.episodeSort}"
+                    is ContinueWatchingStatus.Watched -> "看过 ${renderEpAndSort(s.episodeEp, s.episodeSort)}"
 
                     is ContinueWatchingStatus.Continue,
                     is ContinueWatchingStatus.NotOnAir,
@@ -81,7 +82,7 @@ class AiringLabelState(
                         if (airingInfo.latestSort == null) {
                             "连载中"
                         } else {
-                            "连载至 ${airingInfo.latestSort}"
+                            "连载至 ${renderEpAndSort(airingInfo.latestEp, airingInfo.latestSort)}"
                         }
                 }
             }
@@ -90,8 +91,9 @@ class AiringLabelState(
                 when (val s = progressInfo.continueWatchingStatus) {
                     ContinueWatchingStatus.Done -> "已看完"
 
-                    is ContinueWatchingStatus.Watched -> "看过 ${s.episodeSort}"
-                    is ContinueWatchingStatus.Continue -> "看过 ${s.watchedEpisodeSort}"
+                    is ContinueWatchingStatus.Watched -> "看过 ${renderEpAndSort(s.episodeEp, s.episodeSort)}"
+                    is ContinueWatchingStatus.Continue ->
+                        "看过 ${renderEpAndSort(s.watchedEpisodeEp, s.watchedEpisodeSort)}"
 
                     is ContinueWatchingStatus.NotOnAir,
                     ContinueWatchingStatus.Start,
@@ -99,6 +101,13 @@ class AiringLabelState(
                 }
             }
         }
+    }
+
+    private fun renderEpAndSort(ep: EpisodeSort?, sort: EpisodeSort?) = when {
+        ep == null -> sort.toString()
+        sort == null -> ep.toString()
+        ep != sort -> "$ep ($sort)"
+        else -> sort.toString()
     }
 
     val highlightProgress by derivedStateOf {

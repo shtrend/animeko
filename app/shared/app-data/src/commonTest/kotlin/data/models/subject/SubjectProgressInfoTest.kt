@@ -31,7 +31,7 @@ class SubjectProgressInfoTest {
         airDate: PackedDate = Invalid,
         id: Int = sort,
     ): Episode = Episode(
-        id, type, EpisodeSort(sort),
+        id, type, EpisodeSort(sort), EpisodeSort(sort),
         airDate,
         isKnownCompleted,
     )
@@ -107,7 +107,10 @@ class SubjectProgressInfoTest {
                 ep(WISH, 2, isKnownCompleted = false),
             ),
         ).run {
-            assertEquals(ContinueWatchingStatus.Watched(0, EpisodeSort(1), Invalid), continueWatchingStatus)
+            assertEquals(
+                ContinueWatchingStatus.Watched(0, EpisodeSort(1), EpisodeSort(1), Invalid),
+                continueWatchingStatus,
+            )
             assertEquals(1, nextEpisodeIdToPlay)
         }
     }
@@ -121,7 +124,10 @@ class SubjectProgressInfoTest {
                 ep(WISH, 2, isKnownCompleted = false),
             ),
         ).run {
-            assertEquals(ContinueWatchingStatus.Watched(0, EpisodeSort(1), Invalid), continueWatchingStatus)
+            assertEquals(
+                ContinueWatchingStatus.Watched(0, EpisodeSort(1), EpisodeSort(1), Invalid),
+                continueWatchingStatus,
+            )
             assertEquals(1, nextEpisodeIdToPlay)
         }
     }
@@ -135,7 +141,7 @@ class SubjectProgressInfoTest {
                 ep(WISH, 2, isKnownCompleted = true),
             ),
         ).run {
-            assertEquals(ContinueWatchingStatus.Continue(1, EpisodeSort(2), EpisodeSort(1)), continueWatchingStatus)
+            assertEquals(continue2_1(), continueWatchingStatus)
             assertEquals(2, nextEpisodeIdToPlay)
         }
     }
@@ -163,7 +169,10 @@ class SubjectProgressInfoTest {
                 ep(WISH, 2, isKnownCompleted = false),
             ),
         ).run {
-            assertEquals(ContinueWatchingStatus.Watched(0, EpisodeSort(1), Invalid), continueWatchingStatus)
+            assertEquals(
+                ContinueWatchingStatus.Watched(0, EpisodeSort(1), EpisodeSort(1), Invalid),
+                continueWatchingStatus,
+            )
             assertEquals(1, nextEpisodeIdToPlay)
         }
     }
@@ -177,7 +186,7 @@ class SubjectProgressInfoTest {
                 ep(WISH, 2, isKnownCompleted = true),
             ),
         ).run {
-            assertEquals(ContinueWatchingStatus.Continue(1, EpisodeSort(2), EpisodeSort(1)), continueWatchingStatus)
+            assertEquals(continue2_1(), continueWatchingStatus)
             assertEquals(2, nextEpisodeIdToPlay)
         }
     }
@@ -191,10 +200,13 @@ class SubjectProgressInfoTest {
                 ep(WISH, 2, isKnownCompleted = true),
             ),
         ).run {
-            assertEquals(ContinueWatchingStatus.Continue(1, EpisodeSort(2), EpisodeSort(1)), continueWatchingStatus)
+            assertEquals(continue2_1(), continueWatchingStatus)
             assertEquals(2, nextEpisodeIdToPlay)
         }
     }
+
+    private fun continue2_1() =
+        ContinueWatchingStatus.Continue(1, EpisodeSort(2), EpisodeSort(2), EpisodeSort(1), EpisodeSort(1))
 
     @Test
     fun `all ep done`() {

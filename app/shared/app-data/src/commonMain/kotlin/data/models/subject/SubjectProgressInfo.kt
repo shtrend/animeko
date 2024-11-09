@@ -39,6 +39,7 @@ data class SubjectProgressInfo(
     class Episode(
         val id: Int,
         val type: UnifiedCollectionType,
+        val ep: EpisodeSort?,
         val sort: EpisodeSort,
         /**
          * Might be [PackedDate.Invalid]
@@ -69,6 +70,7 @@ data class SubjectProgressInfo(
                     Episode(
                         it.episodeId,
                         it.collectionType,
+                        it.episodeInfo.ep,
                         it.episodeInfo.sort,
                         it.episodeInfo.airDate,
                         it.episodeInfo.isKnownCompleted,
@@ -116,14 +118,17 @@ data class SubjectProgressInfo(
                         if (latestEpIndex != null && lastWatchedEpIndex < latestEpIndex && actualSubjectStarted) {
                             // 更新了 n+1 集
                             ContinueWatchingStatus.Continue(
-                                lastWatchedEpIndex + 1,
-                                episodes.getOrNull(lastWatchedEpIndex + 1)?.sort,
-                                episodes[lastWatchedEpIndex].sort,
+                                episodeIndex = lastWatchedEpIndex + 1,
+                                episodeEp = episodes.getOrNull(lastWatchedEpIndex + 1)?.ep,
+                                episodeSort = episodes.getOrNull(lastWatchedEpIndex + 1)?.sort,
+                                watchedEpisodeEp = episodes[lastWatchedEpIndex].ep,
+                                watchedEpisodeSort = episodes[lastWatchedEpIndex].sort,
                             )
                         } else {
                             // 还没更新
                             ContinueWatchingStatus.Watched(
                                 lastWatchedEpIndex,
+                                episodes.getOrNull(lastWatchedEpIndex)?.ep,
                                 episodes.getOrNull(lastWatchedEpIndex)?.sort,
                                 episodes.getOrNull(lastWatchedEpIndex + 1)?.airDate ?: PackedDate.Invalid,
                             )
@@ -180,7 +185,9 @@ sealed class ContinueWatchingStatus {
      */
     data class Continue(
         val episodeIndex: Int,
+        val episodeEp: EpisodeSort?,
         val episodeSort: EpisodeSort?, // "12.5"
+        val watchedEpisodeEp: EpisodeSort?,
         val watchedEpisodeSort: EpisodeSort,
     ) : ContinueWatchingStatus()
 
@@ -189,7 +196,8 @@ sealed class ContinueWatchingStatus {
      */
     data class Watched(
         val episodeIndex: Int,
-        val episodeSort: EpisodeSort?, // "12.5"
+        val episodeEp: EpisodeSort?, // "12.5"
+        val episodeSort: EpisodeSort?, // "24.5"
         /**
          * Might be [PackedDate.Invalid]
          */
@@ -211,13 +219,19 @@ object TestSubjectProgressInfos {
 
     @Stable
     val ContinueWatching2 = SubjectProgressInfo(
-        continueWatchingStatus = ContinueWatchingStatus.Continue(1, EpisodeSort(2), EpisodeSort(1)),
+        continueWatchingStatus = ContinueWatchingStatus.Continue(
+            episodeIndex = 1,
+            episodeEp = EpisodeSort(2),
+            episodeSort = EpisodeSort(2),
+            watchedEpisodeEp = EpisodeSort(1),
+            watchedEpisodeSort = EpisodeSort(1),
+        ),
         nextEpisodeIdToPlay = null,
     )
 
     @Stable
     val Watched2 = SubjectProgressInfo(
-        continueWatchingStatus = ContinueWatchingStatus.Watched(1, EpisodeSort(2), PackedDate.Invalid),
+        continueWatchingStatus = ContinueWatchingStatus.Watched(1, EpisodeSort(2), EpisodeSort(2), PackedDate.Invalid),
         nextEpisodeIdToPlay = null,
     )
 

@@ -46,6 +46,7 @@ data class SubjectAiringInfo(
      * 连载至的最新一集序号. 当还未开播时为 `null`, 当已经完结时为最后一集序号.
      * 注意, 如果是来自 [SubjectAiringInfo.computeFromSubjectInfo], 则属性为 `null`.
      */
+    val latestEp: EpisodeSort?,
     val latestSort: EpisodeSort?,
     /**
      * 即将要播出的序号. 当还未开播时为第一集的序号, 当已经完结时为 `null`.
@@ -60,6 +61,7 @@ data class SubjectAiringInfo(
             episodeCount = 0,
             airDate = PackedDate.Invalid,
             firstSort = null,
+            latestEp = null,
             latestSort = null,
             upcomingSort = null,
         )
@@ -132,6 +134,7 @@ data class SubjectAiringInfo(
                 episodeCount = list.size,
                 airDate = airDate.ifInvalid { list.firstOrNull()?.airDate ?: PackedDate.Invalid },
                 firstSort = list.firstOrNull()?.sort,
+                latestEp = list.lastOrNull { it.isKnownCompleted }?.sort,
                 latestSort = list.lastOrNull { it.isKnownCompleted }?.sort,
                 upcomingSort = if (kind == SubjectAiringKind.COMPLETED) null else list.firstOrNull { it.isKnownOnAir }?.sort
                     ?: list.firstOrNull { it.airDate.isInvalid }?.sort,
@@ -154,6 +157,7 @@ data class SubjectAiringInfo(
                 episodeCount = info.totalEpisodes,
                 airDate = info.airDate,
                 firstSort = null,
+                latestEp = null,
                 latestSort = null,
                 upcomingSort = null,
             )
@@ -167,6 +171,7 @@ object TestSubjectAiringInfos {
         episodeCount = 12,
         airDate = PackedDate(2023, 10, 1),
         firstSort = EpisodeSort(1),
+        latestEp = EpisodeSort(2),
         latestSort = EpisodeSort(2),
         upcomingSort = EpisodeSort(3),
     )
@@ -176,6 +181,7 @@ object TestSubjectAiringInfos {
         episodeCount = 24,
         airDate = PackedDate(2023, 10, 1),
         firstSort = EpisodeSort(1),
+        latestEp = null,
         latestSort = null,
         upcomingSort = EpisodeSort(1),
     )
@@ -185,6 +191,7 @@ object TestSubjectAiringInfos {
         episodeCount = 12,
         airDate = PackedDate(2023, 10, 1),
         firstSort = EpisodeSort(1),
+        latestEp = EpisodeSort(12),
         latestSort = EpisodeSort(12),
         upcomingSort = null,
     )

@@ -70,6 +70,11 @@ class AiringProgressTests {
                     SubjectAiringInfo.EmptyCompleted.copy(
                         kind = kind,
                         airDate = if (ep is NotOnAir) ep.airDate else Invalid,
+                        latestEp = when {
+                            latestSort == null -> null
+                            latestSort <= 12 -> latestSort
+                            else -> latestSort - 12
+                        }?.let { EpisodeSort(it) },
                         latestSort = latestSort?.let { EpisodeSort(it) },
                         episodeCount = episodeCount,
                     ),
@@ -89,8 +94,9 @@ class AiringProgressTests {
         val aug24 = PackedDate(2024, 8, 24)
         val sep30 = PackedDate(2024, 9, 30)
 
-        val watched2 = ContinueWatchingStatus.Watched(2 - 1, EpisodeSort(2), Invalid)
-        val watched1 = ContinueWatchingStatus.Watched(1 - 1, EpisodeSort(1), Invalid)
+        val watched2 = ContinueWatchingStatus.Watched(2 - 1, EpisodeSort(2), EpisodeSort(2), Invalid)
+        val watched22 = ContinueWatchingStatus.Watched(22 - 1, EpisodeSort(22 - 12), EpisodeSort(22), Invalid)
+        val watched1 = ContinueWatchingStatus.Watched(1 - 1, EpisodeSort(1), EpisodeSort(1), Invalid)
         val done = Done
 
         add("未开播, 没有时间") {
@@ -175,7 +181,7 @@ class AiringProgressTests {
             }
         }
         add("连载到 1, 看过 2, 有 3 的开播时间") {
-            create(ON_AIR, 1, ep = ContinueWatchingStatus.Watched(2 - 1, EpisodeSort(2), aug24)).run {
+            create(ON_AIR, 1, ep = ContinueWatchingStatus.Watched(2 - 1, EpisodeSort(2), EpisodeSort(2), aug24)).run {
                 assertEquals("看过 02 · 预定全 12 话", airingLabel)
                 assertEquals(false, highlightProgress)
                 assertEquals("明天更新", buttonText)
@@ -185,7 +191,7 @@ class AiringProgressTests {
         add("连载到 2, 看过 1, 没有下集的开播时间") {
             create(
                 ON_AIR, 2,
-                ep = ContinueWatchingStatus.Watched(1 - 1, EpisodeSort(1), Invalid),
+                ep = ContinueWatchingStatus.Watched(1 - 1, EpisodeSort(1), EpisodeSort(1), Invalid),
             ).run {
                 assertEquals("看过 01 · 预定全 12 话", airingLabel)
                 assertEquals(false, highlightProgress)
@@ -196,7 +202,7 @@ class AiringProgressTests {
         add("连载到 2, 看过 1, 有下集开播时间") {
             create(
                 ON_AIR, 2,
-                ep = ContinueWatchingStatus.Watched(1 - 1, EpisodeSort(1), aug24),
+                ep = ContinueWatchingStatus.Watched(1 - 1, EpisodeSort(1), EpisodeSort(1), aug24),
             ).run {
                 assertEquals("看过 01 · 预定全 12 话", airingLabel)
                 assertEquals(false, highlightProgress)
@@ -207,7 +213,7 @@ class AiringProgressTests {
         add("连载到 2, 看过 1, 可以看 2") {
             create(
                 ON_AIR, 2,
-                ep = ContinueWatchingStatus.Continue(2, EpisodeSort(2), EpisodeSort(1)),
+                ep = ContinueWatchingStatus.Continue(2, EpisodeSort(2), EpisodeSort(2), EpisodeSort(1), EpisodeSort(1)),
             ).run {
                 assertEquals("连载至 02 · 预定全 12 话", airingLabel)
                 assertEquals(true, highlightProgress)
@@ -226,7 +232,7 @@ class AiringProgressTests {
         add("连载到 2, 看过 2, 有下集开播时间") {
             create(
                 ON_AIR, 2,
-                ep = ContinueWatchingStatus.Watched(2, EpisodeSort(2), aug24),
+                ep = ContinueWatchingStatus.Watched(2, EpisodeSort(2), EpisodeSort(2), aug24),
             ).run {
                 assertEquals("看过 02 · 预定全 12 话", airingLabel)
                 assertEquals(false, highlightProgress)
@@ -245,7 +251,13 @@ class AiringProgressTests {
         add("已完结, 看了 1") {
             create(
                 COMPLETED, 12,
-                ep = ContinueWatchingStatus.Continue(2 - 1, EpisodeSort(2), EpisodeSort(1)),
+                ep = ContinueWatchingStatus.Continue(
+                    2 - 1,
+                    EpisodeSort(2),
+                    EpisodeSort(2),
+                    EpisodeSort(1),
+                    EpisodeSort(1),
+                ),
             ).run {
                 assertEquals("看过 01 · 全 12 话", airingLabel)
                 assertEquals(false, highlightProgress)
@@ -270,6 +282,42 @@ class AiringProgressTests {
                 assertEquals(false, highlightProgress)
                 assertEquals("已看完", buttonText)
                 assertEquals(false, buttonIsPrimary)
+            }
+        }
+
+
+        // “看过 xx，全 xx 话” 同时显示 ep 和 sort #1047
+        add("同时显示 ep 和 sort: 连载到 2, 看过 2, 没有下集开播时间") {
+            create(ON_AIR, 23, ep = watched22).run {
+                assertEquals("看过 10 (22) · 预定全 12 话", airingLabel)
+                assertEquals(false, highlightProgress)
+                assertEquals("看过 22", buttonText)
+                assertEquals(false, buttonIsPrimary)
+            }
+        }
+        add("同时显示 ep 和 sort: 看过 22, 全 12 话") {
+            create(COMPLETED, 23, ep = watched22).run {
+                assertEquals("看过 10 (22) · 全 12 话", airingLabel)
+                assertEquals(false, highlightProgress)
+                assertEquals("看过 22", buttonText)
+                assertEquals(false, buttonIsPrimary)
+            }
+        }
+        add("同时显示 ep 和 sort: 连载到 23, 看过 22, 可以看 23") {
+            create(
+                ON_AIR, 23,
+                ep = ContinueWatchingStatus.Continue(
+                    episodeIndex = 23 - 1,
+                    episodeEp = EpisodeSort(23 - 12),
+                    episodeSort = EpisodeSort(23),
+                    watchedEpisodeEp = EpisodeSort(22 - 12),
+                    watchedEpisodeSort = EpisodeSort(22),
+                ),
+            ).run {
+                assertEquals("连载至 11 (23) · 预定全 12 话", airingLabel)
+                assertEquals(true, highlightProgress)
+                assertEquals("继续观看 23", buttonText)
+                assertEquals(true, buttonIsPrimary)
             }
         }
     }
