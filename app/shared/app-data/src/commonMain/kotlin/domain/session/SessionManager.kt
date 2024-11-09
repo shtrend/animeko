@@ -68,6 +68,7 @@ interface SessionManager { // For unit tests, see BangumiSessionManagerTest
      *
      * 此函数支持 coroutine cancellation. 当 coroutine 被取消时, 此函数会中断授权请求并抛出 [CancellationException].
      *
+     * @param onLaunch 此函数内只能抛出 [CancellationException] 来正常地取消授权请求 (see [ExternalOAuthRequest.invoke]). 其他所有异常都将会被视为是内部 bug.
      * @param skipOnGuest 当用户使用游客模式时, 若此参数为 `true`, 本函数正常返回, 不会尝试登录. 若为 `false`, 本函数继续尝试登录 (OAuth).
      *
      * @throws AuthorizationCancelledException 当用户选择以游客身份登录时抛出

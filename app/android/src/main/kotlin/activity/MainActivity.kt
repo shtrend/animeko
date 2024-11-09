@@ -45,7 +45,6 @@ import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.foundation.widgets.Toaster
 import me.him188.ani.app.ui.main.AniApp
 import me.him188.ani.app.ui.main.AniAppContent
-import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import org.koin.android.ext.android.inject
@@ -56,11 +55,11 @@ class MainActivity : AniComponentActivity() {
     private val sessionManager: SessionManager by inject()
     private val meteredNetworkDetector: MeteredNetworkDetector by inject()
     private val torrentServiceConnector: TorrentServiceConnection by inject()
-    
+
     private val logger = logger(MainActivity::class)
 
     private val aniNavigator = AniNavigator()
-    
+
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             lifecycle.addObserver(torrentServiceConnector)
@@ -135,11 +134,7 @@ class MainActivity : AniComponentActivity() {
         }
 
         lifecycleScope.launch {
-            runCatching {
-                AppStartupTasks.verifySession(sessionManager, aniNavigator)
-            }.onFailure {
-                logger.error(it)
-            }
+            AppStartupTasks.verifySession(sessionManager, aniNavigator)
         }
     }
 

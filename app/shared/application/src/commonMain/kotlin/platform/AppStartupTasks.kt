@@ -12,11 +12,16 @@ package me.him188.ani.app.platform
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.domain.session.AuthorizationCancelledException
+import me.him188.ani.app.domain.session.AuthorizationFailedException
 import me.him188.ani.app.domain.session.SessionManager
+import me.him188.ani.app.domain.session.SessionStatus
 import me.him188.ani.app.navigation.AniNavigator
+import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.warn
 import kotlin.coroutines.cancellation.CancellationException
 
 object AppStartupTasks {
+    // only throws CancellationException
     suspend fun verifySession(
         sessionManager: SessionManager,
         navigator: AniNavigator,
@@ -36,9 +41,18 @@ object AppStartupTasks {
         } catch (e: AuthorizationCancelledException) {
             // 如果验证失败的原因是 CancellationException，那可能是用户手动取消了验证或是上方首次启动的抛出
             if (e.cause is CancellationException) return
-            throw IllegalStateException("Failed to automatically log in on startup, see cause", e)
+            logger.warn { IllegalStateException("Failed to automatically log in on startup", e) }
+        } catch (e: AuthorizationFailedException) {
+            if (e.status == SessionStatus.NetworkError) {
+                // 网络错误就别抛异常了
+                logger.warn { "Failed to automatically log in on startup due to network error" }
+            }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
-            throw IllegalStateException("Failed to automatically log in on startup, see cause", e)
+            logger.warn { IllegalStateException("Failed to automatically log in on startup due to unknown error", e) }
         }
     }
+
+    private val logger = logger<AppStartupTasks>()
 }
