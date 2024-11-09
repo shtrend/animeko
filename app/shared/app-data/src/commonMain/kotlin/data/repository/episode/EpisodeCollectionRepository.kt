@@ -23,8 +23,8 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.EpisodeInfo
@@ -36,6 +36,7 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
+import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.domain.episode.EpisodeCollections
 import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -83,22 +84,29 @@ class EpisodeCollectionRepository(
         if (subjectDao.findById(subjectId).first()?.totalEpisodes == 0) {
             return@flatMapLatest flowOf(emptyList())
         }
-        episodeCollectionDao.filterBySubjectId(subjectId, epType).mapLatest { episodes ->
+        episodeCollectionDao.filterBySubjectId(subjectId, epType).transformLatest { episodes ->
             if (allowCached &&
                 episodes.isNotEmpty() &&
                 (currentTimeMillis() - (episodes.maxOfOrNull { it.lastUpdated } ?: 0)).milliseconds <= cacheExpiry
             ) {
                 // 有有效缓存则直接返回
-                return@mapLatest episodes.map { it.toEpisodeCollectionInfo() }
+                emit(episodes.map { it.toEpisodeCollectionInfo() })
+                return@transformLatest
             }
-            bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, epType)
-                .toList() // 目前先直接全拿了, 反正一般情况下剧集数量很少
-                .also { list ->
-                    if (subjectDao.findById(subjectId).first() != null) {
-                        // 插入后会立即触发 filterBySubjectId 更新 (emit 新的)
-                        episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
+            try {
+                bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, epType)
+                    .toList() // 目前先直接全拿了, 反正一般情况下剧集数量很少
+                    .also { list ->
+                        if (subjectDao.findById(subjectId).first() != null) {
+                            // 插入后会立即触发 filterBySubjectId 更新 (emit 新的)
+                            episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
+                        }
                     }
-                }
+            } catch (e: Exception) {
+                // 如果网络请求失败, 则返回缓存
+                emit(episodes.map { it.toEpisodeCollectionInfo() })
+                throw RepositoryException.wrapOrThrowCancellation(e)
+            }
         }
     }.flowOn(defaultDispatcher)
 

@@ -13,6 +13,7 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
@@ -103,7 +104,7 @@ class EpisodeRepositoryImpl(
         } ?: getEpisodesBySubjectId(subjectId, epType?.toBangumiEpType()).map {
             it.toEpisodeInfo().createNotCollected()
         }
-    }
+    }.flowOn(ioDispatcher)
 
     override suspend fun getEpisodeCollectionInfosPaged(
         subjectId: Int,
