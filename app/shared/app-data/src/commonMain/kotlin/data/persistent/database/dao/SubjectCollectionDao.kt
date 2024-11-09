@@ -161,7 +161,17 @@ interface SubjectCollectionDao {
     @Query("""SELECT lastUpdated FROM subject_collection ORDER BY lastUpdated DESC LIMIT 1""")
     suspend fun lastUpdated(): Long
 
-    @Query("""UPDATE subject_collection SET self_rating_score = :score, self_rating_comment = :comment, self_rating_tags = :tags, self_rating_isPrivate = :private WHERE subjectId = :subjectId""")
+    @Query(
+        """
+    UPDATE subject_collection 
+    SET 
+        self_rating_score = COALESCE(:score, self_rating_score), 
+        self_rating_comment = COALESCE(:comment, self_rating_comment), 
+        self_rating_tags = COALESCE(:tags, self_rating_tags), 
+        self_rating_isPrivate = COALESCE(:private, self_rating_isPrivate)
+    WHERE subjectId = :subjectId
+""",
+    )
     suspend fun updateRating(subjectId: Int, score: Int?, comment: String?, tags: List<String>?, private: Boolean?)
 
     /**

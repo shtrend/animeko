@@ -111,10 +111,15 @@ sealed interface SubjectCollectionRepository : Repository {
         types: List<UnifiedCollectionType>? = null, // null for all
     ): Flow<List<SubjectCollectionInfo>>
 
+    /**
+     * @param score 0 to remove rating
+     * @param comment set empty to remove
+     * @param tags set empty to remove
+     */
     suspend fun updateRating(
         subjectId: Int,
-        score: Int? = null, // 0 to remove rating
-        comment: String? = null, // set empty to remove
+        score: Int? = null,
+        comment: String? = null,
         tags: List<String>? = null,
         isPrivate: Boolean? = null,
     )
