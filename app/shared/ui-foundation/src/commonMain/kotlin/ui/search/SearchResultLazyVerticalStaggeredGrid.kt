@@ -51,6 +51,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.icons.Passkey_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24
@@ -115,7 +116,7 @@ fun <T : Any> SearchResultLazyVerticalStaggeredGrid(
         }
 
         FastLinearProgressIndicator(
-            items.isLoadingFirstPage,
+            items.isLoadingFirstPage || items.loadState.refresh is LoadState.Loading,
             Modifier.zIndex(2f).align(Alignment.TopStart).fillMaxWidth().padding(vertical = 4.dp),
             minimumDurationMillis = 300,
         )
