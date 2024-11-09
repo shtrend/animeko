@@ -16,11 +16,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.combineTransform
-import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.subject.FollowedSubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
@@ -30,7 +30,10 @@ import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.coroutines.IO_
+import me.him188.ani.utils.logging.error
+import me.him188.ani.utils.logging.logger
 import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 
@@ -59,44 +62,58 @@ class FollowedSubjectsRepository(
         val now = PackedDate.now()
 
         // 对于最近看过的一些条目
-        return subjectCollectionRepository.mostRecentlyUpdatedSubjectCollectionsFlow(
-            limit = 64,
-            types = listOf(
-                UnifiedCollectionType.DOING,
-            ),
-        ).combineTransform(ticker) { subjectCollectionInfoList, _ ->
-            // 对于每个条目, 获取其最新的集数信息
-            val subjectProgressInfos = combine(
-                subjectCollectionInfoList.map { info ->
-                    episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(info.subjectId)
-                },
-            ) { array ->
-                subjectCollectionInfoList.asSequence()
-                    .zip(array.asSequence()) { subjectCollectionInfo, episodes ->
-                        // 计算每个条目的播放进度
-                        FollowedSubjectInfo(
-                            subjectCollectionInfo,
-                            SubjectAiringInfo.computeFromEpisodeList(
-                                episodes.map { it.episodeInfo },
-                                subjectCollectionInfo.subjectInfo.airDate,
-                            ),
-                            SubjectProgressInfo.compute(
-                                subjectCollectionInfo.subjectInfo,
-                                episodes,
-                                now,
-                            ),
-                        )
-                    }.toList()
+        return ticker.flatMapLatest {
+            try {
+                subjectCollectionRepository.updateRecentlyUpdatedSubjectCollections(
+                    30, // should be enough
+                    UnifiedCollectionType.DOING,
+                ) // refresh
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error(e) { """Failed to update recently updated subject collections, ignoring. 这只会导致探索页的继续观看栏目可能显示旧结果. """ }
             }
-            emitAll(subjectProgressInfos)
-        }.map { followedSubjectInfoList ->
-            followedSubjectInfoList
-                .toMutableList()
-                .apply {
-                    sortWith(sorter)
+
+            // 先查询完成 (插入数据库) 再返回 flow 去查数据库. 前端会展示 placeholder 所以延迟没问题.
+
+            subjectCollectionRepository.mostRecentlyUpdatedSubjectCollectionsFlow(
+                limit = 64,
+                types = listOf(
+                    UnifiedCollectionType.DOING,
+                ),
+            ).flatMapLatest { subjectCollectionInfoList ->
+                // 对于每个条目, 获取其最新的集数信息
+                combine<List<EpisodeCollectionInfo>, List<FollowedSubjectInfo>>(
+                    subjectCollectionInfoList.map { info ->
+                        episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(info.subjectId)
+                    },
+                ) { array ->
+                    subjectCollectionInfoList.asSequence()
+                        .zip(array.asSequence()) { subjectCollectionInfo, episodes ->
+                            // 计算每个条目的播放进度
+                            FollowedSubjectInfo(
+                                subjectCollectionInfo,
+                                SubjectAiringInfo.computeFromEpisodeList(
+                                    episodes.map { it.episodeInfo },
+                                    subjectCollectionInfo.subjectInfo.airDate,
+                                ),
+                                SubjectProgressInfo.compute(
+                                    subjectCollectionInfo.subjectInfo,
+                                    episodes,
+                                    now,
+                                ),
+                            )
+                        }.toList()
                 }
-        }.catch {
-            RepositoryException.wrapOrThrowCancellation(it)
+            }.map { followedSubjectInfoList ->
+                followedSubjectInfoList
+                    .toMutableList()
+                    .apply {
+                        sortWith(sorter)
+                    }
+            }.catch {
+                RepositoryException.wrapOrThrowCancellation(it)
+            }
         }.flowOn(defaultDispatcher)
     }
 
@@ -121,6 +138,7 @@ class FollowedSubjectsRepository(
         }.flowOn(defaultDispatcher)
 
     private companion object {
+        private val logger = logger<FollowedSubjectsRepository>()
         private val NotLoading = LoadStates(
             refresh = LoadState.NotLoading(true),
             prepend = LoadState.NotLoading(true),

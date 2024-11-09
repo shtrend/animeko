@@ -24,12 +24,15 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
@@ -41,9 +44,11 @@ import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.data.network.BangumiEpisodeService
 import me.him188.ani.app.data.network.BangumiSubjectService
+import me.him188.ani.app.data.network.BatchSubjectCollection
 import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.network.toSelfRatingInfo
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionDao
+import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
@@ -88,6 +93,15 @@ sealed interface SubjectCollectionRepository : Repository {
         query: CollectionsFilterQuery = CollectionsFilterQuery.Empty,
         pagingConfig: PagingConfig = defaultPagingConfig,
     ): Flow<PagingData<SubjectCollectionInfo>>
+
+    /**
+     * 更新根据服务器上记录的最近有修改的条目收藏. 也就是用户最近操作过的条目收藏.
+     */
+    suspend fun updateRecentlyUpdatedSubjectCollections(
+        limit: Int,
+        type: UnifiedCollectionType?,
+        offset: Int = 0,
+    )
 
     /**
      * 获取最近更新的条目收藏 cold [Flow].
@@ -171,24 +185,26 @@ class SubjectCollectionRepositoryImpl(
                 )
             }.flowOn(defaultDispatcher)
 
-    private suspend fun getSubjectEpisodeCollectionsSnapshot(
-        subjectId: Int,
-        allowCached: Boolean = true,
-    ) = episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId, allowCached).flowOn(defaultDispatcher)
-        .first()
-
     override fun mostRecentlyUpdatedSubjectCollectionsFlow(
         limit: Int,
         types: List<UnifiedCollectionType>?, // null for all
-    ): Flow<List<SubjectCollectionInfo>> =
-        subjectCollectionDao.filterMostRecentUpdated(types, limit).map { list ->
-            list.map { entity ->
-                entity.toSubjectCollectionInfo(
-                    episodes = getSubjectEpisodeCollectionsSnapshot(entity.subjectId),
-                    currentDate = getCurrentDate(),
-                )
+    ): Flow<List<SubjectCollectionInfo>> = subjectCollectionDao.filterMostRecentUpdated(types, limit)
+        .flatMapLatest { list ->
+            combine(
+                list.map { entity ->
+                    episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(entity.subjectId)
+                        .map { episodes ->
+                            entity.toSubjectCollectionInfo(
+                                episodes = episodes,
+                                currentDate = getCurrentDate(),
+                            )
+                        }
+                },
+            ) {
+                it.toList()
             }
-        }.flowOn(defaultDispatcher)
+        }
+        .flowOn(defaultDispatcher)
 
     override fun subjectCollectionsPager(
         query: CollectionsFilterQuery,
@@ -209,6 +225,54 @@ class SubjectCollectionRepositoryImpl(
             )
         }
     }.flowOn(defaultDispatcher)
+
+    private val updateRecentlyUpdatedSubjectCollectionsMutex = Mutex()
+    override suspend fun updateRecentlyUpdatedSubjectCollections(
+        limit: Int,
+        type: UnifiedCollectionType?,
+        offset: Int
+    ) {
+        withContext(defaultDispatcher) {
+            // 只允许同时一个请求. 防止多个请求浪费带宽.
+            // 一般来说不会有多个请求. 最常见的并行请求可能是用户刚刚打开 APP 进入探索页自动刷新"继续观看"栏目, 在刷新还在进行时切换到收藏页触发自动刷新.
+            updateRecentlyUpdatedSubjectCollectionsMutex.withLock {
+                fetchAndSaveSubjectCollectionsWithEpisodes(type, limit, offset)
+            }
+        }
+    }
+
+    /**
+     * 执行网络查询条目收藏及其剧集列表, 在所有网络请求都成功后调用 [onFetched], 然后保存查询结果到数据库.
+     *
+     * @param onFetched 当所有网络请求都成功后调用
+     */
+    private suspend inline fun fetchAndSaveSubjectCollectionsWithEpisodes(
+        type: UnifiedCollectionType?,
+        limit: Int,
+        offset: Int,
+        onFetched: (items: List<BatchSubjectCollection>) -> Unit = {},
+    ) {
+        require(type != UnifiedCollectionType.NOT_COLLECTED) { "type must not be NOT_COLLECTED" }
+        require(limit > 0) { "limit must be positive" }
+
+        // 执行网络请求查询好需要的 subject 和 episodes
+        val items = bangumiSubjectService.getSubjectCollections(
+            type = type?.toSubjectCollectionType(),
+            offset = offset,
+            limit = limit,
+        )
+
+        // 提前'批量'查询剧集收藏状态, 防止在收藏页显示结果时一个一个查导致太慢
+        val episodes = batchGetSubjectEpisodes(items)
+
+        onFetched(items)
+
+        // 批量插入条目信息
+        subjectCollectionDao.upsert(items.map { it.toEntity() })
+
+        // 必须先插入好条目信息, 否则插入 episode 会 foreign key constraint failed
+        episodeCollectionDao.upsert(episodes)
+    }
 
     override suspend fun updateRating(
         subjectId: Int,
@@ -274,66 +338,49 @@ class SubjectCollectionRepositoryImpl(
                     }
                 }
 
-                // 执行网络请求查询好需要的 subject 和 episodes
-
-                val items = bangumiSubjectService.getSubjectCollections(
-                    type = query.type?.toSubjectCollectionType(),
-                    offset = offset,
+                fetchAndSaveSubjectCollectionsWithEpisodes(
+                    type = query.type,
                     limit = state.config.pageSize,
+                    offset = offset,
+                    onFetched = { items ->
+                        if (loadType == LoadType.REFRESH) {
+                            // 仅在网络请求成功后才删除缓存, 否则会导致无网络时清空缓存
+                            // 必须清除缓存, 让顺序与服务器同步, 否则会死循环刷新
+                            subjectCollectionDao.deleteAll(query.type)
+                        }
+
+                        if (items.isEmpty()) {
+                            return@withContext MediatorResult.Success(endOfPaginationReached = items.isEmpty())
+                        }
+                    },
                 )
 
-                // 提前'批量'查询剧集收藏状态, 防止在收藏页显示结果时一个一个查导致太慢
-                val episodes = coroutineScope {
-                    // 并发
-                    val concurrency = Semaphore(4)
-                    items.mapNotNull { subjectCollection ->
-                        subjectCollection.collection?.subjectId?.let { subjectId ->
-                            async {
-                                concurrency.withPermit {
-                                    bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null)
-                                        .map {
-                                            it.toEntity(subjectId)
-                                        }
-                                        .toList()
-                                }
-                            }
-                        }
-                    }.flatMap {
-                        it.await()
-                    }
-                }
-
-                if (loadType == LoadType.REFRESH) {
-                    // 仅在网络请求成功后才删除缓存, 否则会导致无网络时清空缓存
-                    // 必须清除缓存, 让顺序与服务器同步, 否则会死循环刷新
-                    subjectCollectionDao.deleteAll(query.type)
-                }
-
-                if (items.isEmpty()) {
-                    return@withContext MediatorResult.Success(endOfPaginationReached = items.isEmpty())
-                }
-
-                // 批量插入条目信息
-                items.map { collection ->
-                    val subject = collection.batchSubjectDetails
-                    subject.toEntity(
-                        collection.collection?.type.toCollectionType(),
-                        collection.collection.toSelfRatingInfo(),
-                        lastUpdated = collection.collection?.updatedAt?.toEpochMilliseconds() ?: 0,
-                    )
-                }.let { list ->
-                    subjectCollectionDao.upsert(list)
-                }
-
-                // 必须先插入好条目信息, 否则插入 episode 会 foreign key constraint failed
-                episodes.let { list ->
-                    episodeCollectionDao.upsert(list)
-                }
-
-                MediatorResult.Success(endOfPaginationReached = items.isEmpty())
+                MediatorResult.Success(endOfPaginationReached = false)
             }
         } catch (e: Exception) {
             MediatorResult.Error(RepositoryException.wrapOrThrowCancellation(e))
+        }
+    }
+
+    private suspend fun batchGetSubjectEpisodes(items: List<BatchSubjectCollection>): List<EpisodeCollectionEntity> {
+        return coroutineScope {
+            // 并发
+            val concurrency = Semaphore(4)
+            items.mapNotNull { subjectCollection ->
+                subjectCollection.collection?.subjectId?.let { subjectId ->
+                    async {
+                        concurrency.withPermit {
+                            bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null)
+                                .map {
+                                    it.toEntity(subjectId)
+                                }
+                                .toList()
+                        }
+                    }
+                }
+            }.flatMap {
+                it.await()
+            }
         }
     }
 
@@ -447,3 +494,13 @@ internal fun BatchSubjectDetails.toEntity(
             lastUpdated = lastUpdated,
         )
     }
+
+internal fun BatchSubjectCollection.toEntity(): SubjectCollectionEntity {
+    val subject = batchSubjectDetails
+    return subject.toEntity(
+        collection?.type.toCollectionType(),
+        collection.toSelfRatingInfo(),
+        lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
+    )
+}
+
