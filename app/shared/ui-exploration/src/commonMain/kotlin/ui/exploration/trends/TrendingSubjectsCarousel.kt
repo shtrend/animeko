@@ -52,11 +52,11 @@ fun TrendingSubjectsCarousel(
     }
 ) {
     val size = CarouselItemDefaults.itemSize()
-    Box {
+    Box(modifier.padding(contentPadding)) {
         HorizontalMultiBrowseCarousel(
             carouselState,
             preferredItemWidth = size.preferredWidth,
-            modifier.padding(contentPadding).fillMaxWidth(),
+            Modifier.fillMaxWidth(),
             itemSpacing = itemSpacing,
             flingBehavior = CarouselDefaults.multiBrowseFlingBehavior(
                 carouselState,
@@ -84,7 +84,7 @@ fun TrendingSubjectsCarousel(
         }
 
         if (items.loadState.hasError) {
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+            Box(Modifier.height(size.imageHeight).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                 Box(Modifier.minimumHairlineSize()) {
                     val problem by items.rememberSearchProblemState()
                     SearchProblemCard(

@@ -11,7 +11,8 @@ package me.him188.ani.app.ui.main
 
 import androidx.compose.runtime.Stable
 import androidx.paging.cachedIn
-import kotlinx.coroutines.flow.asFlow
+import androidx.paging.compose.launchAsLazyPagingItemsIn
+import androidx.paging.flatMap
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.network.TrendsRepository
 import me.him188.ani.app.data.repository.subject.FollowedSubjectsRepository
@@ -19,10 +20,8 @@ import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
 import me.him188.ani.app.domain.session.userInfo
 import me.him188.ani.app.ui.exploration.ExplorationPageState
-import me.him188.ani.app.ui.exploration.trends.TrendingSubjectsState
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.foundation.AuthState
-import me.him188.ani.utils.coroutines.retryWithBackoffDelay
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -39,13 +38,18 @@ class ExplorationPageViewModel : AbstractViewModel(), KoinComponent {
     val explorationPageState: ExplorationPageState = ExplorationPageState(
         authState,
         selfInfoState,
-        TrendingSubjectsState(
-            suspend { trendsRepository.getTrendsInfo() }
-                .asFlow()
-                .retryWithBackoffDelay()
-                .map { it.subjects }
-                .produceState(null),
-        ),
+        trendingSubjectInfoPager = trendsRepository.trendsInfoPager()
+            .map { pagingData ->
+                pagingData.flatMap { it.subjects }
+            }
+            .launchAsLazyPagingItemsIn(backgroundScope),
+//        TrendingSubjectsState(
+//            suspend { trendsRepository.getTrendsInfo() }
+//                .asFlow()
+//                .retryWithBackoffDelay()
+//                .map { it.subjects }
+//                .produceState(null),
+//        ),
         followedSubjectsPager = followedSubjectsRepository.followedSubjectsPager().cachedIn(backgroundScope),
 //            .onStart<List<FollowedSubjectInfo?>> {
 //                emit(arrayOfNulls<FollowedSubjectInfo>(10).toList())

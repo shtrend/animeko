@@ -12,11 +12,10 @@
 package me.him188.ani.app.ui.exploration.trends
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.preview.PreviewSizeClasses
-import me.him188.ani.app.ui.foundation.stateOf
+import me.him188.ani.app.ui.search.rememberTestLazyPagingItems
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Composable
@@ -29,11 +28,7 @@ private fun PreviewTrendingSubjectsCarousel() = ProvideFoundationCompositionLoca
 @Composable
 private fun PreviewTrendingSubjectsCarouselImpl() {
     TrendingSubjectsCarousel(
-        state = remember {
-            TrendingSubjectsState(
-                stateOf(TestTrendingSubjectInfos),
-            )
-        },
+        items = rememberTestLazyPagingItems(TestTrendingSubjectInfos),
         {},
     )
 }

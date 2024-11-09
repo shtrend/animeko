@@ -37,11 +37,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
 import kotlinx.coroutines.flow.Flow
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.data.models.subject.FollowedSubjectInfo
 import me.him188.ani.app.data.models.subject.subjectInfo
+import me.him188.ani.app.data.models.trending.TrendingSubjectInfo
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
@@ -49,22 +51,30 @@ import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.adaptive.NavTitleHeader
 import me.him188.ani.app.ui.exploration.followed.FollowedSubjectsLazyRow
 import me.him188.ani.app.ui.exploration.trends.TrendingSubjectsCarousel
-import me.him188.ani.app.ui.exploration.trends.TrendingSubjectsState
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.session.SelfAvatar
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
+import me.him188.ani.app.ui.search.isLoadingFirstPageOrRefreshing
 
 @Stable
 class ExplorationPageState(
     val authState: AuthState,
     selfInfoState: State<UserInfo?>,
-    val trendingSubjectsState: TrendingSubjectsState,
+    val trendingSubjectInfoPager: LazyPagingItems<TrendingSubjectInfo>,
     val followedSubjectsPager: Flow<PagingData<FollowedSubjectInfo>>,
 ) {
     val selfInfo by selfInfoState
 
-    val trendingSubjectsCarouselState = CarouselState(itemCount = { trendingSubjectsState.numItems })
+    val trendingSubjectsCarouselState = CarouselState(
+        itemCount = {
+            if (trendingSubjectInfoPager.isLoadingFirstPageOrRefreshing) {
+                8
+            } else {
+                trendingSubjectInfoPager.itemCount
+            }
+        },
+    )
     val followedSubjectsLazyRowState = LazyListState()
 
 
@@ -123,7 +133,7 @@ fun ExplorationPage(
             )
 
             TrendingSubjectsCarousel(
-                state.trendingSubjectsState,
+                state.trendingSubjectInfoPager,
                 onClick = {
                     navigator.navigateSubjectDetails(it.bangumiId)
                 },
