@@ -29,6 +29,7 @@ import me.him188.ani.app.domain.media.cache.EpisodeCacheStatus
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.tools.WeekFormatter
 import me.him188.ani.app.ui.foundation.stateOf
+import me.him188.ani.app.ui.subject.renderEpAndSort
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.toLocalDateOrNull
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -119,7 +120,7 @@ class SubjectProgressState(
 
     val buttonText by derivedStateOf {
         when (val s = continueWatchingStatus) {
-            is ContinueWatchingStatus.Continue -> "继续观看 ${s.episodeSort}"
+            is ContinueWatchingStatus.Continue -> "继续观看 ${renderEpAndSort(s.episodeEp, s.episodeSort)}"
             ContinueWatchingStatus.Done -> "已看完"
             is ContinueWatchingStatus.NotOnAir -> {
                 val date = s.airDate.toLocalDateOrNull()
@@ -138,7 +139,7 @@ class SubjectProgressState(
                     val week = weekFormatter.format(date)
                     "${week}更新"
                 } else {
-                    "看过 ${s.episodeSort}"
+                    "看过 ${renderEpAndSort(s.episodeEp, s.episodeSort)}"
                 }
             }
 

@@ -103,13 +103,6 @@ class AiringLabelState(
         }
     }
 
-    private fun renderEpAndSort(ep: EpisodeSort?, sort: EpisodeSort?) = when {
-        ep == null -> sort.toString()
-        sort == null -> ep.toString()
-        ep != sort -> "$ep ($sort)"
-        else -> sort.toString()
-    }
-
     val highlightProgress by derivedStateOf {
         val continueWatchingStatus = progressInfo?.continueWatchingStatus
         airingInfo?.isOnAir == true
@@ -172,6 +165,14 @@ fun AiringLabel(
         }
     }
 }
+
+fun renderEpAndSort(ep: EpisodeSort?, sort: EpisodeSort?) = when {
+    ep == null -> sort.toString()
+    sort == null -> ep.toString()
+    ep != sort -> "$ep ($sort)"
+    else -> sort.toString()
+}
+
 
 @TestOnly
 fun createTestAiringLabelState(

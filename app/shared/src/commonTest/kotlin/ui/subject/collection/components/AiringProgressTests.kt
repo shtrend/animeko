@@ -291,7 +291,7 @@ class AiringProgressTests {
             create(ON_AIR, 23, ep = watched22).run {
                 assertEquals("看过 10 (22) · 预定全 12 话", airingLabel)
                 assertEquals(false, highlightProgress)
-                assertEquals("看过 22", buttonText)
+                assertEquals("看过 10 (22)", buttonText)
                 assertEquals(false, buttonIsPrimary)
             }
         }
@@ -299,7 +299,7 @@ class AiringProgressTests {
             create(COMPLETED, 23, ep = watched22).run {
                 assertEquals("看过 10 (22) · 全 12 话", airingLabel)
                 assertEquals(false, highlightProgress)
-                assertEquals("看过 22", buttonText)
+                assertEquals("看过 10 (22)", buttonText)
                 assertEquals(false, buttonIsPrimary)
             }
         }
@@ -316,7 +316,7 @@ class AiringProgressTests {
             ).run {
                 assertEquals("连载至 11 (23) · 预定全 12 话", airingLabel)
                 assertEquals(true, highlightProgress)
-                assertEquals("继续观看 23", buttonText)
+                assertEquals("继续观看 11 (23)", buttonText)
                 assertEquals(true, buttonIsPrimary)
             }
         }
