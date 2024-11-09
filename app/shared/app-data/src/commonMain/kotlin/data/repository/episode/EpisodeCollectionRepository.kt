@@ -177,22 +177,25 @@ class EpisodeCollectionRepository(
                 LoadType.APPEND -> state.pages.size * state.config.pageSize
             }
 
-            val episodeType = epTypeFilter.first()
-
-            val episodes = episodeService.getEpisodeCollectionInfosPaged(
-                subjectId,
-                episodeType = episodeType?.toBangumiEpType(),
-                offset = offset,
-                limit = state.config.pageSize,
-            )
-
-            episodes.page.takeIf { it.isNotEmpty() }?.let { list ->
-                episodeCollectionDao.upsert(
-                    list.map { it.toEntity(subjectId) },
+            try {
+                val episodeType = epTypeFilter.first()
+                val episodes = episodeService.getEpisodeCollectionInfosPaged(
+                    subjectId,
+                    episodeType = episodeType?.toBangumiEpType(),
+                    offset = offset,
+                    limit = state.config.pageSize,
                 )
+                episodes.page.takeIf { it.isNotEmpty() }?.let { list ->
+                    episodeCollectionDao.upsert(
+                        list.map { it.toEntity(subjectId) },
+                    )
+                }
+
+                MediatorResult.Success(endOfPaginationReached = episodes.page.isEmpty())
+            } catch (e: Exception) {
+                return@withContext MediatorResult.Error(RepositoryException.wrapOrThrowCancellation(e))
             }
 
-            MediatorResult.Success(endOfPaginationReached = episodes.page.isEmpty())
         }
     }
 }
