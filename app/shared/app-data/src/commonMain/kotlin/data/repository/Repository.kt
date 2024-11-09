@@ -31,7 +31,8 @@ interface Repository {
 
 
 fun interface RepositoryUsernameProvider {
-    suspend operator fun invoke(): String?
+    @Throws(RepositoryException::class, CancellationException::class)
+    suspend operator fun invoke(): String
 }
 
 @Throws(RepositoryAuthorizationException::class, CancellationException::class)
@@ -39,10 +40,7 @@ suspend fun RepositoryUsernameProvider.getOrThrow(): String {
     val username = try {
         invoke()
     } catch (e: Exception) {
-        throw IllegalStateException("Failed to get username, see cause", e)
-    }
-    if (username == null) {
-        throw RepositoryAuthorizationException()
+        throw RepositoryException.wrapOrThrowCancellation(e)
     }
     return username
 }

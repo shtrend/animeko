@@ -41,6 +41,9 @@ import me.him188.ani.app.data.network.TrendsRepository
 import me.him188.ani.app.data.persistent.dataStores
 import me.him188.ani.app.data.persistent.database.AniDatabase
 import me.him188.ani.app.data.persistent.database.createDatabaseBuilder
+import me.him188.ani.app.data.repository.RepositoryAuthorizationException
+import me.him188.ani.app.data.repository.RepositoryNetworkException
+import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
 import me.him188.ani.app.data.repository.RepositoryUsernameProvider
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.episode.EpisodeProgressRepository
@@ -149,12 +152,14 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
     single<RepositoryUsernameProvider> {
         RepositoryUsernameProvider {
             when (val finalState = get<SessionManager>().finalState.first()) {
-                SessionStatus.Guest -> null
-                SessionStatus.Expired -> null
-                SessionStatus.NetworkError -> null
-                SessionStatus.NoToken -> null
-                SessionStatus.ServiceUnavailable -> null
+                SessionStatus.Guest,
+                SessionStatus.Expired,
+                SessionStatus.NoToken -> throw RepositoryAuthorizationException()
+
+                SessionStatus.NetworkError -> throw RepositoryNetworkException()
+                SessionStatus.ServiceUnavailable -> throw RepositoryServiceUnavailableException()
                 is SessionStatus.Verified -> finalState.userInfo.username
+                    ?: throw IllegalStateException("RepositoryUsernameProvider: Username is null")
             }
         }
     }
