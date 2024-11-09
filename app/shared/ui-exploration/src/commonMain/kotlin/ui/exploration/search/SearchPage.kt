@@ -196,8 +196,7 @@ internal fun SharedTransitionScope.SearchPageResultColumn(
             SearchProblemCard(
                 problem = it,
                 onRetry = { items.retry() },
-                onLogin = {}, // noop
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(), // noop
             )
         },
         modifier

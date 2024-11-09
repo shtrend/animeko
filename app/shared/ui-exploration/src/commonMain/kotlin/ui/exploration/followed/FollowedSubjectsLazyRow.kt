@@ -106,7 +106,7 @@ fun FollowedSubjectsLazyRow(
                 item {
                     Box(Modifier.minimumHairlineSize()) {
                         val problem by items.rememberSearchProblemState()
-                        SearchProblemCard(problem, {}, {})
+                        SearchProblemCard(problem, { items.refresh() })
                     }
                 }
             }

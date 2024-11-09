@@ -44,7 +44,7 @@ fun PreviewSearchProblemCard(
 private fun Impl(error: SearchProblem?) {
     ProvideFoundationCompositionLocalsForPreview {
         Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest) {
-            SearchProblemCard(error, {}, {}, Modifier.padding(all = 16.dp))
+            SearchProblemCard(error, {}, Modifier.padding(all = 16.dp), {})
         }
     }
 }

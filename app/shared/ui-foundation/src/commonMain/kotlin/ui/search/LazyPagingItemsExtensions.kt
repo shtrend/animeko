@@ -23,6 +23,10 @@ val LazyPagingItems<*>.isLoadingFirstPage: Boolean
     get() = !loadState.isIdle && !loadState.hasError && itemCount == 0
 
 @Stable
+val LazyPagingItems<*>.isLoadingFirstPageOrRefreshing: Boolean
+    get() = isLoadingFirstPage || loadState.refresh is LoadState.Loading
+
+@Stable
 val LazyPagingItems<*>.isLoadingFirstOrNextPage: Boolean
     get() = loadState.append is LoadState.Loading
 

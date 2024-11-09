@@ -53,9 +53,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import me.him188.ani.app.domain.session.launchAuthorize
+import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.icons.Passkey_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24
 import me.him188.ani.app.ui.foundation.widgets.FastLinearProgressIndicator
+import org.koin.core.component.KoinComponent
 
 /**
  * 显示搜索结果的 [LazyVerticalStaggeredGrid]. 支持显示加载中的进度条, 错误时显示错误卡片.
@@ -138,8 +141,13 @@ fun <T : Any> SearchResultLazyVerticalStaggeredGrid(
 fun SearchProblemCard(
     problem: SearchProblem?,
     onRetry: () -> Unit,
-    onLogin: () -> Unit,
     modifier: Modifier = Modifier,
+    onLogin: () -> Unit = run {
+        val navigator = LocalNavigator.current
+        {
+            object : KoinComponent {}.launchAuthorize(navigator)
+        }
+    },
     shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
     containerColor: Color = SearchDefaults.searchProblemContainerColor,
 ) {
