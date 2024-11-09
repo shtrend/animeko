@@ -32,8 +32,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -53,9 +53,9 @@ import kotlin.coroutines.CoroutineContext
 fun SelfAvatar(
     authState: AuthState,
     selfInfo: UserInfo?,
+    size: DpSize, // = DpSize(48.dp, 48.dp)
     modifier: Modifier = Modifier,
     handler: SelfAvatarActionHandler = rememberSelfAvatarActionHandler(),
-    size: Dp = 48.dp,
 ) {
     var showMenu by rememberSaveable { mutableStateOf(false) }
     Box {

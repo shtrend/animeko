@@ -64,6 +64,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.LoadStates
@@ -189,8 +190,8 @@ fun CollectionPage(
         sessionError = {
             SessionTipsIcon(state.authState)
         },
-        avatar = {
-            SelfAvatar(state.authState, state.selfInfo)
+        avatar = { recommendedSize ->
+            SelfAvatar(state.authState, state.selfInfo, size = recommendedSize)
         },
         filters = {
             CollectionTypeScrollableTabRow(
@@ -268,7 +269,7 @@ private fun CollectionPageLayout(
     windowInsets: WindowInsets,
     onClickSettings: () -> Unit,
     sessionError: @Composable () -> Unit,
-    avatar: @Composable () -> Unit,
+    avatar: @Composable (recommendedSize: DpSize) -> Unit,
     filters: @Composable CollectionPageFilters.() -> Unit,
     isRefreshing: () -> Boolean,
     onRefresh: () -> Unit,

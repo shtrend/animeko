@@ -104,8 +104,8 @@ fun ExplorationPage(
                         }
                     }
                 },
-                avatar = {
-                    SelfAvatar(state.authState, state.selfInfo)
+                avatar = { recommendedSize ->
+                    SelfAvatar(state.authState, state.selfInfo, size = recommendedSize)
                 },
             )
         },

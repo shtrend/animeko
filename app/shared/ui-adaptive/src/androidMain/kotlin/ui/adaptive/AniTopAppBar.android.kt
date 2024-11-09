@@ -42,8 +42,8 @@ private fun PreviewAniTopAppBar() = ProvideFoundationCompositionLocalsForPreview
                 Icon(Icons.Rounded.Settings, null)
             }
         },
-        avatar = {
-            SelfAvatar(createTestAuthState(scope), TestUserInfo)
+        avatar = { recommendedSize ->
+            SelfAvatar(createTestAuthState(scope), TestUserInfo, size = recommendedSize)
         },
         searchIconButton = {
             IconButton({}) {

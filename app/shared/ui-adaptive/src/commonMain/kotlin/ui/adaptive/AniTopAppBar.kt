@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
@@ -38,6 +37,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
@@ -67,7 +67,7 @@ fun AniTopAppBar(
     modifier: Modifier = Modifier,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
-    avatar: @Composable () -> Unit = {},
+    avatar: @Composable (recommendedSize: DpSize) -> Unit = {},
     searchIconButton: @Composable (() -> Unit)? = null,
     searchBar: @Composable (() -> Unit)? = null,
     expandedHeight: Dp = TopAppBarDefaults.TopAppBarExpandedHeight,
@@ -111,14 +111,21 @@ fun AniTopAppBar(
                             end = (horizontalPadding - 4.dp - additionalPadding).coerceAtLeast(0.dp), // `actions` 自带 4
                         ),
                 ) {
+                    val minSize =
+                        if (windowSizeClass.windowWidthSizeClass.isAtLeastMedium
+                            && windowSizeClass.windowHeightSizeClass.isAtLeastMedium
+                        ) {
+                            48.dp
+                        } else {
+                            36.dp
+                        }
                     Box(
-                        Modifier.size(
-                            if (windowSizeClass.windowWidthSizeClass.isAtLeastMedium
-                                && windowSizeClass.windowHeightSizeClass.isAtLeastMedium
-                            ) 48.dp else 36.dp,
+                        Modifier.sizeIn(
+                            minWidth = minSize, maxWidth = 128.dp,  // maxWidth unspecified
+                            minHeight = minSize, maxHeight = minSize,
                         ),
                     ) {
-                        avatar()
+                        avatar(DpSize(minSize, minSize))
                     }
                 }
             },
