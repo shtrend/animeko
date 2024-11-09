@@ -13,15 +13,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.runningFold
 import kotlin.coroutines.CoroutineContext
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 
 fun <T> Flow<T>.runningList(): Flow<List<T>> {
@@ -163,32 +159,4 @@ class OwnedCancellationException(val owner: Any) : CancellationException("Aborte
 
 fun OwnedCancellationException.checkOwner(owner: Any) {
     if (this.owner !== owner) throw this
-}
-
-/**
- * 一直重复直到成功. 每次重试前等待 [duration].
- */
-fun <T> Flow<T>.retryEvery(duration: Duration): Flow<T> = retry { cause ->
-    if (cause is CancellationException) {
-        return@retry false
-    }
-    delay(duration)
-    return@retry true
-}
-
-/**
- * 一直重复直到成功. 每次重试前等待指数退避时间.
- */
-fun <T> Flow<T>.retryUntilSuccess(maxWait: Duration = 10.seconds): Flow<T> {
-    require(maxWait > 0.seconds)
-    var duration = 1.seconds
-    return retry { cause ->
-        if (cause is CancellationException) {
-            return@retry false
-        }
-        delay(duration)
-        duration *= 2
-        duration = duration.coerceAtMost(maxWait)
-        return@retry true
-    }
 }

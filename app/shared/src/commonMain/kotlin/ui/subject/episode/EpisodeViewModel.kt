@@ -19,6 +19,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -110,7 +111,7 @@ import me.him188.ani.datasources.api.source.MediaFetchRequest
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.datasources.api.topic.isDoneOrDropped
 import me.him188.ani.utils.coroutines.cancellableCoroutineScope
-import me.him188.ani.utils.coroutines.runUntilSuccess
+import me.him188.ani.utils.coroutines.retryWithBackoffDelay
 import me.him188.ani.utils.coroutines.sampleWithInitial
 import me.him188.ani.utils.logging.info
 import org.koin.core.component.KoinComponent
@@ -697,13 +698,13 @@ private class EpisodeViewModelImpl(
                                 }
                                 if (pos > max.toFloat() * 0.9) {
                                     logger.info { "观看到 90%, 标记看过" }
-                                    runUntilSuccess(maxAttempts = 5) {
+                                    suspend {
                                         episodeCollectionRepository.setEpisodeCollectionType(
                                             subjectId,
                                             episodeId.value,
                                             UnifiedCollectionType.DONE,
                                         )
-                                    }
+                                    }.asFlow().retryWithBackoffDelay().first()
                                     cancelScope() // 标记成功一次后就不要再检查了
                                 }
                             }.collect()

@@ -1,70 +1,68 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.utils.coroutines
 
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
-import kotlinx.coroutines.yield
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.retryWhen
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-
 /**
- * Runs the block multiple times, returns when it succeeds the first time. with a delay between each attempt.
+ * 尝试多次运行一个 block, 直到成功为止. 会在每次失败后等待一段时间再重试. 等待的时间会逐渐增加.
+ * @see retryWhen
  */
-suspend inline fun <R, V> V.runUntilSuccess(
-    maxAttempts: Int = 5,
-    onFailure: (Exception) -> Unit = { it.printStackTrace() },
-    block: V.() -> R,
-): R {
-    contract { callsInPlace(block, InvocationKind.AT_LEAST_ONCE) }
-    var failed = 0
-    while (currentCoroutineContext().isActive) {
-        try {
-            return block()
-        } catch (e: Exception) {
-            onFailure(e)
-            failed++
-            if (failed >= maxAttempts) {
-                throw IllegalStateException("Failed to run block after $maxAttempts attempts", e)
-            }
-            delay(backoffDelay(failed))
+fun <T> Flow<T>.retryWithBackoffDelay(
+    maxAttempts: Long,
+    predicate: suspend FlowCollector<T>.(cause: Throwable, attempt: Long) -> Boolean = { _, _ -> true },
+): Flow<T> {
+    require(maxAttempts > 0) { "maxAttempts must be positive" }
+    return this.retryWhen { cause, attempt ->
+        if (attempt >= maxAttempts) {
+            throw cause
+        }
+        if (predicate(cause, attempt)) {
+            delay(backoffDelay(attempt.toInt()))
+            true
+        } else {
+            false
         }
     }
-    yield() // throws CancellationException()
-    throw CancellationException() // should not reach, defensive
 }
 
 /**
- * Runs the block multiple times, returns when it succeeds the first time. with a delay between each attempt.
+ * 尝试多次运行一个 block, 直到成功为止. 会在每次失败后等待一段时间再重试. 等待的时间会逐渐增加.
+ * @see retryWhen
  */
-suspend inline fun <R> runUntilSuccess(
-    onError: (Exception) -> Unit = { it.printStackTrace() },
-    block: () -> R,
-): R {
-    contract { callsInPlace(block, InvocationKind.AT_LEAST_ONCE) }
-    var failed = 0
-    while (currentCoroutineContext().isActive) {
-        try {
-            return block()
-        } catch (e: Exception) {
-            onError(e)
-            failed++
-            delay(backoffDelay(failed))
+fun <T> Flow<T>.retryWithBackoffDelay(
+    predicate: suspend FlowCollector<T>.(cause: Throwable, attempt: Long) -> Boolean = { _, _ -> true },
+): Flow<T> {
+    return this.retryWhen { cause, attempt ->
+        if (predicate(cause, attempt)) {
+            delay(backoffDelay(attempt.toInt()))
+            true
+        } else {
+            false
         }
     }
-    yield() // throws CancellationException()
-    throw CancellationException() // should not reach, defensive
 }
 
-@PublishedApi
 internal fun backoffDelay(failureCount: Int): Duration {
     return when (failureCount) {
         0, 1 -> 1.seconds
         2 -> 2.seconds
         3 -> 4.seconds
-        else -> 8.seconds
+        4 -> 8.seconds
+        5 -> 16.seconds
+        else -> 30.seconds
     }
 }
 

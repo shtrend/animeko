@@ -69,7 +69,7 @@ import me.him188.ani.app.ui.settings.SettingsTab
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceInfoProvider
 import me.him188.ani.utils.coroutines.flows.combine
-import me.him188.ani.utils.coroutines.retryUntilSuccess
+import me.him188.ani.utils.coroutines.retryWithBackoffDelay
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -99,12 +99,15 @@ class SubjectCacheViewModelImpl(
     private val mediaSourceManager: MediaSourceManager by inject()
     private val episodePreferencesRepository: EpisodePreferencesRepository by inject()
 
-    private val subjectInfoFlow = subjectCollectionRepository.subjectCollectionFlow(subjectId).shareInBackground()
+    private val subjectInfoFlow = subjectCollectionRepository.subjectCollectionFlow(subjectId)
+        .retryWithBackoffDelay()
+        .shareInBackground()
     override val subjectTitle by subjectInfoFlow.map { it.subjectInfo.nameCnOrName }.produceState(null)
     override val mediaSelectorSettingsFlow: Flow<MediaSelectorSettings> get() = settingsRepository.mediaSelectorSettings.flow
 
     private val episodeCollectionsFlow =
-        episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId).retryUntilSuccess()
+        episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId)
+            .retryWithBackoffDelay()
             .shareInBackground()
 
     private val episodesFlow = episodeCollectionsFlow.take(1).transformLatest { episodes ->

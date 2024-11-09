@@ -21,6 +21,7 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
@@ -37,7 +38,7 @@ import me.him188.ani.app.ui.foundation.launchInBackground
 import me.him188.ani.danmaku.api.Danmaku
 import me.him188.ani.danmaku.api.DanmakuProviderConfig
 import me.him188.ani.danmaku.api.applyDanmakuProviderConfig
-import me.him188.ani.utils.coroutines.runUntilSuccess
+import me.him188.ani.utils.coroutines.retryWithBackoffDelay
 import me.him188.ani.utils.ktor.createDefaultHttpClient
 import me.him188.ani.utils.ktor.registerLogging
 import me.him188.ani.utils.logging.error
@@ -165,13 +166,13 @@ class AniDanmakuSenderImpl(
         val bangumiToken = bangumiToken.first()
             ?: throw AuthorizationFailureException(null)
 
-        return runUntilSuccess(maxAttempts = 3) {
+        return suspend {
             val token = authByBangumiToken(bangumiToken)
             val selfInfo = getUserInfo(token)
             val session = Session(token, selfInfo)
             this.session.value = session
             session
-        }
+        }.asFlow().retryWithBackoffDelay().first()
     }
 
     init {

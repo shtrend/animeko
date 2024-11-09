@@ -22,7 +22,7 @@ import me.him188.ani.app.ui.exploration.ExplorationPageState
 import me.him188.ani.app.ui.exploration.trends.TrendingSubjectsState
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.foundation.AuthState
-import me.him188.ani.utils.coroutines.retryUntilSuccess
+import me.him188.ani.utils.coroutines.retryWithBackoffDelay
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -42,7 +42,7 @@ class ExplorationPageViewModel : AbstractViewModel(), KoinComponent {
         TrendingSubjectsState(
             suspend { trendsRepository.getTrendsInfo() }
                 .asFlow()
-                .retryUntilSuccess()
+                .retryWithBackoffDelay()
                 .map { it.subjects }
                 .produceState(null),
         ),
