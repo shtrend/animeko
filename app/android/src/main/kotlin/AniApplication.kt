@@ -33,6 +33,7 @@ import me.him188.ani.app.platform.startCommonKoinModule
 import me.him188.ani.app.ui.settings.tabs.getLogsDir
 import me.him188.ani.app.ui.settings.tabs.media.DEFAULT_TORRENT_CACHE_DIR_NAME
 import me.him188.ani.utils.coroutines.IO_
+import me.him188.ani.utils.logging.logger
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
@@ -100,6 +101,11 @@ class AniApplication : Application() {
 
         val logsDir = applicationContext.getLogsDir().absolutePath
         AndroidLoggingConfigurator.configure(logsDir)
+        
+        Thread.setDefaultUncaughtExceptionHandler { t, e ->
+            logger<AniApplication>().error("Uncaught exception in thread $t", e) // 保证打印异常
+            throw e // crash app. 即使我们不 throw, APP 也会无响应, 还不如 throw
+        }
 
         if (processName().contains("torrent_service")) {
             // In service process, we don't need any dependency which is use in app process.
