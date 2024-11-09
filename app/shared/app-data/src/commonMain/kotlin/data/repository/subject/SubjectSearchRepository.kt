@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.repository.Repository
+import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.RepositoryRateLimitedException
 import me.him188.ani.app.domain.search.SubjectSearchQuery
 import me.him188.ani.app.domain.search.SubjectType
@@ -29,7 +30,6 @@ import me.him188.ani.datasources.bangumi.BangumiRateLimitedException
 import me.him188.ani.datasources.bangumi.client.BangumiSearchApi
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectType
 import me.him188.ani.datasources.bangumi.models.subjects.BangumiSubjectImageSize
-import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.collections.mapToIntArray
 import kotlin.coroutines.CoroutineContext
@@ -98,8 +98,7 @@ class SubjectSearchRepository(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                logger.error(e) { "Failed to load subjects" }
-                LoadResult.Error(e)
+                LoadResult.Error(RepositoryException.wrapOrThrowCancellation(e))
             }
         }
     }
