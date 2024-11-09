@@ -66,6 +66,7 @@ import me.him188.ani.utils.platform.isAndroid
 import me.him188.ani.utils.platform.isDesktop
 import me.him188.ani.utils.platform.isIos
 import me.him188.ani.utils.platform.isMobile
+import kotlin.coroutines.cancellation.CancellationException
 
 
 sealed class CheckVersionResult {
@@ -235,14 +236,20 @@ class SoftwareUpdateGroupState(
     val releaseClass: ReleaseClass = guessReleaseClass(currentVersion),
     private val onTest: suspend () -> CheckVersionResult = {
         UpdateChecker().let { checker ->
-            val v = checker.checkLatestVersion(
-                updateSettings.value.releaseClass,
-                currentVersion,
-            )
-            if (v == null) {
-                CheckVersionResult.UpToDate
-            } else {
-                CheckVersionResult.HasNewVersion(v)
+            try {
+                val v = checker.checkLatestVersion(
+                    updateSettings.value.releaseClass,
+                    currentVersion,
+                )
+                if (v == null) {
+                    CheckVersionResult.UpToDate
+                } else {
+                    CheckVersionResult.HasNewVersion(v)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                CheckVersionResult.Failed(e)
             }
         }
     },

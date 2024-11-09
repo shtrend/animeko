@@ -21,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.update.UpdateManager
 import me.him188.ani.app.platform.currentAniBuildConfig
@@ -38,6 +39,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 import me.him188.ani.utils.platform.currentTimeMillis
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * 主页使用的自动更新检查
@@ -129,6 +131,11 @@ class AutoUpdateViewModel : AbstractViewModel(), KoinComponent {
                 logger.info { "Checking latest version, updateSettings=${updateSettings}" }
 
                 updateChecker.checkLatestVersion(updateSettings.releaseClass)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: IOException) {
+                logger.info { "Auto update checking failed due to IOException: $e" } // 故意不打印堆栈
+                return@launch
             } finally {
                 withContext(Dispatchers.Main) {
                     lastCheckTime = currentTimeMillis()

@@ -16,6 +16,7 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.appendPathSegments
 import io.ktor.utils.io.core.use
 import kotlinx.coroutines.CancellationException
+import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 import me.him188.ani.app.domain.danmaku.protocol.ReleaseClass
 import me.him188.ani.app.domain.danmaku.protocol.ReleaseUpdatesDetailedResponse
@@ -27,17 +28,10 @@ import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.currentPlatform
 
-
-class CheckVersionFailedException(
-    override val message: String? = null,
-    override val cause: Throwable? = null,
-) : Exception()
-
 class UpdateChecker {
     /**
      * 检查是否有更新的版本. 返回最新版本的信息, 或者 `null` 表示没有新版本.
      */
-    @Throws(CheckVersionFailedException::class, kotlin.coroutines.cancellation.CancellationException::class)
     suspend fun checkLatestVersion(
         releaseClass: ReleaseClass,
         currentVersion: String = currentAniBuildConfig.versionName,
@@ -58,8 +52,9 @@ class UpdateChecker {
                     }
                 }.onFailure { exception ->
                     collect(exception)
-                    if (exception is CancellationException) throw exception
-                    collect(CheckVersionFailedException())
+                    if (exception is CancellationException || exception is IOException) {
+                        throwLast()
+                    }
                     val finalException = getLast()!!
                     logger.error(finalException) { "Failed to get latest version" }
                     throw finalException
