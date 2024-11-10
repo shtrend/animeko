@@ -44,7 +44,7 @@ import me.him188.ani.app.ui.foundation.navigation.BackHandler
 @Composable
 fun <T> AniListDetailPaneScaffold(
     navigator: ThreePaneScaffoldNavigator<T>,
-    listPaneTopAppBar: @Composable () -> Unit,
+    listPaneTopAppBar: @Composable (PaneScope.() -> Unit),
     listPaneContent: @Composable (PaneScope.() -> Unit),
     detailPane: @Composable (PaneScope.() -> Unit),
     modifier: Modifier = Modifier,
@@ -65,7 +65,6 @@ fun <T> AniListDetailPaneScaffold(
                 val threePaneScaffoldScope = this
                 AnimatedPane1(Modifier.preferredWidth(listPanePreferredWidth), useSharedTransition) {
                     Column {
-                        listPaneTopAppBar()
                         val scope =
                             remember(threePaneScaffoldScope, this@SharedTransitionLayout, this@AnimatedPane1) {
                                 object : PaneScope, SharedTransitionScope by this@SharedTransitionLayout {
@@ -78,6 +77,7 @@ fun <T> AniListDetailPaneScaffold(
                                         Modifier.padding(layoutParametersState.listPaneContentPaddingValues)
                                 }
                             }
+                        listPaneTopAppBar(scope)
                         listPaneContent(scope)
                     }
                 }
