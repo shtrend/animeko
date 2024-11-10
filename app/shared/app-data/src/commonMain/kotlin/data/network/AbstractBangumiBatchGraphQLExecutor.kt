@@ -38,7 +38,7 @@ abstract class AbstractBangumiBatchGraphQLExecutor {
 
 data class BangumiGraphQLResponse(
     val data: List<JsonObject?>,
-    val errors: String,
+    val errors: String?,
 )
 
 fun IntSet.toIntArray(): IntArray {

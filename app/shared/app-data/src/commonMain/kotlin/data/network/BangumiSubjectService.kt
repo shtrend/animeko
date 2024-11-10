@@ -198,19 +198,38 @@ class RemoteBangumiSubjectService(
             // 解析条目详情
             response.mapIndexed { index, element ->
                 if (element == null) { // error
-                    val subjectId = ids[index]
-                    BatchSubjectDetails(
-                        SubjectInfo.Empty.copy(
-                            subjectId = subjectId, subjectType = SubjectType.ANIME,
-                            nameCn = "<$subjectId 错误>",
-                            name = "<$subjectId 错误>",
-                            summary = errors,
-                        ),
-                        LightSubjectRelations(
-                            emptyList(),
-                            emptyList(),
-                        ),
-                    )
+                    if (errors == null) {
+                        // 没有错误, 说明这个条目是没权限获取
+                        val subjectId = ids[index]
+                        BatchSubjectDetails(
+                            SubjectInfo.Empty.copy(
+                                subjectId = subjectId,
+                                subjectType = SubjectType.ANIME,
+                                nameCn = "此条目已被隐藏 $subjectId",
+                                name = "此条目已被隐藏 $subjectId",
+                                summary = "此条目已被隐藏, 请尝试登录后再次尝试. 如已登录, 请等待注册时间满四个月后再看.",
+                                nsfw = true,
+                            ),
+                            LightSubjectRelations(
+                                emptyList(),
+                                emptyList(),
+                            ),
+                        )
+                    } else {
+                        val subjectId = ids[index]
+                        BatchSubjectDetails(
+                            SubjectInfo.Empty.copy(
+                                subjectId = subjectId, subjectType = SubjectType.ANIME,
+                                nameCn = "<$subjectId 错误>",
+                                name = "<$subjectId 错误>",
+                                summary = errors,
+                            ),
+                            LightSubjectRelations(
+                                emptyList(),
+                                emptyList(),
+                            ),
+                        )
+                    }
                 } else {
                     BangumiSubjectGraphQLParser.parseBatchSubjectDetails(element)
                 }

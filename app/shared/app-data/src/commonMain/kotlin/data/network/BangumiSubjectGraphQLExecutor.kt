@@ -149,7 +149,7 @@ query BatchGetSubjectQuery(${'$'}id: Int!) {
         return try {
             BangumiGraphQLResponse(
                 processResponse(resp),
-                errors = resp["errors"].toString(),
+                errors = resp["errors"]?.toString(),
             )
         } catch (e: Exception) {
             throw IllegalStateException(
