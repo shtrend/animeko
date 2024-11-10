@@ -11,7 +11,6 @@ package me.him188.ani.app.ui.adaptive
 
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.material3.DockedSearchBar
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarColors
 import androidx.compose.material3.SearchBarDefaults
@@ -25,7 +24,7 @@ import me.him188.ani.app.ui.foundation.layout.compareTo
 import me.him188.ani.utils.platform.isMobile
 
 /**
- * @see DockedSearchBar
+ * @see PopupSearchBar
  * @see SearchBar
  */
 @Composable

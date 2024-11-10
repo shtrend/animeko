@@ -50,13 +50,24 @@ import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 
 /**
- * 小屏幕上使用默认 TopAppBar 高度, 使用 36dp 头像; MEDIUM 及以上上增加额外 padding(all=8.dp), 并使用 48dp 头像
+ * 符合 Ani 设计风格的 TopAppBar: [NavigationSuiteScaffold on Figma](https://www.figma.com/design/LET1n9mmDa6npDTIlUuJjU/Main?node-id=15-605&t=gmFJS6LFQudIIXfK-4).
  *
- * Design: [NavigationSuiteScaffold on Figma](https://www.figma.com/design/LET1n9mmDa6npDTIlUuJjU/Main?node-id=15-605&t=gmFJS6LFQudIIXfK-4)
+ * ### search bar 布局
+ *
+ * - COMPACT: [searchIconButton], 这个按钮应该是一个搜索图标, 用于点击后展开搜索栏或进入搜索模式等.
+ * - MEDIUM: [searchBar], 外显的搜索栏, 通常可以采用 [AdaptiveSearchBar].
+ *
+ * ### 其他布局细节信息
+ *
+ * | 设备类型 | 高度 | 头像大小 |
+ * |----|----|-----|
+ * | COMPACT | 使用[默认][TopAppBarDefaults.TopAppBarExpandedHeight] TopAppBar [高度][expandedHeight] | 24dp |
+ * | MEDIUM+ | 默认高度以及额外 padding(all=8.dp) | 36.dp|
  *
  * 默认颜色为 [AniThemeDefaults.topAppBarColors]
  *
  * @param title use [AniTopAppBarDefaults.Title]
+ * @param avatar 头像. 应当为一个圆形的头像, 且使用 `Modifier.size(recommendedSize)`.
  *
  * @see TopAppBar
  */
@@ -94,7 +105,7 @@ fun AniTopAppBar(
                     horizontalArrangement = Arrangement.spacedBy(8.dp, alignment = Alignment.End),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    AdaptiveSearchBar(
+                    AdaptiveSearchBarLayout(
                         windowSizeClass,
                         searchIconButton,
                         Modifier.weight(1f, fill = false),
@@ -145,8 +156,14 @@ object AniTopAppBarDefaults {
     }
 }
 
+/**
+ * 自适应搜索栏布局.
+ *
+ * @param searchIconButton 搜索按钮, 通常为一个搜索图标.
+ * @param searchBar 外显搜索栏. 可以是 [PopupSearchBar]
+ */
 @Composable
-fun AdaptiveSearchBar(
+private fun AdaptiveSearchBarLayout(
     windowSizeClass: WindowSizeClass,
     searchIconButton: @Composable (() -> Unit)?,
     modifier: Modifier = Modifier,

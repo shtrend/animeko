@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.foundation.layout
+package me.him188.ani.app.ui.adaptive
 
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionLayout
@@ -35,11 +35,25 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import me.him188.ani.app.ui.foundation.layout.AnimatedPane1
+import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 
 
 /**
  * 自动适应单页模式和双页模式的布局的 paddings
+ *
+ * Pane 内可以访问 [PaneScope]. 其中有几个非常实用的属性:
+ * - [PaneScope.paneContentPadding]: 用于为 pane 增加自动的 content padding. 通常你需要为 pane 的内容直接添加这个 modifier.
+ *   如果你不期望为整个容器添加 padding, 可以使用 [PaneScope.listDetailLayoutParameters] [ListDetailLayoutParameters.listPaneContentPaddingValues]
+ * - [PaneScope.listDetailLayoutParameters] 用于获取当前的布局参数.
+ *
+ * @param listPaneTopAppBar 通常可以放 [AniTopAppBar], 可以留空. 留空时不会占额外空间.
+ * @param listPaneContent 列表内容, 可以是 Column 或者 Grid. 需要自行实现 vertical scroll.
+ * @param detailPane 详情内容.
+ * @param listPanePreferredWidth See also [androidx.compose.material3.adaptive.layout.PaneScaffoldScope.preferredWidth]
+ * @param useSharedTransition 是否在[单页模式][ListDetailLayoutParameters.isSinglePane]时使用 Container Transform 等 [SharedTransitionLayout] 的动画.
+ * 启用后将会调整切换 pane 时的 fade 动画逻辑来适配 Container Transform.
  */
 @Composable
 fun <T> AniListDetailPaneScaffold(
@@ -112,11 +126,17 @@ fun <T> AniListDetailPaneScaffold(
 
 @Stable
 interface PaneScope : SharedTransitionScope {
+    /**
+     * 获取当前的布局参数.
+     *
+     * 若要为 pane 增加 padding, 可优先使用 [paneContentPadding].
+     */
     val listDetailLayoutParameters: ListDetailLayoutParameters
     val animatedVisibilityScope: AnimatedVisibilityScope
 
     /**
-     * 增加自动的 content padding
+     * 为 pane 增加自动的 content padding. 通常应用于 pane 的最外层容器:
+     * @sample me.him188.ani.app.ui.foundation.samples.paneContentPadding
      */
     @Stable
     fun Modifier.paneContentPadding(): Modifier
