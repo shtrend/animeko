@@ -15,32 +15,23 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
-import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -52,11 +43,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.foundation.IconButton
-import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.layout.AniListDetailPaneScaffold
-import me.him188.ani.app.ui.foundation.layout.AnimatedPane1
-import me.him188.ani.app.ui.foundation.layout.ListDetailLayoutParameters
-import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.TopAppBarGoBackButton
@@ -69,16 +56,9 @@ fun PeerFilterSettingsPage(
     windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     navigator: ThreePaneScaffoldNavigator<Nothing> = rememberListDetailPaneScaffoldNavigator()
 ) {
-    val layoutParameters = ListDetailLayoutParameters.calculate(navigator.scaffoldDirective)
-
-    val isSinglePane by rememberUpdatedState(layoutParameters.isSinglePane)
-    val paneHorizontalPadding by rememberUpdatedState(currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding)
-
-
     val paneModifier = Modifier
         .consumeWindowInsets(windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
         .fillMaxWidth()
-        .padding(horizontal = paneHorizontalPadding - 8.dp)
 
     Surface(color = AniThemeDefaults.pageContentBackgroundColor) {
         AniListDetailPaneScaffold(
@@ -86,7 +66,7 @@ fun PeerFilterSettingsPage(
             listPanePreferredWidth = 420.dp,
             listPaneTopAppBar = {
                 SearchBlockedIpTopAppBar(
-                    enableSearch = !isSinglePane,
+                    enableSearch = !listDetailLayoutParameters.isSinglePane,
                     title = { AniTopAppBarDefaults.Title("Peer 过滤和屏蔽设置") },
                     state = state,
                     windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
@@ -95,15 +75,15 @@ fun PeerFilterSettingsPage(
             listPaneContent = {
                 PeerFilterEditPane(
                     state = state,
-                    showIpBlockingItem = isSinglePane,
+                    showIpBlockingItem = !listDetailLayoutParameters.isSinglePane,
                     onClickIpBlockSettings = { navigator.navigateTo(ThreePaneScaffoldRole.Primary) },
-                    modifier = paneModifier,
+                    modifier = paneModifier.paneContentPadding(),
                 )
             },
             detailPane = {
                 val filteredList by state.searchedIpBlockList.collectAsStateWithLifecycle(emptyList())
 
-                if (isSinglePane) {
+                if (listDetailLayoutParameters.isSinglePane) {
                     SearchBlockedIpTopAppBar(
                         enableSearch = true,
                         title = { AniTopAppBarDefaults.Title("管理 IP 黑名单") },
@@ -114,8 +94,8 @@ fun PeerFilterSettingsPage(
 
                 BlockListEditPane(
                     blockedIpList = filteredList,
-                    showTitle = !isSinglePane,
-                    modifier = paneModifier,
+                    showTitle = !listDetailLayoutParameters.isSinglePane,
+                    modifier = paneModifier.paneContentPadding(),
                     onAdd = { state.addBlockedIp(it) },
                     onRemove = { state.removeBlockedIp(it) },
                 )
