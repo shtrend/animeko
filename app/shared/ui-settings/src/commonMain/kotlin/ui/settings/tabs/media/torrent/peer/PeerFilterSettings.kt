@@ -46,6 +46,7 @@ import me.him188.ani.app.ui.foundation.IconButton
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.TopAppBarGoBackButton
+import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.tabs.media.torrent.peer.blocklist.BlockListEditPane
 
 @Composable
@@ -92,7 +93,10 @@ fun PeerFilterSettingsPage(
                         blockedIpList = filteredList,
                         showTitle = !listDetailLayoutParameters.isSinglePane,
                         modifier = Modifier
-                            .paneContentPadding()
+                            .paneContentPadding(
+                                extraStart = -SettingsScope.itemHorizontalPadding,
+                                extraEnd = -SettingsScope.itemHorizontalPadding,
+                            )
                             .paneWindowInsetsPadding(),
                         onAdd = { state.addBlockedIp(it) },
                         onRemove = { state.removeBlockedIp(it) },
