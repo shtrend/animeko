@@ -36,6 +36,7 @@ import me.him188.ani.app.torrent.api.files.FilePriority
 import me.him188.ani.app.torrent.api.files.TorrentFileEntry
 import me.him188.ani.app.torrent.api.files.TorrentFileHandle
 import me.him188.ani.app.torrent.api.files.TorrentFilePieceMatcher
+import me.him188.ani.app.torrent.api.pieces.MutablePieceList
 import me.him188.ani.app.torrent.api.pieces.Piece
 import me.him188.ani.app.torrent.api.pieces.PieceList
 import me.him188.ani.app.torrent.api.pieces.PiecePriorities
@@ -273,7 +274,7 @@ class AnitorrentDownloadSession(
      */
     inner class TorrentInfo(
         val name: String,
-        val allPiecesInTorrent: PieceList,
+        val allPiecesInTorrent: MutablePieceList,
         val entries: List<AnitorrentEntry>,
     ) {
         override fun toString(): String {

@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.torrent.api.files
 
+import me.him188.ani.app.torrent.api.pieces.MutablePieceList
 import me.him188.ani.app.torrent.api.pieces.Piece
 import me.him188.ani.app.torrent.api.pieces.PieceList
 import me.him188.ani.app.torrent.api.pieces.first
@@ -27,12 +28,12 @@ object TorrentFilePieceMatcher {
      * @return minimum number of pieces that cover the file offset and length,
      * guaranteed to be continuous and sorted
      */
-    fun matchPiecesForFile(allPieces: PieceList, offset: Long, length: Long): PieceList = with(allPieces) {
+    fun matchPiecesForFile(allPieces: MutablePieceList, offset: Long, length: Long): PieceList = with(allPieces) {
 //        .filter { piece ->
 ////                piece.dataOffset >= offset && piece.dataOffset < offset + length
 ////                        || (piece.dataOffset < offset && piece.dataLastOffset >= offset)
 ////            }
-        val predicate: PieceList.(Piece) -> Boolean = { piece ->
+        val predicate: MutablePieceList.(Piece) -> Boolean = { piece ->
             (piece.dataStartOffset >= offset && piece.dataStartOffset < offset + length)
                     || (piece.dataStartOffset < offset && piece.dataLastOffset >= offset)
         }

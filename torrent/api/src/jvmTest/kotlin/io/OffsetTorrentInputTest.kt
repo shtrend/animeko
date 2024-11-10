@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.torrent.io
 
+import me.him188.ani.app.torrent.api.pieces.MutablePieceList
 import me.him188.ani.app.torrent.api.pieces.PieceList
 import me.him188.ani.app.torrent.api.pieces.PieceState
 import me.him188.ani.app.torrent.api.pieces.asSequence
@@ -68,7 +69,7 @@ internal class OffsetTorrentInputTest {
         input.close()
     }
 
-    private fun runTest(block: suspend PieceList.() -> Unit) {
+    private fun runTest(block: suspend MutablePieceList.() -> Unit) {
         kotlinx.coroutines.test.runTest {
             block(logicalPieces)
         }

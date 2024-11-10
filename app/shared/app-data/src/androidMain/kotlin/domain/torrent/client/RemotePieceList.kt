@@ -45,7 +45,7 @@ class RemotePieceList(
     private val pieceStateSharedMem by lazy { remote.pieceStateArrayMemRegion }
     private val pieceStateBuf by lazy { pieceStateSharedMem.mapReadOnly() }
 
-    override var Piece.state: PieceState
+    override val Piece.state: PieceState
         get() {
             return if (isConnected) {
                 PIECE_STATE_ENTRIES[pieceStateBuf.get(indexInList).toInt()]
@@ -53,9 +53,6 @@ class RemotePieceList(
                 logger.warn { "Remote interface $remote is dead, get state $this returns PieceState.NOT_AVAILABLE" }
                 PieceState.NOT_AVAILABLE
             }
-        }
-        set(_) {
-            throw UnsupportedOperationException("set Piece state is not allowed in remote PieceList")
         }
 
     init {
@@ -67,10 +64,6 @@ class RemotePieceList(
             }
             transform?.let(::unregister)
         }
-    }
-    
-    override fun Piece.compareAndSetState(expect: PieceState, update: PieceState): Boolean {
-        throw UnsupportedOperationException("set Piece state is not allowed in remote PieceList")
     }
 
     override suspend fun Piece.awaitFinished() {

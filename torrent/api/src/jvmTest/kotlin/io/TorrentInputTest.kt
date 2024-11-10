@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.torrent.io
 
+import me.him188.ani.app.torrent.api.pieces.MutablePieceList
 import me.him188.ani.app.torrent.api.pieces.PieceList
 import me.him188.ani.app.torrent.api.pieces.PieceState
 import me.him188.ani.app.torrent.api.pieces.asSequence
@@ -40,7 +41,7 @@ internal val sampleTextByteArray = sampleText.toByteArray()
  */
 internal sealed class TorrentInputTest {
     class NoShift : TorrentInputTest() {
-        override val logicalPieces = PieceList.create(sampleTextByteArray.size.toLong(), 16)
+        override val logicalPieces: MutablePieceList = PieceList.create(sampleTextByteArray.size.toLong(), 16)
 
         @Test
         fun seekReadLastPiece() = runTest {
@@ -54,7 +55,8 @@ internal sealed class TorrentInputTest {
     }
 
     class WithShift : TorrentInputTest() {
-        override val logicalPieces = PieceList.create(sampleTextByteArray.size.toLong(), 16, initialDataOffset = 1000)
+        override val logicalPieces: MutablePieceList =
+            PieceList.create(sampleTextByteArray.size.toLong(), 16, initialDataOffset = 1000)
 
         @Test
         fun seekReadLastPiece() = runTest {
@@ -87,7 +89,7 @@ internal sealed class TorrentInputTest {
     @TempDir
     lateinit var tempDir: File
 
-    protected abstract val logicalPieces: PieceList
+    protected abstract val logicalPieces: MutablePieceList
 
     private val tempFile by lazy {
         tempDir.resolve("test.txt").apply {
@@ -105,7 +107,7 @@ internal sealed class TorrentInputTest {
         )
     }
 
-    fun runTest(block: suspend PieceList.() -> Unit) {
+    fun runTest(block: suspend MutablePieceList.() -> Unit) {
         kotlinx.coroutines.test.runTest {
             block(logicalPieces)
         }

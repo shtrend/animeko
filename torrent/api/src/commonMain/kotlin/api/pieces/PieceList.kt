@@ -7,6 +7,8 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
+@file:Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
+
 package me.him188.ani.app.torrent.api.pieces
 
 import kotlinx.atomicfu.locks.SynchronizedObject
@@ -59,8 +61,7 @@ abstract class PieceList(
     @JvmField
     val endPieceIndex = initialPieceIndex + sizes.size
 
-    abstract var Piece.state: PieceState
-    abstract fun Piece.compareAndSetState(expect: PieceState, update: PieceState): Boolean
+    abstract val Piece.state: PieceState
 
     inline val Piece.indexInList get() = pieceIndex - initialPieceIndex
 
@@ -133,7 +134,7 @@ abstract class PieceList(
             initialDataOffset: Long = 0L,
             initialPieceIndex: Int = 0,
             getPieceSize: (index: Int) -> Long,
-        ): PieceList {
+        ): MutablePieceList {
             val sizes = LongArray(numPieces) { getPieceSize(it) }
             val offsets = LongArray(numPieces)
             val states = Array(numPieces) { PieceState.READY }
@@ -152,7 +153,7 @@ abstract class PieceList(
             pieceSize: Long,
             initialDataOffset: Long = 0L,
             initialPieceIndex: Int = 0,
-        ): PieceList {
+        ): MutablePieceList {
             if (totalSize % pieceSize == 0L) {
                 return create((totalSize / pieceSize).toInt(), initialDataOffset, getPieceSize = { pieceSize })
             }
@@ -177,6 +178,18 @@ abstract class PieceList(
     }
 }
 
+sealed class MutablePieceList(
+    sizes: LongArray,
+    dataOffsets: LongArray,
+    initialPieceIndex: Int
+) : PieceList(
+    sizes,
+    dataOffsets,
+    initialPieceIndex,
+) {
+    abstract override var Piece.state: PieceState
+    abstract fun Piece.compareAndSetState(expect: PieceState, update: PieceState): Boolean
+}
 
 
 class DefaultPieceList(
@@ -184,13 +197,13 @@ class DefaultPieceList(
     dataOffsets: LongArray, // immutable
     private val states: Array<PieceState>, // mutable
     initialPieceIndex: Int, // 第 0 个元素的 piece index
-) : PieceList(sizes, dataOffsets, initialPieceIndex), PieceSubscribable {
+) : MutablePieceList(sizes, dataOffsets, initialPieceIndex), PieceSubscribable {
     init {
         require(sizes.size == dataOffsets.size) { "sizes.size != dataOffsets.size" }
         require(sizes.size == states.size) { "sizes.size != states.size" }
     }
 
-    internal val subscriptions = PieceListSubscriptions()
+    private val subscriptions = PieceListSubscriptions()
 
     override var Piece.state: PieceState
         get() = states[indexInList]
@@ -243,10 +256,10 @@ class DefaultPieceList(
 }
 
 class PieceListSlice(
-    private val delegate: PieceList,
+    private val delegate: MutablePieceList,
     startIndex: Int,
     endIndex: Int,
-) : PieceList(
+) : MutablePieceList(
     sizes = delegate.sizes.copyOfRange(startIndex, endIndex),
     dataOffsets = delegate.dataOffsets.copyOfRange(startIndex, endIndex),
     initialPieceIndex = delegate.initialPieceIndex + startIndex,
@@ -283,13 +296,13 @@ class PieceListSlice(
     override fun subscribePieceState(piece: Piece, onStateChange: PieceList.(Piece, PieceState) -> Unit): Subscription {
         return (delegate as PieceSubscribable).subscribePieceState(piece, onStateChange)
     }
-    
+
     override fun unsubscribePieceState(subscription: Subscription) {
         (delegate as PieceSubscribable).unsubscribePieceState(subscription)
     }
 }
 
-fun PieceList.slice(startIndex: Int, endIndex: Int): PieceList {
+fun MutablePieceList.slice(startIndex: Int, endIndex: Int): PieceListSlice {
     require(startIndex >= 0) { "startIndex < 0" }
     require(endIndex <= sizes.size) { "endIndex > sizes.size" }
     require(startIndex <= endIndex) { "startIndex >= endIndex" }
@@ -336,28 +349,28 @@ fun PieceList.last(): Piece {
 }
 
 @OptIn(RawPieceConstructor::class)
-inline fun PieceList.forEach(block: PieceList.(Piece) -> Unit) {
+inline fun <T : PieceList> T.forEach(block: T.(Piece) -> Unit) {
     // Kotlin compiler won't inline ranges so we have to manually write here
     for (i in initialPieceIndex until endPieceIndex) {
         block(Piece(i))
     }
 }
 
-inline fun PieceList.forEachIndexed(block: PieceList.(index: Int, Piece) -> Unit) {
+inline fun <T : PieceList> T.forEachIndexed(block: T.(index: Int, Piece) -> Unit) {
     val sizes = sizes
     for (i in sizes.indices) {
         block(i, createPieceByListIndexUnsafe(i))
     }
 }
 
-inline fun <C : MutableCollection<E>, E> PieceList.mapTo(destination: C, transform: PieceList.(Piece) -> E): C {
+inline fun <T : PieceList, C : MutableCollection<E>, E> T.mapTo(destination: C, transform: T.(Piece) -> E): C {
     forEach { p ->
         destination.add(transform(p))
     }
     return destination
 }
 
-inline fun <R> PieceList.mapIndexed(transform: PieceList.(index: Int, Piece) -> R): List<R> {
+inline fun <T : PieceList, R> T.mapIndexed(transform: T.(index: Int, Piece) -> R): List<R> {
     val list = ArrayList<R>(this.count)
     forEachIndexed { index, p ->
         list.add(transform(index, p))
@@ -365,7 +378,7 @@ inline fun <R> PieceList.mapIndexed(transform: PieceList.(index: Int, Piece) -> 
     return list
 }
 
-inline fun PieceList.sumOf(block: PieceList.(Piece) -> Long): Long {
+inline fun <T : PieceList> T.sumOf(block: T.(Piece) -> Long): Long {
     var sum = 0L
     forEach { p ->
         sum += block(p)
@@ -373,7 +386,7 @@ inline fun PieceList.sumOf(block: PieceList.(Piece) -> Long): Long {
     return sum
 }
 
-inline fun PieceList.maxOf(block: PieceList.(Piece) -> Long): Long {
+inline fun <T : PieceList> T.maxOf(block: T.(Piece) -> Long): Long {
     val sizes = sizes
     if (sizes.isEmpty()) {
         throw NoSuchElementException()
@@ -388,7 +401,7 @@ inline fun PieceList.maxOf(block: PieceList.(Piece) -> Long): Long {
     return max
 }
 
-inline fun PieceList.minOf(block: PieceList.(Piece) -> Long): Long {
+inline fun <T : PieceList> T.minOf(block: T.(Piece) -> Long): Long {
     val sizes = sizes
     if (sizes.isEmpty()) {
         throw NoSuchElementException()
@@ -403,7 +416,7 @@ inline fun PieceList.minOf(block: PieceList.(Piece) -> Long): Long {
     return min
 }
 
-inline fun PieceList.maxBy(block: PieceList.(Piece) -> Long): Piece {
+inline fun <T : PieceList> T.maxBy(block: T.(Piece) -> Long): Piece {
     val sizes = sizes
     if (sizes.isEmpty()) {
         throw NoSuchElementException()
@@ -421,7 +434,7 @@ inline fun PieceList.maxBy(block: PieceList.(Piece) -> Long): Piece {
     return maxPiece
 }
 
-inline fun PieceList.minBy(block: PieceList.(Piece) -> Long): Piece {
+inline fun <T : PieceList> T.minBy(block: T.(Piece) -> Long): Piece {
     val sizes = sizes
     if (sizes.isEmpty()) {
         throw NoSuchElementException()
@@ -442,7 +455,7 @@ inline fun PieceList.minBy(block: PieceList.(Piece) -> Long): Piece {
 /**
  * @see kotlin.collections.indexOfFirst
  */
-inline fun PieceList.pieceIndexOfFirst(predicate: PieceList.(Piece) -> Boolean): Int {
+inline fun <T : PieceList> T.pieceIndexOfFirst(predicate: T.(Piece) -> Boolean): Int {
     forEach { p ->
         if (predicate(p)) {
             return p.pieceIndex
@@ -455,7 +468,7 @@ inline fun PieceList.pieceIndexOfFirst(predicate: PieceList.(Piece) -> Boolean):
  * @see kotlin.collections.indexOfLast
  */
 @OptIn(RawPieceConstructor::class)
-inline fun PieceList.pieceIndexOfLast(predicate: PieceList.(Piece) -> Boolean): Int {
+inline fun <T : PieceList> T.pieceIndexOfLast(predicate: T.(Piece) -> Boolean): Int {
     // help compiler
     for (i in (initialPieceIndex until endPieceIndex).reversed()) {
         if (predicate(Piece(i))) {
@@ -468,7 +481,7 @@ inline fun PieceList.pieceIndexOfLast(predicate: PieceList.(Piece) -> Boolean): 
 /**
  * @see kotlin.collections.dropWhile
  */
-inline fun PieceList.dropWhile(predicate: PieceList.(Piece) -> Boolean): List<Piece> {
+inline fun <T : PieceList> T.dropWhile(predicate: T.(Piece) -> Boolean): List<Piece> {
     val list = mutableListOf<Piece>()
     var found = false
     forEach { p ->
@@ -484,7 +497,7 @@ inline fun PieceList.dropWhile(predicate: PieceList.(Piece) -> Boolean): List<Pi
 /**
  * @see kotlin.collections.takeWhile
  */
-inline fun PieceList.takeWhile(predicate: PieceList.(Piece) -> Boolean): List<Piece> {
+inline fun <T : PieceList> T.takeWhile(predicate: T.(Piece) -> Boolean): List<Piece> {
     val list = mutableListOf<Piece>()
     forEach { p ->
         if (predicate(p)) {

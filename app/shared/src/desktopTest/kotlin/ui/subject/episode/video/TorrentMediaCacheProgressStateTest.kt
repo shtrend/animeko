@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.subject.episode.video
 
+import me.him188.ani.app.torrent.api.pieces.MutablePieceList
 import me.him188.ani.app.torrent.api.pieces.PieceList
 import me.him188.ani.app.torrent.api.pieces.PieceState
 import me.him188.ani.app.torrent.api.pieces.count
@@ -28,7 +29,7 @@ class TorrentMediaCacheProgressStateTest {
     }
     private val isFinished = false
 
-    private fun runTest(block: suspend PieceList.() -> Unit) {
+    private fun runTest(block: suspend MutablePieceList.() -> Unit) {
         kotlinx.coroutines.test.runTest {
             block(pieces)
         }
