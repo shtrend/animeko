@@ -19,22 +19,22 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldScope
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldValue
-import androidx.compose.material3.adaptive.layout.animateBounds
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import me.him188.ani.app.ui.foundation.animation.EmphasizedEasing
 import me.him188.ani.app.ui.foundation.animation.StandardAccelerate
+import me.him188.ani.app.ui.foundation.theme.AniNavigationMotionScheme
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults.feedItemFadeOutSpec
 import me.him188.ani.app.ui.foundation.theme.EasingDurations
 
 // 把过渡动画改为 fade 而不是带有回弹的 spring
 @ExperimentalMaterial3AdaptiveApi
 @Composable
-fun ThreePaneScaffoldScope.AnimatedPane1(
+fun ThreePaneScaffoldScope.ListDetailAnimatedPane(
     modifier: Modifier = Modifier,
     useSharedTransition: Boolean = false, // changed: for shared transitions
     content: (@Composable AnimatedVisibilityScope.() -> Unit),
@@ -42,34 +42,58 @@ fun ThreePaneScaffoldScope.AnimatedPane1(
     val keepShowing =
         scaffoldStateTransition.currentState[role] != PaneAdaptedValue.Hidden &&
                 scaffoldStateTransition.targetState[role] != PaneAdaptedValue.Hidden
-    val animateFraction = { scaffoldStateTransitionFraction }
+//    val animateFraction = { scaffoldStateTransitionFraction }
     scaffoldStateTransition.AnimatedVisibility(
         visible = { value: ThreePaneScaffoldValue -> value[role] != PaneAdaptedValue.Hidden },
         modifier =
         modifier
-            .animateBounds(
-                animateFraction = animateFraction,
-                positionAnimationSpec = tween(500, easing = EmphasizedEasing), // changed: custom animation spec
-                sizeAnimationSpec = tween(500, easing = EmphasizedEasing), // changed: custom animation spec
-                lookaheadScope = this,
-                enabled = keepShowing,
-            )
+//            .animateBounds(
+//                animateFraction = animateFraction,
+//                positionAnimationSpec = tween(500, easing = EmphasizedEasing), // changed: custom animation spec
+//                sizeAnimationSpec = tween(500, easing = EmphasizedEasing), // changed: custom animation spec
+//                lookaheadScope = this,
+//                enabled = keepShowing,
+//            )
             .then(if (keepShowing) Modifier else Modifier.clipToBounds()),
-        enter = if (useSharedTransition) {
-            fadeIn() + expandVertically()
-        } else {
-            fadeIn(
-                tween(
-                    EasingDurations.standardAccelerate,
-                    delayMillis = EasingDurations.standardDecelerate,
-                    easing = StandardAccelerate,
-                ),
-            )
+        enter = when {
+            useSharedTransition -> {
+                fadeIn() + expandVertically()
+            }
+
+            role == ListDetailPaneScaffoldRole.List -> {
+                AniNavigationMotionScheme.popEnterTransition
+            }
+
+            role == ListDetailPaneScaffoldRole.Detail -> {
+                AniNavigationMotionScheme.enterTransition
+            }
+
+            else -> {
+                fadeIn(
+                    tween(
+                        EasingDurations.standardAccelerate,
+                        delayMillis = EasingDurations.standardDecelerate,
+                        easing = StandardAccelerate,
+                    ),
+                )
+            }
         }, // changed 原生的动画会回弹, 与目前的整个 APP 设计风格相差太多了
-        exit = if (useSharedTransition) {
-            fadeOut() + shrinkVertically()
-        } else {
-            fadeOut(feedItemFadeOutSpec)
+        exit = when {
+            useSharedTransition -> {
+                fadeOut() + shrinkVertically()
+            }
+
+            role == ListDetailPaneScaffoldRole.List -> {
+                AniNavigationMotionScheme.exitTransition
+            }
+
+            role == ListDetailPaneScaffoldRole.Detail -> {
+                AniNavigationMotionScheme.popExitTransition
+            }
+
+            else -> {
+                fadeOut(feedItemFadeOutSpec)
+            }
         }, // changed
     ) {
         this.content()

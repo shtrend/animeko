@@ -51,7 +51,7 @@ import me.him188.ani.app.domain.mediasource.rss.RssMediaSource
 import me.him188.ani.app.domain.mediasource.rss.RssMediaSourceArguments
 import me.him188.ani.app.domain.mediasource.rss.RssSearchConfig
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
-import me.him188.ani.app.ui.foundation.layout.AnimatedPane1
+import me.him188.ani.app.ui.foundation.layout.ListDetailAnimatedPane
 import me.him188.ani.app.ui.foundation.layout.PaddingValuesSides
 import me.him188.ani.app.ui.foundation.layout.ThreePaneScaffoldValueConverter.ExtraPaneForNestedDetails
 import me.him188.ani.app.ui.foundation.layout.convert
@@ -228,7 +228,7 @@ fun EditRssMediaSourcePage(
             navigator.scaffoldDirective,
             navigator.scaffoldValue.convert(ExtraPaneForNestedDetails),
             listPane = {
-                AnimatedPane1 {
+                ListDetailAnimatedPane {
                     RssEditPane(
                         state = state,
                         Modifier.fillMaxSize(),
@@ -237,7 +237,7 @@ fun EditRssMediaSourcePage(
                 }
             },
             detailPane = {
-                AnimatedPane1 {
+                ListDetailAnimatedPane {
                     RssTestPane(
                         testState,
                         { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra) },
@@ -251,7 +251,7 @@ fun EditRssMediaSourcePage(
                 .consumeWindowInsets(paddingValues)
                 .padding(panePadding.only(PaddingValuesSides.Horizontal)),
             extraPane = {
-                AnimatedPane1 {
+                ListDetailAnimatedPane {
                     Crossfade(testState.viewingItem) { item ->
                         item ?: return@Crossfade
                         if (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT) {

@@ -51,7 +51,7 @@ import me.him188.ani.app.domain.mediasource.web.SelectorMediaSourceArguments
 import me.him188.ani.app.domain.mediasource.web.SelectorMediaSourceEngine
 import me.him188.ani.app.platform.Context
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
-import me.him188.ani.app.ui.foundation.layout.AnimatedPane1
+import me.him188.ani.app.ui.foundation.layout.ListDetailAnimatedPane
 import me.him188.ani.app.ui.foundation.layout.isWidthCompact
 import me.him188.ani.app.ui.foundation.layout.materialWindowMarginPadding
 import me.him188.ani.app.ui.foundation.layout.rememberConnectedScrollState
@@ -235,7 +235,7 @@ fun EditSelectorMediaSourcePage(
             navigator.scaffoldDirective,
             navigator.scaffoldValue,
             listPane = {
-                AnimatedPane1(Modifier.preferredWidth(480.dp)) {
+                ListDetailAnimatedPane(Modifier.preferredWidth(480.dp)) {
                     SelectorConfigurationPane(
                         state = state.configurationState,
                         Modifier.fillMaxSize().consumeWindowInsets(paddingValues),
@@ -244,7 +244,7 @@ fun EditSelectorMediaSourcePage(
                 }
             },
             detailPane = {
-                AnimatedPane1 {
+                ListDetailAnimatedPane {
                     SelectorTestAndEpisodePane(
                         state = state,
                         layout = episodePaneLayout,

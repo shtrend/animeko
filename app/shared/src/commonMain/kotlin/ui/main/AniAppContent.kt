@@ -9,6 +9,9 @@
 
 package me.him188.ani.app.ui.main
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -27,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -104,10 +108,14 @@ private fun AniAppContentImpl(
 
     SharedTransitionLayout {
         NavHost(navController, startDestination = initialRoute, modifier) {
-            val enterTransition = AniNavigationMotionScheme.enterTransition
-            val exitTransition = AniNavigationMotionScheme.exitTransition
-            val popEnterTransition = AniNavigationMotionScheme.popEnterTransition
-            val popExitTransition = AniNavigationMotionScheme.popExitTransition
+            val enterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition? =
+                { AniNavigationMotionScheme.enterTransition }
+            val exitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition? =
+                { AniNavigationMotionScheme.exitTransition }
+            val popEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition? =
+                { AniNavigationMotionScheme.popEnterTransition }
+            val popExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition? =
+                { AniNavigationMotionScheme.popExitTransition }
 
             composable<NavRoutes.Welcome>(
                 enterTransition = enterTransition,

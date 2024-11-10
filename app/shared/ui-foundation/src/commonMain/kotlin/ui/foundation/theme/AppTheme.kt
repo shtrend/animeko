@@ -36,7 +36,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
-import androidx.navigation.NavBackStackEntry
 import me.him188.ani.app.ui.foundation.animation.EmphasizedAccelerateEasing
 import me.him188.ani.app.ui.foundation.animation.EmphasizedDecelerateEasing
 import me.him188.ani.app.ui.foundation.animation.StandardAccelerate
@@ -171,46 +170,34 @@ object AniNavigationMotionScheme {
     private const val exitDuration = 200
 
     // https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration#26a169fb-caf3-445e-8267-4f1254e3e8bb
-    // TODO: We should actually use Container transform in CMP 1.7
     // https://developer.android.com/develop/ui/compose/animation/shared-elements
     private val enterEasing = EmphasizedDecelerateEasing
     private val exitEasing = LinearOutSlowInEasing
 
     @Stable
-    val enterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition? =
-        {
-            slideInHorizontally(
-                tween(
-                    enterDuration,
-                    easing = enterEasing,
-                ),
-            ) { (it * (1f / 5)).roundToInt() }
-                .plus(fadeIn(tween(enterDuration, easing = enterEasing)))
-        }
+    val enterTransition: EnterTransition =
+        slideInHorizontally(
+            tween(
+                enterDuration,
+                easing = enterEasing,
+            ),
+        ) { (it * (1f / 5)).roundToInt() }
+            .plus(fadeIn(tween(enterDuration, easing = enterEasing)))
+
 
     @Stable
-    val exitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition? =
-        {
-            fadeOut(tween(exitDuration, easing = exitEasing))
-        }
+    val exitTransition: ExitTransition =
+        fadeOut(tween(exitDuration, easing = exitEasing))
 
     @Stable
-    val popEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition? =
-        {
-            fadeIn(tween(enterDuration, easing = enterEasing))
-        }
+    val popEnterTransition = fadeIn(tween(enterDuration, easing = enterEasing))
 
     // 从页面 A 回到上一个页面 B, 切走页面 A 的动画
     @Stable
-    val popExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition? =
-        {
-            slideOutHorizontally(
-                tween(
-                    exitDuration,
-                    easing = exitEasing,
-                ),
-            ) { (it * (1f / 7)).roundToInt() }
-                .plus(fadeOut(tween(exitDuration, easing = exitEasing)))
-        }
-
+    val popExitTransition = slideOutHorizontally(
+        tween(
+            exitDuration,
+            easing = exitEasing,
+        ),
+    ) { (it * (1f / 7)).roundToInt() }.plus(fadeOut(tween(exitDuration, easing = exitEasing)))
 }
