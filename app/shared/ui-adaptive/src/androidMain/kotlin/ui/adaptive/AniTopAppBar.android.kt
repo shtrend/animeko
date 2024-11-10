@@ -35,7 +35,6 @@ private fun PreviewAniTopAppBar() = ProvideFoundationCompositionLocalsForPreview
     val scope = rememberCoroutineScope()
     AniTopAppBar(
         title = { Text("MyTitle") },
-        windowInsets = WindowInsets.Zero,
         navigationIcon = { TopAppBarGoBackButton() },
         actions = {
             IconButton({}) {
@@ -55,5 +54,6 @@ private fun PreviewAniTopAppBar() = ProvideFoundationCompositionLocalsForPreview
                 Icon(Icons.Rounded.Search, null)
             }
         },
+        windowInsets = WindowInsets.Zero,
     )
 }

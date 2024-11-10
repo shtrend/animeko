@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import me.him188.ani.app.ui.adaptive.AdaptiveSearchBar
 import me.him188.ani.app.ui.foundation.interaction.onEnterKeyEvent
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.search.SearchState
@@ -84,7 +85,7 @@ fun <T : Any> SuggestionSearchBar(
     state: SuggestionSearchBarState<T>,
     modifier: Modifier = Modifier,
     inputFieldModifier: Modifier = Modifier,
-    windowInsets: WindowInsets = SearchBarDefaults.windowInsets,
+    windowInsets: WindowInsets = AniWindowInsets.forSearchBar(),
     placeholder: @Composable (() -> Unit)? = null,
 ) {
     BackHandler(state.expanded) {

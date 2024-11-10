@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.ui.foundation.LocalPlatform
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.compareTo
 import me.him188.ani.utils.platform.isMobile
 
@@ -36,7 +37,7 @@ fun AdaptiveSearchBar(
     colors: SearchBarColors = SearchBarDefaults.colors(),
     tonalElevation: Dp = SearchBarDefaults.TonalElevation,
     shadowElevation: Dp = SearchBarDefaults.ShadowElevation,
-    windowInsets: WindowInsets = SearchBarDefaults.windowInsets,
+    windowInsets: WindowInsets = AniWindowInsets.forSearchBar(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
     if (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass >= WindowWidthSizeClass.MEDIUM
@@ -50,7 +51,7 @@ fun AdaptiveSearchBar(
             colors,
             tonalElevation,
             shadowElevation,
-            content,
+            content = content,
         )
     } else {
         SearchBar(

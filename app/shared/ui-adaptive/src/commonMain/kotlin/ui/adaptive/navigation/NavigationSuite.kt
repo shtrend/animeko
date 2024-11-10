@@ -10,9 +10,6 @@
 package me.him188.ani.app.ui.adaptive.navigation
 
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.NavigationBar
@@ -33,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 
 /**
  * @see NavigationSuite with Ani modifications:
@@ -42,7 +40,6 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun AniNavigationSuite(
-    windowInsets: WindowInsets, // Ani added
     modifier: Modifier = Modifier,
     layoutType: NavigationSuiteType =
         NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo()),
@@ -62,7 +59,7 @@ fun AniNavigationSuite(
                 modifier = modifier,
                 containerColor = colors.navigationBarContainerColor,
                 contentColor = colors.navigationBarContentColor,
-                windowInsets = windowInsets.only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal), // Ani added
+                windowInsets = AniWindowInsets.forNavigationBar(), // Ani added
             ) {
                 scope.itemList.forEach {
                     NavigationBarItem(
@@ -86,7 +83,7 @@ fun AniNavigationSuite(
                 modifier = modifier,
                 containerColor = colors.navigationRailContainerColor,
                 contentColor = colors.navigationRailContentColor,
-                windowInsets = windowInsets.only(WindowInsetsSides.Start + WindowInsetsSides.Vertical), // Ani added
+                windowInsets = AniWindowInsets.forNavigationRail(), // Ani added
                 header = navigationRailHeader,
             ) {
                 scope.itemList.forEach {
@@ -111,7 +108,7 @@ fun AniNavigationSuite(
                 modifier = modifier,
                 drawerContainerColor = colors.navigationDrawerContainerColor,
                 drawerContentColor = colors.navigationDrawerContentColor,
-                windowInsets = windowInsets.only(WindowInsetsSides.Start + WindowInsetsSides.Vertical), // Ani added
+                windowInsets = AniWindowInsets.forNavigationDrawer(), // Ani added
             ) {
                 scope.itemList.forEach {
                     NavigationDrawerItem(

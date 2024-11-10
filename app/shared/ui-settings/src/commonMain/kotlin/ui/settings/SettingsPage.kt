@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -41,7 +40,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.PermanentDrawerSheet
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -67,8 +65,10 @@ import me.him188.ani.app.ui.adaptive.AniListDetailPaneScaffold
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.adaptive.ListDetailLayoutParameters
+import me.him188.ani.app.ui.adaptive.PaneScope
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.ifThen
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
@@ -101,9 +101,9 @@ typealias SettingsTab = me.him188.ani.app.navigation.SettingsTab
 fun SettingsPage(
     vm: SettingsViewModel,
     modifier: Modifier = Modifier,
-    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     initialTab: SettingsTab? = null,
     showNavigationIcon: Boolean = false,
+    windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
     val navigator: ThreePaneScaffoldNavigator<SettingsTab> = rememberListDetailPaneScaffoldNavigator(
         initialDestinationHistory = buildList {
@@ -204,9 +204,9 @@ fun SettingsPage(
 internal fun SettingsPageLayout(
     navigator: ThreePaneScaffoldNavigator<SettingsTab>,
     navItems: @Composable (SettingsDrawerScope.() -> Unit),
-    tabContent: @Composable (currentTab: SettingsTab?) -> Unit,
+    tabContent: @Composable PaneScope.(currentTab: SettingsTab?) -> Unit,
     modifier: Modifier = Modifier,
-    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
+    contentWindowInsets: WindowInsets = AniWindowInsets.forPageContent(),
     containerColor: Color = AniThemeDefaults.pageContentBackgroundColor,
     layoutParameters: ListDetailLayoutParameters = ListDetailLayoutParameters.calculate(navigator.scaffoldDirective),
     showNavigationIcon: Boolean = false,
@@ -242,7 +242,6 @@ internal fun SettingsPageLayout(
         listPaneTopAppBar = {
             AniTopAppBar(
                 title = { AniTopAppBarDefaults.Title("设置") },
-                windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 navigationIcon = {
                     if (showNavigationIcon) {
                         TopAppBarGoBackButton()
@@ -255,7 +254,8 @@ internal fun SettingsPageLayout(
         listPaneContent = {
             PermanentDrawerSheet(
                 Modifier
-                    .consumeWindowInsets(windowInsets.only(WindowInsetsSides.Top))
+                    .paneContentPadding()
+                    .paneWindowInsetsPadding()
                     .fillMaxWidth()
                     .ifThen(!LocalPlatform.current.hasScrollingBug()) {
                         topAppBarScrollBehavior?.let { nestedScroll(it.nestedScrollConnection) }
@@ -272,7 +272,6 @@ internal fun SettingsPageLayout(
                                 label = { Text(getName(item)) },
                                 selected = item == currentTab,
                                 onClick = { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, item) },
-                                modifier = Modifier.padding(horizontal = 16.dp),
                             )
                         }
                     }
@@ -290,7 +289,9 @@ internal fun SettingsPageLayout(
         detailPane = {
             AnimatedContent(
                 navigator.currentDestination?.content,
-                Modifier.fillMaxSize(),
+                Modifier
+                    .fillMaxSize()
+                    .paneContentPadding(),
                 transitionSpec = AniThemeDefaults.standardAnimatedContentTransition,
             ) { navigationTab ->
                 val tab = navigationTab.orDefault()
@@ -300,7 +301,6 @@ internal fun SettingsPageLayout(
                             title = {
                                 AniTopAppBarDefaults.Title(getName(tab))
                             },
-                            windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                             navigationIcon = {
                                 if (listDetailLayoutParameters.isSinglePane) {
                                     TopAppBarGoBackButton {
@@ -312,14 +312,19 @@ internal fun SettingsPageLayout(
                         )
                     }
 
-                    tabContent(tab)
+                    Column(
+                        Modifier
+                            .consumeWindowInsets(AniWindowInsets.forTopAppBar().only(WindowInsetsSides.Top))
+                            .paneWindowInsetsPadding(),
+                    ) {
+                        tabContent(tab)
+                    }
                 }
             }
         },
-        modifier
-            .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-            .consumeWindowInsets(windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
+        modifier,
         layoutParameters = layoutParameters,
+        contentWindowInsets = contentWindowInsets,
     )
 }
 
@@ -333,7 +338,7 @@ abstract class SettingsDrawerScope internal constructor() : ColumnScope {
         Text(
             text,
             Modifier
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 8.dp)
                 .padding(top = paddingTop, bottom = 12.dp),
             color = MaterialTheme.colorScheme.primary,
         )

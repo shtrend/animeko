@@ -26,7 +26,6 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.carousel.CarouselState
@@ -51,6 +50,7 @@ import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.adaptive.NavTitleHeader
 import me.him188.ani.app.ui.exploration.followed.FollowedSubjectsLazyRow
 import me.him188.ani.app.ui.exploration.trends.TrendingSubjectsCarousel
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.session.SelfAvatar
@@ -87,7 +87,7 @@ fun ExplorationPage(
     onSearch: () -> Unit,
     onClickSettings: () -> Unit,
     modifier: Modifier = Modifier,
-    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
+    windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -95,18 +95,7 @@ fun ExplorationPage(
         topBar = {
             AniTopAppBar(
                 title = { AniTopAppBarDefaults.Title("探索") },
-                windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 Modifier.fillMaxWidth(),
-                searchIconButton = {
-                    IconButton(onSearch) {
-                        Icon(Icons.Rounded.Search, "搜索")
-                    }
-                },
-                searchBar = {
-                    IconButton(onSearch) {
-                        Icon(Icons.Rounded.Search, "搜索")
-                    }
-                },
                 actions = {
                     if (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass.isAtLeastMedium) {
                         IconButton(onClick = onClickSettings) {
@@ -116,6 +105,16 @@ fun ExplorationPage(
                 },
                 avatar = { recommendedSize ->
                     SelfAvatar(state.authState, state.selfInfo, size = recommendedSize)
+                },
+                searchIconButton = {
+                    IconButton(onSearch) {
+                        Icon(Icons.Rounded.Search, "搜索")
+                    }
+                },
+                searchBar = {
+                    IconButton(onSearch) {
+                        Icon(Icons.Rounded.Search, "搜索")
+                    }
                 },
             )
         },

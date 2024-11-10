@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -65,6 +64,7 @@ import me.him188.ani.app.ui.foundation.animation.SharedTransitionKeys
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.interaction.keyboardDirectionToSelectItem
 import me.him188.ani.app.ui.foundation.interaction.keyboardPageToScroll
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.compareTo
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
@@ -79,7 +79,6 @@ import me.him188.ani.app.ui.search.collectHasQueryAsState
 @Composable
 fun SearchPage(
     state: SearchPageState,
-    windowInsets: WindowInsets,
     detailContent: @Composable PaneScope.(subjectId: Int) -> Unit,
     modifier: Modifier = Modifier,
     onSelect: (index: Int, item: SubjectPreviewItemInfo) -> Unit = { _, _ -> },
@@ -94,7 +93,6 @@ fun SearchPage(
     val items = state.items
     SearchPageLayout(
         navigator,
-        windowInsets,
         searchBar = { contentPadding ->
             SuggestionSearchBar(
                 state.suggestionSearchBarState,
@@ -104,7 +102,6 @@ fun SearchPage(
                                 || !state.suggestionSearchBarState.expanded,
                     ) { contentPadding },
                 inputFieldModifier = Modifier.focusRequester(focusRequester),
-                windowInsets = windowInsets,
                 placeholder = { Text("搜索") },
             )
         },
@@ -303,10 +300,9 @@ internal fun SharedTransitionScope.SearchPageResultColumn(
 @Composable
 internal fun SearchPageLayout(
     navigator: ThreePaneScaffoldNavigator<*>,
-    windowInsets: WindowInsets,
     searchBar: @Composable (contentPadding: Modifier) -> Unit,
-    searchResultList: @Composable PaneScope.() -> Unit,
-    detailContent: @Composable PaneScope.() -> Unit,
+    searchResultList: @Composable (PaneScope.() -> Unit),
+    detailContent: @Composable (PaneScope.() -> Unit),
     modifier: Modifier = Modifier,
     searchBarHeight: Dp = 64.dp,
 ) {
@@ -315,7 +311,6 @@ internal fun SearchPageLayout(
         listPaneTopAppBar = {
             AniTopAppBar(
                 title = { Text("搜索") },
-                windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 Modifier.fillMaxWidth(),
                 navigationIcon = {
                     TopAppBarGoBackButton()
@@ -325,27 +320,25 @@ internal fun SearchPageLayout(
         listPaneContent = {
             Box(
                 Modifier
-                    .consumeWindowInsets(windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)),
+                    .consumeWindowInsets(
+                        AniWindowInsets.forTopAppBar().only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                    ),
             ) {
-                // Use TopAppBar as a container for scroll behavior
-//                TopAppBar(
-//                    title = { searchBar() },
-//                    scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
-////                    expandedHeight = with(LocalDensity.current) {
-////                        LocalWindowInfo.current.containerSize.height.toDp()
-////                    },
-//                    colors = AniThemeDefaults.topAppBarColors(),
-//                )
                 Column(
                     Modifier
                         .paneContentPadding()
+                        .paneWindowInsetsPadding()
                         .padding(top = searchBarHeight),
                 ) {
                     searchResultList()
                 }
 
                 Row(Modifier.fillMaxWidth()) {
-                    searchBar(Modifier.paneContentPadding())
+                    searchBar(
+                        Modifier
+                            // no window insets padding. 让 search bar 自己 consume
+                            .paneContentPadding(),
+                    )
                 }
             }
         },
@@ -353,7 +346,7 @@ internal fun SearchPageLayout(
             detailContent()
         },
         modifier,
-        listPanePreferredWidth = 480.dp,
         useSharedTransition = true,
+        listPanePreferredWidth = 480.dp,
     )
 }

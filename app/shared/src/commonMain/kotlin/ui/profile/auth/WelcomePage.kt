@@ -39,7 +39,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,6 +67,7 @@ import me.him188.ani.app.ui.foundation.icons.AniIcons
 import me.him188.ani.app.ui.foundation.icons.GithubMark
 import me.him188.ani.app.ui.foundation.icons.QqRoundedOutline
 import me.him188.ani.app.ui.foundation.icons.Telegram
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.settings.tabs.AniHelpNavigator
 import org.koin.core.component.KoinComponent
@@ -92,7 +92,7 @@ class WelcomeViewModel : AbstractViewModel(), KoinComponent {
 fun WelcomeScene(
     vm: WelcomeViewModel,
     modifier: Modifier = Modifier,
-    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
+    windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
     val navigator = LocalNavigator.current
     val goBack = {
@@ -113,7 +113,7 @@ fun WelcomeScene(
             }
         },
         modifier = modifier,
-        windowInsets = windowInsets,
+        contentWindowInsets = windowInsets,
     )
 }
 
@@ -122,7 +122,7 @@ fun WelcomePage(
     onClickLogin: () -> Unit,
     onClickGuest: () -> Unit,
     modifier: Modifier = Modifier,
-    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
+    contentWindowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
     var showDetails by rememberSaveable { mutableStateOf(false) }
     Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -133,7 +133,7 @@ fun WelcomePage(
             },
             bottomBar = {
                 if (showDetails) {
-                    Column(Modifier.windowInsetsPadding(windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))) {
+                    Column(Modifier.windowInsetsPadding(contentWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))) {
                         HorizontalDivider(Modifier.padding(horizontal = 4.dp))
                         Column(
                             Modifier.padding(all = 16.dp).fillMaxWidth(),
@@ -158,7 +158,7 @@ fun WelcomePage(
                     }
                 }
             },
-            contentWindowInsets = windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
+            contentWindowInsets = contentWindowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
         ) { contentPadding ->
             var isContentReady by rememberSaveable {
                 mutableStateOf(false)

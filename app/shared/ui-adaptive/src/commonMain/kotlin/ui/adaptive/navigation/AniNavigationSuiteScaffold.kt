@@ -11,10 +11,9 @@ package me.him188.ani.app.ui.adaptive.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.material3.DrawerDefaults
-import androidx.compose.material3.NavigationBarDefaults
-import androidx.compose.material3.NavigationRailDefaults
+import androidx.compose.foundation.layout.only
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -29,6 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.window.core.layout.WindowHeightSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
+import me.him188.ani.app.ui.foundation.layout.Zero
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 
 /**
@@ -61,15 +62,15 @@ fun AniNavigationSuiteLayout(
                     Modifier.consumeWindowInsets(
                         when (layoutType) {
                             NavigationSuiteType.NavigationBar ->
-                                NavigationBarDefaults.windowInsets
+                                AniWindowInsets.forNavigationBar().only(WindowInsetsSides.Bottom)
 
                             NavigationSuiteType.NavigationRail ->
-                                NavigationRailDefaults.windowInsets
+                                AniWindowInsets.forNavigationRail().only(WindowInsetsSides.Start)
 
                             NavigationSuiteType.NavigationDrawer ->
-                                DrawerDefaults.windowInsets
+                                AniWindowInsets.forNavigationDrawer().only(WindowInsetsSides.Start)
 
-                            else -> WindowInsets(0, 0, 0, 0)
+                            else -> WindowInsets.Zero
                         },
                     ),
                 ) {

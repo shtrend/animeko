@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -116,7 +115,7 @@ private fun AniAppContentImpl(
                 popEnterTransition = popEnterTransition,
                 popExitTransition = popExitTransition,
             ) { // 由 SessionManager.requireAuthorize 跳转到
-                WelcomeScene(viewModel { WelcomeViewModel() }, Modifier.fillMaxSize(), windowInsets)
+                WelcomeScene(viewModel { WelcomeViewModel() }, Modifier.fillMaxSize())
             }
             composable<NavRoutes.Main>(
                 enterTransition = enterTransition,
@@ -145,11 +144,6 @@ private fun AniAppContentImpl(
                 ) {
                     MainScene(
                         page = currentPage,
-                        windowInsets =
-                        // macOS 上的手机状态需要有顶部的 insets
-                        if (navigationLayoutType == NavigationSuiteType.NavigationBar) windowInsets
-                        // 横屏状态不需要有
-                        else windowInsetsWithoutTitleBar,
                         onNavigateToPage = { currentPage = it },
                         navigationLayoutType = navigationLayoutType,
                     )
@@ -230,7 +224,6 @@ private fun AniAppContentImpl(
                         SettingsViewModel()
                     },
                     Modifier.fillMaxSize(),
-                    windowInsets = windowInsets,
                     route.tab,
                     showNavigationIcon = true,
                 )
@@ -245,7 +238,6 @@ private fun AniAppContentImpl(
                     viewModel { CacheManagementViewModel(aniNavigator) },
                     showBack = true,
                     Modifier.fillMaxSize(),
-                    windowInsets = windowInsets,
                 )
             }
             composable<NavRoutes.CacheDetail>(

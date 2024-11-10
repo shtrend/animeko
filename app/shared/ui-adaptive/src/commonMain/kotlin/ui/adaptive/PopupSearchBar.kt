@@ -65,7 +65,7 @@ fun PopupSearchBar(
     colors: SearchBarColors = SearchBarDefaults.colors(),
     tonalElevation: Dp = SearchBarDefaults.TonalElevation,
     shadowElevation: Dp = SearchBarDefaults.ShadowElevation,
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable (ColumnScope.() -> Unit),
 ) {
     val cornerSizeDp by animateDpAsState(
         if (expanded) 0.dp else 28.dp,
@@ -130,7 +130,10 @@ fun PopupSearchBar(
                         val minHeight =
                             remember(maxHeight) { DockedExpandedTableMinHeight.coerceAtMost(maxHeight) }
 
-                        Column(Modifier.heightIn(min = minHeight, max = maxHeight)) {
+                        Column(
+                            Modifier
+                                .heightIn(min = minHeight, max = maxHeight),
+                        ) {
                             HorizontalDivider(color = colors.dividerColor)
                             content()
                         }

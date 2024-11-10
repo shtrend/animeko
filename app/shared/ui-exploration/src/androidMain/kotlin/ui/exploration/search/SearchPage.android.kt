@@ -11,7 +11,6 @@
 
 package me.him188.ani.app.ui.exploration.search
 
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -28,7 +27,6 @@ import me.him188.ani.app.data.repository.RepositoryNetworkException
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults.Text
 import me.him188.ani.app.ui.foundation.layout.DummySharedTransitionLayout
-import me.him188.ani.app.ui.foundation.layout.Zero
 import me.him188.ani.app.ui.foundation.preview.PreviewSizeClasses
 import me.him188.ani.app.ui.search.PreviewSearchProblemCard
 import me.him188.ani.app.ui.search.TestSearchState
@@ -121,8 +119,7 @@ private fun PreviewImpl(state: SearchPageState = createTestSearchPageState(remem
     Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest) {
         SearchPage(
             state,
-            WindowInsets.Zero,
-            { Text("Hello, World!") },
+            detailContent = { Text("Hello, World!") },
         )
     }
 }

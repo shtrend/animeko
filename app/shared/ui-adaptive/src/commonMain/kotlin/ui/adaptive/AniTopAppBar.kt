@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
@@ -43,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.compareTo
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
@@ -74,7 +77,6 @@ import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 @Composable
 fun AniTopAppBar(
     title: @Composable () -> Unit,
-    windowInsets: WindowInsets, // You would like to add only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     modifier: Modifier = Modifier,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
@@ -83,6 +85,8 @@ fun AniTopAppBar(
     searchBar: @Composable (() -> Unit)? = null,
     expandedHeight: Dp = TopAppBarDefaults.TopAppBarExpandedHeight,
     colors: TopAppBarColors = AniThemeDefaults.topAppBarColors(),
+    windowInsets: WindowInsets = AniWindowInsets.forTopAppBar()
+        .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal), // You would like to add only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass

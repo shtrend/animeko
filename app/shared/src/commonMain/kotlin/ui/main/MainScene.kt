@@ -14,7 +14,6 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CornerSize
@@ -24,7 +23,6 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
@@ -78,7 +76,6 @@ fun MainScene(
     page: MainScenePage,
     modifier: Modifier = Modifier,
     onNavigateToPage: (MainScenePage) -> Unit,
-    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets, // Compose for Desktop 目前不会考虑这个
     navigationLayoutType: NavigationSuiteType = AniNavigationSuiteDefaults.calculateLayoutType(
         currentWindowAdaptiveInfo(),
     ),
@@ -91,13 +88,12 @@ fun MainScene(
         }
     }
 
-    MainSceneContent(page, windowInsets, onNavigateToPage, modifier, navigationLayoutType)
+    MainSceneContent(page, onNavigateToPage, modifier, navigationLayoutType)
 }
 
 @Composable
 private fun MainSceneContent(
     page: MainScenePage,
-    windowInsets: WindowInsets,
     onNavigateToPage: (MainScenePage) -> Unit,
     modifier: Modifier = Modifier,
     navigationLayoutType: NavigationSuiteType = AniNavigationSuiteDefaults.calculateLayoutType(
@@ -107,7 +103,12 @@ private fun MainSceneContent(
     AniNavigationSuiteLayout(
         navigationSuite = {
             AniNavigationSuite(
-                windowInsets,
+                layoutType = navigationLayoutType,
+                colors = NavigationSuiteDefaults.colors(
+                    navigationDrawerContainerColor = AniThemeDefaults.navigationContainerColor,
+                    navigationBarContainerColor = AniThemeDefaults.navigationContainerColor,
+                    navigationRailContainerColor = AniThemeDefaults.navigationContainerColor,
+                ),
                 navigationRailHeader = {
                     FloatingActionButton(
                         { onNavigateToPage(MainScenePage.Search) },
@@ -122,13 +123,7 @@ private fun MainSceneContent(
                         Icon(Icons.Rounded.Search, "搜索")
                     }
                 },
-                colors = NavigationSuiteDefaults.colors(
-                    navigationDrawerContainerColor = AniThemeDefaults.navigationContainerColor,
-                    navigationBarContainerColor = AniThemeDefaults.navigationContainerColor,
-                    navigationRailContainerColor = AniThemeDefaults.navigationContainerColor,
-                ),
                 navigationRailItemSpacing = 8.dp,
-                layoutType = navigationLayoutType,
             ) {
                 for (entry in MainScenePage.visibleEntries) {
                     item(
@@ -163,7 +158,6 @@ private fun MainSceneContent(
                             onSearch = { onNavigateToPage(MainScenePage.Search) },
                             onClickSettings = { navigator.navigateSettings() },
                             modifier.fillMaxSize(),
-                            windowInsets = windowInsets,
                         )
                     }
 
@@ -172,7 +166,6 @@ private fun MainSceneContent(
                         CollectionPage(
                             state = vm.state,
                             items = vm.items,
-                            windowInsets = windowInsets,
                             onClickSearch = { onNavigateToPage(MainScenePage.Search) },
                             onClickSettings = { navigator.navigateSettings() },
                             Modifier.fillMaxSize(),
@@ -185,7 +178,6 @@ private fun MainSceneContent(
                         viewModel { CacheManagementViewModel(navigator) },
                         showBack = false,
                         Modifier.fillMaxSize(),
-                        windowInsets = windowInsets,
                     )
 
                     MainScenePage.Search -> {
@@ -198,7 +190,6 @@ private fun MainSceneContent(
                         val toaster = LocalToaster.current
                         SearchPage(
                             vm.searchPageState,
-                            windowInsets,
                             detailContent = {
                                 vm.subjectDetailsStateLoader.subjectDetailsStateFlow?.let { stateFlow ->
                                     val state by stateFlow.collectAsStateWithLifecycle()

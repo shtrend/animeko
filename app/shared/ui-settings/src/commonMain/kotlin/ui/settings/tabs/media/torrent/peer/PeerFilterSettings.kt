@@ -63,7 +63,6 @@ fun PeerFilterSettingsPage(
     Surface(color = AniThemeDefaults.pageContentBackgroundColor) {
         AniListDetailPaneScaffold(
             navigator = navigator,
-            listPanePreferredWidth = 420.dp,
             listPaneTopAppBar = {
                 SearchBlockedIpTopAppBar(
                     enableSearch = !listDetailLayoutParameters.isSinglePane,
@@ -103,6 +102,7 @@ fun PeerFilterSettingsPage(
             modifier = modifier
                 .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
                 .consumeWindowInsets(windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
+            listPanePreferredWidth = 420.dp,
         )
     }
 }
@@ -122,6 +122,7 @@ private fun SearchBlockedIpTopAppBar(
         title = {
             if (enableSearch && state.searchingBlockedIp) SearchBlockedIp(state) else title()
         },
+        navigationIcon = { TopAppBarGoBackButton() },
         avatar = {
             if (enableSearch && !state.searchingBlockedIp) {
                 IconButton({ state.startSearchBlockedIp() }) {
@@ -129,9 +130,8 @@ private fun SearchBlockedIpTopAppBar(
                 }
             }
         },
-        windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-        navigationIcon = { TopAppBarGoBackButton() },
         colors = AniThemeDefaults.transparentAppBarColors(),
+        windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
     )
 }
 

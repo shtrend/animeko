@@ -83,6 +83,7 @@ import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.foundation.LocalPlatform
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.session.SelfAvatar
@@ -176,16 +177,15 @@ class UserCollectionsState(
 fun CollectionPage(
     state: UserCollectionsState,
     items: LazyPagingItems<SubjectCollectionInfo>,
-    windowInsets: WindowInsets,
     onClickSearch: () -> Unit,
     onClickSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
     enableAnimation: Boolean = true,
     lazyGridState: LazyGridState = rememberLazyGridState(),
 ) {
     // 如果有缓存, 列表区域要展示缓存, 错误就用图标放在角落
     CollectionPageLayout(
-        windowInsets,
         onClickSettings = onClickSettings,
         sessionError = {
             SessionTipsIcon(state.authState)
@@ -222,6 +222,7 @@ fun CollectionPage(
             items.refresh()
         },
         modifier,
+        windowInsets,
     ) {
         when {
             // 假设没登录, 但是有缓存, 需要展示缓存
@@ -266,7 +267,6 @@ fun CollectionPage(
  */
 @Composable
 private fun CollectionPageLayout(
-    windowInsets: WindowInsets,
     onClickSettings: () -> Unit,
     sessionError: @Composable () -> Unit,
     avatar: @Composable (recommendedSize: DpSize) -> Unit,
@@ -274,6 +274,7 @@ private fun CollectionPageLayout(
     isRefreshing: () -> Boolean,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
+    windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
     content: @Composable () -> Unit,
 ) {
     Scaffold(
@@ -282,7 +283,6 @@ private fun CollectionPageLayout(
             Column(modifier = Modifier.fillMaxWidth()) {
                 AniTopAppBar(
                     title = { AniTopAppBarDefaults.Title("追番") },
-                    windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                     modifier = Modifier,
                     actions = {
                         sessionError()
@@ -313,7 +313,7 @@ private fun CollectionPageLayout(
                 filters(CollectionPageFilters)
             }
         },
-        contentWindowInsets = windowInsets.only(WindowInsetsSides.Top),
+        contentWindowInsets = windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
         containerColor = AniThemeDefaults.pageContentBackgroundColor,
     ) { topBarPaddings ->
         Box(modifier = Modifier.padding(topBarPaddings).fillMaxSize()) {
