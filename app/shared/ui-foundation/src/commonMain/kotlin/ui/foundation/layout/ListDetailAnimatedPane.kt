@@ -27,9 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import me.him188.ani.app.ui.foundation.animation.StandardAccelerate
-import me.him188.ani.app.ui.foundation.theme.AniNavigationMotionScheme
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults.feedItemFadeOutSpec
 import me.him188.ani.app.ui.foundation.theme.EasingDurations
+import me.him188.ani.app.ui.foundation.theme.NavigationMotionScheme
 
 // 把过渡动画改为 fade 而不是带有回弹的 spring
 @ExperimentalMaterial3AdaptiveApi
@@ -43,6 +43,7 @@ fun ThreePaneScaffoldScope.ListDetailAnimatedPane(
         scaffoldStateTransition.currentState[role] != PaneAdaptedValue.Hidden &&
                 scaffoldStateTransition.targetState[role] != PaneAdaptedValue.Hidden
 //    val animateFraction = { scaffoldStateTransitionFraction }
+    val navMotionScheme = NavigationMotionScheme.current
     scaffoldStateTransition.AnimatedVisibility(
         visible = { value: ThreePaneScaffoldValue -> value[role] != PaneAdaptedValue.Hidden },
         modifier =
@@ -61,11 +62,11 @@ fun ThreePaneScaffoldScope.ListDetailAnimatedPane(
             }
 
             role == ListDetailPaneScaffoldRole.List -> {
-                AniNavigationMotionScheme.popEnterTransition
+                navMotionScheme.popEnterTransition
             }
 
             role == ListDetailPaneScaffoldRole.Detail -> {
-                AniNavigationMotionScheme.enterTransition
+                navMotionScheme.enterTransition
             }
 
             else -> {
@@ -84,11 +85,11 @@ fun ThreePaneScaffoldScope.ListDetailAnimatedPane(
             }
 
             role == ListDetailPaneScaffoldRole.List -> {
-                AniNavigationMotionScheme.exitTransition
+                navMotionScheme.exitTransition
             }
 
             role == ListDetailPaneScaffoldRole.Detail -> {
-                AniNavigationMotionScheme.popExitTransition
+                navMotionScheme.popExitTransition
             }
 
             else -> {

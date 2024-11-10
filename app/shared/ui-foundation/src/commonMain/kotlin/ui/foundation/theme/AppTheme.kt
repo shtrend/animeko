@@ -31,15 +31,20 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
+import androidx.window.core.layout.WindowSizeClass
 import me.him188.ani.app.ui.foundation.animation.EmphasizedAccelerateEasing
 import me.him188.ani.app.ui.foundation.animation.EmphasizedDecelerateEasing
 import me.him188.ani.app.ui.foundation.animation.StandardAccelerate
 import me.him188.ani.app.ui.foundation.animation.StandardDecelerate
+import me.him188.ani.app.ui.foundation.layout.isCompact
 import kotlin.math.roundToInt
 
 @Stable
@@ -164,40 +169,86 @@ object EasingDurations {
 
 
 @Stable
-object AniNavigationMotionScheme {
-    // https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration#e5b958f0-435d-4e84-aed4-8d1ea395fa5c
-    private const val enterDuration = 500
-    private const val exitDuration = 200
+@Immutable
+data class NavigationMotionScheme(
+    val enterTransition: EnterTransition,
+    val exitTransition: ExitTransition,
+    val popEnterTransition: EnterTransition,
+    val popExitTransition: ExitTransition,
+) {
+    companion object {
+        inline val current
+            @Composable
+            get() = LocalNavigationMotionScheme.current
 
-    // https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration#26a169fb-caf3-445e-8267-4f1254e3e8bb
-    // https://developer.android.com/develop/ui/compose/animation/shared-elements
-    private val enterEasing = EmphasizedDecelerateEasing
-    private val exitEasing = LinearOutSlowInEasing
+        // https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration#e5b958f0-435d-4e84-aed4-8d1ea395fa5c
+        private const val enterDuration = 500
+        private const val exitDuration = 200
 
-    @Stable
-    val enterTransition: EnterTransition =
-        slideInHorizontally(
-            tween(
-                enterDuration,
-                easing = enterEasing,
-            ),
-        ) { (it * (1f / 5)).roundToInt() }
-            .plus(fadeIn(tween(enterDuration, easing = enterEasing)))
+        // https://m3.material.io/styles/motion/easing-and-duration/applying-easing-and-duration#26a169fb-caf3-445e-8267-4f1254e3e8bb
+        // https://developer.android.com/develop/ui/compose/animation/shared-elements
+        private val enterEasing = EmphasizedDecelerateEasing
+        private val exitEasing = LinearOutSlowInEasing
 
+        @Composable
+        fun calculate(windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo().windowSizeClass): NavigationMotionScheme {
+            val useSlide = windowSizeClass.windowWidthSizeClass.isCompact
 
-    @Stable
-    val exitTransition: ExitTransition =
-        fadeOut(tween(exitDuration, easing = exitEasing))
+            val enterTransition: EnterTransition = run {
+                if (useSlide) {
+                    val slideIn = slideInHorizontally(
+                        tween(
+                            enterDuration,
+                            easing = enterEasing,
+                        ),
+                        initialOffsetX = { (it * (1f / 5)).roundToInt() },
+                    )
+                    val fadeIn = fadeIn(tween(enterDuration, easing = enterEasing))
+                    slideIn.plus(fadeIn)
+                } else {
+                    fadeIn(tween(enterDuration, delayMillis = exitDuration, easing = enterEasing))
+                }
+            }
 
-    @Stable
-    val popEnterTransition = fadeIn(tween(enterDuration, easing = enterEasing))
+            val exitTransition: ExitTransition =
+                fadeOut(tween(exitDuration, easing = exitEasing))
 
-    // 从页面 A 回到上一个页面 B, 切走页面 A 的动画
-    @Stable
-    val popExitTransition = slideOutHorizontally(
-        tween(
-            exitDuration,
-            easing = exitEasing,
-        ),
-    ) { (it * (1f / 7)).roundToInt() }.plus(fadeOut(tween(exitDuration, easing = exitEasing)))
+            val popEnterTransition = run {
+                if (useSlide) {
+                    fadeIn(tween(enterDuration, easing = enterEasing))
+                } else {
+                    fadeIn(tween(enterDuration, delayMillis = exitDuration, easing = enterEasing)) // clean fade
+                }
+            }
+
+            // 从页面 A 回到上一个页面 B, 切走页面 A 的动画
+            val popExitTransition: ExitTransition = run {
+                val fadeOut = fadeOut(tween(exitDuration, easing = exitEasing))
+                if (useSlide) {
+                    val slide = slideOutHorizontally(
+                        tween(
+                            exitDuration,
+                            easing = exitEasing,
+                        ),
+                        targetOffsetX = { (it * (1f / 7)).roundToInt() },
+                    )
+                    slide.plus(fadeOut)
+                } else {
+                    fadeOut
+                }
+            }
+
+            return NavigationMotionScheme(
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                popEnterTransition = popEnterTransition,
+                popExitTransition = popExitTransition,
+            )
+        }
+    }
+}
+
+@Stable
+val LocalNavigationMotionScheme = compositionLocalOf<NavigationMotionScheme> {
+    error("No LocalNavigationMotionScheme provided")
 }

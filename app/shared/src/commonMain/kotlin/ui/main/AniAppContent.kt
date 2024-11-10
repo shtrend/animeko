@@ -26,6 +26,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -51,7 +52,8 @@ import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPage
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPageViewModel
 import me.him188.ani.app.ui.cache.details.MediaDetailsLazyGrid
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
-import me.him188.ani.app.ui.foundation.theme.AniNavigationMotionScheme
+import me.him188.ani.app.ui.foundation.theme.LocalNavigationMotionScheme
+import me.him188.ani.app.ui.foundation.theme.NavigationMotionScheme
 import me.him188.ani.app.ui.profile.BangumiOAuthViewModel
 import me.him188.ani.app.ui.profile.auth.BangumiOAuthScene
 import me.him188.ani.app.ui.profile.auth.BangumiTokenAuthPage
@@ -87,7 +89,10 @@ fun AniAppContent(
     aniNavigator.setNavController(navigator)
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        CompositionLocalProvider(LocalNavigator provides aniNavigator) {
+        CompositionLocalProvider(
+            LocalNavigator provides aniNavigator,
+            LocalNavigationMotionScheme provides NavigationMotionScheme.calculate(),
+        ) {
             AniAppContentImpl(aniNavigator, initialRoute, Modifier.fillMaxSize())
         }
     }
@@ -104,17 +109,18 @@ private fun AniAppContentImpl(
     val windowInsetsWithoutTitleBar = ScaffoldDefaults.contentWindowInsets
     val windowInsets = ScaffoldDefaults.contentWindowInsets
         .add(WindowInsets.desktopTitleBar()) // Compose 目前不支持这个所以我们要自己加上
+    val navMotionScheme by rememberUpdatedState(NavigationMotionScheme.current)
 
     SharedTransitionLayout {
         NavHost(navController, startDestination = initialRoute, modifier) {
             val enterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition? =
-                { AniNavigationMotionScheme.enterTransition }
+                { navMotionScheme.enterTransition }
             val exitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition? =
-                { AniNavigationMotionScheme.exitTransition }
+                { navMotionScheme.exitTransition }
             val popEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition? =
-                { AniNavigationMotionScheme.popEnterTransition }
+                { navMotionScheme.popEnterTransition }
             val popExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition? =
-                { AniNavigationMotionScheme.popExitTransition }
+                { navMotionScheme.popExitTransition }
 
             composable<NavRoutes.Welcome>(
                 enterTransition = enterTransition,
