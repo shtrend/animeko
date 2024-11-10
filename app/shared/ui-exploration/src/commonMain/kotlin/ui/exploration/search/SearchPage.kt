@@ -60,7 +60,6 @@ import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.adaptive.AniListDetailPaneScaffold
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.PaneScope
-import me.him188.ani.app.ui.foundation.animation.SharedTransitionKeys
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.interaction.keyboardDirectionToSelectItem
 import me.him188.ani.app.ui.foundation.interaction.keyboardPageToScroll
@@ -249,10 +248,10 @@ internal fun SharedTransitionScope.SearchPageResultColumn(
                     onPlay = { onPlay(info) },
                     info = info,
                     Modifier
-                        .sharedElement(
-                            rememberSharedContentState(SharedTransitionKeys.subjectBounds(info.subjectId)),
-                            animatedVisibilityScope,
-                        )
+//                        .sharedElement(
+//                            rememberSharedContentState(SharedTransitionKeys.subjectBounds(info.subjectId)),
+//                            animatedVisibilityScope,
+//                        )
                         .animateItem(
                             fadeInSpec = AniThemeDefaults.feedItemFadeInSpec,
                             placementSpec = AniThemeDefaults.feedItemPlacementSpec,
@@ -345,7 +344,7 @@ internal fun SearchPageLayout(
             detailContent()
         },
         modifier,
-        useSharedTransition = true,
+        useSharedTransition = false,
         listPanePreferredWidth = 480.dp,
         contentWindowInsets = contentWindowInsets,
     )
