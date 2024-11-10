@@ -74,7 +74,7 @@ object SettingsDefaults {
 abstract class SettingsScope {
     @Stable
     @PublishedApi
-    internal val itemHorizontalPadding = 16.dp
+    internal val itemHorizontalPadding = 0.dp
 
     @Stable
     @PublishedApi
