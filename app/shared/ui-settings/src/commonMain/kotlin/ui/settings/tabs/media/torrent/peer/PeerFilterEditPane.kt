@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.ui.settings.tabs.media.torrent.peer
 
 import androidx.compose.animation.AnimatedVisibility
@@ -29,49 +38,14 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
 import me.him188.ani.app.ui.richtext.RichText
 import me.him188.ani.app.ui.richtext.rememberBBCodeRichTextState
+import me.him188.ani.app.ui.settings.SettingsTab
+import me.him188.ani.app.ui.settings.framework.components.SwitchItem
+import me.him188.ani.app.ui.settings.framework.components.TextItem
 
 @Composable
 private fun BBCodeSupportingText(text: String, modifier: Modifier = Modifier) {
     val richTextState = rememberBBCodeRichTextState(text)
     RichText(richTextState.elements, modifier)
-}
-
-@Composable
-private fun SwitchItem(
-    title: String,
-    enabled: Boolean,
-    onSwitchChange: (Boolean) -> Unit,
-    supportingTextBBCode: String? = null,
-) {
-    val listItemColors = ListItemDefaults.colors(containerColor = Color.Transparent)
-    ListItem(
-        headlineContent = { Text(text = title, overflow = TextOverflow.Ellipsis) },
-        supportingContent = supportingTextBBCode?.let {
-            { BBCodeSupportingText(supportingTextBBCode) }
-        },
-        trailingContent = { Switch(checked = enabled, onCheckedChange = onSwitchChange) },
-        colors = listItemColors,
-        modifier = Modifier.clickable { onSwitchChange(!enabled) },
-    )
-}
-
-@Composable
-private fun ExpandableSwitchItem(
-    title: String,
-    enabled: Boolean,
-    onSwitchChange: (Boolean) -> Unit,
-    enabledContent: @Composable ColumnScope.() -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier) {
-        SwitchItem(title, enabled, onSwitchChange)
-
-        AnimatedVisibility(enabled) {
-            Column {
-                enabledContent()
-            }
-        }
-    }
 }
 
 @Composable
@@ -109,25 +83,14 @@ fun PeerFilterEditPane(
     onClickIpBlockSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val listItemColors = ListItemDefaults.colors(containerColor = Color.Transparent)
-    Column(
-        modifier = modifier.verticalScroll(rememberScrollState()),
-    ) {
-        ListItem(
-            headlineContent = {
-                ProvideTextStyleContentColor(
-                    MaterialTheme.typography.labelLarge,
-                    MaterialTheme.colorScheme.primary,
-                ) {
-                    Text("过滤规则")
-                }
-            }
-        )
-        ExpandableSwitchItem(
-            title = "过滤 IP 地址",
-            enabled = state.ipFilterEnabled,
-            onSwitchChange = { state.ipFilterEnabled = it },
-            enabledContent = {
+    SettingsTab(modifier.verticalScroll(rememberScrollState())) {
+        Group({ Text("过滤规则") }) {
+            SwitchItem(
+                title = { Text("过滤 IP 地址") },
+                checked = state.ipFilterEnabled,
+                onCheckedChange = { state.ipFilterEnabled = it },
+            )
+            AnimatedVisibility(visible = state.ipFilterEnabled) {
                 RuleEditItem(
                     content = state.ipFilters,
                     enabled = state.ipFilterEnabled,
@@ -147,36 +110,40 @@ fun PeerFilterEditPane(
                     onContentChange = { state.ipFilters = it },
                 )
             }
-        )
-        ExpandableSwitchItem(
-            title = "过滤客户端指纹",
-            enabled = state.idFilterEnabled,
-            onSwitchChange = { state.idFilterEnabled = it },
-            enabledContent = {
-                RuleEditItem(
-                    content = state.idFilters,
-                    enabled = state.idFilterEnabled,
-                    supportingTextBBCode = """
+
+            SwitchItem(
+                title = { Text("过滤客户端指纹") },
+                checked = state.idFilterEnabled,
+                onCheckedChange = { state.idFilterEnabled = it },
+            )
+            AnimatedVisibility(visible = state.idFilterEnabled) {
+                Column {
+                    RuleEditItem(
+                        content = state.idFilters,
+                        enabled = state.idFilterEnabled,
+                        supportingTextBBCode = """
                         每行一条过滤规则，仅支持使用正则表达式过滤
                         例如：[code]\-HP\d{4}\-[/code] 将封禁具有 -HPxxxx- 指纹的客户端
                     """.trimIndent(),
-                    onContentChange = { state.idFilters = it },
-                )
-                SwitchItem(
-                    title = "总是过滤异常指纹",
-                    enabled = state.blockInvalidId,
-                    onSwitchChange = { state.blockInvalidId = it },
-                    supportingTextBBCode = """
-                        无论是否满足规则, 都会屏蔽指纹不符合 [code]-xxxxxx-[/code] 格式的客户端
-                    """.trimIndent()
-                )
+                        onContentChange = { state.idFilters = it },
+                    )
+                    SwitchItem(
+                        title = { Text("总是过滤异常指纹") },
+                        checked = state.blockInvalidId,
+                        onCheckedChange = { state.blockInvalidId = it },
+                        description = {
+                            BBCodeSupportingText("无论是否满足规则, 都会屏蔽指纹不符合 [code]-xxxxxx-[/code] 格式的客户端")
+                        },
+                    )
+                }
             }
-        )
-        ExpandableSwitchItem(
-            title = "过滤客户端类型",
-            enabled = state.clientFilterEnabled,
-            onSwitchChange = { state.clientFilterEnabled = it },
-            enabledContent = {
+
+            SwitchItem(
+                title = { Text("过滤客户端类型") },
+                checked = state.clientFilterEnabled,
+                onCheckedChange = { state.clientFilterEnabled = it },
+            )
+            AnimatedVisibility(visible = state.clientFilterEnabled) {
                 RuleEditItem(
                     content = state.clientFilters,
                     enabled = state.clientFilterEnabled,
@@ -187,49 +154,38 @@ fun PeerFilterEditPane(
                     onContentChange = { state.clientFilters = it },
                 )
             }
-        )
 
-        if (showIpBlockingItem) {
-            ListItem(
-                headlineContent = {
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        ProvideTextStyleContentColor(
-                            MaterialTheme.typography.labelLarge,
-                            MaterialTheme.colorScheme.primary,
-                        ) {
-                            Text("黑名单")
-                        }
-                        ProvideTextStyleContentColor(MaterialTheme.typography.labelMedium) {
-                            Text("黑名单中的 Peer 总是被屏蔽，无论是否匹配过滤规则")
-                        }
-                    }
-                }
-            )
-            ListItem(
-                headlineContent = { Text(text = "IP 黑名单设置", overflow = TextOverflow.Ellipsis) },
-                supportingContent = { Text("点击进入 IP 黑名单列表") },
-                trailingContent = {
-                    IconButton(onClickIpBlockSettings) {
-                        Icon(Icons.Rounded.ArrowOutward, null)
-                    }
-                },
-                colors = listItemColors,
-                modifier = Modifier.clickable(onClick = onClickIpBlockSettings),
-            )
-        }
-
-        ListItem(headlineContent = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.End
-            ) {
-                ProvideTextStyleContentColor(
-                    MaterialTheme.typography.labelMedium,
-                    MaterialTheme.colorScheme.outline,
+            AnimatedVisibility(visible = showIpBlockingItem) {
+                Group(
+                    title = { Text("黑名单") },
+                    description = { Text("黑名单中的 Peer 总是被屏蔽，无论是否匹配过滤规则") },
                 ) {
-                    Text("提示：修改自动保存")
+                    TextItem(
+                        title = { Text("IP 黑名单设置") },
+                        description = { Text("配置 IP 黑名单列表") },
+                        action = {
+                            IconButton(onClickIpBlockSettings) {
+                                Icon(Icons.Rounded.ArrowOutward, null)
+                            }
+                        },
+                        onClick = onClickIpBlockSettings,
+                    )
                 }
             }
-        })
+
+            TextItem {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.End,
+                ) {
+                    ProvideTextStyleContentColor(
+                        MaterialTheme.typography.labelMedium,
+                        MaterialTheme.colorScheme.outline,
+                    ) {
+                        Text("提示：修改自动保存")
+                    }
+                }
+            }
+        }
     }
 }

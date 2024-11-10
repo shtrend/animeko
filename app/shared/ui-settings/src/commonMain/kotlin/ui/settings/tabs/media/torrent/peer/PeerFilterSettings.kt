@@ -1,10 +1,22 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.ui.settings.tabs.media.torrent.peer
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -12,10 +24,12 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldRole
@@ -26,6 +40,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -34,10 +49,16 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import me.him188.ani.app.ui.adaptive.AniTopAppBar
+import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.foundation.IconButton
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
+import me.him188.ani.app.ui.foundation.layout.AniListDetailPaneScaffold
 import me.him188.ani.app.ui.foundation.layout.AnimatedPane1
+import me.him188.ani.app.ui.foundation.layout.ListDetailLayoutParameters
+import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
+import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.TopAppBarGoBackButton
 import me.him188.ani.app.ui.settings.tabs.media.torrent.peer.blocklist.BlockListEditPane
 
@@ -48,104 +69,112 @@ fun PeerFilterSettingsPage(
     windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     navigator: ThreePaneScaffoldNavigator<Nothing> = rememberListDetailPaneScaffoldNavigator()
 ) {
-    val keyboard = LocalSoftwareKeyboardController.current
-    val focusRequester = remember { FocusRequester() }
-    
-    val isDualPane by derivedStateOf {
-        navigator.scaffoldValue.primary == PaneAdaptedValue.Expanded &&
-                navigator.scaffoldValue.secondary == PaneAdaptedValue.Expanded
-    }
-    val inIpBlockListPane by derivedStateOf { 
-        navigator.scaffoldValue.primary == PaneAdaptedValue.Expanded
-    }
-    
-    if (!isDualPane) {
-        BackHandler(navigator.canNavigateBack()) {
-            if (state.searchingBlockedIp) {
-                state.stopSearchBlockedIp()
-                return@BackHandler
-            }
-            navigator.navigateBack()
-        }
-    } else {
-        BackHandler(state.searchingBlockedIp) {
-            state.stopSearchBlockedIp()
-        }
-    }
-    
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        topBar = {
-            WindowDragArea {
-                TopAppBar(
-                    title = {
-                        if (inIpBlockListPane) {
-                            if (state.searchingBlockedIp) {
-                                val searchQuery by state.searchBlockedIpQuery.collectAsStateWithLifecycle("")
-                                TextField(
-                                    value = searchQuery,
-                                    onValueChange = { state.setSearchBlockIpQuery(it) },
-                                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                                    keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
-                                    colors = TextFieldDefaults.colors(
-                                        unfocusedContainerColor = Color.Transparent,
-                                        focusedContainerColor = Color.Transparent,
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                    ),
-                                    modifier = Modifier.fillMaxSize().focusRequester(focusRequester),
-                                )
-                                SideEffect { focusRequester.requestFocus() }
-                            } else {
-                                if (!isDualPane) {
-                                    Text("管理 IP 黑名单")
-                                } else {
-                                    Text("Peer 过滤和屏蔽设置")
-                                }
-                            }
-                        } else {
-                            Text("Peer 过滤和屏蔽设置")
-                        }
-                    },
-                    navigationIcon = { TopAppBarGoBackButton() },
-                    windowInsets = windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Top),
-                    actions = {
-                        if (inIpBlockListPane && !state.searchingBlockedIp) {
-                            IconButton({ state.startSearchBlockedIp() }) {
-                                Icon(Icons.Default.Search, contentDescription = "搜索黑名单 IP 地址")
-                            }
-                        }
-                    },
+    val layoutParameters = ListDetailLayoutParameters.calculate(navigator.scaffoldDirective)
+
+    val isSinglePane by rememberUpdatedState(layoutParameters.isSinglePane)
+    val paneHorizontalPadding by rememberUpdatedState(currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding)
+
+
+    val paneModifier = Modifier
+        .consumeWindowInsets(windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+        .fillMaxWidth()
+        .padding(horizontal = paneHorizontalPadding - 8.dp)
+
+    Surface(color = AniThemeDefaults.pageContentBackgroundColor) {
+        AniListDetailPaneScaffold(
+            navigator = navigator,
+            listPanePreferredWidth = 420.dp,
+            listPaneTopAppBar = {
+                SearchBlockedIpTopAppBar(
+                    enableSearch = !isSinglePane,
+                    title = { AniTopAppBarDefaults.Title("Peer 过滤和屏蔽设置") },
+                    state = state,
+                    windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 )
-            }
-        },
-        contentWindowInsets = windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
-    ) { paddingValues ->
-        ListDetailPaneScaffold(
-            directive = navigator.scaffoldDirective,
-            value = navigator.scaffoldValue,
-            listPane = {
-                AnimatedPane1(modifier = Modifier.preferredWidth(480.dp)) { 
-                    PeerFilterEditPane(
-                        state = state,
-                        showIpBlockingItem = !isDualPane,
-                        onClickIpBlockSettings = { navigator.navigateTo(ThreePaneScaffoldRole.Primary) },
-                        modifier = Modifier.padding(paddingValues)
-                    )
-                }
+            },
+            listPaneContent = {
+                PeerFilterEditPane(
+                    state = state,
+                    showIpBlockingItem = isSinglePane,
+                    onClickIpBlockSettings = { navigator.navigateTo(ThreePaneScaffoldRole.Primary) },
+                    modifier = paneModifier,
+                )
             },
             detailPane = {
                 val filteredList by state.searchedIpBlockList.collectAsStateWithLifecycle(emptyList())
-                AnimatedPane1 { 
-                    BlockListEditPane(
-                        blockedIpList = filteredList,
-                        showTitle = isDualPane,
-                        onAdd = { state.addBlockedIp(it) },
-                        onRemove = { state.removeBlockedIp(it) },
-                        modifier = Modifier.padding(paddingValues)
+
+                if (isSinglePane) {
+                    SearchBlockedIpTopAppBar(
+                        enableSearch = true,
+                        title = { AniTopAppBarDefaults.Title("管理 IP 黑名单") },
+                        state = state,
+                        windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                     )
                 }
+
+                BlockListEditPane(
+                    blockedIpList = filteredList,
+                    showTitle = !isSinglePane,
+                    modifier = paneModifier,
+                    onAdd = { state.addBlockedIp(it) },
+                    onRemove = { state.removeBlockedIp(it) },
+                )
             },
+            modifier = modifier
+                .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
+                .consumeWindowInsets(windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
         )
     }
+}
+
+@Composable
+private fun SearchBlockedIpTopAppBar(
+    enableSearch: Boolean,
+    state: PeerFilterSettingsState,
+    title: @Composable () -> Unit,
+    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
+) {
+    BackHandler(enableSearch && state.searchingBlockedIp) {
+        state.stopSearchBlockedIp()
+    }
+
+    AniTopAppBar(
+        title = {
+            if (enableSearch && state.searchingBlockedIp) SearchBlockedIp(state) else title()
+        },
+        avatar = {
+            if (enableSearch && !state.searchingBlockedIp) {
+                IconButton({ state.startSearchBlockedIp() }) {
+                    Icon(Icons.Default.Search, contentDescription = "搜索黑名单 IP 地址")
+                }
+            }
+        },
+        windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+        navigationIcon = { TopAppBarGoBackButton() },
+        colors = AniThemeDefaults.transparentAppBarColors(),
+    )
+}
+
+@Composable
+private fun SearchBlockedIp(state: PeerFilterSettingsState) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusRequester = remember { FocusRequester() }
+
+    val searchQuery by state.searchBlockedIpQuery.collectAsStateWithLifecycle("")
+
+    TextField(
+        value = searchQuery,
+        onValueChange = { state.setSearchBlockIpQuery(it) },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(onDone = { keyboard?.hide() }),
+        colors = TextFieldDefaults.colors(
+            unfocusedContainerColor = Color.Transparent,
+            focusedContainerColor = Color.Transparent,
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+        ),
+        modifier = Modifier.fillMaxSize().focusRequester(focusRequester),
+    )
+
+    SideEffect { focusRequester.requestFocus() }
 }

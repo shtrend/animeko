@@ -47,6 +47,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.comment.CommentEditorTextState
+import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.text.ProvideContentColor
 import me.him188.ani.utils.platform.Platform
@@ -104,7 +105,9 @@ fun AddBlockedIPDialog(
             Column {
                 Text("向 IP 地址黑名单添加新的 IP 地址")
                 Text("支持 IPv4 或 IPv6 地址，且 IPv6 地址必须为完整格式的地址")
-                Text("可输入多行，按 Enter 确认添加，Ctrl+Enter 换行")
+                if (LocalPlatform.current is Platform.Desktop) {
+                    Text("可输入多行，按 Enter 确认添加，Ctrl+Enter 换行")
+                }
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     isError = !isIpValueValid,
