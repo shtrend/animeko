@@ -103,8 +103,8 @@ fun <T : Any> SearchResultLazyVerticalStaggeredGrid(
 
                 content()
 
-                item(span = StaggeredGridItemSpan.FullLine) {
-                    if (items.isLoadingNextPage) {
+                if (items.isLoadingNextPage) {
+                    item(span = StaggeredGridItemSpan.FullLine) {
                         ListItem(
                             headlineContent = {
                                 Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
