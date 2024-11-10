@@ -290,8 +290,7 @@ internal fun SettingsPageLayout(
             AnimatedContent(
                 navigator.currentDestination?.content,
                 Modifier
-                    .fillMaxSize()
-                    .paneContentPadding(),
+                    .fillMaxSize(),
                 transitionSpec = AniThemeDefaults.standardAnimatedContentTransition,
             ) { navigationTab ->
                 val tab = navigationTab.orDefault()
@@ -314,6 +313,7 @@ internal fun SettingsPageLayout(
 
                     Column(
                         Modifier
+                            .paneContentPadding()
                             .consumeWindowInsets(AniWindowInsets.forTopAppBar().only(WindowInsetsSides.Top))
                             .paneWindowInsetsPadding(),
                     ) {
