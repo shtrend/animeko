@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
@@ -42,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.ListDetailAnimatedPane
@@ -54,7 +56,7 @@ import me.him188.ani.app.ui.foundation.navigation.BackHandler
  *
  * Pane 内可以访问 [PaneScope]. 其中有几个非常实用的属性:
  * - [PaneScope.paneContentPadding]: 用于为 pane 增加自动的 content padding. 通常你需要为 pane 的内容直接添加这个 modifier.
- *   如果你不期望为整个容器添加 padding, 可以使用 [PaneScope.listDetailLayoutParameters] [ListDetailLayoutParameters.listPaneContentPaddingValues]
+ *   如果你不期望为整个容器添加 padding, 可以使用 [PaneScope.listDetailLayoutParameters] [ListDetailLayoutParameters.listPaneContentStartPadding]
  * - [PaneScope.listDetailLayoutParameters] 用于获取当前的布局参数.
  *
  * ### Window Insets
@@ -131,10 +133,28 @@ fun <T> AniListDetailPaneScaffold(
                                             else -> contentWindowInsets.only(WindowInsetsSides.Start + WindowInsetsSides.Vertical)
                                         }
 
-                                    override fun Modifier.paneContentPadding(): Modifier =
-                                        Modifier
-                                            .padding(layoutParametersState.listPaneContentPaddingValues)
-                                            .consumeWindowInsets(layoutParametersState.listPaneContentPaddingValues)
+                                    override fun Modifier.paneContentPadding(
+                                        extraStart: Dp,
+                                        extraEnd: Dp,
+                                    ): Modifier {
+                                        return Modifier
+                                            .padding(
+                                                PaddingValues(
+                                                    start = (layoutParametersState.listPaneContentStartPadding + extraStart)
+                                                        .coerceAtLeast(0.dp),
+                                                    end = (layoutParametersState.listPaneContentEndPadding + extraEnd)
+                                                        .coerceAtLeast(0.dp),
+                                                ),
+                                            )
+                                            .consumeWindowInsets(
+                                                PaddingValues(
+                                                    start = (layoutParametersState.listPaneContentStartPadding + extraStart)
+                                                        .coerceAtLeast(layoutParametersState.listPaneContentStartPadding),
+                                                    end = (layoutParametersState.listPaneContentEndPadding + extraEnd)
+                                                        .coerceAtLeast(layoutParametersState.listPaneContentEndPadding),
+                                                ),
+                                            )
+                                    }
                                 }
                             }
                         if (listPaneTopAppBar == null) {
@@ -175,10 +195,28 @@ fun <T> AniListDetailPaneScaffold(
                                             else -> contentWindowInsets.only(WindowInsetsSides.End + WindowInsetsSides.Vertical)
                                         }
 
-                                    override fun Modifier.paneContentPadding(): Modifier =
-                                        Modifier
-                                            .padding(layoutParametersState.detailPaneContentPaddingValues)
-                                            .consumeWindowInsets(layoutParametersState.detailPaneContentPaddingValues)
+                                    override fun Modifier.paneContentPadding(
+                                        extraStart: Dp,
+                                        extraEnd: Dp,
+                                    ): Modifier {
+                                        return Modifier
+                                            .padding(
+                                                PaddingValues(
+                                                    start = (layoutParametersState.detailPaneContentStartPadding + extraStart)
+                                                        .coerceAtLeast(0.dp),
+                                                    end = (layoutParametersState.detailPaneContentEndPadding + extraEnd)
+                                                        .coerceAtLeast(0.dp),
+                                                ),
+                                            )
+                                            .consumeWindowInsets(
+                                                PaddingValues(
+                                                    start = (layoutParametersState.detailPaneContentStartPadding + extraStart)
+                                                        .coerceAtLeast(layoutParametersState.detailPaneContentStartPadding),
+                                                    end = (layoutParametersState.detailPaneContentEndPadding + extraEnd)
+                                                        .coerceAtLeast(layoutParametersState.detailPaneContentEndPadding),
+                                                ),
+                                            )
+                                    }
                                 }
                             }
                         detailPane(scope)
@@ -251,15 +289,38 @@ interface PaneScope : SharedTransitionScope {
 
     /**
      * 为 pane 增加自动的 content padding 并 consume 等量的 [WindowInsets]. 通常应用于 pane 的最外层容器:
+     *
+     * [extraStart] 为额外增加多少 start padding. 可以为负数, 则表示减少一些 padding.
+     * 即使减少了 padding, 此函数仍然会 consume 完整的 [ListDetailLayoutParameters.listPaneContentStartPadding] 大小的 window insets.
+     *
+     * 适合搭配 [ListItem] 等自带 content padding 的组件使用 - 传入 `extraStart = (-16).dp`.
      */
     @Stable
-    fun Modifier.paneContentPadding(): Modifier
+    fun Modifier.paneContentPadding(
+        extraStart: Dp = 0.dp,
+        extraEnd: Dp = 0.dp,
+    ): Modifier
 }
 
 @Immutable
 data class ListDetailLayoutParameters(
-    val listPaneContentPaddingValues: PaddingValues,
-    val detailPaneContentPaddingValues: PaddingValues,
+    /**
+     * 通常不要使用这个. 而是使用 [PaneScope.paneContentPadding]
+     */
+    val listPaneContentStartPadding: Dp,
+    /**
+     * 通常不要使用这个. 而是使用 [PaneScope.paneContentPadding]
+     */
+    val listPaneContentEndPadding: Dp,
+    /**
+     * 通常不要使用这个. 而是使用 [PaneScope.paneContentPadding]
+     */
+    val detailPaneContentStartPadding: Dp,
+    /**
+     * 通常不要使用这个. 而是使用 [PaneScope.paneContentPadding]
+     */
+    val detailPaneContentEndPadding: Dp,
+
     val detailPaneShape: Shape,
     val detailPaneColors: CardColors,
     /**
@@ -274,11 +335,10 @@ data class ListDetailLayoutParameters(
             val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
             return if (isTwoPane) {
                 ListDetailLayoutParameters(
-                    listPaneContentPaddingValues = PaddingValues(
-                        start = windowSizeClass.paneHorizontalPadding,
-                        end = 0.dp, // ListDetail 两个 pane 之间自带 24.dp
-                    ),
-                    detailPaneContentPaddingValues = PaddingValues(0.dp),
+                    listPaneContentStartPadding = windowSizeClass.paneHorizontalPadding,
+                    listPaneContentEndPadding = 0.dp, // ListDetail 两个 pane 之间自带 24.dp
+                    detailPaneContentStartPadding = windowSizeClass.paneHorizontalPadding,
+                    detailPaneContentEndPadding = windowSizeClass.paneHorizontalPadding,
                     detailPaneShape = MaterialTheme.shapes.extraLarge.copy(
                         topEnd = ZeroCornerSize,
                         bottomEnd = ZeroCornerSize,
@@ -288,8 +348,10 @@ data class ListDetailLayoutParameters(
                 )
             } else {
                 ListDetailLayoutParameters(
-                    listPaneContentPaddingValues = PaddingValues(horizontal = windowSizeClass.paneHorizontalPadding),
-                    detailPaneContentPaddingValues = PaddingValues(horizontal = windowSizeClass.paneHorizontalPadding),
+                    listPaneContentStartPadding = windowSizeClass.paneHorizontalPadding,
+                    listPaneContentEndPadding = windowSizeClass.paneHorizontalPadding,
+                    detailPaneContentStartPadding = windowSizeClass.paneHorizontalPadding,
+                    detailPaneContentEndPadding = windowSizeClass.paneHorizontalPadding,
                     detailPaneShape = RectangleShape,
                     detailPaneColors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
                     isSinglePane = true,

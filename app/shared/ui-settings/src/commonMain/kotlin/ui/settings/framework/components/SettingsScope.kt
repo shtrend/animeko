@@ -72,9 +72,10 @@ object SettingsDefaults {
  */
 @SettingsDsl
 abstract class SettingsScope {
-    @Stable
-    @PublishedApi
-    internal val itemHorizontalPadding = 0.dp
+    companion object {
+        @Stable
+        val itemHorizontalPadding = 16.dp
+    }
 
     @Stable
     @PublishedApi

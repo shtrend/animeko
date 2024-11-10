@@ -315,7 +315,10 @@ internal fun SettingsPageLayout(
                     Box(Modifier.consumeWindowInsets(paneContentWindowInsets.only(WindowInsetsSides.Top))) {
                         Column(
                             Modifier
-                                .paneContentPadding()
+                                .paneContentPadding(
+                                    extraStart = -SettingsScope.itemHorizontalPadding,
+                                    extraEnd = -SettingsScope.itemHorizontalPadding,
+                                )
                                 .paneWindowInsetsPadding(),
                         ) {
                             tabContent(tab)
@@ -398,7 +401,7 @@ fun SettingsTab(
         ),
     ) {
         val scope = remember(this) {
-            object : SettingsScope(), ColumnScope by this {}
+            object : SettingsScope(), ColumnScope by this@Column {}
         }
         scope.content()
     }
