@@ -51,7 +51,6 @@ import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPage
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPageViewModel
 import me.him188.ani.app.ui.cache.details.MediaDetailsLazyGrid
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
-import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.theme.AniNavigationMotionScheme
 import me.him188.ani.app.ui.profile.BangumiOAuthViewModel
 import me.him188.ani.app.ui.profile.auth.BangumiOAuthScene
@@ -321,7 +320,6 @@ private fun AniAppContentImpl(
                 val viewModel = viewModel { PeerFilterSettingsViewModel() }
                 PeerFilterSettingsPage(
                     viewModel.state,
-                    Modifier.desktopTitleBarPadding(),
                 )
             }
         }
