@@ -128,8 +128,7 @@ object AniWindowInsets {
      * 如果 TopAppBar 不会接触窗口左上角, 就使用这个.
      */
     @Composable
-    inline fun forTopAppBarWithoutDesktopTitle() = (WindowInsets.systemBars.union(WindowInsets.displayCutout))
-        .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal) // 要加上 displayCutout 因为刘海可能会挡住横屏状态下的状态栏返回键
+    inline fun forTopAppBarWithoutDesktopTitle() = forTopAppBar()// 要加上 displayCutout 因为刘海可能会挡住横屏状态下的状态栏返回键
 
     /**
      * 包含 macOS 标题栏

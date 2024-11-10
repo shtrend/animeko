@@ -15,6 +15,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -60,6 +61,7 @@ import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.SharedTransitionKeys
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
+import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.setRequestFullScreen
@@ -152,7 +154,13 @@ private fun MainSceneContent(
                 fadeIn(snap()) togetherWith fadeOut(snap())
             },
         ) { page ->
-            TabContent(layoutType = navigationLayoutType) {
+            TabContent(
+                layoutType = navigationLayoutType,
+                Modifier.ifThen(navigationLayoutType != NavigationSuiteType.NavigationBar) {
+                    // macos 标题栏只会在 NavigationRail 的区域内, TabContent 区域无需这些 padding.
+                    consumeWindowInsets(WindowInsets.desktopTitleBar())
+                },
+            ) {
                 when (page) {
                     MainScenePage.Exploration -> {
                         ExplorationPage(
