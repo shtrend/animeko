@@ -31,7 +31,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -44,6 +43,7 @@ import me.him188.ani.app.ui.foundation.animation.EmphasizedAccelerateEasing
 import me.him188.ani.app.ui.foundation.animation.EmphasizedDecelerateEasing
 import me.him188.ani.app.ui.foundation.animation.StandardAccelerate
 import me.him188.ani.app.ui.foundation.animation.StandardDecelerate
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isCompact
 import kotlin.math.roundToInt
 
@@ -191,7 +191,7 @@ data class NavigationMotionScheme(
         private val exitEasing = LinearOutSlowInEasing
 
         @Composable
-        fun calculate(windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo().windowSizeClass): NavigationMotionScheme {
+        fun calculate(windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass): NavigationMotionScheme {
             val useSlide = windowSizeClass.windowWidthSizeClass.isCompact
 
             val enterTransition: EnterTransition = run {

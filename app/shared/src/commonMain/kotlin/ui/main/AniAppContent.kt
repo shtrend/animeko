@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScaffoldDefaults
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -51,6 +50,7 @@ import me.him188.ani.app.ui.cache.CacheManagementViewModel
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPage
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPageViewModel
 import me.him188.ani.app.ui.cache.details.MediaDetailsLazyGrid
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.theme.LocalNavigationMotionScheme
 import me.him188.ani.app.ui.foundation.theme.NavigationMotionScheme
@@ -142,7 +142,7 @@ private fun AniAppContentImpl(
                 val route = backStack.toRoute<NavRoutes.Main>()
                 val navigationLayoutType =
                     AniNavigationSuiteDefaults.calculateLayoutType(
-                        currentWindowAdaptiveInfo(),
+                        currentWindowAdaptiveInfo1(),
                     )
                 var currentPage by rememberSaveable { mutableStateOf(route.initialPage) }
 

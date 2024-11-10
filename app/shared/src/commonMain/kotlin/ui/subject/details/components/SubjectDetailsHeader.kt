@@ -32,7 +32,6 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,6 +49,7 @@ import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.OutlinedTag
 import me.him188.ani.app.ui.foundation.animation.SharedTransitionKeys
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
 import me.him188.ani.app.ui.subject.AiringLabel
@@ -71,7 +71,7 @@ internal fun SharedTransitionScope.SubjectDetailsHeader(
     animatedVisibilityScope: AnimatedVisibilityScope,
     modifier: Modifier = Modifier,
 ) {
-    if (currentWindowAdaptiveInfo().isWidthAtLeastMedium) {
+    if (currentWindowAdaptiveInfo1().isWidthAtLeastMedium) {
         SubjectDetailsHeaderWide(
             subjectId = info.subjectId,
             coverImageUrl = coverImageUrl,

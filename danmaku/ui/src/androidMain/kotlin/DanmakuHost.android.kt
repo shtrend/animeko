@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.danmaku.ui
 
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -37,7 +46,6 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -64,6 +72,7 @@ import androidx.window.core.layout.WindowWidthSizeClass
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.danmaku.api.Danmaku
 import me.him188.ani.danmaku.api.DanmakuLocation
 import me.him188.ani.danmaku.api.DanmakuPresentation
@@ -408,7 +417,8 @@ private fun DanmakuConfig(
                     valueLabel = { Text(remember(speed) { "${(speed * 100).roundToInt()}%" }) },
                 )
 
-                val isDesktop = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
+                val isDesktop =
+                    currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
                 val displayDensityRange = remember(isDesktop) {
                     // 100% .. 0%
                     36.dp..(if (isDesktop) 720.dp else 240.dp)

@@ -21,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Transparent
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.effects.moveFocusOnEnter
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 
 /**
  * @see me.him188.ani.app.domain.mediasource.web.SelectorMediaSourceArguments
@@ -42,7 +42,7 @@ object SelectorConfigurationDefaults {
 
     val verticalSpacing: Dp
         @Composable
-        get() = currentWindowAdaptiveInfo().windowSizeClass.cardVerticalPadding
+        get() = currentWindowAdaptiveInfo1().windowSizeClass.cardVerticalPadding
 
     val textFieldShape
         @Composable

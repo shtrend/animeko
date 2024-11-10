@@ -46,7 +46,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -84,6 +83,7 @@ import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.session.SelfAvatar
@@ -197,7 +197,7 @@ fun CollectionPage(
             CollectionTypeScrollableTabRow(
                 selectedIndex = state.selectedTypeIndex,
                 onSelect = { index -> state.selectTypeIndex(index) },
-                Modifier.padding(horizontal = currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding),
+                Modifier.padding(horizontal = currentWindowAdaptiveInfo1().windowSizeClass.paneHorizontalPadding),
             ) { type ->
                 val size = state.collectionCounts
                 if (size == null) {
@@ -301,7 +301,7 @@ private fun CollectionPageLayout(
                             }
                         }
 
-                        if (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass.isAtLeastMedium) {
+                        if (currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass.isAtLeastMedium) {
                             IconButton(onClick = onClickSettings) {
                                 Icon(Icons.Rounded.Settings, "设置")
                             }

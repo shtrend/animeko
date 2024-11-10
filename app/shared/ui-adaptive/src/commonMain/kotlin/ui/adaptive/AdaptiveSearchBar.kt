@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarColors
 import androidx.compose.material3.SearchBarDefaults
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
@@ -22,6 +21,7 @@ import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.compareTo
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.utils.platform.isMobile
 
 /**
@@ -40,7 +40,7 @@ fun AdaptiveSearchBar(
     windowInsets: WindowInsets = AniWindowInsets.forSearchBar(),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    if (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass >= WindowWidthSizeClass.MEDIUM
+    if (currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass >= WindowWidthSizeClass.MEDIUM
         && !LocalPlatform.current.isMobile() // #1104
     ) {
         PopupSearchBar(

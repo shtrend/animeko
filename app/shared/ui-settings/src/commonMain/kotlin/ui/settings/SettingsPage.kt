@@ -44,7 +44,6 @@ import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldDestinationItem
 import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
@@ -71,6 +70,7 @@ import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.TopAppBarGoBackButton
@@ -187,7 +187,7 @@ fun SettingsPage(
                 }
                 Spacer(
                     Modifier.height(
-                        currentWindowAdaptiveInfo().windowSizeClass.paneVerticalPadding,
+                        currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding,
                     ),
                 )
             }
@@ -278,7 +278,7 @@ internal fun SettingsPageLayout(
                 }
 
 
-                val verticalPadding = currentWindowAdaptiveInfo().windowSizeClass.paneVerticalPadding
+                val verticalPadding = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding
 
                 Spacer(Modifier.height(verticalPadding)) // scrollable
                 navItems(scope)
@@ -397,7 +397,7 @@ fun SettingsTab(
     Column(
         modifier,
         verticalArrangement = Arrangement.spacedBy(
-            currentWindowAdaptiveInfo().windowSizeClass.cardVerticalPadding,
+            currentWindowAdaptiveInfo1().windowSizeClass.cardVerticalPadding,
         ),
     ) {
         val scope = remember(this) {

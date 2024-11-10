@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.only
 import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldLayout
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteType
@@ -30,6 +29,7 @@ import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.Zero
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 
 /**
@@ -43,7 +43,7 @@ fun AniNavigationSuiteLayout(
     navigationSuite: @Composable () -> Unit, // Ani modified
     modifier: Modifier = Modifier,
     layoutType: NavigationSuiteType =
-        AniNavigationSuiteDefaults.calculateLayoutType(currentWindowAdaptiveInfo()),
+        AniNavigationSuiteDefaults.calculateLayoutType(currentWindowAdaptiveInfo1()),
 //    navigationSuiteColors: NavigationSuiteColors = NavigationSuiteDefaults.colors(), // Ani modified
     navigationContainerColor: Color = AniThemeDefaults.navigationContainerColor,
     navigationContentColor: Color = contentColorFor(AniThemeDefaults.navigationContainerColor),

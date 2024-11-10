@@ -39,7 +39,6 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldValue
@@ -62,6 +61,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.widgets.FastLinearProgressIndicator
@@ -161,7 +161,7 @@ fun SelectorEpisodePaneContent(
     state: SelectorEpisodeState,
     modifier: Modifier = Modifier,
     itemSpacing: Dp = SelectorConfigurationDefaults.verticalSpacing,
-    horizontalPadding: Dp = currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding,
+    horizontalPadding: Dp = currentWindowAdaptiveInfo1().windowSizeClass.paneHorizontalPadding,
     itemColors: ListItemColors = ListItemDefaults.colors(),
 ) {
     Column(modifier) {

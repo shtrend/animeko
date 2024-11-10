@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DisplaySettings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
@@ -32,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.LocalIsPreviewing
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 
 @Immutable
 internal class MediaSourceHeadlineStyle(
@@ -42,7 +42,7 @@ internal class MediaSourceHeadlineStyle(
 
 @Composable
 internal fun computeMediaSourceHeadlineStyle(): MediaSourceHeadlineStyle {
-    return when (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass) {
+    return when (currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass) {
         WindowWidthSizeClass.COMPACT -> {
             MediaSourceHeadlineStyle(
                 imageSize = DpSize(96.dp, 96.dp),

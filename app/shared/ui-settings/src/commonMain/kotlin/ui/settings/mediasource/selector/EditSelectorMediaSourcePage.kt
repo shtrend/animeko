@@ -25,7 +25,6 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
@@ -52,6 +51,7 @@ import me.him188.ani.app.domain.mediasource.web.SelectorMediaSourceEngine
 import me.him188.ani.app.platform.Context
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.layout.ListDetailAnimatedPane
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthCompact
 import me.him188.ani.app.ui.foundation.layout.materialWindowMarginPadding
 import me.him188.ani.app.ui.foundation.layout.rememberConnectedScrollState
@@ -182,7 +182,7 @@ fun EditSelectorMediaSourcePage(
                         },
                         navigationIcon = { TopAppBarGoBackButton() },
                         actions = {
-                            if (currentWindowAdaptiveInfo().isWidthCompact && navigator.currentDestination?.pane != ListDetailPaneScaffoldRole.Detail) {
+                            if (currentWindowAdaptiveInfo1().isWidthCompact && navigator.currentDestination?.pane != ListDetailPaneScaffoldRole.Detail) {
                                 TextButton({ navigator.navigateTo(ListDetailPaneScaffoldRole.Detail) }) {
                                     Text("测试")
                                 }

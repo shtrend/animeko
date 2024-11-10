@@ -26,7 +26,6 @@ import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldDefaults
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.ListDetailAnimatedPane
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 
@@ -332,7 +332,7 @@ data class ListDetailLayoutParameters(
         @Composable
         fun calculate(directive: PaneScaffoldDirective): ListDetailLayoutParameters {
             val isTwoPane = directive.maxHorizontalPartitions > 1
-            val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+            val windowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass
             return if (isTwoPane) {
                 ListDetailLayoutParameters(
                     listPaneContentStartPadding = windowSizeClass.paneHorizontalPadding,

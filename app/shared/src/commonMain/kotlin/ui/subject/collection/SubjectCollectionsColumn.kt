@@ -40,7 +40,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -57,6 +56,7 @@ import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
 import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.ifThen
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.search.SearchProblem
@@ -83,7 +83,7 @@ fun SubjectCollectionsColumn(
     gridState: LazyGridState = rememberLazyGridState(),
     enableAnimation: Boolean = true,
 ) {
-    val isCompact = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.COMPACT
+    val isCompact = currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass == WindowWidthSizeClass.COMPACT
     val spacedBy = if (isCompact) 16.dp else 24.dp
 
     LazyVerticalGrid(

@@ -44,7 +44,6 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
@@ -73,6 +72,7 @@ import me.him188.ani.app.ui.foundation.layout.ConnectedScrollState
 import me.him188.ani.app.ui.foundation.layout.PaddingValuesSides
 import me.him188.ani.app.ui.foundation.layout.connectedScrollContainer
 import me.him188.ani.app.ui.foundation.layout.connectedScrollTarget
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.only
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.layout.rememberConnectedScrollState
@@ -409,7 +409,7 @@ fun SharedTransitionScope.SubjectDetailsPageLayout(
                         val type = SubjectDetailsTab.entries[index]
                         Column(Modifier.padding()) {
                             val paddingValues =
-                                PaddingValues(bottom = currentWindowAdaptiveInfo().windowSizeClass.paneVerticalPadding)
+                                PaddingValues(bottom = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding)
                             when (type) {
                                 SubjectDetailsTab.DETAILS -> detailsTab(paddingValues)
                                 SubjectDetailsTab.COMMENTS -> commentsTab(paddingValues)

@@ -25,7 +25,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
@@ -51,6 +50,7 @@ import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.layout.BasicCarouselItem
 import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults
 import me.him188.ani.app.ui.foundation.layout.compareTo
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.minimumHairlineSize
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.search.SearchProblemCard
@@ -70,7 +70,7 @@ fun FollowedSubjectsLazyRow(
     onPlay: (FollowedSubjectInfo) -> Unit,
     modifier: Modifier = Modifier,
     layoutParameters: FollowedSubjectsLayoutParameters = FollowedSubjectsDefaults.layoutParameters(
-        currentWindowAdaptiveInfo(),
+        currentWindowAdaptiveInfo1(),
     ),
     lazyListState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -206,7 +206,7 @@ data class FollowedSubjectsLayoutParameters(
 @Stable
 object FollowedSubjectsDefaults {
     @Composable
-    fun layoutParameters(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo()): FollowedSubjectsLayoutParameters {
+    fun layoutParameters(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo1()): FollowedSubjectsLayoutParameters {
         val width = windowAdaptiveInfo.windowSizeClass.windowWidthSizeClass
         return FollowedSubjectsLayoutParameters(
             imageSize = imageSize(windowAdaptiveInfo),

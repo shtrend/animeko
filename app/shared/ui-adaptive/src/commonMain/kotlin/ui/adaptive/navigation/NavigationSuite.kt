@@ -19,7 +19,6 @@ import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.PermanentDrawerSheet
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuite
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteColors
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
@@ -31,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 
 /**
  * @see NavigationSuite with Ani modifications:
@@ -42,7 +42,7 @@ import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 fun AniNavigationSuite(
     modifier: Modifier = Modifier,
     layoutType: NavigationSuiteType =
-        NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo()),
+        NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo1()),
     colors: NavigationSuiteColors = NavigationSuiteDefaults.colors(),
     navigationRailHeader: @Composable (ColumnScope.() -> Unit)? = null, // Ani added
     navigationRailItemSpacing: Dp = 0.dp, // Ani added

@@ -25,13 +25,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.layout.cardHorizontalPadding
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.settings.mediasource.rss.test.OutlinedMatchTag
 
 @Composable
@@ -47,8 +47,8 @@ fun SelectorTestEpisodeListGrid(
         modifier,
         state,
         contentPadding,
-        horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo().windowSizeClass.cardHorizontalPadding),
-        verticalItemSpacing = currentWindowAdaptiveInfo().windowSizeClass.cardVerticalPadding,
+        horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo1().windowSizeClass.cardHorizontalPadding),
+        verticalItemSpacing = currentWindowAdaptiveInfo1().windowSizeClass.cardVerticalPadding,
     ) {
         for (episode in episodes) {
             item(key = episode.playUrl) {

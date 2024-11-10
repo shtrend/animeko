@@ -52,7 +52,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -100,6 +99,7 @@ import me.him188.ani.app.ui.foundation.effects.OnLifecycleEvent
 import me.him188.ani.app.ui.foundation.effects.ScreenOnEffect
 import me.him188.ani.app.ui.foundation.effects.ScreenRotationEffect
 import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.setRequestFullScreen
 import me.him188.ani.app.ui.foundation.layout.setSystemBarVisible
@@ -202,7 +202,7 @@ private fun EpisodeSceneContent(
 
     BoxWithConstraints(modifier) {
         val showExpandedUI =
-            currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
+            currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
         CompositionLocalProvider(LocalImageViewerHandler provides imageViewer) {
             when {
                 showExpandedUI -> EpisodeSceneTabletVeryWide(vm, Modifier.fillMaxSize(), windowInsets)

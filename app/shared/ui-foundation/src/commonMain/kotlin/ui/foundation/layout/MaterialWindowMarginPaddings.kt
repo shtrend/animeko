@@ -1,8 +1,16 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.ui.foundation.layout
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.platform.debugInspectorInfo
@@ -20,7 +28,7 @@ fun Modifier.materialWindowMarginPadding(): Modifier = composed(
     },
 ) {
     // https://m3.material.io/foundations/layout/applying-layout
-    val values = when (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass) {
+    val values = when (currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass) {
         WindowWidthSizeClass.COMPACT -> {
             // https://m3.material.io/foundations/layout/applying-layout/compact#5a83ddd7-137f-4657-ba2d-eb08cac065e7
             MaterialWindowMarginPaddings.COMPACT

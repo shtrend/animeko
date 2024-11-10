@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +34,7 @@ import me.him188.ani.app.domain.mediasource.web.format.SelectorChannelFormatNoCh
 import me.him188.ani.app.domain.mediasource.web.format.SelectorFormatId
 import me.him188.ani.app.ui.foundation.effects.moveFocusOnEnter
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
 import me.him188.ani.app.ui.settings.mediasource.MediaSourceConfigurationDefaults
 
@@ -48,7 +48,7 @@ internal fun SelectorChannelFormatColumn(
     Column(modifier) {
         when (SelectorChannelFormat.findById(formatId)) {
             SelectorChannelFormatIndexGrouped -> Column(
-                verticalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo().windowSizeClass.cardVerticalPadding),
+                verticalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo1().windowSizeClass.cardVerticalPadding),
             ) {
                 Text(
                     "先提取线路名称列表，再提取剧集面板列表，按顺序对应后，再分别从每个剧集面板中提取剧集",
@@ -129,7 +129,7 @@ internal fun SelectorChannelFormatColumn(
             }
 
             SelectorChannelFormatNoChannel -> Column(
-                verticalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo().windowSizeClass.cardVerticalPadding),
+                verticalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo1().windowSizeClass.cardVerticalPadding),
             ) {
                 val conf = state.channelFormatNoChannel
                 OutlinedTextField(

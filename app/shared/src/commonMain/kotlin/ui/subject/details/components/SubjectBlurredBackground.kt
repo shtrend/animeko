@@ -11,7 +11,6 @@ package me.him188.ani.app.ui.subject.details.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -20,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.backgroundWithGradient
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 
 @Composable
@@ -31,7 +31,7 @@ fun SubjectBlurredBackground(
 ) {
     Box(
         modifier
-            .blur(if (currentWindowAdaptiveInfo().isWidthAtLeastMedium) 32.dp else 16.dp)
+            .blur(if (currentWindowAdaptiveInfo1().isWidthAtLeastMedium) 32.dp else 16.dp)
             .backgroundWithGradient(
                 coverImageUrl, backgroundColor,
                 brush = if (backgroundColor.luminance() < 0.5f) {

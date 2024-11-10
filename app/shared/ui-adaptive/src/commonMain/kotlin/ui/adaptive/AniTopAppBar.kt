@@ -32,7 +32,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -47,6 +46,7 @@ import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.compareTo
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
@@ -89,7 +89,7 @@ fun AniTopAppBar(
         .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal), // You would like to add only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
-    val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+    val windowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass
     WindowDragArea {
         val additionalPadding =
             if (windowSizeClass.windowWidthSizeClass.isAtLeastMedium && windowSizeClass.windowHeightSizeClass.isAtLeastMedium) {

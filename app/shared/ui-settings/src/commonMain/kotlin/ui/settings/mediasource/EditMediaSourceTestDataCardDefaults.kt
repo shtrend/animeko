@@ -23,7 +23,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -31,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.effects.moveFocusOnEnter
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isCompact
 
 @Stable
@@ -52,7 +52,7 @@ object EditMediaSourceTestDataCardDefaults {
         content: @Composable FlowRowScope.() -> Unit
     ) {
         BoxWithConstraints {
-            val isCompact = currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass.isCompact
+            val isCompact = currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass.isCompact
             androidx.compose.foundation.layout.FlowRow(
                 modifier.padding(all = 16.dp).padding(bottom = 4.dp).focusGroup(),
                 verticalArrangement = if (isCompact) {

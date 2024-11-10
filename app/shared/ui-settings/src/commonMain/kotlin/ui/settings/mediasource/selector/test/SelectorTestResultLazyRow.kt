@@ -15,7 +15,6 @@ import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -23,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.layout.cardHorizontalPadding
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 
 
 /**
@@ -55,7 +55,7 @@ internal fun <T> SelectorTestResultLazyRow(
         modifier = modifier,
         state = lazyListState,
         contentPadding = contentPadding,
-        horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo().windowSizeClass.cardHorizontalPadding),
+        horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo1().windowSizeClass.cardHorizontalPadding),
     ) {
         for ((index, value) in items.withIndex()) {
             item {

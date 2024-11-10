@@ -28,7 +28,6 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
@@ -55,6 +54,7 @@ import me.him188.ani.app.ui.foundation.layout.ListDetailAnimatedPane
 import me.him188.ani.app.ui.foundation.layout.PaddingValuesSides
 import me.him188.ani.app.ui.foundation.layout.ThreePaneScaffoldValueConverter.ExtraPaneForNestedDetails
 import me.him188.ani.app.ui.foundation.layout.convert
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.only
 import me.him188.ani.app.ui.foundation.layout.panePadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
@@ -222,7 +222,7 @@ fun EditRssMediaSourcePage(
             navigator.navigateBack()
         }
 
-        val panePadding = currentWindowAdaptiveInfo().windowSizeClass.panePadding
+        val panePadding = currentWindowAdaptiveInfo1().windowSizeClass.panePadding
         val panePaddingVertical = panePadding.only(PaddingValuesSides.Vertical)
         ListDetailPaneScaffold(
             navigator.scaffoldDirective,
@@ -254,7 +254,7 @@ fun EditRssMediaSourcePage(
                 ListDetailAnimatedPane {
                     Crossfade(testState.viewingItem) { item ->
                         item ?: return@Crossfade
-                        if (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT) {
+                        if (currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT) {
                             SideSheetPane(
                                 onClose = { navigator.navigateBack() },
                                 Modifier.padding(panePaddingVertical),

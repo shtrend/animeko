@@ -27,7 +27,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -51,6 +50,7 @@ import me.him188.ani.app.ui.adaptive.NavTitleHeader
 import me.him188.ani.app.ui.exploration.followed.FollowedSubjectsLazyRow
 import me.him188.ani.app.ui.exploration.trends.TrendingSubjectsCarousel
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.session.SelfAvatar
@@ -97,7 +97,7 @@ fun ExplorationPage(
                 title = { AniTopAppBarDefaults.Title("探索") },
                 Modifier.fillMaxWidth(),
                 actions = {
-                    if (currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass.isAtLeastMedium) {
+                    if (currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass.isAtLeastMedium) {
                         IconButton(onClick = onClickSettings) {
                             Icon(Icons.Rounded.Settings, "设置")
                         }
@@ -121,7 +121,7 @@ fun ExplorationPage(
         },
         contentWindowInsets = windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
     ) { topBarPadding ->
-        val horizontalPadding = currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding
+        val horizontalPadding = currentWindowAdaptiveInfo1().windowSizeClass.paneHorizontalPadding
         val horizontalContentPadding =
             PaddingValues(horizontal = horizontalPadding)
 

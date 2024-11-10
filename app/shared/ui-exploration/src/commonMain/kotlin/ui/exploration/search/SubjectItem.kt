@@ -30,7 +30,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Surface
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
@@ -49,6 +48,7 @@ import androidx.window.core.layout.WindowSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.layout.compareTo
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 
 /**
  * Design: [SubjectItem on Figma](https://www.figma.com/design/LET1n9mmDa6npDTIlUuJjU/Main?node-id=101-877&t=gmFJS6LFQudIIXfK-4)
@@ -68,8 +68,8 @@ fun SubjectItemLayout(
     rating: @Composable () -> Unit,
     actions: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    layout: SubjectItemLayoutParameters = SubjectItemLayoutParameters.calculate(currentWindowAdaptiveInfo().windowSizeClass),
-    typography: SubjectItemTypography = SubjectItemTypography.calculate(currentWindowAdaptiveInfo().windowSizeClass),
+    layout: SubjectItemLayoutParameters = SubjectItemLayoutParameters.calculate(currentWindowAdaptiveInfo1().windowSizeClass),
+    typography: SubjectItemTypography = SubjectItemTypography.calculate(currentWindowAdaptiveInfo1().windowSizeClass),
     colors: SubjectItemColors = SubjectItemDefaults.colors()
 ) {
     val shape = layout.shape

@@ -28,7 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteDefaults
@@ -61,6 +60,7 @@ import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.SharedTransitionKeys
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
@@ -81,7 +81,7 @@ fun MainScene(
     modifier: Modifier = Modifier,
     onNavigateToPage: (MainScenePage) -> Unit,
     navigationLayoutType: NavigationSuiteType = AniNavigationSuiteDefaults.calculateLayoutType(
-        currentWindowAdaptiveInfo(),
+        currentWindowAdaptiveInfo1(),
     ),
 ) {
     if (LocalPlatform.current.isAndroid()) {
@@ -101,7 +101,7 @@ private fun MainSceneContent(
     onNavigateToPage: (MainScenePage) -> Unit,
     modifier: Modifier = Modifier,
     navigationLayoutType: NavigationSuiteType = AniNavigationSuiteDefaults.calculateLayoutType(
-        currentWindowAdaptiveInfo(),
+        currentWindowAdaptiveInfo1(),
     ),
 ) {
     AniNavigationSuiteLayout(
@@ -118,7 +118,7 @@ private fun MainSceneContent(
                         { onNavigateToPage(MainScenePage.Search) },
                         Modifier
                             .desktopTitleBarPadding()
-                            .ifThen(currentWindowAdaptiveInfo().windowSizeClass.windowHeightSizeClass.isAtLeastMedium) {
+                            .ifThen(currentWindowAdaptiveInfo1().windowSizeClass.windowHeightSizeClass.isAtLeastMedium) {
                                 // 移动端横屏不增加额外 padding
                                 padding(vertical = 48.dp)
                             },

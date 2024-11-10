@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.carousel.CarouselItemScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -149,7 +148,7 @@ object CarouselItemDefaults {
 
     @Composable
     fun itemSize(): CarouselItemSize {
-        val windowSizeClass = currentWindowAdaptiveInfo().windowSizeClass
+        val windowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass
         val preferredWidth = if (windowSizeClass.windowWidthSizeClass >= WindowWidthSizeClass.MEDIUM) {
             300.dp
         } else {

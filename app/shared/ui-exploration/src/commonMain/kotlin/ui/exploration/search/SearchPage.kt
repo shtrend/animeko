@@ -29,7 +29,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridS
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.Text
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
@@ -65,6 +64,7 @@ import me.him188.ani.app.ui.foundation.interaction.keyboardDirectionToSelectItem
 import me.him188.ani.app.ui.foundation.interaction.keyboardPageToScroll
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.compareTo
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
@@ -98,7 +98,7 @@ fun SearchPage(
                 state.suggestionSearchBarState,
                 Modifier
                     .ifThen(
-                        currentWindowAdaptiveInfo().windowSizeClass.windowWidthSizeClass >= WindowWidthSizeClass.MEDIUM
+                        currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass >= WindowWidthSizeClass.MEDIUM
                                 || !state.suggestionSearchBarState.expanded,
                     ) { contentPadding },
                 inputFieldModifier = Modifier.focusRequester(focusRequester),
@@ -211,7 +211,7 @@ internal fun SharedTransitionScope.SearchPageResultColumn(
                 state.animateScrollBy(it)
             },
         lazyStaggeredGridState = state,
-        horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding),
+        horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo1().windowSizeClass.paneHorizontalPadding),
     ) {
         if (showSummary()) {
             item(span = StaggeredGridItemSpan.FullLine) {
@@ -259,7 +259,7 @@ internal fun SharedTransitionScope.SearchPageResultColumn(
                         )
                         .fillMaxWidth()
                         .bringIntoViewRequester(requester)
-                        .padding(vertical = currentWindowAdaptiveInfo().windowSizeClass.paneVerticalPadding / 2),
+                        .padding(vertical = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding / 2),
                     image = {
                         SubjectItemDefaults.Image(
                             info.imageUrl,

@@ -43,7 +43,6 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -68,6 +67,7 @@ import me.him188.ani.app.tools.getOrZero
 import me.him188.ani.app.tools.toPercentageOrZero
 import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.interaction.clickableAndMouseRightClick
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.text.ProvideContentColor
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
@@ -311,7 +311,7 @@ fun CacheEpisodeItem(
         },
         trailingContent = {
             // 仅当有足够宽度时, 才展示当前状态下的推荐操作
-            val showPrimaryAction = currentWindowAdaptiveInfo().isWidthAtLeastMedium
+            val showPrimaryAction = currentWindowAdaptiveInfo1().isWidthAtLeastMedium
             Row(horizontalArrangement = Arrangement.aligned(Alignment.End)) {
                 // 当前状态下的推荐操作
                 AnimatedVisibility(showPrimaryAction) {
