@@ -244,7 +244,7 @@ private class EpisodeViewModelImpl(
         emitAll(episodeCollectionRepository.episodeCollectionInfoFlow(subjectId, episodeId))
     }.stateInBackground(null)
 
-    private val episodeInfo = episodeCollection.map { it?.episodeInfo }
+    private val episodeInfo = episodeCollection.map { it?.episodeInfo }.distinctUntilChanged()
     private val subjectDetailsStateFactory: SubjectDetailsStateFactory by inject()
 
     // Media Selection
@@ -257,7 +257,7 @@ private class EpisodeViewModelImpl(
             } else {
                 subjectInfo.map { subjectInfo ->
                     MediaFetchRequest.create(subjectInfo, episodeInfo)
-                }
+                }.distinctUntilChanged()
             },
         )
     }.shareInBackground(started = SharingStarted.Lazily)
