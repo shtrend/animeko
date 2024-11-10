@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.FrameWindowScope
 import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
@@ -85,6 +86,7 @@ import me.him188.ani.app.platform.window.setTitleBarColor
 import me.him188.ani.app.tools.update.DesktopUpdateInstaller
 import me.him188.ani.app.tools.update.UpdateInstaller
 import me.him188.ani.app.ui.foundation.LocalImageLoader
+import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.LocalWindowState
 import me.him188.ani.app.ui.foundation.getDefaultImageLoader
 import me.him188.ani.app.ui.foundation.ifThen
@@ -354,6 +356,15 @@ object AniDesktop {
                             } else {
                                 window.rootPane.putClientProperty("apple.awt.fullWindowContent", false)
                                 window.rootPane.putClientProperty("apple.awt.transparentTitleBar", false)
+                            }
+                        }
+                    }
+
+                    if (LocalPlatform.current.isMacOS()) {
+                        // CMP bug, 退出全屏后窗口会变为 Maximized, 而不是还原到 Floating
+                        if (!isSystemInFullscreen() && windowState.placement == WindowPlacement.Maximized) {
+                            SideEffect {
+                                windowState.placement = WindowPlacement.Floating
                             }
                         }
                     }

@@ -15,7 +15,6 @@ import androidx.compose.ui.window.WindowState
 import com.sun.jna.Library
 import com.sun.jna.Native
 import com.sun.jna.Platform
-import kotlinx.coroutines.delay
 import me.him188.ani.app.platform.PlatformWindow
 
 internal class MacosWindowUtils : AwtWindowUtils() {
@@ -46,11 +45,6 @@ internal class MacosWindowUtils : AwtWindowUtils() {
                 return
             }
 
-//            window.savedMacosWindowState = SavedMacosWindowState(windowState.position, windowState.size)
-
-            // CMP bug, 必须先 Maximized 并且等系统动画完成再 Fullscreen, 否则取消 Fullscreen 时窗口会变为 maximized
-            windowState.placement = WindowPlacement.Maximized
-            delay(1000) // 留足时间. 窗口越小, 需要的时间越多.
             windowState.placement = WindowPlacement.Fullscreen
         } else {
             if (windowState.placement == WindowPlacement.Floating) {
