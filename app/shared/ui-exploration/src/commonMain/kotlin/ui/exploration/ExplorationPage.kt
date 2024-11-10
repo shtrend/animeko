@@ -116,6 +116,7 @@ fun ExplorationPage(
                         Icon(Icons.Rounded.Search, "搜索")
                     }
                 },
+                windowInsets = AniWindowInsets.forTopAppBarWithoutDesktopTitle(),
             )
         },
         contentWindowInsets = windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),

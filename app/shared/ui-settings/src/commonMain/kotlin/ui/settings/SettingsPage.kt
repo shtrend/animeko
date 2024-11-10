@@ -11,6 +11,7 @@ package me.him188.ani.app.ui.settings
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
@@ -70,7 +71,6 @@ import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
-import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.TopAppBarGoBackButton
@@ -143,8 +143,7 @@ fun SettingsPage(
         },
         tabContent = { currentTab ->
             val tabModifier = Modifier
-                .padding(horizontal = currentWindowAdaptiveInfo().windowSizeClass.paneHorizontalPadding - 8.dp)
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 8.dp)) {
                 when (currentTab) {
                     SettingsTab.ABOUT -> AboutTab({ vm.debugTriggerState.triggerDebugMode() }, tabModifier)
                     SettingsTab.DEBUG -> DebugTab(
@@ -249,6 +248,7 @@ internal fun SettingsPageLayout(
                 },
                 colors = AniThemeDefaults.transparentAppBarColors(),
                 scrollBehavior = topAppBarScrollBehavior,
+                windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
             )
         },
         listPaneContent = {
@@ -308,16 +308,18 @@ internal fun SettingsPageLayout(
                                 }
                             },
                             colors = AniThemeDefaults.transparentAppBarColors(),
+                            windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                         )
                     }
 
-                    Column(
-                        Modifier
-                            .paneContentPadding()
-                            .consumeWindowInsets(AniWindowInsets.forTopAppBar().only(WindowInsetsSides.Top))
-                            .paneWindowInsetsPadding(),
-                    ) {
-                        tabContent(tab)
+                    Box(Modifier.consumeWindowInsets(paneContentWindowInsets.only(WindowInsetsSides.Top))) {
+                        Column(
+                            Modifier
+                                .paneContentPadding()
+                                .paneWindowInsetsPadding(),
+                        ) {
+                            tabContent(tab)
+                        }
                     }
                 }
             }

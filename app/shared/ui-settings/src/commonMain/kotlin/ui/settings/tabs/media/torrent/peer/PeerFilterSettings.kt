@@ -9,13 +9,12 @@
 
 package me.him188.ani.app.ui.settings.tabs.media.torrent.peer
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -53,13 +52,8 @@ import me.him188.ani.app.ui.settings.tabs.media.torrent.peer.blocklist.BlockList
 fun PeerFilterSettingsPage(
     state: PeerFilterSettingsState,
     modifier: Modifier = Modifier,
-    windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
     navigator: ThreePaneScaffoldNavigator<Nothing> = rememberListDetailPaneScaffoldNavigator()
 ) {
-    val paneModifier = Modifier
-        .consumeWindowInsets(windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
-        .fillMaxWidth()
-
     Surface(color = AniThemeDefaults.pageContentBackgroundColor) {
         AniListDetailPaneScaffold(
             navigator = navigator,
@@ -68,7 +62,7 @@ fun PeerFilterSettingsPage(
                     enableSearch = !listDetailLayoutParameters.isSinglePane,
                     title = { AniTopAppBarDefaults.Title("Peer 过滤和屏蔽设置") },
                     state = state,
-                    windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                    windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                 )
             },
             listPaneContent = {
@@ -76,7 +70,9 @@ fun PeerFilterSettingsPage(
                     state = state,
                     showIpBlockingItem = !listDetailLayoutParameters.isSinglePane,
                     onClickIpBlockSettings = { navigator.navigateTo(ThreePaneScaffoldRole.Primary) },
-                    modifier = paneModifier.paneContentPadding(),
+                    modifier = Modifier
+                        .paneContentPadding()
+                        .paneWindowInsetsPadding(),
                 )
             },
             detailPane = {
@@ -87,21 +83,23 @@ fun PeerFilterSettingsPage(
                         enableSearch = true,
                         title = { AniTopAppBarDefaults.Title("管理 IP 黑名单") },
                         state = state,
-                        windowInsets = windowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                        windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
                     )
                 }
 
-                BlockListEditPane(
-                    blockedIpList = filteredList,
-                    showTitle = !listDetailLayoutParameters.isSinglePane,
-                    modifier = paneModifier.paneContentPadding(),
-                    onAdd = { state.addBlockedIp(it) },
-                    onRemove = { state.removeBlockedIp(it) },
-                )
+                Box(Modifier.consumeWindowInsets(paneContentWindowInsets.only(WindowInsetsSides.Top))) {
+                    BlockListEditPane(
+                        blockedIpList = filteredList,
+                        showTitle = !listDetailLayoutParameters.isSinglePane,
+                        modifier = Modifier
+                            .paneContentPadding()
+                            .paneWindowInsetsPadding(),
+                        onAdd = { state.addBlockedIp(it) },
+                        onRemove = { state.removeBlockedIp(it) },
+                    )
+                }
             },
-            modifier = modifier
-                .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-                .consumeWindowInsets(windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom)),
+            modifier = modifier,
             listPanePreferredWidth = 420.dp,
         )
     }

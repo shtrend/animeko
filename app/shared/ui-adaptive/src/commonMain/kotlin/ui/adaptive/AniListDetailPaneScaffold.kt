@@ -67,15 +67,26 @@ import me.him188.ani.app.ui.foundation.navigation.BackHandler
  * 总之, 你总是需要在 [listPaneContent] 和 [detailPane] 中使用 [PaneScope.paneContentPadding] 和 [PaneScope.paneWindowInsetsPadding] 来处理 window insets.
  * [listPaneContent] 内会自动帮你处理 TopAppBar 的 insets.
  *
- * 如果要在 [detailPane] 内也增加 [AniTopAppBar], 则需要自行处理 insets.
+ * 如果要在 [detailPane] 内也增加 [AniTopAppBar], 则需要自行处理 insets:
+ * ```
+ * detailPane = {
+ *     AniTopAppBar(windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal))
+ *     Box(Modifier.consumeWindowInsets(paneContentWindowInsets.only(WindowInsetsSides.Top))) {
+ *         Column(Modifier.paneContentPadding().paneWindowInsetsPadding()) {
+ *             // ...
+ *         }
+ *     }
+ * }
+ * ```
+ * TODO: 为 [detailPane] 内使用 [AniTopAppBar] 做一个 scaffold
  *
- * @param listPaneTopAppBar 通常可以放 [AniTopAppBar]. 可以为 `null`, 届时不占额外空间 (也不会造成 insets 消耗).
+ * @param listPaneTopAppBar 通常可以放 [AniTopAppBar]. 可以为 `null`, 届时不占额外空间 (也不会造成 insets 消耗). 你需要指定 [AniTopAppBar] 的 windowInsets 为 `contentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)`.
  * @param listPaneContent 列表内容, 可以是 [Column] 或者 Grid. 需要自行实现 vertical scroll.
  * @param detailPane 详情页内容.
  * @param listPanePreferredWidth See also [androidx.compose.material3.adaptive.layout.PaneScaffoldScope.preferredWidth]
  * @param useSharedTransition 是否在[单页模式][ListDetailLayoutParameters.isSinglePane]时使用 Container Transform 等 [SharedTransitionLayout] 的动画.
  * 启用后将会调整切换 pane 时的 fade 动画逻辑来支持 Container Transform.
- * @param contentWindowInsets 内容的 [WindowInsets]. 这会影响 [PaneScope.contentWindowInsets].
+ * @param contentWindowInsets 内容的 [WindowInsets]. 这会影响 [PaneScope.paneContentWindowInsets].
  *
  * @sample me.him188.ani.app.ui.exploration.search.SearchPageLayout
  */
@@ -114,7 +125,7 @@ fun <T> AniListDetailPaneScaffold(
                                     override val role: ThreePaneScaffoldRole
                                         get() = threePaneScaffoldScope.role
 
-                                    override val contentWindowInsets: WindowInsets
+                                    override val paneContentWindowInsets: WindowInsets
                                         get() = when {
                                             isSinglePane -> contentWindowInsets
                                             else -> contentWindowInsets.only(WindowInsetsSides.Start + WindowInsetsSides.Vertical)
@@ -132,7 +143,7 @@ fun <T> AniListDetailPaneScaffold(
                             listPaneTopAppBar(scope)
                             Column(
                                 Modifier.consumeWindowInsets(
-                                    AniWindowInsets.forTopAppBar().only(WindowInsetsSides.Top),
+                                    contentWindowInsets.only(WindowInsetsSides.Top),
                                 ),
                             ) {
                                 listPaneContent(scope)
@@ -158,7 +169,7 @@ fun <T> AniListDetailPaneScaffold(
                                     override val role: ThreePaneScaffoldRole
                                         get() = threePaneScaffoldScope.role
 
-                                    override val contentWindowInsets: WindowInsets
+                                    override val paneContentWindowInsets: WindowInsets
                                         get() = when {
                                             isSinglePane -> contentWindowInsets
                                             else -> contentWindowInsets.only(WindowInsetsSides.End + WindowInsetsSides.Vertical)
@@ -230,13 +241,13 @@ interface PaneScope : SharedTransitionScope {
      * ```
      */
     @Stable
-    val contentWindowInsets: WindowInsets
+    val paneContentWindowInsets: WindowInsets
 
     /**
-     * @see contentWindowInsets
+     * @see paneContentWindowInsets
      */
     @Stable
-    fun Modifier.paneWindowInsetsPadding(): Modifier = windowInsetsPadding(contentWindowInsets)
+    fun Modifier.paneWindowInsetsPadding(): Modifier = windowInsetsPadding(paneContentWindowInsets)
 
     /**
      * 为 pane 增加自动的 content padding 并 consume 等量的 [WindowInsets]. 通常应用于 pane 的最外层容器:

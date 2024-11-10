@@ -271,6 +271,7 @@ fun CacheManagementPage(
                     }
                 },
                 colors = appBarColors,
+                windowInsets = AniWindowInsets.forTopAppBarWithoutDesktopTitle(),
             )
         },
         containerColor = Color.Unspecified,

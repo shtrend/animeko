@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.material3.DrawerDefaults
 import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.NavigationRailDefaults
@@ -116,9 +117,23 @@ object AniWindowInsets {
         @Composable
         get() = WindowInsets.safeDrawing + WindowInsets.desktopTitleBar()
 
+    /**
+     * 如果 TopAppBar 会接触窗口左上角, 就使用这个. 因为 macOS 的标题栏是透明且悬浮的.
+     */
     @Composable
-    inline fun forTopAppBar() = systemBars + WindowInsets.displayCutout // 刘海可能会挡住横屏状态下的状态栏返回键
+    inline fun forTopAppBar() = (systemBars.union(WindowInsets.displayCutout))
+        .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal) // 要加上 displayCutout 因为刘海可能会挡住横屏状态下的状态栏返回键
 
+    /**
+     * 如果 TopAppBar 不会接触窗口左上角, 就使用这个.
+     */
+    @Composable
+    inline fun forTopAppBarWithoutDesktopTitle() = (WindowInsets.systemBars.union(WindowInsets.displayCutout))
+        .only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal) // 要加上 displayCutout 因为刘海可能会挡住横屏状态下的状态栏返回键
+
+    /**
+     * 包含 macOS 标题栏
+     */
     @Composable
     inline fun forPageContent() = safeDrawing
 

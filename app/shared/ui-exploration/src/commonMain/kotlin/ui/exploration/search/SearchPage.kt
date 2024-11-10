@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -84,6 +84,7 @@ fun SearchPage(
     onSelect: (index: Int, item: SubjectPreviewItemInfo) -> Unit = { _, _ -> },
     focusSearchBarByDefault: Boolean = true,
     navigator: ThreePaneScaffoldNavigator<*> = rememberListDetailPaneScaffoldNavigator(),
+    contentWindowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
     BackHandler(navigator.canNavigateBack()) {
         navigator.navigateBack()
@@ -143,6 +144,7 @@ fun SearchPage(
             }
         },
         modifier,
+        contentWindowInsets = contentWindowInsets,
     )
 
     // 不能挪到 searchBar 里面, 否则从详情页回来的时候会重复 focus
@@ -304,6 +306,7 @@ internal fun SearchPageLayout(
     searchResultList: @Composable (PaneScope.() -> Unit),
     detailContent: @Composable (PaneScope.() -> Unit),
     modifier: Modifier = Modifier,
+    contentWindowInsets: WindowInsets = AniWindowInsets.forPageContent(),
     searchBarHeight: Dp = 64.dp,
 ) {
     AniListDetailPaneScaffold(
@@ -315,15 +318,11 @@ internal fun SearchPageLayout(
                 navigationIcon = {
                     TopAppBarGoBackButton()
                 },
+                windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
             )
         },
         listPaneContent = {
-            Box(
-                Modifier
-                    .consumeWindowInsets(
-                        AniWindowInsets.forTopAppBar().only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
-                    ),
-            ) {
+            Box {
                 Column(
                     Modifier
                         .paneContentPadding()
@@ -336,8 +335,8 @@ internal fun SearchPageLayout(
                 Row(Modifier.fillMaxWidth()) {
                     searchBar(
                         Modifier
-                            // no window insets padding. 让 search bar 自己 consume
                             .paneContentPadding(),
+                        // no window insets padding. 让 search bar 自己 consume
                     )
                 }
             }
@@ -348,5 +347,6 @@ internal fun SearchPageLayout(
         modifier,
         useSharedTransition = true,
         listPanePreferredWidth = 480.dp,
+        contentWindowInsets = contentWindowInsets,
     )
 }

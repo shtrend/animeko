@@ -314,7 +314,6 @@ private fun AniAppContentImpl(
                 PeerFilterSettingsPage(
                     viewModel.state,
                     Modifier.desktopTitleBarPadding(),
-                    windowInsets = ScaffoldDefaults.contentWindowInsets,
                 )
             }
         }

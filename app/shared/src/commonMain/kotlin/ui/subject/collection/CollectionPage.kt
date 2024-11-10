@@ -308,6 +308,7 @@ private fun CollectionPageLayout(
                         }
                     },
                     avatar = avatar,
+                    windowInsets = AniWindowInsets.forTopAppBarWithoutDesktopTitle(),
                 )
 
                 filters(CollectionPageFilters)
