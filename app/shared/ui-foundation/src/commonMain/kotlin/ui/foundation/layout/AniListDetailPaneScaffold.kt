@@ -122,11 +122,6 @@ interface PaneScope : SharedTransitionScope {
     fun Modifier.paneContentPadding(): Modifier
 }
 
-enum class AniListDetailPaneNavigationType {
-    NAV_HOST,
-    LIST_DETAIL,
-}
-
 @Immutable
 data class ListDetailLayoutParameters(
     val listPaneContentPaddingValues: PaddingValues,
