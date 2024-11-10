@@ -157,7 +157,10 @@ class FollowedSubjectsRepository(
             }.thenByDescending { info ->
                 // 2. 在看 > 想看
                 info.subjectCollectionInfo.collectionType == UnifiedCollectionType.DOING
-            }.thenByDescending { info -> // TODO: 3. 最后播放时间降序 (不必在 4.0 实现) 
+            }.thenByDescending { info ->
+                // 3. 最后播放时间降序
+                info.subjectCollectionInfo.lastUpdated
+            }.thenByDescending { info ->
                 // 4. (已经看了的 sort - first sort) 降序
                 val firstEp = info.subjectCollectionInfo.episodes.firstOrNull()?.episodeInfo?.sort
                 val firstDone =
