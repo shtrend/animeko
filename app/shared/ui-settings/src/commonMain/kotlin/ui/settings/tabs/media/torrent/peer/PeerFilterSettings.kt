@@ -69,7 +69,7 @@ fun PeerFilterSettingsPage(
             listPaneContent = {
                 PeerFilterEditPane(
                     state = state,
-                    showIpBlockingItem = !listDetailLayoutParameters.isSinglePane,
+                    showIpBlockingItem = listDetailLayoutParameters.isSinglePane,
                     onClickIpBlockSettings = { navigator.navigateTo(ThreePaneScaffoldRole.Primary) },
                     modifier = Modifier
                         .paneContentPadding()
@@ -91,7 +91,7 @@ fun PeerFilterSettingsPage(
                 Box(Modifier.consumeWindowInsets(paneContentWindowInsets.only(WindowInsetsSides.Top))) {
                     BlockListEditPane(
                         blockedIpList = filteredList,
-                        showTitle = listDetailLayoutParameters.isSinglePane,
+                        showTitle = !listDetailLayoutParameters.isSinglePane,
                         modifier = Modifier
                             .paneContentPadding(
                                 extraStart = -SettingsScope.itemHorizontalPadding,
