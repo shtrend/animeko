@@ -31,7 +31,6 @@ import me.him188.ani.app.domain.mediasource.MediaSourceEngineHelpers
 import me.him188.ani.app.domain.mediasource.asCandidate
 import me.him188.ani.app.domain.mediasource.web.format.SelectedChannelEpisodes
 import me.him188.ani.app.domain.mediasource.web.format.SelectorChannelFormat
-import me.him188.ani.app.domain.mediasource.web.format.SelectorChannelFormat.Companion.isPossiblyMovie
 import me.him188.ani.app.domain.mediasource.web.format.SelectorFormatConfig
 import me.him188.ani.app.domain.mediasource.web.format.SelectorSubjectFormat
 import me.him188.ani.datasources.api.DefaultMedia
@@ -96,9 +95,15 @@ abstract class SelectorMediaSourceEngine {
         searchUrl: String,
         subjectName: String,
         useOnlyFirstWord: Boolean,
+        removeSpecial: Boolean,
     ): ApiResponse<SearchSubjectResult> {
+        val finalName = if (removeSpecial) {
+            MediaListFilters.removeSpecials(subjectName, removeWhitespace = false) // keep whitespace for getFirstWord
+        } else {
+            subjectName
+        }
         val encodedUrl = MediaSourceEngineHelpers.encodeUrlSegment(
-            if (useOnlyFirstWord) getFirstWord(subjectName) else subjectName,
+            if (useOnlyFirstWord) getFirstWord(finalName) else finalName,
         )
 
         val finalUrl = Url(
@@ -190,7 +195,7 @@ abstract class SelectorMediaSourceEngine {
         val parser = LabelFirstRawTitleParser()
         val originalMediaList = episodes.mapNotNull { info ->
             val subtitleLanguages = guessSubtitleLanguages(info, parser)
-            info.episodeSort ?: return@mapNotNull null
+            info.episodeSortOrEp ?: return@mapNotNull null
             DefaultMedia(
                 mediaId = buildString {
                     append(mediaSourceId)
@@ -205,7 +210,7 @@ abstract class SelectorMediaSourceEngine {
                     }
                     append(info.name)
                     append("-")
-                    append(info.episodeSort)
+                    append(info.episodeSortOrEp)
                 },
                 mediaSourceId = mediaSourceId,
                 originalUrl = info.playUrl,
@@ -225,13 +230,7 @@ abstract class SelectorMediaSourceEngine {
                     size = FileSize.Unspecified,
                     subtitleKind = SubtitleKind.EMBEDDED,
                 ),
-                episodeRange = EpisodeRange.single(
-                    if (isPossiblyMovie(info.name) && info.episodeSort is EpisodeSort.Special) {
-                        EpisodeSort(1) // 电影总是 01
-                    } else {
-                        info.episodeSort
-                    },
-                ),
+                episodeRange = EpisodeRange.single(info.episodeSortOrEp),
                 location = MediaSourceLocation.Online,
                 kind = MediaSourceKind.WEB,
             )

@@ -10,6 +10,11 @@
 package me.him188.ani.app.domain.mediasource
 
 import me.him188.ani.datasources.api.topic.contains
+import me.him188.ani.utils.platform.deleteInfix
+import me.him188.ani.utils.platform.deleteMatches
+import me.him188.ani.utils.platform.deletePrefix
+import me.him188.ani.utils.platform.replaceMatches
+import me.him188.ani.utils.platform.trimSB
 
 /**
  * 常用的过滤器
@@ -19,7 +24,7 @@ import me.him188.ani.datasources.api.topic.contains
 object MediaListFilters {
     val ContainsSubjectName = BasicMediaListFilter { media ->
         subjectNamesWithoutSpecial.any { subjectName ->
-            removeSpecials(removeSpecials(media.originalTitle))
+            removeSpecials(media.originalTitle, removeWhitespace = true)
                 .contains(subjectName, ignoreCase = true)
         }
     }
@@ -37,7 +42,7 @@ object MediaListFilters {
         val name = episodeNameWithoutSpecial
         checkNotNull(name)
         if (name.isBlank()) return@BasicMediaListFilter false
-        removeSpecials(media.originalTitle)
+        removeSpecials(media.originalTitle, removeWhitespace = true)
             .contains(name, ignoreCase = true)
     }
 
@@ -67,10 +72,23 @@ object MediaListFilters {
         put("一", "1")
     }
     private val allNumbersRegex = numberMappings.keys.joinToString("|").toRegex()
-    private val specialCharRegex = Regex("""[ 	~!@#$%^&*()_+{}\[\]\\|;':",.<>/?【】：～「」]""")
+    private val specialCharRegex = Regex("""[~!@#$%^&*()_+{}\[\]\\|;':",.<>/?【】：～「」]""")
+    private val whitespaceRegex = Regex(""" 	\s+""")
 
-    fun removeSpecials(string: String): String {
-        return string.replace(specialCharRegex, "")
-            .replace(allNumbersRegex) { numberMappings.getValue(it.value) }
+    fun removeSpecials(string: String, removeWhitespace: Boolean): String {
+        return StringBuilder(string).apply {
+            deletePrefix("电影")
+            deleteInfix("电影")
+            deletePrefix("剧场版")
+            deleteInfix("剧场版")
+            deletePrefix("OVA")
+            deleteInfix("OVA")
+            deleteMatches(specialCharRegex)
+            replaceMatches(allNumbersRegex) { numberMappings.getValue(it.value) }
+            if (removeWhitespace) {
+                deleteMatches(whitespaceRegex)
+            }
+            trimSB()
+        }.toString()
     }
 }
