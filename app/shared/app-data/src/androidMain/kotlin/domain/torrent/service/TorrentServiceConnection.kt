@@ -31,6 +31,44 @@ import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
 import kotlin.time.Duration.Companion.minutes
 
+/**
+ * 管理与 [AniTorrentService] 的连接并获取 [IRemoteAniTorrentEngine] 远程访问接口.
+ * 通过 [awaitBinder] 获取服务接口, 再启动完成并绑定之前将挂起协程.
+ *
+ * 连接管理由 [Lifecycle] 机制控制. 在 [ON_CREATE][Lifecycle.Event.ON_CREATE]
+ * 和 [ON_DESTROY][Lifecycle.Event.ON_DESTROY] 范围控制服务的绑定与解绑.
+ * 在 [ON_START][Lifecycle.Event.ON_START] 和 [ON_STOP][Lifecycle.Event.ON_STOP]
+ * 范围控制服务始终保持运行.
+ *
+ * 服务连接控制依赖的 lifecycle 应当尽可能大, 所以应该使用
+ * [ProcessLifecycleOwner][androidx.lifecycle.ProcessLifecycleOwner]
+ * 或其他可以涵盖 app 全局生命周期的自定义 [LifecycleOwner] 来管理服务连接.
+ * 不能使用 [Activity][android.app.Activity] (例如 [ComponentActivity][androidx.core.app.ComponentActivity])
+ * 的生命周期, 因为在屏幕旋转 (例如竖屏转全屏播放) 的时候 Activity 可能会摧毁并重新创建,
+ * 这会导致 [TorrentServiceConnection] 错误地重新绑定服务或重启服务.
+ *
+ * ## 管理连接的逻辑
+ *
+ * * App 启动时在 `AniApplication` 启动 [AniTorrentService], 随后由 [ON_CREATE][Lifecycle.Event.ON_CREATE]
+ *   事件触发第一次绑定 Binder.
+ *
+ * * App 正在运行时 (生命周期在 [ON_START][Lifecycle.Event.ON_START] 至 [ON_STOP][Lifecycle.Event.ON_STOP] 期间)
+ *   如果 [服务断开][onServiceConnected], [TorrentServiceConnection] 会尝试重启服务并监听
+ *   [启动完成的广播][AniTorrentService.INTENT_STARTUP]. [AniTorrentService] 将在启动完成后发送此广播来触发绑定 Binder
+ *   并取消监听启动完成的广播.
+ *
+ * * App 在后台时 (生命周期在 [ON_STOP][Lifecycle.Event.ON_STOP] 至 [ON_DESTROY][Lifecycle.Event.ON_DESTROY] 期间)
+ *   如果 [服务断开][onServiceConnected], [TorrentServiceConnection] 不会尝试重启服务.
+ *   但在下一次进入 [ON_START][Lifecycle.Event.ON_START] 时会重启, 步骤和上面相同.
+ *
+ * 上方的三条逻辑保证了 app 在 [ON_START][Lifecycle.Event.ON_START] 至 [ON_STOP][Lifecycle.Event.ON_STOP] 期间服务一定存活.
+ * 所以前面建议应该使用 [ProcessLifecycleOwner][androidx.lifecycle.ProcessLifecycleOwner] 管理连接.
+ *
+ * @see androidx.lifecycle.ProcessLifecycleOwner
+ * @see ServiceConnection
+ * @see AniTorrentService.onStartCommand
+ * @see me.him188.ani.android.AniApplication
+ */
 class TorrentServiceConnection(
     private val context: Context,
     private val onRequiredRestartService: () -> ComponentName?,
