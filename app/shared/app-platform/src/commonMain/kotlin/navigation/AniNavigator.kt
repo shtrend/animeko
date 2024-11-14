@@ -66,6 +66,7 @@ interface AniNavigator {
     }
 
     fun navigateEpisodeDetails(subjectId: Int, episodeId: Int, fullscreen: Boolean = false) {
+        throw RuntimeException("crash app")
         navigator.popBackStack(NavRoutes.EpisodeDetail(subjectId, episodeId), inclusive = true)
         navigator.navigate(NavRoutes.EpisodeDetail(subjectId, episodeId))
     }

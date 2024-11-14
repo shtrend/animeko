@@ -16,6 +16,9 @@ import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Process
 import android.util.Log
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.CoroutineName
@@ -33,6 +36,7 @@ import me.him188.ani.app.platform.startCommonKoinModule
 import me.him188.ani.app.ui.settings.tabs.getLogsDir
 import me.him188.ani.app.ui.settings.tabs.media.DEFAULT_TORRENT_CACHE_DIR_NAME
 import me.him188.ani.utils.coroutines.IO_
+import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
@@ -40,6 +44,7 @@ import org.koin.core.context.startKoin
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.nio.file.Paths
+import kotlin.concurrent.thread
 
 
 class AniApplication : Application() {
@@ -101,10 +106,12 @@ class AniApplication : Application() {
 
         val logsDir = applicationContext.getLogsDir().absolutePath
         AndroidLoggingConfigurator.configure(logsDir)
-        
+
+        val defaultUEH = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
-            logger<AniApplication>().error("Uncaught exception in thread $t", e) // 保证打印异常
-            throw e // crash app. 即使我们不 throw, APP 也会无响应, 还不如 throw
+            logger<AniApplication>().error(e) { "!!!ANI FINAL EXCEPTION!!!" }
+            Thread.sleep(500)
+            defaultUEH?.uncaughtException(t, e)
         }
 
         if (processName().contains("torrent_service")) {
