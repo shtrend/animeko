@@ -61,6 +61,7 @@ import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.episode.toEntity
 import me.him188.ani.app.data.repository.episode.toEpisodeCollectionInfo
 import me.him188.ani.app.domain.search.SubjectType
+import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.datasources.bangumi.apis.DefaultApi
@@ -139,8 +140,11 @@ class SubjectCollectionRepositoryImpl(
     private val bangumiEpisodeService: BangumiEpisodeService,
     private val episodeCollectionDao: EpisodeCollectionDao,
     private val getCurrentDate: () -> PackedDate = { PackedDate.now() },
+    private val enableAllEpisodeTypes: Flow<Boolean>,
     private val defaultDispatcher: CoroutineContext = Dispatchers.IO_,
 ) : SubjectCollectionRepository {
+    private val epTypeFilter get() = enableAllEpisodeTypes.map { if (it) null else MainStory }
+
     override fun subjectCollectionCountsFlow(): Flow<SubjectCollectionCounts?> {
         return (bangumiSubjectService.subjectCollectionCountsFlow() as Flow<SubjectCollectionCounts?>)
             .retry(2)
@@ -215,20 +219,27 @@ class SubjectCollectionRepositoryImpl(
     override fun subjectCollectionsPager(
         query: CollectionsFilterQuery,
         pagingConfig: PagingConfig,
-    ): Flow<PagingData<SubjectCollectionInfo>> = Pager(
-        config = pagingConfig,
-        initialKey = 0,
-        remoteMediator = SubjectCollectionRemoteMediator(query),
-        pagingSourceFactory = {
-            subjectCollectionDao.filterByCollectionTypePaging(query.type)
-        },
-    ).flow.map { data ->
-        data.map { (entity, episodes) ->
-            val date = getCurrentDate()
-            entity.toSubjectCollectionInfo(
-                episodes = episodes.map { it.toEpisodeCollectionInfo() },
-                currentDate = date,
-            )
+    ): Flow<PagingData<SubjectCollectionInfo>> = epTypeFilter.flatMapLatest { epType ->
+        Pager(
+            config = pagingConfig,
+            initialKey = 0,
+            remoteMediator = SubjectCollectionRemoteMediator(query),
+            pagingSourceFactory = {
+                subjectCollectionDao.filterByCollectionTypePaging(query.type)
+            },
+        ).flow.map { data ->
+
+            data.map { (entity, episodesOfAnyType) ->
+                val date = getCurrentDate()
+                entity.toSubjectCollectionInfo(
+                    episodes = episodesOfAnyType
+                        .asSequence()
+                        .filter { it.episodeType == epType }
+                        .map { it.toEpisodeCollectionInfo() }
+                        .toList(),
+                    currentDate = date,
+                )
+            }
         }
     }.flowOn(defaultDispatcher)
 

@@ -217,10 +217,10 @@ data class SubjectCollectionAndEpisodes(
         parentColumn = "subjectId",
         entityColumn = "subjectId",
     )
-    val episodes: List<EpisodeCollectionEntity>,
+    val episodesOfAnyType: List<EpisodeCollectionEntity>,
 ) {
     override fun toString(): String {
-        return "SubjectCollectionAndEpisodes(collection.nameCn=${collection.nameCn}, episodes.size=${episodes.size})"
+        return "SubjectCollectionAndEpisodes(collection.nameCn=${collection.nameCn}, episodes.size=${episodesOfAnyType.size})"
     }
 }
 
