@@ -154,6 +154,12 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
         return binder
     }
 
+    override fun onRebind(intent: Intent?) {
+        super.onRebind(intent)
+        logger.info { "client rebind anitorrent." }
+        isClientBound.value = true
+    }
+
     override fun onUnbind(intent: Intent?): Boolean {
         super.onUnbind(intent)
         logger.info { "client unbind anitorrent." }

@@ -10,13 +10,12 @@
 package me.him188.ani.android
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.Application
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
-import android.os.Bundle
 import android.util.Log
+import androidx.lifecycle.ProcessLifecycleOwner
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
@@ -25,6 +24,7 @@ import me.him188.ani.android.activity.MainActivity
 import me.him188.ani.app.domain.media.cache.MediaCacheNotificationTask
 import me.him188.ani.app.domain.torrent.TorrentManager
 import me.him188.ani.app.domain.torrent.service.AniTorrentService
+import me.him188.ani.app.domain.torrent.service.TorrentServiceConnection
 import me.him188.ani.app.platform.AndroidLoggingConfigurator
 import me.him188.ani.app.platform.JvmLogHelper
 import me.him188.ani.app.platform.createAppRootCoroutineScope
@@ -56,39 +56,6 @@ class AniApplication : Application() {
         }
 
         lateinit var instance: Instance
-    }
-
-    private var currentActivity: Activity? = null
-
-    init {
-        registerActivityLifecycleCallbacks(
-            object : ActivityLifecycleCallbacks {
-                override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-                }
-
-                override fun onActivityStarted(activity: Activity) {
-                }
-
-                override fun onActivityResumed(activity: Activity) {
-                    currentActivity = activity
-                }
-
-                override fun onActivityPaused(activity: Activity) {
-                }
-
-                override fun onActivityStopped(activity: Activity) {
-                    if (currentActivity == activity) {
-                        currentActivity = null
-                    }
-                }
-
-                override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {
-                }
-
-                override fun onActivityDestroyed(activity: Activity) {
-                }
-            },
-        )
     }
 
     inner class Instance {
@@ -147,6 +114,12 @@ class AniApplication : Application() {
         koin.get<TorrentManager>() // start sharing, connect to DHT now
         scope.launch(CoroutineName("MediaCacheNotificationTask")) {
             MediaCacheNotificationTask(koin.get(), koin.get()).run()
+        }
+
+        // use lifecycle of application process
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            val connection = koin.get<TorrentServiceConnection>()
+            ProcessLifecycleOwner.get().lifecycle.addObserver(connection)
         }
     }
 

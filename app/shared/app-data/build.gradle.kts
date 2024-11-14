@@ -71,6 +71,7 @@ kotlin {
         implementation(libs.androidx.browser)
         api(libs.androidx.lifecycle.runtime.ktx)
         api(libs.androidx.lifecycle.service)
+        api(libs.androidx.lifecycle.process)
     }
     sourceSets.nativeMain.dependencies {
         implementation(libs.stately.common) // fixes koin bug
