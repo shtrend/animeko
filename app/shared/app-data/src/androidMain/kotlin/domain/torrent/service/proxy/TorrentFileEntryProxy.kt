@@ -20,6 +20,7 @@ import me.him188.ani.app.domain.torrent.IRemotePieceList
 import me.him188.ani.app.domain.torrent.IRemoteTorrentFileEntry
 import me.him188.ani.app.domain.torrent.IRemoteTorrentFileHandle
 import me.him188.ani.app.domain.torrent.ITorrentFileEntryStatsCallback
+import me.him188.ani.app.domain.torrent.client.ConnectivityAware
 import me.him188.ani.app.domain.torrent.parcel.PTorrentFileEntryStats
 import me.him188.ani.app.domain.torrent.parcel.PTorrentInputParameter
 import me.him188.ani.app.torrent.anitorrent.session.AnitorrentDownloadSession
@@ -28,19 +29,20 @@ import me.him188.ani.utils.coroutines.CancellationException
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.io.absolutePath
-import me.him188.ani.utils.logging.logger
 import kotlin.coroutines.CoroutineContext
 
 class TorrentFileEntryProxy(
     private val delegate: TorrentFileEntry,
+    connectivityAware: ConnectivityAware,
     context: CoroutineContext
-) : IRemoteTorrentFileEntry.Stub() {
+) : IRemoteTorrentFileEntry.Stub(), ConnectivityAware by connectivityAware {
     private val scope = context.childScope()
-    private val logger = logger<TorrentFileEntryProxy>()
     
     override fun getFileStats(flow: ITorrentFileEntryStatsCallback?): IDisposableHandle {
         val job = scope.launch(Dispatchers.IO_) {
             delegate.fileStats.collect {
+                if (!isConnected) return@collect
+                
                 try {
                     flow?.onEmit(PTorrentFileEntryStats(it.downloadedBytes, it.downloadProgress))
                 } catch (doe: DeadObjectException) {
@@ -70,7 +72,7 @@ class TorrentFileEntryProxy(
     }
 
     override fun createHandle(): IRemoteTorrentFileHandle {
-        return TorrentFileHandleProxy(delegate.createHandle(), scope.coroutineContext)
+        return TorrentFileHandleProxy(delegate.createHandle(), this, scope.coroutineContext)
     }
 
     override fun resolveFile(): String {

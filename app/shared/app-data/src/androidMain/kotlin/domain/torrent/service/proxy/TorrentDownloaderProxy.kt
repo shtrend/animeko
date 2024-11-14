@@ -21,6 +21,7 @@ import me.him188.ani.app.domain.torrent.IDisposableHandle
 import me.him188.ani.app.domain.torrent.IRemoteTorrentDownloader
 import me.him188.ani.app.domain.torrent.IRemoteTorrentSession
 import me.him188.ani.app.domain.torrent.ITorrentDownloaderStatsCallback
+import me.him188.ani.app.domain.torrent.client.ConnectivityAware
 import me.him188.ani.app.domain.torrent.parcel.PEncodedTorrentInfo
 import me.him188.ani.app.domain.torrent.parcel.PTorrentDownloaderStats
 import me.him188.ani.app.domain.torrent.parcel.PTorrentLibInfo
@@ -31,17 +32,22 @@ import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.inSystem
+import me.him188.ani.utils.logging.logger
 import kotlin.coroutines.CoroutineContext
 
 class TorrentDownloaderProxy(
     private val delegate: TorrentDownloader,
+    connectivityAware: ConnectivityAware,
     context: CoroutineContext,
-) : IRemoteTorrentDownloader.Stub() {
+) : IRemoteTorrentDownloader.Stub(), ConnectivityAware by connectivityAware {
+    private val logger = logger<TorrentDownloaderProxy>()
     private val scope = context.childScope()
     
     override fun getTotalStatus(flow: ITorrentDownloaderStatsCallback?): IDisposableHandle {
         val job = scope.launch(Dispatchers.IO_) {
             delegate.totalStats.collect {
+                if (!isConnected) return@collect
+                
                 try {
                     flow?.onEmit(
                         PTorrentDownloaderStats(
@@ -90,7 +96,7 @@ class TorrentDownloaderProxy(
                 overrideSaveDir = overrideSaveDir?.run { Path(this).inSystem },
             ) 
         }
-        return TorrentSessionProxy(session, scope.coroutineContext)
+        return TorrentSessionProxy(session, this, scope.coroutineContext)
     }
 
     @RequiresApi(Build.VERSION_CODES.O_MR1)

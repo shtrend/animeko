@@ -27,6 +27,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -63,7 +64,8 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
 
     // detect metered network state.
     private val meteredNetworkDetector by lazy { createMeteredNetworkDetector(this) }
-    
+
+    private val isClientBound: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val anitorrent: CompletableDeferred<AnitorrentEngine> = CompletableDeferred()
 
     private val binder by lazy {
@@ -73,6 +75,7 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
             torrentPeerConfig,
             anitorrentConfig,
             anitorrent,
+            isClientBound,
             coroutineContext,
         )
     }
@@ -147,12 +150,14 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
     override fun onBind(intent: Intent): IBinder {
         super.onBind(intent)
         logger.info { "client bind anitorrent." }
+        isClientBound.value = true
         return binder
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
         super.onUnbind(intent)
         logger.info { "client unbind anitorrent." }
+        isClientBound.value = false
         return true
     }
 

@@ -17,6 +17,7 @@ import me.him188.ani.app.domain.torrent.IDisposableHandle
 import me.him188.ani.app.domain.torrent.IRemoteTorrentFileEntryList
 import me.him188.ani.app.domain.torrent.IRemoteTorrentSession
 import me.him188.ani.app.domain.torrent.ITorrentSessionStatsCallback
+import me.him188.ani.app.domain.torrent.client.ConnectivityAware
 import me.him188.ani.app.domain.torrent.parcel.PPeerInfo
 import me.him188.ani.app.domain.torrent.parcel.PTorrentSessionStats
 import me.him188.ani.app.torrent.api.TorrentSession
@@ -28,15 +29,18 @@ import kotlin.coroutines.CoroutineContext
 
 class TorrentSessionProxy(
     private val delegate: TorrentSession,
+    connectivityAware: ConnectivityAware,
     context: CoroutineContext
-) : IRemoteTorrentSession.Stub() {
+) : IRemoteTorrentSession.Stub(), ConnectivityAware by connectivityAware {
     private val scope = context.childScope()
     private val logger = logger<TorrentSessionProxy>()
     
     override fun getSessionStats(flow: ITorrentSessionStatsCallback?): IDisposableHandle {
         val job = scope.launch(Dispatchers.IO_) { 
             delegate.sessionStats.collect {
+                if (!isConnected) return@collect
                 if (it == null) return@collect
+
                 try {
                     flow?.onEmit(
                         PTorrentSessionStats(
@@ -64,7 +68,7 @@ class TorrentSessionProxy(
     override fun getFiles(): IRemoteTorrentFileEntryList {
         val list = runBlocking { delegate.getFiles() }
 
-        return TorrentFileEntryListProxy(list, scope.coroutineContext)
+        return TorrentFileEntryListProxy(list, this, scope.coroutineContext)
     }
 
     override fun getPeers(): Array<PPeerInfo> {

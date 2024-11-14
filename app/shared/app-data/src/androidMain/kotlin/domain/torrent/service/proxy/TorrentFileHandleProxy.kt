@@ -12,6 +12,7 @@ package me.him188.ani.app.domain.torrent.service.proxy
 import kotlinx.coroutines.runBlocking
 import me.him188.ani.app.domain.torrent.IRemoteTorrentFileEntry
 import me.him188.ani.app.domain.torrent.IRemoteTorrentFileHandle
+import me.him188.ani.app.domain.torrent.client.ConnectivityAware
 import me.him188.ani.app.torrent.api.files.FilePriority
 import me.him188.ani.app.torrent.api.files.TorrentFileHandle
 import me.him188.ani.utils.coroutines.childScope
@@ -19,12 +20,13 @@ import kotlin.coroutines.CoroutineContext
 
 class TorrentFileHandleProxy(
     private val delegate: TorrentFileHandle,
+    connectivityAware: ConnectivityAware,
     context: CoroutineContext
-) : IRemoteTorrentFileHandle.Stub() {
+) : IRemoteTorrentFileHandle.Stub(), ConnectivityAware by connectivityAware {
     private val scope = context.childScope()
 
     override fun getTorrentFileEntry(): IRemoteTorrentFileEntry {
-        return TorrentFileEntryProxy(delegate.entry, scope.coroutineContext)
+        return TorrentFileEntryProxy(delegate.entry, this, scope.coroutineContext)
     }
 
     override fun resume(priorityEnum: Int) {

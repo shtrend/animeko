@@ -12,6 +12,7 @@ package me.him188.ani.app.domain.torrent.service.proxy
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -28,6 +29,7 @@ import me.him188.ani.app.domain.torrent.IProxySettingsCollector
 import me.him188.ani.app.domain.torrent.IRemoteAniTorrentEngine
 import me.him188.ani.app.domain.torrent.IRemoteTorrentDownloader
 import me.him188.ani.app.domain.torrent.ITorrentPeerConfigCollector
+import me.him188.ani.app.domain.torrent.client.DefaultConnectivityAware
 import me.him188.ani.app.domain.torrent.engines.AnitorrentEngine
 import me.him188.ani.app.domain.torrent.parcel.PAnitorrentConfig
 import me.him188.ani.app.domain.torrent.parcel.PProxySettings
@@ -44,10 +46,12 @@ class TorrentEngineProxy(
     private val torrentPeerConfig: MutableSharedFlow<TorrentPeerConfig>,
     private val anitorrentConfig: MutableSharedFlow<AnitorrentConfig>,
     private val anitorrent: CompletableDeferred<AnitorrentEngine>,
+    isClientBound: StateFlow<Boolean>,
     context: CoroutineContext,
 ) : IRemoteAniTorrentEngine.Stub() {
     private val logger = logger(this::class)
     private val scope = context.childScope()
+    private val connectivityAware = DefaultConnectivityAware(context.childScope(), isClientBound)
 
     // cache downloader in case clients always get the same downloader proxy instance.
     private var currentDownloader: TorrentDownloader? = null
@@ -60,7 +64,7 @@ class TorrentEngineProxy(
         }
     }
         .distinctUntilChanged()
-        .map { TorrentDownloaderProxy(it, scope.coroutineContext) }
+        .map { TorrentDownloaderProxy(it, connectivityAware, scope.coroutineContext) }
         .stateIn(scope, SharingStarted.Lazily, null)
 
     private val json = Json {
