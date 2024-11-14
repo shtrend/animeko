@@ -90,10 +90,10 @@ class EpisodeCollectionRepository(
         subjectId: Int,
         allowCached: Boolean = true,
     ): Flow<List<EpisodeCollectionInfo>> = epTypeFilter.flatMapLatest { epType ->
-        episodeCollectionDao.filterBySubjectId(subjectId, epType).transformLatest { episodes ->
-            if (shouldUseCache(allowCached, episodes, subjectId)) {
+        episodeCollectionDao.filterBySubjectId(subjectId, epType).transformLatest { cachedEpisodes ->
+            if (shouldUseCache(allowCached, cachedEpisodes, subjectId)) {
                 // 有有效缓存则直接返回
-                emit(episodes.map { it.toEpisodeCollectionInfo() })
+                emit(cachedEpisodes.map { it.toEpisodeCollectionInfo() })
                 return@transformLatest
             }
 
@@ -106,6 +106,11 @@ class EpisodeCollectionRepository(
                                 // 插入后会立即触发 filterBySubjectId 更新 (emit 新的)
                                 episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
                             }
+                        }
+                        // 过滤需要的类型
+                        .let { list ->
+                            if (epType == null) list
+                            else list.filter { it.episodeInfo.type == epType }
                         },
                 )
             } catch (e: CancellationException) {
@@ -113,7 +118,7 @@ class EpisodeCollectionRepository(
             } catch (e: Exception) {
                 // 失败则返回缓存
                 logger.error(e) { "Failed to get episode collection infos for subject $subjectId" }
-                emit(episodes.map { it.toEpisodeCollectionInfo() })
+                emit(cachedEpisodes.map { it.toEpisodeCollectionInfo() })
                 return@transformLatest
             }
         }
