@@ -23,6 +23,7 @@ import me.him188.ani.app.domain.media.cache.EpisodeCacheStatus
 import me.him188.ani.app.tools.toProgress
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.datasources.api.EpisodeSort
+import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 
@@ -31,7 +32,7 @@ val TestEpisodes = buildList {
     repeat(12) { id ->
         add(
             EpisodeInfo(
-                id,
+                id, EpisodeType.MainStory,
                 nameCn =
                 if (id.rem(2) == 0) "中文剧集名称中文剧集名称中文剧集名称中文剧集名称"
                 else "中文剧集名称",

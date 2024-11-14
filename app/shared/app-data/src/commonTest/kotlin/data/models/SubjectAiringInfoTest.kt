@@ -13,6 +13,7 @@ import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringKind
 import me.him188.ani.datasources.api.EpisodeSort
+import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.PackedDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,7 +24,12 @@ class SubjectAiringInfoTest {
     private fun ep(
         sort: Int,
         airDate: PackedDate = PackedDate.Invalid,
-    ): EpisodeInfo = EpisodeInfo(episodeId = ++idCounter, sort = EpisodeSort(sort), airDate = airDate)
+    ): EpisodeInfo = EpisodeInfo(
+        episodeId = ++idCounter,
+        type = EpisodeType.MainStory,
+        sort = EpisodeSort(sort),
+        airDate = airDate,
+    )
 
     @Test
     fun `empty episode list is upcoming`() {

@@ -20,7 +20,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -34,12 +33,15 @@ import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
+import me.him188.ani.app.data.persistent.database.dao.filterBySubjectId
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
 import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.domain.episode.EpisodeCollections
 import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
+import me.him188.ani.utils.logging.error
+import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
@@ -55,6 +57,10 @@ class EpisodeCollectionRepository(
     private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val cacheExpiry: Duration = 1.hours,
 ) : Repository {
+    private companion object {
+        val logger = logger<EpisodeCollectionRepository>()
+    }
+
     private val epTypeFilter get() = enableAllEpisodeTypes.map { if (it) null else MainStory }
 
     /**
@@ -84,14 +90,8 @@ class EpisodeCollectionRepository(
         subjectId: Int,
         allowCached: Boolean = true,
     ): Flow<List<EpisodeCollectionInfo>> = epTypeFilter.flatMapLatest { epType ->
-        if (subjectDao.findById(subjectId).first()?.totalEpisodes == 0) {
-            return@flatMapLatest flowOf(emptyList())
-        }
         episodeCollectionDao.filterBySubjectId(subjectId, epType).transformLatest { episodes ->
-            if (allowCached &&
-                episodes.isNotEmpty() &&
-                (currentTimeMillis() - (episodes.maxOfOrNull { it.lastUpdated } ?: 0)).milliseconds <= cacheExpiry
-            ) {
+            if (shouldUseCache(allowCached, episodes, subjectId)) {
                 // 有有效缓存则直接返回
                 emit(episodes.map { it.toEpisodeCollectionInfo() })
                 return@transformLatest
@@ -99,7 +99,7 @@ class EpisodeCollectionRepository(
 
             try {
                 emit(
-                    bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, epType)
+                    bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null) // 总是缓存所有类型
                         .toList() // 目前先直接全拿了, 反正一般情况下剧集数量很少
                         .also { list ->
                             if (subjectDao.findById(subjectId).first() != null) {
@@ -112,11 +112,36 @@ class EpisodeCollectionRepository(
                 throw e
             } catch (e: Exception) {
                 // 失败则返回缓存
+                logger.error(e) { "Failed to get episode collection infos for subject $subjectId" }
                 emit(episodes.map { it.toEpisodeCollectionInfo() })
                 return@transformLatest
             }
         }
     }.flowOn(defaultDispatcher)
+
+    private suspend fun shouldUseCache(
+        allowCached: Boolean,
+        cachedEpisodes: List<EpisodeCollectionEntity>,
+        subjectId: Int,
+    ): Boolean {
+        if (!allowCached) return false
+        if (cachedEpisodes.isEmpty()) {
+            val subjectTotalEpisodes = subjectDao.findById(subjectId).first()?.totalEpisodes
+                ?: // 无法确定条目是否有剧集, 无法确认缓存是否有效, 保守判定为无效
+                return false
+
+            if (subjectTotalEpisodes == 0) {
+                // 条目没有剧集, 缓存有效 (为空)
+                return true
+            }
+
+            // 条目有剧集而缓存未空. 缓存肯定无效. 已经无效了就不用再判断时间了
+            return false
+        }
+
+        val lastUpdated = cachedEpisodes.maxOf { it.lastUpdated }
+        return (currentTimeMillis() - lastUpdated).milliseconds <= cacheExpiry
+    }
 
     fun subjectEpisodeCollectionsPager(
         subjectId: Int,
@@ -167,7 +192,7 @@ class EpisodeCollectionRepository(
     ) : RemoteMediator<Int, T>() {
         override suspend fun initialize(): InitializeAction {
             return withContext(defaultDispatcher) {
-                if ((currentTimeMillis() - episodeCollectionDao.lastUpdated()).milliseconds > cacheExpiry) {
+                if ((currentTimeMillis() - episodeCollectionDao.lastUpdated(subjectId)).milliseconds > cacheExpiry) {
                     InitializeAction.LAUNCH_INITIAL_REFRESH
                 } else {
                     InitializeAction.SKIP_INITIAL_REFRESH
@@ -249,7 +274,7 @@ fun EpisodeCollectionEntity.toEpisodeCollectionInfo() =
 private fun EpisodeCollectionEntity.toEpisodeInfo(): EpisodeInfo {
     return EpisodeInfo(
         episodeId = this.episodeId,
-        type = this.episodeType ?: MainStory,
+        type = this.episodeType,
         name = this.name,
         nameCn = this.nameCn,
         airDate = this.airDate,

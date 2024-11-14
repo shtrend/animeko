@@ -14,6 +14,7 @@ import kotlinx.coroutines.test.runTest
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.datasources.api.EpisodeSort
+import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import kotlin.test.Test
@@ -29,7 +30,7 @@ class MediaAutoCacheServiceTest {
         id: Int = this.id++,
         airDate: PackedDate = PackedDate(0, 1, 1)
     ) = EpisodeInfo(
-        episodeId = id,
+        episodeId = id, EpisodeType.MainStory,
         name = "Diana Houston",
         nameCn = "Nita O'Donnell",
         sort = EpisodeSort(1),

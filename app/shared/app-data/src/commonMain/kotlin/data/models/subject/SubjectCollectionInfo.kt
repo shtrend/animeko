@@ -13,6 +13,7 @@ import androidx.compose.runtime.Immutable
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.datasources.api.EpisodeSort
+import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -47,6 +48,7 @@ val TestSubjectCollections
             EpisodeCollectionInfo(
                 episodeInfo = EpisodeInfo(
                     episodeId = 6385,
+                    type = EpisodeType.MainStory,
                     name = "Diana Houston",
                     nameCn = "Nita O'Donnell",
                     comment = 5931,
@@ -59,6 +61,7 @@ val TestSubjectCollections
             EpisodeCollectionInfo(
                 episodeInfo = EpisodeInfo(
                     episodeId = 6386,
+                    type = EpisodeType.MainStory,
                     name = "Diana Houston",
                     nameCn = "Nita O'Donnell",
                     sort = EpisodeSort(2),
@@ -89,6 +92,7 @@ val TestSubjectCollections
                     episodes = eps + EpisodeCollectionInfo(
                         episodeInfo = EpisodeInfo(
                             episodeId = 6386,
+                            type = EpisodeType.MainStory,
                             name = "Diana Houston",
                             nameCn = "Nita O'Donnell",
                             sort = EpisodeSort(2),

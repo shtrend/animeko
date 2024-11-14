@@ -49,7 +49,7 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEn
         SubjectCharacterRelationEntity::class, // 4.0.0-alpha04
         CharacterActorEntity::class, // 4.0.0-alpha04
     ],
-    version = 7,
+    version = 8,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = Migrations.Migration_1_2::class),
         AutoMigration(from = 2, to = 3, spec = Migrations.Migration_2_3::class),
@@ -57,6 +57,7 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEn
         AutoMigration(from = 4, to = 5, spec = Migrations.Migration_4_5::class),
         AutoMigration(from = 5, to = 6, spec = Migrations.Migration_5_6::class),
         AutoMigration(from = 6, to = 7, spec = Migrations.Migration_6_7::class),
+        AutoMigration(from = 7, to = 8, spec = Migrations.Migration_7_8::class),
     ],
 )
 @ConstructedBy(AniDatabaseConstructor::class)
@@ -150,6 +151,15 @@ internal object Migrations {
      */
     @DeleteColumn("subject_collection", "_index")
     class Migration_6_7 : AutoMigrationSpec {
+        override fun onPostMigrate(connection: SQLiteConnection) {
+        }
+    }
+
+    /**
+     * Added [SubjectCollectionEntity.lastFetched]
+     * @since 4.0.0-beta03
+     */
+    class Migration_7_8 : AutoMigrationSpec {
         override fun onPostMigrate(connection: SQLiteConnection) {
         }
     }

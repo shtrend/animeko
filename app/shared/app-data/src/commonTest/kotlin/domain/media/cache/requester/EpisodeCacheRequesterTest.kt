@@ -34,6 +34,7 @@ import me.him188.ani.app.domain.mediasource.instance.createTestMediaSourceInstan
 import me.him188.ani.datasources.api.CachedMedia
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.EpisodeSort
+import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.MediaCacheMetadata
 import me.him188.ani.datasources.api.MediaProperties
@@ -140,7 +141,7 @@ class EpisodeCacheRequesterTest {
     ): EpisodeCacheRequest {
         return EpisodeCacheRequest(
             subjectInfo = SubjectInfo.Empty,
-            episodeInfo = EpisodeInfo(0, sort = sort),
+            episodeInfo = EpisodeInfo(0, EpisodeType.MainStory, sort = sort),
         )
     }
 

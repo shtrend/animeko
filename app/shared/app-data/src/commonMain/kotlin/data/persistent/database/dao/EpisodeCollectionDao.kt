@@ -74,7 +74,7 @@ interface EpisodeCollectionDao {
         WHERE episodeId = :episodeId 
         ORDER BY sort DESC
         LIMIT 1
-        """
+        """,
     )
     fun findByEpisodeId(episodeId: Int): Flow<EpisodeCollectionEntity?>
 
@@ -83,13 +83,24 @@ interface EpisodeCollectionDao {
         """
         SELECT * FROM episode_collection
         WHERE subjectId = :subjectId
-        AND (:episodeType IS NULL OR episodeType = :episodeType)
+        AND (episodeType = :episodeType)
         ORDER BY sort ASC
         """,
     )
     fun filterBySubjectId(
         subjectId: Int,
-        episodeType: EpisodeType?,
+        episodeType: EpisodeType,
+    ): Flow<List<EpisodeCollectionEntity>>
+
+    @Query(
+        """
+        SELECT * FROM episode_collection
+        WHERE subjectId = :subjectId
+        ORDER BY sort ASC
+        """,
+    )
+    fun filterBySubjectId(
+        subjectId: Int,
     ): Flow<List<EpisodeCollectionEntity>>
 
     @Query(
@@ -126,9 +137,24 @@ interface EpisodeCollectionDao {
     fun all(): Flow<List<EpisodeCollectionEntity>>
 
 
-    @Query("""SELECT lastUpdated FROM episode_collection ORDER BY lastUpdated DESC LIMIT 1""")
-    suspend fun lastUpdated(): Long
+    @Query(
+        """
+        SELECT lastUpdated FROM episode_collection 
+        WHERE subjectId = :subjectId
+        ORDER BY lastUpdated DESC LIMIT 1""",
+    )
+    suspend fun lastUpdated(subjectId: Int): Long
 }
+
+fun EpisodeCollectionDao.filterBySubjectId(
+    subjectId: Int,
+    episodeType: EpisodeType? = null,
+) = if (episodeType == null) {
+    filterBySubjectId(subjectId)
+} else {
+    filterBySubjectId(subjectId, episodeType)
+}
+
 
 //@Entity(
 //    tableName = "episode_collection",

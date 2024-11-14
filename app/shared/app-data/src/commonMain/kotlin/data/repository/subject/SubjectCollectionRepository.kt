@@ -177,6 +177,7 @@ class SubjectCollectionRepositoryImpl(
                         collection?.type.toCollectionType(),
                         selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
                         lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
+                        lastFetched = currentTimeMillis(),
                     )
                     subjectCollectionDao.upsert(entity) // 插入后, `subjectCollectionDao.findById(subjectId)` 会重新 emit
                 }
@@ -278,7 +279,8 @@ class SubjectCollectionRepositoryImpl(
         onFetched(items)
 
         // 批量插入条目信息
-        subjectCollectionDao.upsert(items.map { it.toEntity() })
+        val lastFetched = currentTimeMillis()
+        subjectCollectionDao.upsert(items.map { it.toEntity(lastFetched) })
 
         // 必须先插入好条目信息, 否则插入 episode 会 foreign key constraint failed
         episodeCollectionDao.upsert(episodes)
@@ -316,7 +318,8 @@ class SubjectCollectionRepositoryImpl(
         private val query: CollectionsFilterQuery,
     ) : RemoteMediator<Int, T>() {
         override suspend fun initialize(): InitializeAction = withContext(defaultDispatcher) {
-            if ((currentTimeMillis() - subjectCollectionDao.lastUpdated()).milliseconds > 1.hours) {
+            val lastUpdated = subjectCollectionDao.lastFetched(query.type)
+            if ((currentTimeMillis() - lastUpdated).milliseconds > 1.hours) {
                 InitializeAction.LAUNCH_INITIAL_REFRESH
             } else {
                 InitializeAction.SKIP_INITIAL_REFRESH
@@ -482,6 +485,7 @@ internal fun BatchSubjectDetails.toEntity(
     collectionType: UnifiedCollectionType,
     selfRatingInfo: SelfRatingInfo,
     lastUpdated: Long,
+    lastFetched: Long,
 ): SubjectCollectionEntity =
     subjectInfo.run {
         SubjectCollectionEntity(
@@ -504,15 +508,21 @@ internal fun BatchSubjectDetails.toEntity(
             selfRatingInfo = selfRatingInfo,
             collectionType = collectionType,
             lastUpdated = lastUpdated,
+            lastFetched = lastFetched,
+            cachedStaffUpdated = 0,
+            cachedCharactersUpdated = 0,
         )
     }
 
-internal fun BatchSubjectCollection.toEntity(): SubjectCollectionEntity {
+internal fun BatchSubjectCollection.toEntity(
+    lastFetched: Long,
+): SubjectCollectionEntity {
     val subject = batchSubjectDetails
     return subject.toEntity(
         collection?.type.toCollectionType(),
         collection.toSelfRatingInfo(),
         lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
+        lastFetched = lastFetched,
     )
 }
 

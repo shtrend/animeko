@@ -24,7 +24,7 @@ import me.him188.ani.datasources.api.PackedDate
 data class EpisodeInfo(
     val episodeId: Int,
     /** `0` 本篇，`1` SP，`2` OP，`3` ED */
-    val type: EpisodeType? = EpisodeType.MainStory,
+    val type: EpisodeType?,
     val name: String = "",
     val nameCn: String = "",
     /**

@@ -51,6 +51,9 @@ data class SubjectCollectionEntity(
     val summary: String,
     val nsfw: Boolean,
     val imageLarge: String,
+    /**
+     * 会在获取剧集列表时使用, 用于验证缓存的剧集数目是否正确
+     */
     val totalEpisodes: Int,
     val airDate: PackedDate,
     val aliases: List<String>,
@@ -66,12 +69,20 @@ data class SubjectCollectionEntity(
     val selfRatingInfo: SelfRatingInfo,
     val collectionType: UnifiedCollectionType,
 
+    /**
+     * 此条目最后被修改的时间 (如修改收藏状态). 与服务器同步.
+     */
     @ColumnInfo(defaultValue = "CURRENT_TIMESTAMP")
-    val lastUpdated: Long = currentTimeMillis(),
+    val lastUpdated: Long,
+    /**
+     * 此条目从 bangumi 服务器上查询到的时间. 用于判断是否需要自动刷新
+     */
     @ColumnInfo(defaultValue = "0")
-    val cachedStaffUpdated: Long = 0,
+    val lastFetched: Long,
     @ColumnInfo(defaultValue = "0")
-    val cachedCharactersUpdated: Long = 0,
+    val cachedStaffUpdated: Long,
+    @ColumnInfo(defaultValue = "0")
+    val cachedCharactersUpdated: Long,
 )
 
 @Dao
@@ -158,8 +169,14 @@ interface SubjectCollectionDao {
     @Query("""SELECT * FROM subject_collection WHERE subjectId = :subjectId""")
     fun findById(subjectId: Int): Flow<SubjectCollectionEntity?>
 
-    @Query("""SELECT lastUpdated FROM subject_collection ORDER BY lastUpdated DESC LIMIT 1""")
-    suspend fun lastUpdated(): Long
+    @Query(
+        """
+        SELECT lastFetched FROM subject_collection 
+        WHERE (:type IS NULL) OR (collectionType = :type)
+        ORDER BY lastFetched DESC LIMIT 1
+        """,
+    )
+    suspend fun lastFetched(type: UnifiedCollectionType?): Long
 
     @Query(
         """
