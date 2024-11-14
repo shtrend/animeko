@@ -16,6 +16,10 @@ import me.him188.ani.datasources.bangumi.BangumiClient
 
 object BangumiSubjectRelationsGraphQLExecutor : AbstractBangumiBatchGraphQLExecutor() {
     private const val FRAGMENTS = """
+fragment Ep on Episode {
+  sort
+  type
+}
 fragment SF on Subject {
   id
   characters(limit:500) {
@@ -65,6 +69,9 @@ fragment SF on Subject {
     }
     position
   }
+  episodes(limit: 100) { ...Ep }
+//  leadingEpisodes : episodes(limit: 1) { ...Ep }
+//  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
 }
     """
 

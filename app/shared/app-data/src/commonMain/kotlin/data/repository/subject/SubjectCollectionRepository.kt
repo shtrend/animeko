@@ -492,7 +492,9 @@ internal fun BatchSubjectDetails.toEntity(
             summary = summary,
             nsfw = nsfw,
             imageLarge = imageLarge,
-            totalEpisodes = totalEpisodes,
+            totalEpisodes =
+            @Suppress("DEPRECATION")
+            totalEpisodes,
             airDate = airDate,
             tags = tags,
             aliases = aliases,

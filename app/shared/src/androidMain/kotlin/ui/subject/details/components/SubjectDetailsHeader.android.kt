@@ -72,7 +72,7 @@ fun PreviewSubjectDetailsHeaderOnAirWatched() {
     PreviewSubjectDetailsHeader(
         airingInfo = TestSubjectAiringInfo.copy(
             kind = SubjectAiringKind.ON_AIR,
-            episodeCount = 24,
+            mainEpisodeCount = 24,
             latestSort = EpisodeSort(20),
         ),
         progressInfo = SubjectProgressInfo(
@@ -94,7 +94,7 @@ fun PreviewSubjectDetailsHeaderOnAirContinue() {
     PreviewSubjectDetailsHeader(
         airingInfo = TestSubjectAiringInfo.copy(
             kind = SubjectAiringKind.ON_AIR,
-            episodeCount = 24,
+            mainEpisodeCount = 24,
             latestSort = EpisodeSort(20),
         ),
         progressInfo = SubjectProgressInfo(

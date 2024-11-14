@@ -62,8 +62,7 @@ fragment SubjectFragment on Subject {
   nsfw
   tags{count, name}
 
-  leadingEpisodes : episodes(limit: 100) { ...Ep }
-  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
+  episodes : episodes(limit: 100) { ...Ep }
   # episodes{id, type, name, name_cn, sort, airdate, comment, duration, description, disc, ep, }
 }
         """

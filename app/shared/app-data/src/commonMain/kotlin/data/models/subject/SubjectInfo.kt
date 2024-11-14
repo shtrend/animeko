@@ -45,6 +45,7 @@ data class SubjectInfo(
     /**
      * 总集数, 0 表示未知.
      */
+    @Deprecated("This includes all MainStory/OVA/SP while the app only supports MainStory") 
     val totalEpisodes: Int,
     /**
      * 放送开始日期. 时区为条目所在地区的时区, 即一般为 UTC+9.

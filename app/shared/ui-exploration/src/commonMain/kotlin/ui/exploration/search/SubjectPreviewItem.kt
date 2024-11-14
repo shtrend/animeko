@@ -42,18 +42,19 @@ class SubjectPreviewItemInfo(
     companion object {
         fun compute(
             subjectInfo: SubjectInfo,
+            mainEpisodeCount: Int,
             relatedPersonList: List<LightRelatedPersonInfo>?,
             characters: List<LightRelatedCharacterInfo>?,
             roleSet: RoleSet = RoleSet.Default,
         ): SubjectPreviewItemInfo {
-            val airingInfo = SubjectAiringInfo.computeFromSubjectInfo(subjectInfo)
+            val airingInfo = SubjectAiringInfo.computeFromSubjectInfo(subjectInfo, mainEpisodeCount)
             val tags = buildString {
                 if (subjectInfo.airDate.isValid) {
                     append(renderSubjectSeason(subjectInfo.airDate))
                     append(" · ")
                 }
                 airingInfo.computeTotalEpisodeText()?.let {
-                    append("全 ${subjectInfo.totalEpisodes} 话")
+                    append("全 $mainEpisodeCount 话")
                     append(" · ")
                 }
 

@@ -210,6 +210,7 @@ class RemoteBangumiSubjectService(
                                 summary = "此条目已被隐藏, 请尝试登录后再次尝试. 如已登录, 请等待注册时间满四个月后再看.",
                                 nsfw = true,
                             ),
+                            mainEpisodeCount = 0,
                             LightSubjectRelations(
                                 emptyList(),
                                 emptyList(),
@@ -224,6 +225,7 @@ class RemoteBangumiSubjectService(
                                 name = "<$subjectId 错误>",
                                 summary = errors,
                             ),
+                            mainEpisodeCount = 0,
                             LightSubjectRelations(
                                 emptyList(),
                                 emptyList(),
@@ -435,6 +437,7 @@ private fun BangumiCount.toRatingCounts() = RatingCounts(
 
 data class BatchSubjectDetails(
     val subjectInfo: SubjectInfo,
+    val mainEpisodeCount: Int,
     val lightSubjectRelations: LightSubjectRelations,
 )
 

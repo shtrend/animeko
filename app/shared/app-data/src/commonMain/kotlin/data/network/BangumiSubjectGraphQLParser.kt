@@ -216,6 +216,19 @@ object BangumiSubjectGraphQLParser {
                     },
                     completeDate = completionDate,
                 ),
+                mainEpisodeCount = getOrFail("episodes").jsonArray
+                    .asSequence()
+                    .map {
+                        it.jsonObject
+                    }
+                    .filter { it.getIntOrFail("type") == 0 }
+                    .count().let {
+                        if (it == 100) {
+                            getIntOrFail("eps") // 太多了所以没查完整, 退一步采用 eps (包含所有剧集类型)
+                        } else {
+                            it
+                        }
+                    },
                 LightSubjectRelations(
                     lightRelatedPersonInfoList = persons,
                     lightRelatedCharacterInfoList = characters,

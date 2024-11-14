@@ -76,7 +76,7 @@ class AiringProgressTests {
                             else -> latestSort - 12
                         }?.let { EpisodeSort(it) },
                         latestSort = latestSort?.let { EpisodeSort(it) },
-                        episodeCount = episodeCount,
+                        mainEpisodeCount = episodeCount,
                     ),
                 ),
                 progressInfoState = progressInfoState,

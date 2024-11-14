@@ -32,7 +32,7 @@ data class SubjectAiringInfo(
     /**
      * 总集数
      */
-    val episodeCount: Int,
+    val mainEpisodeCount: Int,
     /**
      * 首播日期
      */
@@ -58,7 +58,7 @@ data class SubjectAiringInfo(
         @Stable
         val EmptyCompleted = SubjectAiringInfo(
             SubjectAiringKind.COMPLETED,
-            episodeCount = 0,
+            mainEpisodeCount = 0,
             airDate = PackedDate.Invalid,
             firstSort = null,
             latestEp = null,
@@ -131,7 +131,7 @@ data class SubjectAiringInfo(
             }
             return SubjectAiringInfo(
                 kind = kind,
-                episodeCount = list.size,
+                mainEpisodeCount = list.size,
                 airDate = airDate.ifInvalid { list.firstOrNull()?.airDate ?: PackedDate.Invalid },
                 firstSort = list.firstOrNull()?.sort,
                 latestEp = list.lastOrNull { it.isKnownCompleted }?.sort,
@@ -145,7 +145,8 @@ data class SubjectAiringInfo(
          * 在无剧集信息的时候使用, 估算
          */
         fun computeFromSubjectInfo(
-            info: SubjectInfo
+            info: SubjectInfo,
+            mainEpisodeCount: Int,
         ): SubjectAiringInfo {
             val kind = when {
                 info.completeDate.isValid -> SubjectAiringKind.COMPLETED
@@ -154,7 +155,7 @@ data class SubjectAiringInfo(
             }
             return SubjectAiringInfo(
                 kind = kind,
-                episodeCount = info.totalEpisodes,
+                mainEpisodeCount = mainEpisodeCount,
                 airDate = info.airDate,
                 firstSort = null,
                 latestEp = null,
@@ -168,7 +169,7 @@ data class SubjectAiringInfo(
 object TestSubjectAiringInfos {
     val OnAir12Eps = SubjectAiringInfo(
         SubjectAiringKind.ON_AIR,
-        episodeCount = 12,
+        mainEpisodeCount = 12,
         airDate = PackedDate(2023, 10, 1),
         firstSort = EpisodeSort(1),
         latestEp = EpisodeSort(2),
@@ -178,7 +179,7 @@ object TestSubjectAiringInfos {
 
     val Upcoming24Eps = SubjectAiringInfo(
         SubjectAiringKind.UPCOMING,
-        episodeCount = 24,
+        mainEpisodeCount = 24,
         airDate = PackedDate(2023, 10, 1),
         firstSort = EpisodeSort(1),
         latestEp = null,
@@ -188,7 +189,7 @@ object TestSubjectAiringInfos {
 
     val Completed12Eps = SubjectAiringInfo(
         SubjectAiringKind.COMPLETED,
-        episodeCount = 12,
+        mainEpisodeCount = 12,
         airDate = PackedDate(2023, 10, 1),
         firstSort = EpisodeSort(1),
         latestEp = EpisodeSort(12),
@@ -200,16 +201,16 @@ object TestSubjectAiringInfos {
 // Mainly for SubjectAiringLabel
 @Stable
 fun SubjectAiringInfo.computeTotalEpisodeText(): String? {
-    return if (kind == SubjectAiringKind.UPCOMING && episodeCount == 0) {
+    return if (kind == SubjectAiringKind.UPCOMING && mainEpisodeCount == 0) {
         // 剧集还未知
         null
     } else {
         when (kind) {
-            SubjectAiringKind.COMPLETED -> "全 $episodeCount 话"
+            SubjectAiringKind.COMPLETED -> "全 $mainEpisodeCount 话"
 
             SubjectAiringKind.ON_AIR,
             SubjectAiringKind.UPCOMING,
-                -> "预定全 $episodeCount 话"
+                -> "预定全 $mainEpisodeCount 话"
         }
     }
 }
