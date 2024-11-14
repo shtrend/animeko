@@ -25,7 +25,6 @@ import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
-import me.him188.ani.utils.platform.currentTimeMillis
 
 
 @Entity(
@@ -62,7 +61,11 @@ data class EpisodeCollectionEntity(
     val ep: EpisodeSort? = null,
 
     val selfCollectionType: UnifiedCollectionType,
-    val lastUpdated: Long = currentTimeMillis(),
+
+    /**
+     * 最后从服务器获取的时间
+     */
+    val lastFetched: Long,
 )
 
 
@@ -139,11 +142,11 @@ interface EpisodeCollectionDao {
 
     @Query(
         """
-        SELECT lastUpdated FROM episode_collection 
+        SELECT lastFetched FROM episode_collection 
         WHERE subjectId = :subjectId
-        ORDER BY lastUpdated DESC LIMIT 1""",
+        ORDER BY lastFetched DESC LIMIT 1""",
     )
-    suspend fun lastUpdated(subjectId: Int): Long
+    suspend fun lastFetched(subjectId: Int): Long
 }
 
 fun EpisodeCollectionDao.filterBySubjectId(

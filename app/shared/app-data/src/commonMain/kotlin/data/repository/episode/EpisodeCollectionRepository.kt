@@ -139,7 +139,7 @@ class EpisodeCollectionRepository(
             return false
         }
 
-        val lastUpdated = cachedEpisodes.maxOf { it.lastUpdated }
+        val lastUpdated = cachedEpisodes.maxOf { it.lastFetched }
         return (currentTimeMillis() - lastUpdated).milliseconds <= cacheExpiry
     }
 
@@ -192,7 +192,7 @@ class EpisodeCollectionRepository(
     ) : RemoteMediator<Int, T>() {
         override suspend fun initialize(): InitializeAction {
             return withContext(defaultDispatcher) {
-                if ((currentTimeMillis() - episodeCollectionDao.lastUpdated(subjectId)).milliseconds > cacheExpiry) {
+                if ((currentTimeMillis() - episodeCollectionDao.lastFetched(subjectId)).milliseconds > cacheExpiry) {
                     InitializeAction.LAUNCH_INITIAL_REFRESH
                 } else {
                     InitializeAction.SKIP_INITIAL_REFRESH
@@ -249,7 +249,10 @@ suspend inline fun EpisodeCollectionRepository.setEpisodeWatched(subjectId: Int,
         if (watched) UnifiedCollectionType.DONE else UnifiedCollectionType.WISH,
     )
 
-fun EpisodeCollectionInfo.toEntity(subjectId: Int): EpisodeCollectionEntity {
+fun EpisodeCollectionInfo.toEntity(
+    subjectId: Int,
+    lastFetched: Long = currentTimeMillis(),
+): EpisodeCollectionEntity {
     return EpisodeCollectionEntity(
         subjectId = subjectId,
         episodeId = episodeId,
@@ -262,6 +265,7 @@ fun EpisodeCollectionInfo.toEntity(subjectId: Int): EpisodeCollectionEntity {
         sort = episodeInfo.sort,
         ep = episodeInfo.ep,
         selfCollectionType = collectionType,
+        lastFetched = lastFetched,
     )
 }
 

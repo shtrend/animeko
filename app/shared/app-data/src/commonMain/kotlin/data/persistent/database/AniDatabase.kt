@@ -13,6 +13,7 @@ import androidx.room.AutoMigration
 import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.DeleteColumn
+import androidx.room.RenameColumn
 import androidx.room.RenameTable
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
@@ -49,7 +50,7 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEn
         SubjectCharacterRelationEntity::class, // 4.0.0-alpha04
         CharacterActorEntity::class, // 4.0.0-alpha04
     ],
-    version = 8,
+    version = 9,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = Migrations.Migration_1_2::class),
         AutoMigration(from = 2, to = 3, spec = Migrations.Migration_2_3::class),
@@ -58,6 +59,7 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEn
         AutoMigration(from = 5, to = 6, spec = Migrations.Migration_5_6::class),
         AutoMigration(from = 6, to = 7, spec = Migrations.Migration_6_7::class),
         AutoMigration(from = 7, to = 8, spec = Migrations.Migration_7_8::class),
+        AutoMigration(from = 8, to = 9, spec = Migrations.Migration_8_9::class),
     ],
 )
 @ConstructedBy(AniDatabaseConstructor::class)
@@ -160,6 +162,16 @@ internal object Migrations {
      * @since 4.0.0-beta03
      */
     class Migration_7_8 : AutoMigrationSpec {
+        override fun onPostMigrate(connection: SQLiteConnection) {
+        }
+    }
+
+    /**
+     * Renamed [EpisodeCollectionEntity].`lastUpdated` to [EpisodeCollectionEntity.lastFetched]
+     * @since 4.0.0-beta04
+     */
+    @RenameColumn("episode_collection", "lastUpdated", "lastFetched")
+    class Migration_8_9 : AutoMigrationSpec {
         override fun onPostMigrate(connection: SQLiteConnection) {
         }
     }
