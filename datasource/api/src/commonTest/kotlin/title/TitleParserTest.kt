@@ -57,4 +57,20 @@ class TitleParserTest : PatternBasedTitleParserTestSuite() {
         assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
         assertEquals("1080P", r.resolution.toString())
     }
+
+    @Test
+    fun `movie v2 as 01`() {
+        val r = parse("[北宇治字幕组] 蓦然回首 / Look Back [Movie v2][WebRip][HEVC_AAC×2][简繁日内封]")
+        assertEquals("01..01", r.episodeRange.toString())
+        assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
+        assertEquals("null", r.resolution.toString())
+    }
+
+    @Test
+    fun `movie as 01`() {
+        val r = parse("[北宇治字幕组] 蓦然回首 / Look Back [Movie][WebRip][HEVC_AAC×2][简繁日内封]")
+        assertEquals("01..01", r.episodeRange.toString())
+        assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
+        assertEquals("null", r.resolution.toString())
+    }
 }

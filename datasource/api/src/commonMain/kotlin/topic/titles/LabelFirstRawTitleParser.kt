@@ -51,6 +51,9 @@ class LabelFirstRawTitleParser : RawTitleParser() {
                         || word.contains("Blu-Ray", ignoreCase = true)
                     ) {
                         builder.episodeRange = EpisodeRange.unknownSeason()
+                    } else if (word.contains("Movie", ignoreCase = true)) {
+                        // #1193
+                        builder.episodeRange = EpisodeRange.single(EpisodeSort(1))
                     }
                 }
             }
