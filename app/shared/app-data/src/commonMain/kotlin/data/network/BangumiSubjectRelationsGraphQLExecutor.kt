@@ -70,10 +70,11 @@ fragment SF on Subject {
     position
   }
   episodes(limit: 100) { ...Ep }
-//  leadingEpisodes : episodes(limit: 1) { ...Ep }
-//  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
 }
     """
+
+//  leadingEpisodes : episodes(limit: 1) { ...Ep }
+//  trailingEpisodes : episodes(limit: 1, offset: -1) { ...Ep }
 
     private const val QUERY_1 = """
 $FRAGMENTS
