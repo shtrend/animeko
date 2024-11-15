@@ -36,7 +36,7 @@ public class `PatternTitleParserTest剧场版 紫罗兰永恒花园` : PatternBa
       fun `651397_VCB_Studio_Gekijouban_Violet_Evergarden_10_bit_2160p_1080p_HEVC_BDRip_MOVIE`() {
     val r =
         parse("[VCB-Studio] 剧场版 紫罗兰永恒花园 / Gekijouban Violet Evergarden 10-bit 2160p/1080p HEVC BDRip [MOVIE]")
-    assertEquals("S?", r.episodeRange.toString())
+    assertEquals("01..01", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -45,7 +45,7 @@ public class `PatternTitleParserTest剧场版 紫罗兰永恒花园` : PatternBa
   @Test
   public fun `615844_Violet_Evergarden_the_Movie_4K_SDR`() {
     val r = parse("[云光字幕组]剧场版 紫罗兰永恒花园 Violet Evergarden the Movie [简体双语][4K SDR]招募时轴翻译")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("01..01", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -173,7 +173,7 @@ public class `PatternTitleParserTest剧场版 紫罗兰永恒花园` : PatternBa
   public fun `571322_WEBRip_MOVIE_Violet_Evergarden_1920x804_x_264_AAC_MP4`() {
     val r =
         parse("[森之屋动画组][WEBRip][剧场版 紫罗兰永恒花园 / 劇場版ヴァイオレット・エヴァーガーデン / MOVIE Violet Evergarden][1920x804][x.264 AAC MP4][俄语音轨][内嵌简中]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("01..01", r.episodeRange.toString())
     assertEquals("CHS", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EMBEDDED, r.subtitleKind)
@@ -183,7 +183,7 @@ public class `PatternTitleParserTest剧场版 紫罗兰永恒花园` : PatternBa
   public fun `571317_WEBRip_MOVIE_Violet_Evergarden_1920x804_x_264_AAC_MP4`() {
     val r =
         parse("[森之屋动画组][WEBRip][剧场版 紫罗兰永恒花园 / 劇場版ヴァイオレット・エヴァーガーデン / MOVIE Violet Evergarden][1920x804][x.264 AAC MP4][日语剧场录音音轨（先行版）][内嵌简中]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("01..01", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EMBEDDED, r.subtitleKind)
