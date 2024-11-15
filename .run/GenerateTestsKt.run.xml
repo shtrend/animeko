@@ -12,7 +12,7 @@
             nameIsGenerated="true">
         <option name="MAIN_CLASS_NAME"
                 value="me.him188.ani.datasources.api.test.codegen.main.GenerateTestsKt" />
-        <module name="ani.datasource.datasource-api.test-codegen.main" />
+        <module name="animeko.datasource.datasource-api.test-codegen.test" />
         <shortenClasspath name="NONE" />
         <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/datasource/api/test-codegen" />
         <method v="2">
