@@ -52,6 +52,17 @@
                 <!-- Include one or more domains that should be verified. -->
                 <data android:host="bangumi-oauth-callback" />
             </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="ani" />
+
+                <data android:host="subjects" />
+            </intent-filter>
         </activity>
 
         <provider
@@ -72,8 +83,8 @@
                     android:name="android.support.FILE_PROVIDER_PATHS"
                     android:resource="@xml/file_paths" />
         </provider>
-        
-        <service 
+
+        <service
                 android:name="me.him188.ani.app.domain.torrent.service.AniTorrentService"
                 android:description="@string/service_torrent_engine_description"
                 android:enabled="true"

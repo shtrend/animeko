@@ -43,6 +43,7 @@ import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.foundation.widgets.Toaster
 import me.him188.ani.app.ui.main.AniApp
 import me.him188.ani.app.ui.main.AniAppContent
+import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import org.koin.android.ext.android.inject
@@ -60,11 +61,22 @@ class MainActivity : AniComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        KoinPlatformTools.defaultContext().getOrNull()?.get<NotifManager>()?.let {
-            val code = intent.getIntExtra(EXTRA_REQUEST_CODE, -1)
-            if (code != -1) {
+        val code = intent.getIntExtra(EXTRA_REQUEST_CODE, -1)
+        if (code != -1) {
+            KoinPlatformTools.defaultContext().getOrNull()?.get<NotifManager>()?.let {
                 logger.info { "onNewIntent requestCode: $code" }
                 AndroidNotifManager.handleIntent(code)
+            }
+        }
+
+        val data = intent.data ?: return
+        if (data.scheme != "ani") return
+        if (data.pathSegments.getOrNull(0) == "subjects") {
+            val id = data.pathSegments.getOrNull(1)?.toIntOrNull() ?: return
+            try {
+                aniNavigator.navigateSubjectDetails(id)
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to navigate to subject details" }
             }
         }
     }
