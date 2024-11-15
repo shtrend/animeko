@@ -47,13 +47,16 @@ class LabelFirstRawTitleParser : RawTitleParser() {
             // 第二遍, 如果没有解析到剧集, 找是不是有 "BDRip", 判定为季度全集
             if (builder.episodeRange == null) {
                 words.forEach { word ->
-                    if (word.contains("BD", ignoreCase = true)
+                    if (word.contains("Movie", ignoreCase = true)
+                        || word.contains("电影", ignoreCase = true)
+                        || word.contains("剧场版", ignoreCase = true)
+                    ) {
+                        // #1193
+                        builder.episodeRange = EpisodeRange.unknownSeason()
+                    } else if (word.contains("BD", ignoreCase = true)
                         || word.contains("Blu-Ray", ignoreCase = true)
                     ) {
                         builder.episodeRange = EpisodeRange.unknownSeason()
-                    } else if (word.contains("Movie", ignoreCase = true)) {
-                        // #1193
-                        builder.episodeRange = EpisodeRange.single(EpisodeSort(1))
                     }
                 }
             }
