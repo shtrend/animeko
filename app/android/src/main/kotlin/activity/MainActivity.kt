@@ -23,6 +23,7 @@ import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import coil3.compose.LocalPlatformContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.configIfEnabledOrNull
@@ -69,20 +70,31 @@ class MainActivity : AniComponentActivity() {
             }
         }
 
+        handleStartIntent(intent)
+    }
+
+    private fun handleStartIntent(intent: Intent) {
         val data = intent.data ?: return
         if (data.scheme != "ani") return
-        if (data.pathSegments.getOrNull(0) == "subjects") {
-            val id = data.pathSegments.getOrNull(1)?.toIntOrNull() ?: return
-            try {
-                aniNavigator.navigateSubjectDetails(id)
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to navigate to subject details" }
+        if (data.host == "subjects") {
+            val id = data.pathSegments.getOrNull(0)?.toIntOrNull() ?: return
+            lifecycleScope.launch {
+                try {
+                    if (!aniNavigator.isNavControllerReady()) {
+                        aniNavigator.awaitNavController()
+                        delay(1000) // 等待初始化好, 否则跳转可能无效
+                    }
+                    aniNavigator.navigateSubjectDetails(id)
+                } catch (e: Exception) {
+                    logger.error(e) { "Failed to navigate to subject details" }
+                }
             }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        handleStartIntent(intent)
 
         enableEdgeToEdge(
             // 透明状态栏

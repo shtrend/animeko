@@ -33,6 +33,8 @@ interface AniNavigator {
         controller: NavHostController,
     )
 
+    fun isNavControllerReady(): Boolean
+
     suspend fun awaitNavController(): NavHostController
 
     val navigator: NavHostController
@@ -138,6 +140,8 @@ private class AniNavigatorImpl : AniNavigator {
     override fun setNavController(controller: NavHostController) {
         this._navigator.complete(controller)
     }
+
+    override fun isNavControllerReady(): Boolean = _navigator.isCompleted
 
     override suspend fun awaitNavController(): NavHostController {
         return _navigator.await()
