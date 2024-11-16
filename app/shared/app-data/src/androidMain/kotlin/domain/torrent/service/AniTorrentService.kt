@@ -193,6 +193,7 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
 
     override fun onDestroy() {
         logger.info { "AniTorrentService is stopping." }
+        meteredNetworkDetector.dispose()
         val engine = kotlin.runCatching { anitorrent.getCompleted() }.getOrNull() ?: return
         runBlocking(Dispatchers.IO_) {
             val downloader = engine.getDownloader()
@@ -205,7 +206,6 @@ class AniTorrentService : LifecycleService(), CoroutineScope {
         }
         // cancel lifecycle scope
         this.cancel()
-        meteredNetworkDetector.dispose()
         // release wake lock if held
         if (wakeLock.isHeld) {
             wakeLock.release()

@@ -22,15 +22,13 @@ import me.him188.ani.utils.logging.logger
 
 @SuppressLint("MissingPermission")
 private class AndroidMeteredNetworkDetector(
-    context: Context
+    private val context: Context
 ) : MeteredNetworkDetector, BroadcastReceiver() {
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val logger by lazy { logger<AndroidMeteredNetworkDetector>() }
 
     private val flow = MutableStateFlow(getCurrentIsMetered())
     override val isMeteredNetworkFlow: Flow<Boolean> get() = flow
-
-    private val unregisterReceiver = { context.unregisterReceiver(this) }
     
     // Create a NetworkCallback to detect network changes
     // private val networkCallback = object : ConnectivityManager.NetworkCallback() {
@@ -82,7 +80,7 @@ private class AndroidMeteredNetworkDetector(
     override fun dispose() {
         // Unregister the network callback when no longer needed
         // connectivityManager.unregisterNetworkCallback(networkCallback)
-        unregisterReceiver()
+        context.unregisterReceiver(this)
     }
 
     private inline fun log(message: () -> String) {
