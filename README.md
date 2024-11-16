@@ -82,7 +82,7 @@ Animeko 采用语义化版本号, 简单来说就是 `4.x.y` 的格式. 有以�
 
 - 多端同步 [Bangumi][Bangumi] 收藏, 记录观看进度
 
-<img width="270" src=".readme/images/collection/collection-dark.png" alt="collection-dark"/> <img width="300" src=".readme/images/subject/subject-dark.png" alt="subject-dark"/> 
+<img width="270" src=".readme/images/collection/collection-dark.png" alt="collection-dark"/> <img width="270" src=".readme/images/subject/subject-dark.png" alt="subject-dark"/> 
 
 <img width="600" src=".readme/images/collection/exploration-desktop.png" alt="exploration-desktop"/>
 
