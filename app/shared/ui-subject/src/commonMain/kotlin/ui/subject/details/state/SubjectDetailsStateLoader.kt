@@ -50,6 +50,7 @@ class SubjectDetailsStateLoader(
         return tasker.async {
             withContext(Dispatchers.Main) {
                 subjectDetailsStateProblem = null
+                subjectDetailsStateFlow = null
             }
             runningFlowScope?.cancel()
             val flowScope = backgroundScope.childScope()
