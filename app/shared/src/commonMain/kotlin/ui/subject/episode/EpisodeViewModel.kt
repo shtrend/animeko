@@ -111,6 +111,7 @@ import me.him188.ani.datasources.api.source.MediaFetchRequest
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.datasources.api.topic.isDoneOrDropped
 import me.him188.ani.utils.coroutines.cancellableCoroutineScope
+import me.him188.ani.utils.coroutines.flows.flowOfEmptyList
 import me.him188.ani.utils.coroutines.retryWithBackoffDelay
 import me.him188.ani.utils.coroutines.sampleWithInitial
 import me.him188.ani.utils.logging.info
@@ -452,6 +453,9 @@ private class EpisodeViewModelImpl(
 
     override val episodeCarouselState: EpisodeCarouselState = kotlin.run {
         val episodeCacheStatusListState by episodeCollectionsFlow.flatMapLatest { list ->
+            if (list.isEmpty()) {
+                return@flatMapLatest flowOfEmptyList()
+            }
             combine(
                 list.map { collection ->
                     mediaCacheManager.cacheStatusForEpisode(subjectId, collection.episodeId).map {
