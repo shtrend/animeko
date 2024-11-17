@@ -102,6 +102,7 @@ import me.him188.ani.app.ui.foundation.effects.OnLifecycleEvent
 import me.him188.ani.app.ui.foundation.effects.ScreenOnEffect
 import me.him188.ani.app.ui.foundation.effects.ScreenRotationEffect
 import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
+import me.him188.ani.app.ui.foundation.layout.compareTo
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.setRequestFullScreen
@@ -202,7 +203,7 @@ private fun EpisodeSceneContent(
 
     BoxWithConstraints(modifier) {
         val showExpandedUI =
-            currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass != WindowWidthSizeClass.COMPACT
+            currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass >= WindowWidthSizeClass.EXPANDED
         CompositionLocalProvider(LocalImageViewerHandler provides imageViewer) {
             when {
                 showExpandedUI -> EpisodeSceneTabletVeryWide(vm, Modifier.fillMaxSize(), windowInsets)
