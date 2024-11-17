@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import me.him188.ani.app.data.models.subject.TestSubjectProgressInfos
+import me.him188.ani.app.ui.comment.generateUiComment
+import me.him188.ani.app.ui.comment.rememberTestCommentState
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.layout.DummySharedTransitionLayout
 import me.him188.ani.app.ui.foundation.layout.rememberConnectedScrollState
@@ -23,8 +25,6 @@ import me.him188.ani.app.ui.search.rememberTestLazyPagingItems
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeButton
 import me.him188.ani.app.ui.subject.collection.components.rememberTestEditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.progress.rememberTestSubjectProgressState
-import me.him188.ani.app.ui.subject.components.comment.generateUiComment
-import me.him188.ani.app.ui.subject.components.comment.rememberTestCommentState
 import me.him188.ani.app.ui.subject.details.components.CollectionData
 import me.him188.ani.app.ui.subject.details.components.DetailsTab
 import me.him188.ani.app.ui.subject.details.components.SelectEpisodeButtons

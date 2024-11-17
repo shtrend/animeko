@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.subject.components.comment
+package me.him188.ani.app.ui.comment
 
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize

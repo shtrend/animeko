@@ -16,10 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import me.him188.ani.app.ui.comment.generateUiComment
+import me.him188.ani.app.ui.comment.rememberTestCommentState
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.layout.rememberConnectedScrollState
-import me.him188.ani.app.ui.subject.components.comment.generateUiComment
-import me.him188.ani.app.ui.subject.components.comment.rememberTestCommentState
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Preview

@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.subject.components.comment
+package me.him188.ani.app.ui.comment
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
