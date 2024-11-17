@@ -63,18 +63,24 @@ class TorrentDownloadController(
     private val footerSize: Long = headerSize,
     private val possibleFooterSize: Long = headerSize,
 ) : SynchronizedObject() {
-    private val totalSize: Long = pieces.sumOf { it.size }
+    private val totalPieceSize: Long = pieces.sumOf { it.size }
+    private val pieceOffsetStart = with(pieces) { pieces.first().dataStartOffset }
 
-    private val footerPieces = pieces.dropWhile { it.dataLastOffset < totalSize - footerSize }
-    private val possibleFooterRange = pieces.dropWhile { it.dataLastOffset < totalSize - possibleFooterSize }
+    private val footerPieces = pieces.dropWhile { it.dataLastOffset < pieceOffsetStart + totalPieceSize - footerSize }
+    private val possibleFooterRange = pieces
+        .dropWhile { it.dataLastOffset < pieceOffsetStart + totalPieceSize - possibleFooterSize }
         .let {
             if (it.isEmpty()) IntRange.EMPTY
             else it.first().pieceIndex..it.last().pieceIndex
         }
 
-    private val lastIndex = pieces.pieceIndexOfFirst { it.dataLastOffset >= totalSize - footerSize } - 1
+    private val lastIndex = try {
+        pieces.last().pieceIndex
+    } catch (ex: NoSuchElementException) {
+        -1
+    }
 
-    private var currentWindowStart = 0
+    private var currentWindowStart = pieces.initialPieceIndex
 
     // inclusive
     private var currentWindowEnd = (currentWindowStart + windowSize - 1).coerceAtMost(lastIndex)
@@ -88,10 +94,12 @@ class TorrentDownloadController(
     }
 
     fun onTorrentResumed() = synchronized(this) {
-        onSeek(0)
+        if (currentWindowEnd == -1) return@synchronized
+        onSeek(pieces.initialPieceIndex)
     }
 
     fun onSeek(pieceIndex: Int) = synchronized(this) {
+        if (currentWindowEnd == -1) return@synchronized
         if (pieceIndex in possibleFooterRange) {
             // seek 到 footer 附近, 不重置 piece priority
             if (pieceIndex !in downloadingPieces) {
@@ -100,46 +108,61 @@ class TorrentDownloadController(
             return
         }
         downloadingPieces.clear()
-        currentWindowEnd = pieceIndex - 1
         fillWindow(pieceIndex)
         priorities.downloadOnly(downloadingPieces, possibleFooterRange)
     }
 
     /**
-     * 找接下来最近的还未完成的 piece, 如果没有, 返回 [startIndex]
+     * 找接下来最近的还未完成的 piece, 如果没有, 返回 -1
      */
     private fun findNextDownloadingPiece(startIndex: Int): Int {
-        for (index in (startIndex + 1)..lastIndex) {
+        for (index in startIndex..lastIndex) {
             if (with(pieces) { pieces.getByPieceIndex(index).state } != PieceState.FINISHED) {
                 return index
             }
         }
-        return startIndex
+        return -1
     }
 
     fun onPieceDownloaded(pieceIndex: Int) = synchronized(this) {
+        if (currentWindowEnd == -1) return@synchronized
         if (!downloadingPieces.remove(pieceIndex)) {
             return
         }
 
-        val newWindowEnd = findNextDownloadingPiece(currentWindowEnd)
-        if (newWindowEnd != currentWindowEnd) {
+        val newWindowEnd = findNextDownloadingPiece(currentWindowEnd + 1)
+        if (newWindowEnd != -1 && newWindowEnd != currentWindowEnd) {
             downloadingPieces.add(newWindowEnd)
             currentWindowEnd = newWindowEnd
         }
         priorities.downloadOnly(downloadingPieces, possibleFooterRange)
     }
 
+    /**
+     * seek 到 pieceIndex 不一定会重构从 pieceIndex 开始的 window
+     * 要从 pieceIndex 开始找接下来 window 大小个未完成的 piece 构成 window
+     */
     private fun fillWindow(pieceIndex: Int) {
-        val nextStartIndex = downloadingPieces.firstOrNull() ?: (currentWindowEnd + 1)
-        val nextEndIndex = (nextStartIndex + windowSize - 1).coerceAtMost(lastIndex)
-        downloadingPieces = (nextStartIndex..nextEndIndex).toMutableList()
-        currentWindowStart = downloadingPieces.firstOrNull() ?: -1
-        currentWindowEnd = downloadingPieces.lastOrNull() ?: -1
-        if (pieceIndex <= 1) {
-            // 正在下载第 0-1 个 piece, 说明我们刚刚开始下载视频, 需要额外请求尾部元数据
-            addFooterPieces()
+        // 如果 pieceIndex 以后的 piece 都完成了, 那就没有 piece 要填充到 window 了
+        val next = findNextDownloadingPiece(pieceIndex)
+        if (next == -1) return
+
+        currentWindowStart = next
+        currentWindowEnd = next
+
+        downloadingPieces.add(currentWindowStart)
+        for (i in 0..<windowSize - 1) {
+            val next = findNextDownloadingPiece(currentWindowEnd + 1)
+            if (next != -1) {
+                downloadingPieces.add(next)
+                currentWindowEnd = next
+            } else {
+                // findNext 没找到, 说明所有的 piece 都下完了
+                break
+            }
         }
+
+        addFooterPieces()
     }
 
     private fun addFooterPieces() {
