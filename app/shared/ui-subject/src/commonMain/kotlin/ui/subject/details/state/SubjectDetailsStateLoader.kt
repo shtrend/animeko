@@ -42,6 +42,10 @@ class SubjectDetailsStateLoader(
     fun load(
         subjectId: Int
     ): Job {
+        if (subjectDetailsStateFlow?.value?.info?.subjectId == subjectId) {
+            // 已经加载完成了
+            return completedJob
+        }
         return tasker.launch {
             withContext(Dispatchers.Main) {
                 subjectDetailsStateProblem = null
@@ -80,6 +84,10 @@ class SubjectDetailsStateLoader(
         private set
     var subjectDetailsStateFlow: StateFlow<SubjectDetailsState>? by mutableStateOf(null)
         private set
+
+    private companion object {
+        private val completedJob: Job = CompletableDeferred(Unit)
+    }
 }
 
 @TestOnly
