@@ -71,6 +71,7 @@ import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.subject.collection.CollectionPage
 import me.him188.ani.app.ui.subject.collection.UserCollectionsViewModel
 import me.him188.ani.app.ui.subject.details.SubjectDetailsPage
+import me.him188.ani.app.ui.update.TextButtonUpdateLogo
 import me.him188.ani.utils.platform.isAndroid
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -181,6 +182,9 @@ private fun MainSceneContent(
                             Modifier.fillMaxSize(),
                             enableAnimation = vm.myCollectionsSettings.enableListAnimation1,
                             lazyGridState = vm.lazyGridState,
+                            actions = {
+                                TextButtonUpdateLogo()
+                            },
                         )
                     }
 
