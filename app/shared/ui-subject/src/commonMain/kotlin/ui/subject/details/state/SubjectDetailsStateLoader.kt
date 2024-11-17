@@ -52,8 +52,10 @@ class SubjectDetailsStateLoader(
             val resp = try {
                 subjectDetailsStateFactory.create(subjectId).stateIn(flowScope)
             } catch (e: CancellationException) {
+                flowScope.cancel()
                 throw e
             } catch (e: Exception) {
+                flowScope.cancel()
                 withContext(Dispatchers.Main) {
                     subjectDetailsStateProblem = SearchProblem.fromException(e)
                     subjectDetailsStateFlow = null
