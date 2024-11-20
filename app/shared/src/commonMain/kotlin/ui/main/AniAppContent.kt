@@ -50,6 +50,8 @@ import me.him188.ani.app.ui.cache.CacheManagementViewModel
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPage
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPageViewModel
 import me.him188.ani.app.ui.cache.details.MediaDetailsLazyGrid
+import me.him188.ani.app.ui.foundation.layout.LocalSharedTransitionScopeProvider
+import me.him188.ani.app.ui.foundation.layout.SharedTransitionScopeProvider
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.theme.LocalNavigationMotionScheme
@@ -157,12 +159,18 @@ private fun AniAppContentImpl(
                         }
                     },
                 ) {
-                    MainScene(
-                        page = currentPage,
-                        subjectDetailsStateLoader = appViewModel.subjectDetailsStateLoader,
-                        onNavigateToPage = { currentPage = it },
-                        navigationLayoutType = navigationLayoutType,
-                    )
+                    CompositionLocalProvider(
+                        LocalSharedTransitionScopeProvider provides SharedTransitionScopeProvider(
+                            this@SharedTransitionLayout, this,
+                        ),
+                    ) {
+                        MainScene(
+                            page = currentPage,
+                            subjectDetailsStateLoader = appViewModel.subjectDetailsStateLoader,
+                            onNavigateToPage = { currentPage = it },
+                            navigationLayoutType = navigationLayoutType,
+                        )
+                    }
                 }
             }
             composable<NavRoutes.BangumiOAuth>(
@@ -199,12 +207,18 @@ private fun AniAppContentImpl(
                     SubjectDetailsViewModel(stateLoader = appViewModel.subjectDetailsStateLoader)
                 }
                 vm.stateLoader.load(details.subjectId)
-                SubjectDetailsPage(
-                    vm,
-                    onPlay = { aniNavigator.navigateEpisodeDetails(details.subjectId, it) },
-                    animatedVisibilityScope = this,
-                    windowInsets = windowInsets,
-                )
+
+                CompositionLocalProvider(
+                    LocalSharedTransitionScopeProvider provides SharedTransitionScopeProvider(
+                        this@SharedTransitionLayout, this,
+                    ),
+                ) {
+                    SubjectDetailsPage(
+                        vm,
+                        onPlay = { aniNavigator.navigateEpisodeDetails(details.subjectId, it) },
+                        windowInsets = windowInsets,
+                    )
+                }
             }
             composable<NavRoutes.EpisodeDetail>(
                 enterTransition = enterTransition,

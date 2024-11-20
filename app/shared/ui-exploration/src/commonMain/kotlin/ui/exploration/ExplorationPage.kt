@@ -159,6 +159,7 @@ fun ExplorationPage(
 
             TrendingSubjectsCarousel(
                 state.trendingSubjectInfoPager,
+                modifier = Modifier,
                 loadingItem = { state.loadingTrendingSubject },
                 subjectDetailsProblem = { state.subjectDetailsStateLoader.subjectDetailsStateProblem },
                 onClick = {

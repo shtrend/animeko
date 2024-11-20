@@ -65,6 +65,7 @@ import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.setRequestFullScreen
+import me.him188.ani.app.ui.foundation.layout.useSharedTransitionScope
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
@@ -218,16 +219,17 @@ private fun MainSceneContent(
                                                 episodeId,
                                             )
                                         },
-                                        animatedVisibilityScope,
                                         Modifier.ifThen(listDetailLayoutParameters.isSinglePane) {
-                                            sharedElement(
-                                                rememberSharedContentState(
-                                                    SharedTransitionKeys.subjectBounds(
-                                                        state.info.subjectId,
+                                            useSharedTransitionScope { modifier, animatedVisibilityScope ->
+                                                modifier.sharedElement(
+                                                    rememberSharedContentState(
+                                                        SharedTransitionKeys.subjectBounds(
+                                                            state.info.subjectId,
+                                                        ),
                                                     ),
-                                                ),
-                                                animatedVisibilityScope,
-                                            )
+                                                    animatedVisibilityScope,
+                                                )
+                                            }
                                         },
                                     )
                                 }
