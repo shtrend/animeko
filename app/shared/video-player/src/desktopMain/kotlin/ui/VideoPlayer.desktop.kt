@@ -202,8 +202,13 @@ class VlcjVideoPlayerState(parentCoroutineContext: CoroutineContext) : PlayerSta
     }
 
     override fun closeImpl() {
-        player.release()
+        lastMedia?.onClose() // 在调用 VLC 之前停止阻塞线程
         lastMedia = null
+        backgroundScope.launch(NonCancellable) {
+            logger.trace { "VLC closeImpl: release player" }
+            player.release()
+            logger.trace { "VLC closeImpl: release player" }
+        }
     }
 
     private var lastMedia: SeekableInputCallbackMedia? = null // keep referenced so won't be gc'ed
@@ -217,6 +222,7 @@ class VlcjVideoPlayerState(parentCoroutineContext: CoroutineContext) : PlayerSta
     }
 
     override suspend fun cleanupPlayer() {
+        lastMedia?.onClose() // 在调用 VLC 之前停止阻塞线程
         player.submit {
             player.controls().stop()
         }
@@ -234,11 +240,15 @@ class VlcjVideoPlayerState(parentCoroutineContext: CoroutineContext) : PlayerSta
     override val isBuffering: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     override fun pause() {
-        player.controls().pause()
+        player.submit {
+            player.controls().pause()
+        }
     }
 
     override fun resume() {
-        player.controls().play()
+        player.submit {
+            player.controls().play()
+        }
     }
 
     override val playbackSpeed: MutableStateFlow<Float> = MutableStateFlow(1.0f)
@@ -490,13 +500,17 @@ class VlcjVideoPlayerState(parentCoroutineContext: CoroutineContext) : PlayerSta
     }
 
     override fun setPlaybackSpeed(speed: Float) {
-        player.controls().setRate(speed)
+        player.submit {
+            player.controls().setRate(speed)
+        }
         playbackSpeed.value = speed
     }
 
     override fun seekTo(positionMillis: Long) {
         currentPositionMillis.value = positionMillis
-        player.controls().setTime(positionMillis)
+        player.submit {
+            player.controls().setTime(positionMillis)
+        }
         surface.allowedDrawFrames.value = 2 // 多渲染一帧, 防止 race 问题π
     }
 
