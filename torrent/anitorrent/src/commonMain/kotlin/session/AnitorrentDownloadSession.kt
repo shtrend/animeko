@@ -226,7 +226,7 @@ class AnitorrentDownloadSession(
             }
         }
 
-        override suspend fun createInput(): SeekableInput {
+        override suspend fun createInput(awaitCoroutineContext: CoroutineContext): SeekableInput {
             val input = resolveDownloadingFile()
             return withContext(Dispatchers.IO_) {
                 TorrentInput(
@@ -237,6 +237,7 @@ class AnitorrentDownloadSession(
                         updatePieceDeadlinesForSeek(piece)
                     },
                     size = length,
+                    awaitCoroutineContext = awaitCoroutineContext,
                 )
             }
         }
