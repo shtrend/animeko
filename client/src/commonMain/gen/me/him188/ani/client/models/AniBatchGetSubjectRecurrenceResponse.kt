@@ -31,31 +31,13 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param aliases
- * @param bangumiId
- * @param name
- * @param begin
- * @param end 
- * @param mikanId 
- * @param recurrence 
+ * @param recurrences 
  */
 @Serializable
 
-data class AniOnAirAnimeInfo(
+data class AniBatchGetSubjectRecurrenceResponse(
 
-    @SerialName(value = "aliases") @Required val aliases: kotlin.collections.List<kotlin.String>,
-
-    @SerialName(value = "bangumiId") @Required val bangumiId: kotlin.Int,
-
-    @SerialName(value = "name") @Required val name: kotlin.String,
-
-    @SerialName(value = "begin") val begin: kotlin.String? = null,
-
-    @SerialName(value = "end") val end: kotlin.String? = null,
-
-    @SerialName(value = "mikanId") val mikanId: kotlin.Int? = null,
-
-    @SerialName(value = "recurrence") val recurrence: AniAnimeRecurrence? = null
+    @SerialName(value = "recurrences") @Required val recurrences: kotlin.collections.List<AniAnimeRecurrence>
 
 )
 
