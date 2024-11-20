@@ -113,8 +113,6 @@ private fun AniAppContentImpl(
         .add(WindowInsets.desktopTitleBar()) // Compose 目前不支持这个所以我们要自己加上
     val navMotionScheme by rememberUpdatedState(NavigationMotionScheme.current)
 
-    val appViewModel = viewModel<AniAppViewModel> { AniAppViewModel() }
-
     SharedTransitionLayout {
         NavHost(navController, startDestination = initialRoute, modifier) {
             val enterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition? =
@@ -166,7 +164,6 @@ private fun AniAppContentImpl(
                     ) {
                         MainScene(
                             page = currentPage,
-                            subjectDetailsStateLoader = appViewModel.subjectDetailsStateLoader,
                             onNavigateToPage = { currentPage = it },
                             navigationLayoutType = navigationLayoutType,
                         )
@@ -203,11 +200,9 @@ private fun AniAppContentImpl(
                 popExitTransition = popExitTransition,
             ) { backStackEntry ->
                 val details = backStackEntry.toRoute<NavRoutes.SubjectDetail>()
-                val vm = viewModel<SubjectDetailsViewModel>(key = appViewModel.subjectDetailsStateLoader.toString()) {
-                    SubjectDetailsViewModel(stateLoader = appViewModel.subjectDetailsStateLoader)
+                val vm = viewModel<SubjectDetailsViewModel>(key = details.subjectId.toString()) {
+                    SubjectDetailsViewModel(details.subjectId)
                 }
-                vm.stateLoader.load(details.subjectId)
-
                 CompositionLocalProvider(
                     LocalSharedTransitionScopeProvider provides SharedTransitionScopeProvider(
                         this@SharedTransitionLayout, this,
