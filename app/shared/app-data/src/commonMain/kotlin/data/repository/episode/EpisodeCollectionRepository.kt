@@ -35,13 +35,11 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.filterBySubjectId
 import me.him188.ani.app.data.repository.Repository
-import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
 import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.domain.episode.EpisodeCollections
 import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.logging.error
-import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
@@ -54,13 +52,9 @@ class EpisodeCollectionRepository(
     private val episodeCollectionDao: EpisodeCollectionDao,
     private val bangumiEpisodeService: BangumiEpisodeService,
     private val enableAllEpisodeTypes: Flow<Boolean>,
-    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
+    defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val cacheExpiry: Duration = 1.hours,
-) : Repository {
-    private companion object {
-        val logger = logger<EpisodeCollectionRepository>()
-    }
-
+) : Repository(defaultDispatcher) {
     private val epTypeFilter get() = enableAllEpisodeTypes.map { if (it) null else MainStory }
 
     /**

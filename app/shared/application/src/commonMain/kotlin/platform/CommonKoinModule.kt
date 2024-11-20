@@ -57,7 +57,6 @@ import me.him188.ani.app.data.repository.media.MikanIndexCacheRepositoryImpl
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepository
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepositoryImpl
 import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepository
-import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepositoryImpl
 import me.him188.ani.app.data.repository.player.EpisodeScreenshotRepository
 import me.him188.ani.app.data.repository.player.WhatslinkEpisodeScreenshotRepository
 import me.him188.ani.app.data.repository.subject.DefaultSubjectRelationsRepository
@@ -239,7 +238,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
         MediaSourceSubscriptionRepository(getContext().dataStores.mediaSourceSubscriptionStore)
     }
     single<EpisodePlayHistoryRepository> {
-        EpisodePlayHistoryRepositoryImpl(getContext().dataStores.episodeHistoryStore)
+        EpisodePlayHistoryRepository(getContext().dataStores.episodeHistoryStore)
     }
     single<BangumiProfileService> { BangumiProfileService() }
     single<AnimeScheduleService> { AnimeScheduleService(lazy { get<AniAuthClient>().scheduleApi }) }

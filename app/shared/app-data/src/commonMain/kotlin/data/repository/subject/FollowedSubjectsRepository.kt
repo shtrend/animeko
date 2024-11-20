@@ -26,13 +26,12 @@ import me.him188.ani.app.data.models.subject.FollowedSubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.data.models.subject.hasNewEpisodeToPlay
+import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
-import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.error
-import me.him188.ani.utils.logging.logger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
@@ -46,8 +45,8 @@ class FollowedSubjectsRepository(
     private val episodeCollectionRepository: EpisodeCollectionRepository,
 //    private val subjectProgressRepository: EpisodeProgressRepository,
 //    private val subjectCollectionDao: SubjectCollectionDao,
-    private val defaultDispatcher: CoroutineContext = Dispatchers.IO_,
-) {
+    defaultDispatcher: CoroutineContext = Dispatchers.Default,
+) : Repository(defaultDispatcher) {
     private fun followedSubjectsFlow(
         updatePeriod: Duration = 1.hours,
     ): Flow<List<FollowedSubjectInfo>> {
@@ -146,7 +145,6 @@ class FollowedSubjectsRepository(
         }.flowOn(defaultDispatcher)
 
     private companion object {
-        private val logger = logger<FollowedSubjectsRepository>()
         private val NotLoading = LoadStates(
             refresh = LoadState.NotLoading(true),
             prepend = LoadState.NotLoading(true),

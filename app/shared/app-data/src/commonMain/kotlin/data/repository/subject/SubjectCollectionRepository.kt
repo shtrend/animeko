@@ -55,7 +55,6 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
 import me.him188.ani.app.data.persistent.database.dao.deleteAll
 import me.him188.ani.app.data.persistent.database.dao.filterMostRecentUpdated
 import me.him188.ani.app.data.repository.Repository
-import me.him188.ani.app.data.repository.Repository.Companion.defaultPagingConfig
 import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.episode.toEntity
@@ -68,7 +67,6 @@ import me.him188.ani.datasources.bangumi.apis.DefaultApi
 import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollectionModifyPayload
 import me.him188.ani.datasources.bangumi.processing.toCollectionType
 import me.him188.ani.datasources.bangumi.processing.toSubjectCollectionType
-import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.flows.flowOfEmptyList
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.currentTimeMillis
@@ -83,15 +81,17 @@ typealias BangumiSubjectApi = DefaultApi
  *
  * [SubjectInfo], [SubjectCollectionInfo], [SubjectCollectionCounts]
  */
-sealed interface SubjectCollectionRepository : Repository {
+sealed class SubjectCollectionRepository(
+    defaultDispatcher: CoroutineContext = Dispatchers.Default
+) : Repository(defaultDispatcher) {
     /**
      * 获取条目收藏统计信息 cold [Flow]. Flow 将会 emit 至少一个值, 失败时 emit `null`.
      */
-    fun subjectCollectionCountsFlow(): Flow<SubjectCollectionCounts?>
+    abstract fun subjectCollectionCountsFlow(): Flow<SubjectCollectionCounts?>
 
-    fun subjectCollectionFlow(subjectId: Int): Flow<SubjectCollectionInfo>
+    abstract fun subjectCollectionFlow(subjectId: Int): Flow<SubjectCollectionInfo>
 
-    fun subjectCollectionsPager(
+    abstract fun subjectCollectionsPager(
         query: CollectionsFilterQuery = CollectionsFilterQuery.Empty,
         pagingConfig: PagingConfig = defaultPagingConfig,
     ): Flow<PagingData<SubjectCollectionInfo>>
@@ -99,7 +99,7 @@ sealed interface SubjectCollectionRepository : Repository {
     /**
      * 更新根据服务器上记录的最近有修改的条目收藏. 也就是用户最近操作过的条目收藏.
      */
-    suspend fun updateRecentlyUpdatedSubjectCollections(
+    abstract suspend fun updateRecentlyUpdatedSubjectCollections(
         limit: Int,
         type: UnifiedCollectionType?,
         offset: Int = 0,
@@ -108,7 +108,7 @@ sealed interface SubjectCollectionRepository : Repository {
     /**
      * 获取最近更新的条目收藏 cold [Flow].
      */
-    fun mostRecentlyUpdatedSubjectCollectionsFlow(
+    abstract fun mostRecentlyUpdatedSubjectCollectionsFlow(
         limit: Int,
         types: List<UnifiedCollectionType>? = null, // null for all
     ): Flow<List<SubjectCollectionInfo>>
@@ -118,7 +118,7 @@ sealed interface SubjectCollectionRepository : Repository {
      * @param comment set empty to remove
      * @param tags set empty to remove
      */
-    suspend fun updateRating(
+    abstract suspend fun updateRating(
         subjectId: Int,
         score: Int? = null,
         comment: String? = null,
@@ -126,7 +126,7 @@ sealed interface SubjectCollectionRepository : Repository {
         isPrivate: Boolean? = null,
     )
 
-    suspend fun setSubjectCollectionTypeOrDelete(
+    abstract suspend fun setSubjectCollectionTypeOrDelete(
         subjectId: Int,
         type: UnifiedCollectionType?,
     )
@@ -142,8 +142,8 @@ class SubjectCollectionRepositoryImpl(
     private val episodeCollectionDao: EpisodeCollectionDao,
     private val getCurrentDate: () -> PackedDate = { PackedDate.now() },
     private val enableAllEpisodeTypes: Flow<Boolean>,
-    private val defaultDispatcher: CoroutineContext = Dispatchers.IO_,
-) : SubjectCollectionRepository {
+    defaultDispatcher: CoroutineContext = Dispatchers.Default,
+) : SubjectCollectionRepository(defaultDispatcher) {
     private val epTypeFilter get() = enableAllEpisodeTypes.map { if (it) null else MainStory }
 
     override fun subjectCollectionCountsFlow(): Flow<SubjectCollectionCounts?> {
