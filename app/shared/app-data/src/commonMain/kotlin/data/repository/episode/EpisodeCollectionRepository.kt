@@ -18,6 +18,7 @@ import androidx.paging.RemoteMediator
 import androidx.paging.map
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
@@ -36,6 +37,7 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.filterBySubjectId
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
 import me.him188.ani.app.domain.episode.EpisodeCollections
 import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -51,11 +53,15 @@ class EpisodeCollectionRepository(
     private val subjectDao: SubjectCollectionDao,
     private val episodeCollectionDao: EpisodeCollectionDao,
     private val bangumiEpisodeService: BangumiEpisodeService,
+    private val animeScheduleRepository: AnimeScheduleRepository,
+    subjectCollectionRepository: Lazy<SubjectCollectionRepository>,
     private val enableAllEpisodeTypes: Flow<Boolean>,
     defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val cacheExpiry: Duration = 1.hours,
 ) : Repository(defaultDispatcher) {
     private val epTypeFilter get() = enableAllEpisodeTypes.map { if (it) null else MainStory }
+
+    private val subjectCollectionRepository by subjectCollectionRepository
 
     /**
      * 获取指定条目的指定剧集信息, 如果没有则从网络获取并缓存
@@ -182,6 +188,16 @@ class EpisodeCollectionRepository(
     }
 
     /**
+     * 获取指定条目是否已经完结. 不是用户是否看完, 只要条目本身完结了就算.
+     */
+    fun subjectCompletedFlow(subjectId: Int): Flow<Boolean> {
+        return subjectEpisodeCollectionInfosFlow(subjectId)
+            .combine(subjectCollectionRepository.subjectCollectionFlow(subjectId)) { epCollection, subject ->
+                EpisodeCollections.isSubjectCompleted(epCollection.map { it.episodeInfo }, subject.recurrence)
+            }
+    }
+
+    /**
      * Loads [EpisodeCollectionEntity]
      */
     private inner class EpisodeCollectionsRemoteMediator<T : Any>(
@@ -229,15 +245,6 @@ class EpisodeCollectionRepository(
             }
 
         }
-    }
-}
-
-/**
- * 获取指定条目是否已经完结. 不是用户是否看完, 只要条目本身完结了就算.
- */
-fun EpisodeCollectionRepository.subjectCompletedFlow(subjectId: Int): Flow<Boolean> {
-    return subjectEpisodeCollectionInfosFlow(subjectId).map { epCollection ->
-        EpisodeCollections.isSubjectCompleted(epCollection.map { it.episodeInfo })
     }
 }
 

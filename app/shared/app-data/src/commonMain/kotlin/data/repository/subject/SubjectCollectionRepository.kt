@@ -42,6 +42,7 @@ import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
 import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
+import me.him188.ani.app.data.models.subject.SubjectRecurrence
 import me.him188.ani.app.data.network.BangumiEpisodeService
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.BatchSubjectCollection
@@ -56,6 +57,7 @@ import me.him188.ani.app.data.persistent.database.dao.deleteAll
 import me.him188.ani.app.data.persistent.database.dao.filterMostRecentUpdated
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.data.repository.episode.AnimeScheduleRepository
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.episode.toEntity
 import me.him188.ani.app.data.repository.episode.toEpisodeCollectionInfo
@@ -138,6 +140,7 @@ class SubjectCollectionRepositoryImpl(
     private val subjectCollectionDao: SubjectCollectionDao,
     private val subjectRelationsDao: SubjectRelationsDao,
     private val episodeCollectionRepository: EpisodeCollectionRepository,
+    private val animeScheduleRepository: AnimeScheduleRepository,
     private val bangumiEpisodeService: BangumiEpisodeService,
     private val episodeCollectionDao: EpisodeCollectionDao,
     private val getCurrentDate: () -> PackedDate = { PackedDate.now() },
@@ -183,13 +186,16 @@ class SubjectCollectionRepositoryImpl(
                         selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
                         lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
                         lastFetched = currentTimeMillis(),
+                        recurrence = animeScheduleRepository.getSubjectRecurrence(subjectId),
                     )
                     subjectCollectionDao.upsert(entity) // 插入后, `subjectCollectionDao.findById(subjectId)` 会重新 emit
                 }
             }
             .filterNotNull()
             // 有 subject 缓存后才能从 episodeCollectionRepository fetch episodes
-            .combine(episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId)) { entity, episodes ->
+            .combine(
+                episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId),
+            ) { entity, episodes ->
                 entity.toSubjectCollectionInfo(
                     episodes = episodes,
                     currentDate = getCurrentDate(),
@@ -206,13 +212,12 @@ class SubjectCollectionRepositoryImpl(
             }
             combine(
                 list.map { entity ->
-                    episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(entity.subjectId)
-                        .map { episodes ->
-                            entity.toSubjectCollectionInfo(
-                                episodes = episodes,
-                                currentDate = getCurrentDate(),
-                            )
-                        }
+                    episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(entity.subjectId).map { episodes ->
+                        entity.toSubjectCollectionInfo(
+                            episodes = episodes,
+                            currentDate = getCurrentDate(),
+                        )
+                    }
                 },
             ) {
                 it.toList()
@@ -295,13 +300,26 @@ class SubjectCollectionRepositoryImpl(
         )
 
         // 提前'批量'查询剧集收藏状态, 防止在收藏页显示结果时一个一个查导致太慢
-        val episodes = batchGetSubjectEpisodes(items)
+        val episodes: List<EpisodeCollectionEntity>
+        val recurrences: List<SubjectRecurrence?>
+        coroutineScope {
+            // 并行加载
+            val episodesDeferred = async { batchGetSubjectEpisodes(items) }
+            val recurrencesDeferred =
+                async { animeScheduleRepository.batchGetSubjectRecurrence(items.map { it.batchSubjectDetails.subjectInfo.subjectId }) }
+            episodes = episodesDeferred.await()
+            recurrences = recurrencesDeferred.await()
+        }
 
         onFetched(items)
 
         // 批量插入条目信息
         val lastFetched = currentTimeMillis()
-        subjectCollectionDao.upsert(items.map { it.toEntity(lastFetched) })
+        subjectCollectionDao.upsert(
+            items.mapIndexed { index, batchSubjectCollection ->
+                batchSubjectCollection.toEntity(lastFetched, recurrences[index])
+            },
+        )
 
         // 必须先插入好条目信息, 否则插入 episode 会 foreign key constraint failed
         episodeCollectionDao.upsert(episodes)
@@ -493,8 +511,11 @@ private fun SubjectCollectionEntity.toSubjectCollectionInfo(
         airingInfo = SubjectAiringInfo.computeFromEpisodeList(
             episodes.map { it.episodeInfo },
             airDate,
+            recurrence,
         ),
-        progressInfo = SubjectProgressInfo.compute(subjectInfo, episodes, currentDate),
+        progressInfo = SubjectProgressInfo.compute(subjectInfo, episodes, currentDate, recurrence),
+//        isOnAir = ,
+        recurrence = recurrence,
         cachedStaffUpdated = cachedStaffUpdated,
         cachedCharactersUpdated = cachedCharactersUpdated,
         lastUpdated = lastUpdated,
@@ -505,6 +526,7 @@ private fun SubjectCollectionEntity.toSubjectCollectionInfo(
 internal fun BatchSubjectDetails.toEntity(
     collectionType: UnifiedCollectionType,
     selfRatingInfo: SelfRatingInfo,
+    recurrence: SubjectRecurrence?,
     lastUpdated: Long,
     lastFetched: Long,
 ): SubjectCollectionEntity =
@@ -528,6 +550,7 @@ internal fun BatchSubjectDetails.toEntity(
             completeDate = completeDate,
             selfRatingInfo = selfRatingInfo,
             collectionType = collectionType,
+            recurrence = recurrence,
             lastUpdated = lastUpdated,
             lastFetched = lastFetched,
             cachedStaffUpdated = 0,
@@ -537,6 +560,7 @@ internal fun BatchSubjectDetails.toEntity(
 
 internal fun BatchSubjectCollection.toEntity(
     lastFetched: Long,
+    recurrence: SubjectRecurrence?,
 ): SubjectCollectionEntity {
     val subject = batchSubjectDetails
     return subject.toEntity(
@@ -544,6 +568,7 @@ internal fun BatchSubjectCollection.toEntity(
         collection.toSelfRatingInfo(),
         lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
         lastFetched = lastFetched,
+        recurrence = recurrence,
     )
 }
 

@@ -21,13 +21,14 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.subject.FollowedSubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectAiringInfo
+import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.data.models.subject.hasNewEpisodeToPlay
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.data.repository.episode.AnimeScheduleRepository
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -42,6 +43,7 @@ import kotlin.time.Duration.Companion.hours
  */
 class FollowedSubjectsRepository(
     private val subjectCollectionRepository: SubjectCollectionRepository,
+    private val animeScheduleRepository: AnimeScheduleRepository,
     private val episodeCollectionRepository: EpisodeCollectionRepository,
 //    private val subjectProgressRepository: EpisodeProgressRepository,
 //    private val subjectCollectionDao: SubjectCollectionDao,
@@ -90,28 +92,7 @@ class FollowedSubjectsRepository(
                 if (subjectCollectionInfoList.isEmpty()) { // `combine(emptyList)` does not emit
                     return@flatMapLatest flowOf(emptyList())
                 }
-                combine<List<EpisodeCollectionInfo>, List<FollowedSubjectInfo>>(
-                    subjectCollectionInfoList.map { info ->
-                        episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(info.subjectId)
-                    },
-                ) { array ->
-                    subjectCollectionInfoList.asSequence()
-                        .zip(array.asSequence()) { subjectCollectionInfo, episodes ->
-                            // 计算每个条目的播放进度
-                            FollowedSubjectInfo(
-                                subjectCollectionInfo,
-                                SubjectAiringInfo.computeFromEpisodeList(
-                                    episodes.map { it.episodeInfo },
-                                    subjectCollectionInfo.subjectInfo.airDate,
-                                ),
-                                SubjectProgressInfo.compute(
-                                    subjectCollectionInfo.subjectInfo,
-                                    episodes,
-                                    now,
-                                ),
-                            )
-                        }.toList()
-                }
+                getFollowedSubjectInfoFlows(subjectCollectionInfoList, now)
             }.map { followedSubjectInfoList ->
                 followedSubjectInfoList
                     .toMutableList()
@@ -119,9 +100,37 @@ class FollowedSubjectsRepository(
                         sortWith(sorter)
                     }
             }.catch {
-                RepositoryException.wrapOrThrowCancellation(it)
+                throw RepositoryException.wrapOrThrowCancellation(it)
             }
         }.flowOn(defaultDispatcher)
+    }
+
+    private fun getFollowedSubjectInfoFlows(
+        subjectCollectionInfoList: List<SubjectCollectionInfo>,
+        now: PackedDate,
+    ): Flow<List<FollowedSubjectInfo>> = combine(
+        subjectCollectionInfoList.map { info ->
+            episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(info.subjectId)
+        },
+    ) { array ->
+        subjectCollectionInfoList.asSequence()
+            .zip(array.asSequence()) { subjectCollectionInfo, episodes ->
+                // 计算每个条目的播放进度
+                FollowedSubjectInfo(
+                    subjectCollectionInfo,
+                    SubjectAiringInfo.computeFromEpisodeList(
+                        episodes.map { it.episodeInfo },
+                        subjectCollectionInfo.subjectInfo.airDate,
+                        subjectCollectionInfo.recurrence,
+                    ),
+                    SubjectProgressInfo.compute(
+                        subjectCollectionInfo.subjectInfo,
+                        episodes,
+                        now,
+                        subjectCollectionInfo.recurrence,
+                    ),
+                )
+            }.toList()
     }
 
     fun followedSubjectsPager(

@@ -45,6 +45,7 @@ import me.him188.ani.app.data.repository.RepositoryAuthorizationException
 import me.him188.ani.app.data.repository.RepositoryNetworkException
 import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
 import me.him188.ani.app.data.repository.RepositoryUsernameProvider
+import me.him188.ani.app.data.repository.episode.AnimeScheduleRepository
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.episode.EpisodeProgressRepository
 import me.him188.ani.app.data.repository.media.EpisodePreferencesRepository
@@ -174,6 +175,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
 //            subjectPersonRelationDao = database.subjectPersonRelation(),
             subjectRelationsDao = database.subjectRelations(),
             episodeCollectionRepository = get(),
+            animeScheduleRepository = get(),
             bangumiEpisodeService = get(),
             episodeCollectionDao = database.episodeCollection(),
             enableAllEpisodeTypes = settingsRepository.debugSettings.flow.map { it.showAllEpisodes },
@@ -182,6 +184,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
     single<FollowedSubjectsRepository> {
         FollowedSubjectsRepository(
             subjectCollectionRepository = get(),
+            animeScheduleRepository = get(),
             episodeCollectionRepository = get(),
         )
     }
@@ -215,11 +218,14 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
     single<BangumiEpisodeService> { EpisodeRepositoryImpl() }
 
     single<BangumiRelatedPeopleService> { BangumiRelatedPeopleService(get()) }
+    single<AnimeScheduleRepository> { AnimeScheduleRepository(get()) }
     single<EpisodeCollectionRepository> {
         EpisodeCollectionRepository(
             subjectDao = database.subjectCollection(),
             episodeCollectionDao = database.episodeCollection(),
             bangumiEpisodeService = get(),
+            animeScheduleRepository = get(),
+            subjectCollectionRepository = inject(),
             enableAllEpisodeTypes = settingsRepository.debugSettings.flow.map { it.showAllEpisodes },
         )
     }
