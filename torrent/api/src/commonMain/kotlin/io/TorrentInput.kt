@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.torrent.io
 
-import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import me.him188.ani.app.torrent.api.pieces.Piece
 import me.him188.ani.app.torrent.api.pieces.PieceList
@@ -18,13 +17,10 @@ import me.him188.ani.utils.io.BufferedInput.Companion.DEFAULT_BUFFER_PER_DIRECTI
 import me.him188.ani.utils.io.SeekableInput
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.length
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * @param pieces The corresponding pieces of the [file], must contain all bytes in the [file]. 不需要排序.
  * @param logicalStartOffset 逻辑上的偏移量, 也就是当 seek `k` 时, 实际上是在 `logicalStartOffset + k` 处.
- * @param awaitCoroutineContext 当 [SeekableInput] 需要等待 piece 完成时, 会[切换][withContext]到的 [CoroutineContext].
  */
 @Suppress("FunctionName")
 @Throws(IOException::class)
@@ -34,8 +30,7 @@ expect fun TorrentInput(
     logicalStartOffset: Long = pieces.minOf { it.dataStartOffset }, // 默认为第一个 piece 开头
     onWait: suspend (Piece) -> Unit = { },
     bufferSize: Int = DEFAULT_BUFFER_PER_DIRECTION,
-    size: Long = file.length(),
-    awaitCoroutineContext: CoroutineContext = EmptyCoroutineContext,
+    size: Long = file.length()
 ): SeekableInput
 
 @RequiresOptIn(
@@ -44,7 +39,7 @@ expect fun TorrentInput(
 )
 annotation class RawTorrentInputConstructorParameter
 
-class TorrentInputParameters
+class TorrentInputParameters 
 @RawTorrentInputConstructorParameter constructor(
     val file: SystemPath,
     val logicalStartOffset: Long,

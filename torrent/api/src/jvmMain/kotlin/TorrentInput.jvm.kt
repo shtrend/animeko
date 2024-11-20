@@ -10,7 +10,6 @@
 package me.him188.ani.app.torrent.io
 
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import me.him188.ani.app.torrent.api.pieces.Piece
 import me.him188.ani.app.torrent.api.pieces.PieceList
@@ -26,8 +25,6 @@ import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.toFile
 import me.him188.ani.utils.platform.annotations.Range
 import java.io.RandomAccessFile
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.EmptyCoroutineContext
 
 @Suppress("FunctionName")
 @Throws(IOException::class)
@@ -38,12 +35,8 @@ actual fun TorrentInput(
     onWait: suspend (Piece) -> Unit,
     bufferSize: Int,
     size: Long,
-    awaitCoroutineContext: CoroutineContext,
 ): SeekableInput =
-    TorrentInput(
-        RandomAccessFile(file.toFile(), "r"), pieces, logicalStartOffset, onWait, bufferSize, size,
-        awaitCoroutineContext = awaitCoroutineContext,
-    )
+    TorrentInput(RandomAccessFile(file.toFile(), "r"), pieces, logicalStartOffset, onWait, bufferSize, size)
 
 
 /**
@@ -82,11 +75,7 @@ class TorrentInput(
      * 因此 [bufferSize] 指定的是最大大小. 不会因为过大的 [bufferSize] 而导致等待更多 piece 完成.
      */
     private val bufferSize: Int = DEFAULT_BUFFER_PER_DIRECTION,
-    override val size: Long = file.length(),
-    /**
-     * 当 [SeekableInput] 需要等待 piece 完成时, 会[切换][withContext]到的 [CoroutineContext].
-     */
-    private val awaitCoroutineContext: CoroutineContext = EmptyCoroutineContext,
+    override val size: Long = file.length()
 ) : BufferedInput(bufferSize) {
 
     // exclusive
@@ -117,7 +106,7 @@ class TorrentInput(
         val piece = pieces.getByPieceIndex(index)
         with(pieces) {
             if (piece.state != PieceState.FINISHED) {
-                runBlocking(this@TorrentInput.awaitCoroutineContext) {
+                runBlocking {
                     onWait(piece)
                     piece.awaitFinished()
                 }
