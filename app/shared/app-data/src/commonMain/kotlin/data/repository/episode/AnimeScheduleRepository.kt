@@ -11,9 +11,11 @@ package me.him188.ani.app.data.repository.episode
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.mapNotNull
 import me.him188.ani.app.data.models.schedule.AnimeScheduleInfo
 import me.him188.ani.app.data.models.schedule.AnimeSeasonId
 import me.him188.ani.app.data.models.schedule.findRecurrence
@@ -55,9 +57,9 @@ class AnimeScheduleRepository(
 
     suspend fun getSubjectRecurrence(subjectId: Int): SubjectRecurrence? {
         try {
-            val seasons = animeSeasonIdsFlow().firstOrNull() ?: return null
-            val schedules = seasons.mapNotNull { animeScheduleFlow(it).firstOrNull() }
-            return schedules.firstNotNullOfOrNull { it.findRecurrence(subjectId) }
+            val seasons = animeSeasonIdsFlow().firstOrNull()?.take(4) ?: return null
+            val schedules = seasons.asFlow().mapNotNull { animeScheduleFlow(it).firstOrNull() }
+            return schedules.mapNotNull { it.findRecurrence(subjectId) }.firstOrNull()
         } catch (e: CancellationException) {
             throw e
         } catch (e: RepositoryServiceUnavailableException) {
