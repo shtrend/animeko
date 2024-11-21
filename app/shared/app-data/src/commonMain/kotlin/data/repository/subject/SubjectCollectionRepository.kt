@@ -180,15 +180,20 @@ class SubjectCollectionRepositoryImpl(
             .onEach {
                 // 如果没有缓存, 则 fetch 然后插入 subject 缓存
                 if (it == null) {
-                    val (batch, collection) = bangumiSubjectService.getSubjectCollection(subjectId)
-                    val entity = batch.toEntity(
-                        collection?.type.toCollectionType(),
-                        selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
-                        lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
-                        lastFetched = currentTimeMillis(),
-                        recurrence = animeScheduleRepository.getSubjectRecurrence(subjectId),
-                    )
-                    subjectCollectionDao.upsert(entity) // 插入后, `subjectCollectionDao.findById(subjectId)` 会重新 emit
+                    coroutineScope {
+                        val subjectCollectionDeferred = async { bangumiSubjectService.getSubjectCollection(subjectId) }
+                        val recurrenceDeferred = async { animeScheduleRepository.getSubjectRecurrence(subjectId) }
+
+                        val (batch, collection) = subjectCollectionDeferred.await()
+                        val entity = batch.toEntity(
+                            collection?.type.toCollectionType(),
+                            selfRatingInfo = collection?.toSelfRatingInfo() ?: SelfRatingInfo.Empty,
+                            lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
+                            lastFetched = currentTimeMillis(),
+                            recurrence = recurrenceDeferred.await(),
+                        )
+                        subjectCollectionDao.upsert(entity) // 插入后, `subjectCollectionDao.findById(subjectId)` 会重新 emit
+                    }
                 }
             }
             .filterNotNull()
