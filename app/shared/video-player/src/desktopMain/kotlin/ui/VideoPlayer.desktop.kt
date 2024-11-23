@@ -528,7 +528,8 @@ class VlcjVideoPlayerState(parentCoroutineContext: CoroutineContext) : PlayerSta
         if (state.value == PlaybackState.PAUSED) {
             // 如果是暂停, 上面 positionChanged 事件不会触发, 所以这里手动更新
             // 如果正在播放, 这里不能更新. 否则可能导致进度抖动 1 秒
-            currentPositionMillis.value += deltaMillis
+            currentPositionMillis.value = (currentPositionMillis.value + deltaMillis)
+                .coerceIn(0, videoProperties.value?.durationMillis ?: 0)
         }
         player.submit {
             setTimeLock.withLock {
