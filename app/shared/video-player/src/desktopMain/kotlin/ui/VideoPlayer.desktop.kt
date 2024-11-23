@@ -509,6 +509,12 @@ class VlcjVideoPlayerState(parentCoroutineContext: CoroutineContext) : PlayerSta
     private val setTimeLock = ReentrantLock()
 
     override fun seekTo(positionMillis: Long) {
+        @Suppress("NAME_SHADOWING")
+        val positionMillis = positionMillis.coerceIn(0, videoProperties.value?.durationMillis ?: 0)
+        if (positionMillis == currentPositionMillis.value) {
+            return
+        }
+
         currentPositionMillis.value = positionMillis
         player.submit {
             setTimeLock.withLock {
