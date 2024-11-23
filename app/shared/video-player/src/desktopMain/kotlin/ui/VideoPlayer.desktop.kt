@@ -506,14 +506,31 @@ class VlcjVideoPlayerState(parentCoroutineContext: CoroutineContext) : PlayerSta
         playbackSpeed.value = speed
     }
 
+    private val setTimeLock = ReentrantLock()
+
     override fun seekTo(positionMillis: Long) {
         currentPositionMillis.value = positionMillis
         player.submit {
-            player.controls().setTime(positionMillis)
+            setTimeLock.withLock {
+                player.controls().setTime(positionMillis)
+            }
         }
-        surface.allowedDrawFrames.value = 2 // 多渲染一帧, 防止 race 问题π
+        surface.allowedDrawFrames.value = 2 // 多渲染一帧, 防止 race 问题
     }
 
+    override fun skip(deltaMillis: Long) {
+        if (state.value == PlaybackState.PAUSED) {
+            // 如果是暂停, 上面 positionChanged 事件不会触发, 所以这里手动更新
+            // 如果正在播放, 这里不能更新. 否则可能导致进度抖动 1 秒
+            currentPositionMillis.value += deltaMillis
+        }
+        player.submit {
+            setTimeLock.withLock {
+                player.controls().skipTime(deltaMillis) // 采用当前 player 时间
+            }
+        }
+        surface.allowedDrawFrames.value = 2 // 多渲染一帧, 防止 race 问题
+    }
 }
 
 @Composable

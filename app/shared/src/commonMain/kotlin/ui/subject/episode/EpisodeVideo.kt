@@ -258,7 +258,7 @@ internal fun EpisodeVideoImpl(
         },
         gestureHost = {
             val swipeSeekerState = rememberSwipeSeekerState(constraints.maxWidth) {
-                playerState.seekTo(playerState.currentPositionMillis.value + it * 1000)
+                playerState.skip(it * 1000L)
             }
             val videoPropertiesState by playerState.videoProperties.collectAsState()
             val enableSwipeToSeek by remember {
