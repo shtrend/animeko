@@ -170,6 +170,9 @@ private fun MainSceneContent(
                             onSearch = { onNavigateToPage(MainScenePage.Search) },
                             onClickSettings = { navigator.navigateSettings() },
                             modifier.fillMaxSize(),
+                            actions = {
+                                TextButtonUpdateLogo()
+                            },
                         )
                     }
 
