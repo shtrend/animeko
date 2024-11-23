@@ -35,7 +35,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowHeightSizeClass.Companion.MEDIUM
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
+import me.him188.ani.app.ui.foundation.layout.compareTo
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 
 /**
@@ -120,7 +122,7 @@ fun AniNavigationSuite(
 
                 Spacer(Modifier.weight(1f))
 
-                if (navigationRailFooter != null) {
+                if (navigationRailFooter != null && currentWindowAdaptiveInfo1().windowSizeClass.windowHeightSizeClass >= MEDIUM) {
                     val itemScope = remember(this) {
                         NavigationRailItemScopeImpl(
                             this,
