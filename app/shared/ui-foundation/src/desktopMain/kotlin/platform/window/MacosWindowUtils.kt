@@ -85,7 +85,7 @@ internal class MacosWindowUtils : AwtWindowUtils() {
                 try {
                     screenSaverProcess = ProcessBuilder("caffeinate", "-d")
                         .inheritIO()
-                        .start()
+                        .start() // Note: this is blocking. We actually should not block here as it's called from the ui thread. But it's fine for now.
                 } catch (e: Exception) {
                     logger.error("Failed to launch caffeinate, see cause", e)
                 }
