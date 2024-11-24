@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.tools.MonoTasker
-import me.him188.ani.app.ui.search.SearchProblem
+import me.him188.ani.app.ui.search.LoadError
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.platform.annotations.TestOnly
 import kotlin.coroutines.cancellation.CancellationException
@@ -63,7 +63,7 @@ class SubjectDetailsStateLoader(
             } catch (e: Exception) {
                 flowScope.cancel()
                 withContext(Dispatchers.Main) {
-                    subjectDetailsStateProblem = SearchProblem.fromException(e)
+                    subjectDetailsStateProblem = LoadError.fromException(e)
                     subjectDetailsStateFlow = null
                 }
                 return@launch
@@ -82,7 +82,7 @@ class SubjectDetailsStateLoader(
         subjectDetailsStateFlow = null
     }
 
-    var subjectDetailsStateProblem: SearchProblem? by mutableStateOf(null)
+    var subjectDetailsStateProblem: LoadError? by mutableStateOf(null)
         private set
     var subjectDetailsStateFlow: StateFlow<SubjectDetailsState>? by mutableStateOf(null)
         private set
