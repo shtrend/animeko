@@ -64,39 +64,28 @@ class TorrentDownloadController(
     private val footerSize: Long = headerSize,
     private val possibleFooterSize: Long = headerSize,
 ) : SynchronizedObject() {
-    private val totalPieceSize: Long = pieces.sumOf { it.size }
     private val pieceOffsetStart = with(pieces) { pieces.first().dataStartOffset }
+    private val totalPieceSize: Long = if (pieces.isEmpty()) 0 else
+        with(pieces) { last().dataEndOffset - pieceOffsetStart }
+    private val totalPieceCount = pieces.sizes.size
 
-    // 获取 head piece 数量和 tail piece 数量
-    private val headPieceCount =
-        pieces.pieceIndexOfFirst { it.dataEndOffset >= pieceOffsetStart + headerSize }.let { index ->
-            // 如果 index == -1 说明未找到说明所有 piece 的 dataOffset 都小于 headerSize
-            // 那就让所有的 piece 都成为 highest piece
-            if (index == -1) pieces.sizes.size else {
-                index - pieces.initialPieceIndex + 1
-            }
-        }
-    private val footerPieceCount = pieces.sizes.size -
-            pieces.pieceIndexOfLast { it.dataStartOffset <= pieceOffsetStart + totalPieceSize - footerSize } +
-            pieces.initialPieceIndex
-    // private val possibleFooterPieceCount = pieces.sizes.size -
-    //         pieces.pieceIndexOfLast { it.dataStartOffset <= pieceOffsetStart + totalPieceSize - possibleFooterSize } +
-    //         pieces.initialPieceIndex
+    // 获取 metadata piece 数量
+    private val metadataPieces = pieces.parseMetadataPieceCount()
 
     /**
-     * 头尾 metadata 的 pieceIndex, 下载完后移除对应 index, 传递给 [priorities].
+     * metadata 的 pieceIndex, 下载完后移除对应 index, 传递给 [priorities].
      * metadata piece 的顺序和数量是固定的. 不需要额外的 list 来存储当前需要下载的 piece.
      */
-    private val highPieces = pieces
-        .getHeadAndFooterPieces(headPieceCount, footerPieceCount)
-        .toMutableList()
+    private val highPieces = with(metadataPieces) { pieces.getMetadataPieces().toMutableList() }
 
     /**
      * 其他 piece 的 pieceIndex, 使用 [downloadingNormalPieces] 维护下载窗口
      */
-    private val normalPieces: List<Int> = DelegateStrippedMetadataPieceList(pieces, headPieceCount, footerPieceCount)
+    private val normalPieces: List<Int> =
+        DelegateStrippedMetadataPieceList(pieces, metadataPieces.headerPieceCount, metadataPieces.footerPieceCount)
 
-    private val bodyPieceIndexRange by lazy { normalPieces.run { first()..last() } }
+    private val bodyPieceIndexRange =
+        if (normalPieces.isEmpty()) IntRange.EMPTY else normalPieces.first()..normalPieces.last()
 
     /**
      * 正在下载的 normal pieces.
@@ -109,7 +98,7 @@ class TorrentDownloadController(
     private var currentWindowStartIndex = 0
 
     // 有可能 normalPriorityPieces 的数量比 windowSize 小
-    private var currentWindowEndIndex = min(normalPieces.size, windowSize) - 1
+    private var currentWindowEndIndex = min(min(normalPieces.size, windowSize) - 1, 0)
 
     /**
      * 返回此 pieceIndex 在 [normalPieces] 中对应 piece 的列表索引.
@@ -172,14 +161,16 @@ class TorrentDownloadController(
             priorities.downloadOnly(highPieces, downloadingNormalPieces)
             return@synchronized
         }
-        // 所有 normal piece 都下载完了, 不再处理 window
-        if (allNormalPieceDownloaded) {
+
+        // (1) normal piece 是空的, 不关 normal piece 的事情, 不处理 window
+        // (2) 所有 normal piece 都下载完了, 不处理 window
+        if (normalPieces.isEmpty() || allNormalPieceDownloaded) {
             return@synchronized
         }
-        
-        // 完成了窗口之外的 piece, 不移动窗口
+
+        // (3) 下载完了窗口之外的 piece, 不关 window 内的 piece 的事, 不处理 window
         if (!downloadingNormalPieces.remove(pieceIndex)) {
-            return
+            return@synchronized
         }
 
         if (pieceIndex.indexInNormalPieceList == currentWindowStartIndex) {
@@ -220,8 +211,10 @@ class TorrentDownloadController(
     }
 
     /**
-     * seek 到 pieceIndex 不一定会重构从 pieceIndex 开始的 window
-     * 要从 pieceIndex 开始找接下来 window 大小个未完成的 piece 构成 window
+     * seek 到 pieceIndex 不一定会重构从 pieceIndex 开始的 window, 因为这个 piece 可能已经下载完成了
+     * 要从 pieceIndex 开始找接下来 window 大小个未完成的 piece 构成 window.
+     *
+     * 此函数会重置 window 边界.
      */
     private fun fillNormalPieceWindow(listIndex: Int) {
         // 如果 pieceIndex 以后的 piece 都完成了, 那就没有 piece 要填充到 window 了
@@ -232,7 +225,8 @@ class TorrentDownloadController(
         currentWindowEndIndex = nextIndex
 
         downloadingNormalPieces.addIfNotExist(normalPieces[currentWindowStartIndex])
-        for (i in 0..<(windowSize - downloadingNormalPieces.size)) {
+        // windowSize - downloadingNormalPieces.size 是为了保证 window 内的 piece 数量总为 windowSize
+        for (i in 0..<(windowSize - downloadingNormalPieces.size)) { 
             val next = findNextDownloadingNormalPiece(currentWindowEndIndex + 1)
             if (next != -1) {
                 downloadingNormalPieces.addIfNotExist(normalPieces[next])
@@ -244,30 +238,83 @@ class TorrentDownloadController(
         }
     }
 
+    private fun PieceList.parseMetadataPieceCount(): MetadataPieceCount {
+        // 如果 piece 总大小比 header 和 footer 小, 那所有 piece 都判定为 normal piece
+        if (headerSize >= totalPieceSize || footerSize >= totalPieceSize) return MetadataPieceCount.Zero
+        // 如果总 piece 数量只有 1, 那也是所有 piece 判定为 normal piece
+        if (totalPieceCount == 1) return MetadataPieceCount.Zero
+        // 如果总 piece 数量有 2, 那 header 和 footer 各一个
+        if (totalPieceCount == 2) return MetadataPieceCount(1, 1)
+       
+        val headerCount: Int
+        val footerCount: Int
+
+        // 第一个在 header size 外的 piece
+        val firstPieceIndexAfterHeader = pieceIndexOfFirst { it.dataStartOffset >= pieceOffsetStart + headerSize }
+        if (firstPieceIndexAfterHeader == -1) {
+            // 如果没找到, 那说明所有 piece 都是 header piece
+            // 因此所有 piece 都判定为 normal piece 也没问题
+            return MetadataPieceCount.Zero
+        } else {
+            headerCount = firstPieceIndexAfterHeader - initialPieceIndex
+        }
+
+        // 第一个在 footer size 之外的 piece
+        val firstPieceIndexBeforeFooter =
+            pieceIndexOfLast { it.dataEndOffset <= pieceOffsetStart + totalPieceSize - footerSize }
+
+        if (firstPieceIndexBeforeFooter == -1) {
+            // 如果没找到, 那说明所有 piece 都是 footer piece
+            // 因此所有 piece 都判定为 normal piece 也没问题
+            return MetadataPieceCount.Zero
+        } else {
+            footerCount = initialPieceIndex + totalPieceCount - firstPieceIndexBeforeFooter - 1
+        }
+
+        // 如果 header 和 footer piece 数量大于 piece 总数，通常意味着它们重叠了, 那就均分
+        if (headerCount + footerCount > totalPieceCount) {
+            val halfTotal = totalPieceCount / 2
+            return MetadataPieceCount(halfTotal, totalPieceCount - halfTotal)
+        }
+
+        return MetadataPieceCount(headerCount, footerCount)
+    }
+}
+
+private class MetadataPieceCount(val headerPieceCount: Int, val footerPieceCount: Int) {
     /**
-     * 返回首尾元数据 piece index, 靠近边缘的排在前面.
+     * 获取 metadata 的 piece index, 靠近边缘的排在前面.
      * 例如 如果 piece index 从 `0 - 99`, 返回 `0, 99, 1, 98, 2, 97, 3, 96, 95 ...`
      */
-    private fun PieceList.getHeadAndFooterPieces(headN: Int, tailN: Int): List<Int> {
-        val pieceList = this
-        require(headN <= pieceList.sizes.size) { "headN should be smaller than piece list size" }
-        require(tailN <= pieceList.sizes.size) { "tailN should be smaller than piece list size" }
+    fun PieceList.getMetadataPieces(): List<Int> {
+        val totalPieceCount = sizes.size
+
+        require(headerPieceCount <= totalPieceCount) {
+            "headerCount should be smaller than piece list size"
+        }
+        require(footerPieceCount <= totalPieceCount) {
+            "footerCount should be smaller than piece list size"
+        }
 
         var headIndex = 0
         var tailIndex = 0
 
         return buildList {
-            while (headIndex < headN || tailIndex < tailN) {
-                if (headIndex < headN) {
-                    add(pieceList.initialPieceIndex + headIndex)
+            while (headIndex < headerPieceCount || tailIndex < footerPieceCount) {
+                if (headIndex < headerPieceCount) {
+                    add(initialPieceIndex + headIndex)
                     headIndex += 1
                 }
-                if (tailIndex < tailN) {
-                    add(pieceList.initialPieceIndex + pieceList.sizes.size - 1 - tailIndex)
+                if (tailIndex < footerPieceCount) {
+                    add(initialPieceIndex + totalPieceCount - 1 - tailIndex)
                     tailIndex += 1
                 }
             }
         }
+    }
+
+    companion object {
+        val Zero = MetadataPieceCount(0, 0)
     }
 }
 
@@ -284,6 +331,9 @@ private class DelegateStrippedMetadataPieceList(
     init {
         require(headerCount <= pieceCount) { "headerCount should be smaller than piece list size" }
         require(footerCount <= pieceCount) { "footerCount should be smaller than piece list size" }
+        require(pieceCount - headerCount - footerCount >= 0) {
+            "headerCount + footerCount is bigger than total pieceCount."
+        }
     }
 
     override val size: Int = pieceCount - headerCount - footerCount

@@ -13,18 +13,19 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 private class Test(
-    pieceListSize: Long,
+    totalPieceSize: Long,
     pieceListInitialDataOffset: Long = 0,
     pieceListInitialPieceIndex: Int = 0,
     tdcWindowSize: Int,
     tdcHeaderSize: Long,
     tdcFooterSize: Long,
     tdcPossibleFooterSize: Long,
+    pieceSize: Long = 1,
     private val onDownloadOnly: (highPriorityPieces: List<Int>, normalPriorityPieces: List<Int>) -> Unit
 ) {
     private val pieceList: MutablePieceList = PieceList.create(
-        totalSize = pieceListSize,
-        pieceSize = 1,
+        totalSize = totalPieceSize,
+        pieceSize = pieceSize,
         initialDataOffset = pieceListInitialDataOffset,
         initialPieceIndex = pieceListInitialPieceIndex,
 
@@ -71,7 +72,7 @@ internal class TorrentDownloadControllerTest {
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
         val test = Test(
-            pieceListSize = 1000L,
+            totalPieceSize = 1000L,
             tdcWindowSize = 10,
             tdcHeaderSize = 5,
             tdcFooterSize = 3,
@@ -90,7 +91,7 @@ internal class TorrentDownloadControllerTest {
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
         val test = Test(
-            pieceListSize = 1000L,
+            totalPieceSize = 1000L,
             tdcWindowSize = 10,
             tdcHeaderSize = 5,
             tdcFooterSize = 3,
@@ -113,7 +114,7 @@ internal class TorrentDownloadControllerTest {
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
         val test = Test(
-            pieceListSize = 1000L,
+            totalPieceSize = 1000L,
             tdcWindowSize = 10,
             tdcHeaderSize = 5,
             tdcFooterSize = 3,
@@ -149,7 +150,7 @@ internal class TorrentDownloadControllerTest {
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
         val test = Test(
-            pieceListSize = 1000L,
+            totalPieceSize = 1000L,
             tdcWindowSize = 10,
             tdcHeaderSize = 5,
             tdcFooterSize = 3,
@@ -180,7 +181,7 @@ internal class TorrentDownloadControllerTest {
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
         val test = Test(
-            pieceListSize = 1000L,
+            totalPieceSize = 1000L,
             tdcWindowSize = 10,
             tdcHeaderSize = 5,
             tdcFooterSize = 3,
@@ -226,7 +227,7 @@ internal class TorrentDownloadControllerTest {
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
         val test = Test(
-            pieceListSize = 1000L,
+            totalPieceSize = 1000L,
             tdcWindowSize = 10,
             tdcHeaderSize = 5,
             tdcFooterSize = 3,
@@ -260,7 +261,7 @@ internal class TorrentDownloadControllerTest {
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
         val test = Test(
-            pieceListSize = 1000L,
+            totalPieceSize = 1000L,
             tdcWindowSize = 10,
             tdcHeaderSize = 5,
             tdcFooterSize = 3,
@@ -295,7 +296,7 @@ internal class TorrentDownloadControllerTest {
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
         val test = Test(
-            pieceListSize = 1000L,
+            totalPieceSize = 1000L,
             tdcWindowSize = 10,
             tdcHeaderSize = 5,
             tdcFooterSize = 3,
@@ -338,7 +339,7 @@ internal class TorrentDownloadControllerTest {
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
         val test = Test(
-            pieceListSize = 1000L,
+            totalPieceSize = 1000L,
             tdcWindowSize = 10,
             tdcHeaderSize = 5,
             tdcFooterSize = 3,
@@ -387,5 +388,98 @@ internal class TorrentDownloadControllerTest {
 
         test.finishPiece(995)
         assertEquals(listOf(6, 8, 9, 10, 11, 12, 13, 14, 16, 18), currentDownloadingNormalPriorityPieces)
+    }
+
+    @Test
+    fun `piece count = 1`() {
+        var currentDownloadingHighPriorityPieces: List<Int> = emptyList()
+        var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
+
+        val test = Test(
+            totalPieceSize = 50,
+            pieceSize = 50,
+            tdcWindowSize = 10,
+            tdcHeaderSize = 50,
+            tdcFooterSize = 30,
+            tdcPossibleFooterSize = 120,
+        ) { highList, normalList ->
+            currentDownloadingHighPriorityPieces = highList
+            currentDownloadingNormalPriorityPieces = normalList
+        }
+
+        test.resume()
+
+        assertEquals(emptyList(), currentDownloadingHighPriorityPieces)
+        assertEquals(listOf(0), currentDownloadingNormalPriorityPieces)
+
+    }
+
+    @Test
+    fun `piece count = 2, header and footer is smaller than piece size`() {
+        var currentDownloadingHighPriorityPieces: List<Int> = emptyList()
+        var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
+
+        val test = Test(
+            totalPieceSize = 100,
+            pieceSize = 50,
+            tdcWindowSize = 10,
+            tdcHeaderSize = 50,
+            tdcFooterSize = 30,
+            tdcPossibleFooterSize = 120,
+        ) { highList, normalList ->
+            currentDownloadingHighPriorityPieces = highList
+            currentDownloadingNormalPriorityPieces = normalList
+        }
+
+        test.resume()
+
+        assertEquals(listOf(0, 1), currentDownloadingHighPriorityPieces)
+        assertEquals(emptyList(), currentDownloadingNormalPriorityPieces)
+    }
+
+    @Test
+    fun `piece count = 2, header and footer is bigger than piece size`() {
+        var currentDownloadingHighPriorityPieces: List<Int> = emptyList()
+        var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
+
+        val test = Test(
+            totalPieceSize = 100,
+            pieceSize = 50,
+            tdcWindowSize = 10,
+            tdcHeaderSize = 70,
+            tdcFooterSize = 60,
+            tdcPossibleFooterSize = 120,
+        ) { highList, normalList ->
+            currentDownloadingHighPriorityPieces = highList
+            currentDownloadingNormalPriorityPieces = normalList
+        }
+
+        test.resume()
+
+        assertEquals(listOf(0, 1), currentDownloadingHighPriorityPieces)
+        assertEquals(emptyList(), currentDownloadingNormalPriorityPieces)
+    }
+
+    @Test
+    fun `piece count = 3, header + footer overlap whole piece data size`() {
+        var currentDownloadingHighPriorityPieces: List<Int> = emptyList()
+        var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
+
+        val test = Test(
+            totalPieceSize = 150,
+            pieceSize = 50,
+            tdcWindowSize = 10,
+            tdcHeaderSize = 70,
+            tdcFooterSize = 60,
+            tdcPossibleFooterSize = 120,
+        ) { highList, normalList ->
+            currentDownloadingHighPriorityPieces = highList
+            currentDownloadingNormalPriorityPieces = normalList
+        }
+
+        test.resume()
+
+        assertEquals(listOf(0, 2, 1), currentDownloadingHighPriorityPieces)
+        assertEquals(emptyList(), currentDownloadingNormalPriorityPieces)
     }
 }
