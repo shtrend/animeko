@@ -83,7 +83,7 @@ class AnitorrentDownloadSession(
     parentCoroutineContext: CoroutineContext,
     dispatcher: CoroutineContext = Dispatchers.IO_,
 ) : TorrentSession, SynchronizedObject() {
-    val logger = logger(this::class)
+    internal val logger = logger(this::class)
     val handleId get() = handle.id // 内存地址, 不可持久
 
     private val scope = CoroutineScope(
