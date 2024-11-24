@@ -415,7 +415,7 @@ internal class TorrentDownloadControllerTest {
     }
 
     @Test
-    fun `piece count = 2, header and footer is smaller than piece size`() {
+    fun `piece count = 2 - header and footer is smaller than piece size`() {
         var currentDownloadingHighPriorityPieces: List<Int> = emptyList()
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
@@ -438,7 +438,7 @@ internal class TorrentDownloadControllerTest {
     }
 
     @Test
-    fun `piece count = 2, header and footer is bigger than piece size`() {
+    fun `piece count = 2 - header and footer is bigger than piece size`() {
         var currentDownloadingHighPriorityPieces: List<Int> = emptyList()
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
@@ -461,7 +461,7 @@ internal class TorrentDownloadControllerTest {
     }
 
     @Test
-    fun `piece count = 3, header + footer overlap whole piece data size`() {
+    fun `piece count = 3 - header + footer overlap whole piece data size`() {
         var currentDownloadingHighPriorityPieces: List<Int> = emptyList()
         var currentDownloadingNormalPriorityPieces: List<Int> = emptyList()
 
