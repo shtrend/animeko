@@ -236,7 +236,7 @@ abstract class SelectorMediaSourceEngine {
                 publishedTime = 0L,
                 properties = MediaProperties(
                     subtitleLanguageIds = subtitleLanguages,
-                    resolution = "1080P",
+                    resolution = config.defaultResolution.id,
                     alliance = info.channel ?: mediaSourceId,
                     size = FileSize.Unspecified,
                     subtitleKind = SubtitleKind.EMBEDDED,
