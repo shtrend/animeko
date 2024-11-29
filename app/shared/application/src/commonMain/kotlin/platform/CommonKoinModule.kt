@@ -32,10 +32,10 @@ import me.him188.ani.app.data.network.AnimeScheduleService
 import me.him188.ani.app.data.network.BangumiBangumiCommentServiceImpl
 import me.him188.ani.app.data.network.BangumiCommentService
 import me.him188.ani.app.data.network.BangumiEpisodeService
+import me.him188.ani.app.data.network.BangumiEpisodeServiceImpl
 import me.him188.ani.app.data.network.BangumiProfileService
 import me.him188.ani.app.data.network.BangumiRelatedPeopleService
 import me.him188.ani.app.data.network.BangumiSubjectService
-import me.him188.ani.app.data.network.EpisodeRepositoryImpl
 import me.him188.ani.app.data.network.RemoteBangumiSubjectService
 import me.him188.ani.app.data.network.TrendsRepository
 import me.him188.ani.app.data.persistent.dataStores
@@ -216,7 +216,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
             usernameProvider = get(),
         )
     }
-    single<BangumiEpisodeService> { EpisodeRepositoryImpl() }
+    single<BangumiEpisodeService> { BangumiEpisodeServiceImpl() }
 
     single<BangumiRelatedPeopleService> { BangumiRelatedPeopleService(get()) }
     single<AnimeScheduleRepository> { AnimeScheduleRepository(get()) }

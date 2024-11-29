@@ -89,11 +89,11 @@ sealed interface BangumiEpisodeService {
     ): Boolean
 }
 
-class EpisodeRepositoryImpl(
+class BangumiEpisodeServiceImpl(
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
 ) : BangumiEpisodeService, KoinComponent {
     private val client by inject<BangumiClient>()
-    private val logger = logger(EpisodeRepositoryImpl::class)
+    private val logger = logger(BangumiEpisodeServiceImpl::class)
 
     override suspend fun getEpisodeCollectionInfosBySubjectId(
         subjectId: Int,
