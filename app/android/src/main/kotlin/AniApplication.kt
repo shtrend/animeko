@@ -11,7 +11,6 @@ package me.him188.ani.android
 
 import android.annotation.SuppressLint
 import android.app.Application
-import android.app.ForegroundServiceStartNotAllowedException
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Build
@@ -39,7 +38,6 @@ import me.him188.ani.utils.logging.logger
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import org.koin.dsl.module
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.nio.file.Paths
@@ -76,7 +74,7 @@ class AniApplication : Application() {
 
         val defaultUEH = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
-            logger<AniApplication>().error(e) { "!!!ANI FATAL EXCEPTION!!!" }
+            logger<AniApplication>().error(e) { "!!!ANI FATAL EXCEPTION!!! ($e)" }
             Thread.sleep(500)
             defaultUEH?.uncaughtException(t, e)
         }
