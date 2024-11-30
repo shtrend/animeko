@@ -269,6 +269,7 @@ fun EpisodeCollectionInfo.toEntity(
         comment = episodeInfo.comment,
         desc = episodeInfo.desc,
         sort = episodeInfo.sort,
+        sortNumber = episodeInfo.sort.number ?: Float.MAX_VALUE,
         ep = episodeInfo.ep,
         selfCollectionType = collectionType,
         lastFetched = lastFetched,

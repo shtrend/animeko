@@ -10,6 +10,7 @@
 package me.him188.ani.app.data.persistent.database.dao
 
 import androidx.paging.PagingSource
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -39,6 +40,7 @@ import me.him188.ani.datasources.api.topic.UnifiedCollectionType
     ],
     indices = [
         Index(value = ["subjectId", "episodeId"], unique = true),
+        Index(value = ["sortNumber", "sort"], orders = [Index.Order.ASC, Index.Order.ASC]),
 //        Index(
 //            value = ["subjectId", "sort"],
 //            unique = true,
@@ -58,6 +60,11 @@ data class EpisodeCollectionEntity(
     val comment: Int,
     val desc: String,
     val sort: EpisodeSort,
+    /**
+     * [EpisodeSort.number]. 用于排序.
+     */
+    @ColumnInfo(defaultValue = "3.4028235e38") // Float.MAX_VALUE
+    val sortNumber: Float, // see #1256
     val ep: EpisodeSort? = null,
 
     val selfCollectionType: UnifiedCollectionType,
@@ -99,7 +106,7 @@ interface EpisodeCollectionDao {
         """
         SELECT * FROM episode_collection
         WHERE subjectId = :subjectId
-        ORDER BY sort ASC
+        ORDER BY sortNumber ASC, sort ASC
         """,
     )
     fun filterBySubjectId(
@@ -110,7 +117,7 @@ interface EpisodeCollectionDao {
         """
         SELECT * FROM episode_collection
         WHERE subjectId = :subjectId 
-        ORDER BY sort ASC""",
+        ORDER BY sortNumber ASC, sort ASC""",
     )
     fun filterBySubjectIdPaging(subjectId: Int): PagingSource<Int, EpisodeCollectionEntity>
 
@@ -136,7 +143,7 @@ interface EpisodeCollectionDao {
     )
 
 
-    @Query("""select * from episode_collection ORDER BY sort ASC""")
+    @Query("""select * from episode_collection ORDER BY sortNumber ASC, sort ASC""")
     fun all(): Flow<List<EpisodeCollectionEntity>>
 
 

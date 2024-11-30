@@ -57,7 +57,7 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectReviewEntity
         SubjectReviewEntity::class,
         EpisodeCommentEntity::class,
     ],
-    version = 11,
+    version = 12,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = Migrations.Migration_1_2::class),
         AutoMigration(from = 2, to = 3, spec = Migrations.Migration_2_3::class),
@@ -69,6 +69,7 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectReviewEntity
         AutoMigration(from = 8, to = 9, spec = Migrations.Migration_8_9::class),
         AutoMigration(from = 9, to = 10, spec = Migrations.Migration_9_10::class),
         AutoMigration(from = 10, to = 11, spec = Migrations.Migration_10_11::class),
+        AutoMigration(from = 11, to = 12, spec = Migrations.Migration_11_12::class),
     ],
 )
 @ConstructedBy(AniDatabaseConstructor::class)
@@ -211,6 +212,15 @@ internal object Migrations {
      * @since 4.1.0-alpha02
      */
     class Migration_10_11 : AutoMigrationSpec {
+        override fun onPostMigrate(connection: SQLiteConnection) {
+        }
+    }
+
+    /**
+     * Added [EpisodeCollectionEntity.sortNumber]
+     * @since 4.1.0-alpha02
+     */
+    class Migration_11_12 : AutoMigrationSpec {
         override fun onPostMigrate(connection: SQLiteConnection) {
         }
     }
