@@ -11,8 +11,10 @@
 package me.him188.ani.app.domain.mediasource.web
 
 import io.ktor.client.request.get
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import me.him188.ani.app.data.models.ApiFailure
 import me.him188.ani.app.data.models.ApiResponse
@@ -148,8 +150,8 @@ class SelectorMediaSource(
         searchConfig: SelectorSearchConfig,
         query: SelectorSearchQuery,
         mediaSourceId: String,
-    ): ApiResponse<List<DefaultMedia>> {
-        return searchSubjects(
+    ): ApiResponse<List<DefaultMedia>> = withContext(Dispatchers.Default) {
+        searchSubjects(
             searchConfig.searchUrl,
             subjectName = query.subjectName,
             useOnlyFirstWord = searchConfig.searchUseOnlyFirstWord,

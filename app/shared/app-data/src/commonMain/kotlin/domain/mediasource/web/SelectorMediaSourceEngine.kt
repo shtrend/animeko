@@ -19,8 +19,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLBuilder
 import io.ktor.http.Url
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonPrimitive
 import me.him188.ani.app.data.models.ApiResponse
@@ -47,9 +49,11 @@ import me.him188.ani.datasources.api.topic.FileSize
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.datasources.api.topic.SubtitleLanguage
 import me.him188.ani.datasources.api.topic.titles.LabelFirstRawTitleParser
+import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.xml.Document
 import me.him188.ani.utils.xml.Element
 import me.him188.ani.utils.xml.Html
+import kotlin.coroutines.CoroutineContext
 
 data class SelectorSearchQuery(
     val subjectName: String,
@@ -350,35 +354,38 @@ class DefaultSelectorMediaSourceEngine(
      * Engine 自己不会 cache 实例, 每次都调用 `.first()`.
      */
     private val client: Flow<HttpClient>,
+    private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
 ) : SelectorMediaSourceEngine() {
     override suspend fun searchImpl(
         finalUrl: Url,
-    ): ApiResponse<SearchSubjectResult> = runApiRequest {
-        val document = try {
-            client.first().get(finalUrl) {
-                accept(ContentType.Text.Html)
-            }.let { resp ->
-                parseResp(resp)
+    ): ApiResponse<SearchSubjectResult> = withContext(ioDispatcher) {
+        runApiRequest {
+            val document = try {
+                client.first().get(finalUrl) {
+                    accept(ContentType.Text.Html)
+                }.let { resp ->
+                    parseResp(resp)
+                }
+            } catch (e: ClientRequestException) {
+                if (e.response.status == HttpStatusCode.NotFound) {
+                    // 404 Not Found
+                    return@runApiRequest SearchSubjectResult(
+                        finalUrl,
+                        document = null,
+                    )
+                }
+                throw e
             }
-        } catch (e: ClientRequestException) {
-            if (e.response.status == HttpStatusCode.NotFound) {
-                // 404 Not Found
-                return@runApiRequest SearchSubjectResult(
-                    finalUrl,
-                    document = null,
-                )
-            }
-            throw e
-        }
 
-        SearchSubjectResult(
-            finalUrl,
-            document,
-        )
+            SearchSubjectResult(
+                finalUrl,
+                document,
+            )
+        }
     }
 
 
-    public override suspend fun doHttpGet(uri: String): ApiResponse<Document> =
+    public override suspend fun doHttpGet(uri: String): ApiResponse<Document> = withContext(ioDispatcher) {
         runApiRequest {
             client.first().get(uri) {
                 accept(ContentType.Text.Html)
@@ -386,6 +393,7 @@ class DefaultSelectorMediaSourceEngine(
                 parseResp(resp)
             }
         }
+    }
 
     private suspend fun parseResp(resp: HttpResponse): Document {
         var body = resp.bodyAsText()
