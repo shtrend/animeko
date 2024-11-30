@@ -114,7 +114,7 @@ class BangumiCommentRepository(
 
                 subjectReviewDao.upsert(subjectReviews.page.mapNotNull { it.toEntity(subjectId) })
 
-                MediatorResult.Success(endOfPaginationReached = subjectReviews.hasMore)
+                MediatorResult.Success(endOfPaginationReached = !subjectReviews.hasMore)
             } catch (e: Exception) {
                 return@withContext MediatorResult.Error(RepositoryException.wrapOrThrowCancellation(e))
             }
