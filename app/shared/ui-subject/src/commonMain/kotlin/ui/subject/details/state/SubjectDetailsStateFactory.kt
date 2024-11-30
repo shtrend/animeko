@@ -277,12 +277,13 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
         }
 
         val comments = bangumiCommentRepository.subjectCommentsPager(subjectId)
+            .map { page ->
+                page.map { it.parseToUIComment() }
+            }
             .cachedIn(this)
 
         val subjectCommentState = CommentState(
-            list = comments.map { page ->
-                page.map { it.parseToUIComment() }
-            },
+            list = comments,
             countState = stateOf(null),
             onSubmitCommentReaction = { _, _ -> },
             backgroundScope = this,
