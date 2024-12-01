@@ -74,6 +74,19 @@ class MediaListFiltersTest {
     }
 
     @TestFactory
+    fun `removeSpecials period`() = runDynamicTests {
+        add("with period") {
+            assertEquals("紫罗兰永恒花园", removeSpecials("紫罗兰永恒花园。"))
+        }
+        add("with comma") {
+            assertEquals("紫罗兰永恒花园", removeSpecials("紫罗兰永恒花园，"))
+        }
+        add("with comma and space") {
+            assertEquals("紫罗兰永恒花园", removeSpecials("紫罗兰永恒花园， "))
+        }
+    }
+
+    @TestFactory
     fun `removeSpecials seasons`() = runDynamicTests {
         add("second season") {
             assertEquals("测试 第二季", removeSpecials("测试 第二季"))
