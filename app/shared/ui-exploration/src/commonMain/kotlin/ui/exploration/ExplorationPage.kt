@@ -98,12 +98,12 @@ fun ExplorationPage(
                 title = { AniTopAppBarDefaults.Title("探索") },
                 Modifier.fillMaxWidth(),
                 actions = {
+                    actions()
                     if (currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass.isAtLeastMedium) {
                         IconButton(onClick = onClickSettings) {
                             Icon(Icons.Rounded.Settings, "设置")
                         }
                     }
-                    actions()
                 },
                 avatar = { recommendedSize ->
                     SelfAvatar(state.authState, state.selfInfo, size = recommendedSize)
