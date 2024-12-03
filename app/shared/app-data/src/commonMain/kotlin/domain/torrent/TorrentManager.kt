@@ -22,6 +22,8 @@ import me.him188.ani.datasources.api.topic.FileSize.Companion.kiloBytes
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.resolve
+import me.him188.ani.utils.logging.debug
+import me.him188.ani.utils.logging.logger
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -51,13 +53,16 @@ class DefaultTorrentManager(
     private val peerFilterConfig: Flow<TorrentPeerConfig>
 ) : TorrentManager {
     private val scope = parentCoroutineContext.childScope()
+    private val logger = logger<DefaultTorrentManager>()
 
     private val anitorrent: TorrentEngine by lazy {
         factory.createTorrentEngine(
             scope.coroutineContext + CoroutineName("AnitorrentEngine"),
             combine(anitorrentConfigFlow, isMeteredNetworkFlow) { config, isMetered ->
                 val isUploadLimited = isMetered && config.limitUploadOnMeteredNetwork
-                config.copy(uploadRateLimit = if (isUploadLimited) 10.kiloBytes else config.uploadRateLimit)
+                val limit = if (isUploadLimited) 10.kiloBytes else config.uploadRateLimit
+                logger.debug { "Anitorrent upload rate limit: $limit/s" }
+                config.copy(uploadRateLimit = limit)
             },
             proxySettingsFlow,
             peerFilterConfig,
