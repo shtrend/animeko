@@ -41,9 +41,11 @@ import kotlinx.coroutines.flow.Flow
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.data.models.subject.FollowedSubjectInfo
 import me.him188.ani.app.data.models.subject.subjectInfo
+import me.him188.ani.app.data.models.subject.toNavPlaceholder
 import me.him188.ani.app.data.models.trending.TrendingSubjectInfo
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.navigation.LocalNavigator
+import me.him188.ani.app.navigation.SubjectDetailPlaceholder
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.adaptive.NavTitleHeader
@@ -137,7 +139,14 @@ fun ExplorationPage(
             TrendingSubjectsCarousel(
                 state.trendingSubjectInfoPager,
                 onClick = {
-                    navigator.navigateSubjectDetails(it.bangumiId)
+                    navigator.navigateSubjectDetails(
+                        subjectId = it.bangumiId,
+                        placeholder = SubjectDetailPlaceholder(
+                            id = it.bangumiId,
+                            name = it.nameCn,
+                            coverUrl = it.imageLarge,
+                        ),
+                    )
                 },
                 contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 8.dp),
                 carouselState = state.trendingSubjectsCarouselState,
@@ -151,7 +160,10 @@ fun ExplorationPage(
             FollowedSubjectsLazyRow(
                 followedSubjectsPager,
                 onClick = {
-                    navigator.navigateSubjectDetails(it.subjectInfo.subjectId)
+                    navigator.navigateSubjectDetails(
+                        subjectId = it.subjectInfo.subjectId,
+                        placeholder = it.subjectInfo.toNavPlaceholder(),
+                    )
                 },
                 onPlay = {
                     it.subjectProgressInfo.nextEpisodeIdToPlay?.let { it1 ->

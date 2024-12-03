@@ -16,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchHistoryRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchRepository
@@ -82,12 +83,24 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
     )
 
     val subjectDetailsStateLoader = SubjectDetailsStateLoader(subjectDetailsStateFactory, backgroundScope)
+    private var currentPreviewingSubject: SubjectInfo? = null
 
-    suspend fun viewSubjectDetails(
-        subjectId: Int
-    ) {
+    fun viewSubjectDetails(previewItem: SubjectPreviewItemInfo) {
         subjectDetailsStateLoader.clear()
-        subjectDetailsStateLoader.load(subjectId).join()
+        subjectDetailsStateLoader.load(
+            previewItem.subjectId,
+            placeholder = SubjectInfo.createPlaceholder(
+                previewItem.subjectId,
+                previewItem.title,
+                previewItem.imageUrl,
+                previewItem.title,
+            ).also { currentPreviewingSubject = it },
+        )
+    }
+
+    fun reloadCurrentSubjectDetails() {
+        val curr = currentPreviewingSubject ?: return
+        subjectDetailsStateLoader.reload(curr.subjectId, curr)
     }
 
     override fun onCleared() {

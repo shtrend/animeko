@@ -9,8 +9,6 @@
 
 package me.him188.ani.app.ui.subject.details.components
 
-import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,8 +25,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
@@ -47,24 +43,19 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.AsyncImage
-import me.him188.ani.app.ui.foundation.OutlinedTag
-import me.him188.ani.app.ui.foundation.animation.SharedTransitionKeys
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
-import me.him188.ani.app.ui.foundation.layout.useSharedTransitionScope
-import me.him188.ani.app.ui.subject.AiringLabel
-import me.him188.ani.app.ui.subject.AiringLabelState
-import me.him188.ani.app.ui.subject.renderSubjectSeason
 
 const val COVER_WIDTH_TO_HEIGHT_RATIO = 849 / 1200f
 
 // 图片和标题
 @Composable
 internal fun SubjectDetailsHeader(
-    info: SubjectInfo,
+    subjectId: Int,
+    info: SubjectInfo?,
     coverImageUrl: String?,
-    airingLabelState: AiringLabelState,
+    seasonTags: @Composable () -> Unit,
     collectionData: @Composable () -> Unit,
     collectionAction: @Composable () -> Unit,
     selectEpisodeButton: @Composable BoxScope.() -> Unit,
@@ -73,30 +64,24 @@ internal fun SubjectDetailsHeader(
 ) {
     if (currentWindowAdaptiveInfo1().isWidthAtLeastMedium) {
         SubjectDetailsHeaderWide(
-            subjectId = info.subjectId,
+            subjectId = subjectId,
             coverImageUrl = coverImageUrl,
             title = {
                 Text(
-                    info.displayName,
-                    Modifier.useSharedTransitionScope { modifier, animatedVisibilityScope ->
+                    info?.displayName ?: "",
+                    /*Modifier.useSharedTransitionScope { modifier, animatedVisibilityScope ->
                         modifier.sharedElement(
                             rememberSharedContentState(SharedTransitionKeys.subjectTitle(info.subjectId)),
                             animatedVisibilityScope,
                         )
-                    },
+                    },*/
                 )
             },
             subtitle = {
-                Text(info.name)
+                Text(info?.name ?: "")
             },
             seasonTags = {
-                OutlinedTag { Text(renderSubjectSeason(info.airDate)) }
-                AiringLabel(
-                    airingLabelState,
-                    Modifier.align(Alignment.CenterVertically),
-                    style = LocalTextStyle.current,
-                    progressColor = LocalContentColor.current,
-                )
+                seasonTags() 
             },
             collectionData = collectionData,
             collectionAction = collectionAction,
@@ -106,31 +91,11 @@ internal fun SubjectDetailsHeader(
         )
     } else {
         SubjectDetailsHeaderCompact(
-            subjectId = info.subjectId,
+            subjectId = subjectId,
             coverImageUrl = coverImageUrl,
-            title = {
-                Text(
-                    info.displayName,
-                    Modifier.useSharedTransitionScope { modifier, animatedVisibilityScope ->
-                        modifier.sharedElement(
-                            rememberSharedContentState(SharedTransitionKeys.subjectTitle(info.subjectId)),
-                            animatedVisibilityScope,
-                        )
-                    },
-                )
-            },
-            subtitle = {
-                Text(info.name)
-            },
-            seasonTags = {
-                OutlinedTag { Text(renderSubjectSeason(info.airDate)) }
-                AiringLabel(
-                    airingLabelState,
-                    Modifier.align(Alignment.CenterVertically),
-                    style = LocalTextStyle.current,
-                    progressColor = LocalContentColor.current,
-                )
-            },
+            title = { Text(info?.displayName ?: "") },
+            subtitle = { Text(info?.name ?: "") },
+            seasonTags = { seasonTags() },
             collectionData = collectionData,
             collectionAction = collectionAction,
             selectEpisodeButton = selectEpisodeButton,
@@ -148,7 +113,7 @@ fun SubjectDetailsHeaderCompact(
     coverImageUrl: String?,
     title: @Composable () -> Unit,
     subtitle: @Composable () -> Unit,
-    seasonTags: @Composable RowScope.() -> Unit,
+    seasonTags: @Composable () -> Unit,
     collectionData: @Composable () -> Unit,
     collectionAction: @Composable () -> Unit,
     selectEpisodeButton: @Composable BoxScope.() -> Unit,
@@ -164,12 +129,6 @@ fun SubjectDetailsHeaderCompact(
                     coverImageUrl,
                     null,
                     Modifier
-                        .useSharedTransitionScope { modifier, animatedVisibilityScope ->
-                            modifier.sharedElement(
-                                rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId)),
-                                animatedVisibilityScope,
-                            )
-                        }
                         .width(imageWidth)
                         .height(imageWidth / COVER_WIDTH_TO_HEIGHT_RATIO),
                     contentScale = ContentScale.Crop,
@@ -197,12 +156,7 @@ fun SubjectDetailsHeaderCompact(
                     }
 
                     ProvideTextStyle(MaterialTheme.typography.labelLarge) {
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
-                        ) {
-                            seasonTags()
-                        }
+                        seasonTags()
                     }
 
                     Spacer(Modifier.weight(1f))
@@ -261,12 +215,6 @@ fun SubjectDetailsHeaderWide(
                     coverImageUrl,
                     null,
                     Modifier
-                        .useSharedTransitionScope { modifier, animatedVisibilityScope ->
-                            modifier.sharedElement(
-                                rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId)),
-                                animatedVisibilityScope,
-                            )
-                        }
                         .width(imageWidth)
                         .height(imageWidth / COVER_WIDTH_TO_HEIGHT_RATIO),
                     contentScale = ContentScale.Crop,

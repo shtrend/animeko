@@ -99,6 +99,11 @@ sealed class SubjectCollectionRepository(
     ): Flow<PagingData<SubjectCollectionInfo>>
 
     /**
+     * 获取本地所有缓存的 [SubjectCollectionInfo] 的 [subjectId][SubjectCollectionInfo.subjectId]
+     */
+    abstract fun cachedValidSubjectIds(): Flow<List<Int>>
+    
+    /**
      * 更新根据服务器上记录的最近有修改的条目收藏. 也就是用户最近操作过的条目收藏.
      */
     abstract suspend fun updateRecentlyUpdatedSubjectCollections(
@@ -262,6 +267,10 @@ class SubjectCollectionRepositoryImpl(
             }
         }
     }.flowOn(defaultDispatcher)
+
+    override fun cachedValidSubjectIds(): Flow<List<Int>> {
+        return subjectCollectionDao.subjectIdsWithValidEpisodeCollection().flowOn(defaultDispatcher)
+    }
 
     private val updateRecentlyUpdatedSubjectCollectionsMutex = Mutex()
     override suspend fun updateRecentlyUpdatedSubjectCollections(

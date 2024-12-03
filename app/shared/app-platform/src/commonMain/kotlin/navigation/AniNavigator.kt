@@ -61,8 +61,13 @@ interface AniNavigator {
         navigator.popBackStack(NavRoutes.BangumiOAuth, inclusive = true)
     }
 
-    fun navigateSubjectDetails(subjectId: Int) {
-        navigator.navigate(NavRoutes.SubjectDetail(subjectId))
+    fun navigateSubjectDetails(
+        subjectId: Int,
+        placeholder: SubjectDetailPlaceholder? = null
+    ) {
+        navigator.navigate(
+            NavRoutes.SubjectDetail(subjectId, placeholder),
+        )
     }
 
     fun navigateSubjectCaches(subjectId: Int) {

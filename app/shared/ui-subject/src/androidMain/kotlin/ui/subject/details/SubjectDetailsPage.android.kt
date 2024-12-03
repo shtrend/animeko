@@ -9,29 +9,14 @@
 
 package me.him188.ani.app.ui.subject.details
 
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
-import me.him188.ani.app.data.models.subject.TestSubjectProgressInfos
-import me.him188.ani.app.ui.comment.generateUiComment
-import me.him188.ani.app.ui.comment.rememberTestCommentState
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
-import me.him188.ani.app.ui.foundation.layout.rememberConnectedScrollState
-import me.him188.ani.app.ui.search.rememberTestLazyPagingItems
-import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeButton
-import me.him188.ani.app.ui.subject.collection.components.rememberTestEditableSubjectCollectionTypeState
-import me.him188.ani.app.ui.subject.collection.progress.rememberTestSubjectProgressState
-import me.him188.ani.app.ui.subject.details.components.CollectionData
-import me.him188.ani.app.ui.subject.details.components.DetailsTab
-import me.him188.ani.app.ui.subject.details.components.SelectEpisodeButtons
-import me.him188.ani.app.ui.subject.details.components.SubjectCommentColumn
-import me.him188.ani.app.ui.subject.details.components.SubjectDetailsDefaults
+import me.him188.ani.app.ui.search.LoadError
+import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateLoader
 import me.him188.ani.app.ui.subject.details.state.createTestSubjectDetailsState
-import me.him188.ani.app.ui.subject.rating.EditableRating
-import me.him188.ani.app.ui.subject.rating.rememberTestEditableRatingState
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @OptIn(TestOnly::class)
@@ -39,57 +24,43 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
 @Composable
 internal fun PreviewSubjectDetails() = ProvideFoundationCompositionLocalsForPreview {
-    val state = createTestSubjectDetailsState(rememberCoroutineScope())
-    val connectedScrollState = rememberConnectedScrollState()
-    SubjectDetailsPageLayout(
-        state = state,
-        collectionData = {
-            SubjectDetailsDefaults.CollectionData(
-                collectionStats = state.info.collectionStats,
-            )
-        },
-        collectionActions = {
-            EditableSubjectCollectionTypeButton(
-                rememberTestEditableSubjectCollectionTypeState(),
-            )
-        },
-        rating = {
-            EditableRating(
-                state = rememberTestEditableRatingState(),
-            )
-        },
-        selectEpisodeButton = {
-            SubjectDetailsDefaults.SelectEpisodeButtons(
-                rememberTestSubjectProgressState(info = TestSubjectProgressInfos.ContinueWatching2),
-                onShowEpisodeList = {},
-                onPlay = {},
-            )
-        },
-        connectedScrollState = connectedScrollState,
-        detailsTab = {
-            SubjectDetailsDefaults.DetailsTab(
-                info = TestSubjectInfo,
-                staff = rememberTestLazyPagingItems(TestSubjectStaffInfo),
-                exposedStaff = rememberTestLazyPagingItems(TestSubjectStaffInfo.take(6)),
-                totalStaffCount = TestSubjectStaffInfo.size,
-                characters = rememberTestLazyPagingItems(TestSubjectCharacterList),
-                exposedCharacters = rememberTestLazyPagingItems(TestSubjectCharacterList.take(6)),
-                totalCharactersCount = TestSubjectCharacterList.size,
-                relatedSubjects = rememberTestLazyPagingItems(TestRelatedSubjects),
-                Modifier.nestedScroll(connectedScrollState.nestedScrollConnection),
-            )
-        },
-        commentsTab = {
-            val lazyListState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+    val state = remember { SubjectDetailsStateLoader.LoadState.Ok(createTestSubjectDetailsState(scope)) }
+    SubjectDetailsPage(
+        state,
+        onPlay = { },
+        onLoadErrorRetry = { },
+    )
+}
 
-            SubjectDetailsDefaults.SubjectCommentColumn(
-                state = rememberTestCommentState(commentList = generateUiComment(10)),
-                onClickUrl = { },
-                onClickImage = {},
-                connectedScrollState = connectedScrollState,
-                lazyListState = lazyListState,
-            )
-        },
-        discussionsTab = {},
+@OptIn(TestOnly::class)
+@Preview
+@Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
+@Composable
+internal fun PreviewPlaceholderSubjectDetails() = ProvideFoundationCompositionLocalsForPreview {
+    val scope = rememberCoroutineScope()
+    val state = remember {
+        SubjectDetailsStateLoader.LoadState.Ok(createTestSubjectDetailsState(scope, isPlaceholder = true))
+    }
+    SubjectDetailsPage(
+        state,
+        onPlay = { },
+        onLoadErrorRetry = { },
+    )
+}
+
+
+@OptIn(TestOnly::class)
+@Preview
+@Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
+@Composable
+internal fun PreviewErrorSubjectDetails() = ProvideFoundationCompositionLocalsForPreview {
+    val state = remember {
+        SubjectDetailsStateLoader.LoadState.Err(TestSubjectInfo.subjectId, TestSubjectInfo, LoadError.NetworkError)
+    }
+    SubjectDetailsPage(
+        state,
+        onPlay = { },
+        onLoadErrorRetry = { },
     )
 }

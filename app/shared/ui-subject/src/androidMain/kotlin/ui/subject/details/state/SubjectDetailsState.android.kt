@@ -32,10 +32,12 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @TestOnly
 fun createTestSubjectDetailsState(
     backgroundScope: CoroutineScope,
+    isPlaceholder: Boolean = false,
 ): SubjectDetailsState {
     val subjectCollectionInfo = TestSubjectCollections.first()
     val subjectInfo = subjectCollectionInfo.subjectInfo
     return SubjectDetailsState(
+        subjectId = TestSubjectInfo.subjectId,
         info = TestSubjectInfo,
         selfCollectionTypeState = stateOf(UnifiedCollectionType.WISH),
         airingLabelState = createTestAiringLabelState(),
@@ -61,5 +63,6 @@ fun createTestSubjectDetailsState(
         ),
         subjectProgressState = createTestSubjectProgressState(),
         subjectCommentState = createTestCommentState(backgroundScope),
+        showPlaceholder = isPlaceholder,
     )
 }

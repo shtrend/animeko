@@ -34,7 +34,8 @@ import me.him188.ani.datasources.api.topic.UnifiedCollectionType
  */
 @Stable
 class SubjectDetailsState(
-    val info: SubjectInfo,
+    val subjectId: Int,
+    val info: SubjectInfo?,
     selfCollectionTypeState: State<UnifiedCollectionType>,
     val airingLabelState: AiringLabelState,
 
@@ -52,8 +53,11 @@ class SubjectDetailsState(
     val editableRatingState: EditableRatingState,
     val subjectProgressState: SubjectProgressState,
     val subjectCommentState: CommentState,
+    /**
+     * 是否预先显示少量 [info].
+     */
+    val showPlaceholder: Boolean,
 ) {
-    val coverImageUrl get() = this.info.imageLarge
     private val selfCollectionTypeOrNull by selfCollectionTypeState
     val selfCollectionType by derivedStateOf { selfCollectionTypeOrNull }
 

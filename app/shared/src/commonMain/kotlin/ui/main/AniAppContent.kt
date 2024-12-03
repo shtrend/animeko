@@ -35,6 +35,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.domain.mediasource.rss.RssMediaSource
 import me.him188.ani.app.domain.mediasource.web.SelectorMediaSource
 import me.him188.ani.app.navigation.AniNavigator
@@ -43,6 +44,7 @@ import me.him188.ani.app.navigation.MainScenePage
 import me.him188.ani.app.navigation.NavRoutes
 import me.him188.ani.app.navigation.OverrideNavigation
 import me.him188.ani.app.navigation.SettingsTab
+import me.him188.ani.app.navigation.SubjectDetailPlaceholder
 import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.ui.adaptive.navigation.AniNavigationSuiteDefaults
 import me.him188.ani.app.ui.cache.CacheManagementPage
@@ -199,10 +201,17 @@ private fun AniAppContentImpl(
                 exitTransition = exitTransition,
                 popEnterTransition = popEnterTransition,
                 popExitTransition = popExitTransition,
-            ) { backStackEntry ->
+                typeMap = mapOf(
+                    typeOf<SubjectDetailPlaceholder?>() to SubjectDetailPlaceholder.NavType,
+                ),
+
+                ) { backStackEntry ->
                 val details = backStackEntry.toRoute<NavRoutes.SubjectDetail>()
                 val vm = viewModel<SubjectDetailsViewModel>(key = details.subjectId.toString()) {
-                    SubjectDetailsViewModel(details.subjectId)
+                    val placeholder = details.placeholder?.run {
+                        SubjectInfo.createPlaceholder(id, name, coverUrl, nameCN)
+                    }
+                    SubjectDetailsViewModel(details.subjectId, placeholder)
                 }
                 CompositionLocalProvider(
                     LocalSharedTransitionScopeProvider provides SharedTransitionScopeProvider(
@@ -212,6 +221,7 @@ private fun AniAppContentImpl(
                     SubjectDetailsPage(
                         vm,
                         onPlay = { aniNavigator.navigateEpisodeDetails(details.subjectId, it) },
+                        onLoadErrorRetry = { vm.reload() },
                         windowInsets = windowInsets,
                     )
                 }

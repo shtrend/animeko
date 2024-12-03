@@ -117,10 +117,17 @@ fun PreviewSubjectDetailsHeader(
     subjectInfo: SubjectInfo = TestSubjectInfo,
 ) = ProvideFoundationCompositionLocalsForPreview {
     SubjectDetailsHeader(
+        subjectInfo.subjectId,
         subjectInfo,
         TestCoverImage,
-        airingLabelState = remember {
-            AiringLabelState(stateOf(airingInfo), stateOf(progressInfo))
+        seasonTags = {
+            SubjectDetailsDefaults.SeasonTag(
+                subjectInfo.airDate,
+                AiringLabelState(
+                    remember { stateOf(airingInfo) },
+                    remember { stateOf(progressInfo) },
+                ),
+            )
         },
         collectionData = {
             SubjectDetailsDefaults.CollectionData(

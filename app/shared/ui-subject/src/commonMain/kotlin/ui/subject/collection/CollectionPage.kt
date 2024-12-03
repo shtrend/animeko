@@ -77,9 +77,11 @@ import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
 import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
+import me.him188.ani.app.data.models.subject.toNavPlaceholder
 import me.him188.ani.app.data.repository.subject.CollectionsFilterQuery
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.navigation.LocalNavigator
+import me.him188.ani.app.navigation.SubjectDetailPlaceholder
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.foundation.LocalPlatform
@@ -413,7 +415,14 @@ private fun SubjectCollectionItem(
             },
             onDismissRequest = { showEpisodeProgressDialog = false },
             actions = {
-                OutlinedButton({ navigator.navigateSubjectDetails(subjectCollection.subjectId) }) {
+                OutlinedButton(
+                    {
+                        navigator.navigateSubjectDetails(
+                            subjectCollection.subjectId,
+                            placeholder = subjectCollection.subjectInfo.toNavPlaceholder(),
+                        )
+                    },
+                ) {
                     Text("条目详情")
                 }
             },
@@ -427,7 +436,10 @@ private fun SubjectCollectionItem(
         subjectCollection,
         editableSubjectCollectionTypeState = editableSubjectCollectionTypeState,
         onClick = {
-            navigator.navigateSubjectDetails(subjectCollection.subjectId)
+            navigator.navigateSubjectDetails(
+                subjectCollection.subjectId,
+                placeholder = subjectCollection.subjectInfo.toNavPlaceholder(),
+            )
         },
         onShowEpisodeList = {
             showEpisodeProgressDialog = true

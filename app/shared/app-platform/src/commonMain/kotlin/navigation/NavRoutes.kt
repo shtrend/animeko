@@ -48,6 +48,7 @@ sealed class NavRoutes {
     @Serializable
     data class SubjectDetail(
         val subjectId: Int,
+        val placeholder: SubjectDetailPlaceholder? = null,
     ) : NavRoutes()
 
     @Serializable
@@ -78,6 +79,18 @@ sealed class NavRoutes {
         val cacheId: String,
     ) : NavRoutes()
 
+}
+
+@Serializable
+data class SubjectDetailPlaceholder(
+    val id: Int,
+    val name: String = "",
+    val nameCN: String = "",
+    val coverUrl: String = "",
+) {
+    companion object {
+        val NavType = SerializableNavType(serializer())
+    }
 }
 
 @Serializable

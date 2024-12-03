@@ -32,6 +32,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ProvideTextStyle
@@ -61,11 +63,19 @@ import me.him188.ani.app.data.models.subject.RelatedSubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.nameCn
 import me.him188.ani.app.navigation.LocalNavigator
+import me.him188.ani.app.navigation.SubjectDetailPlaceholder
+import me.him188.ani.app.ui.foundation.OutlinedTag
 import me.him188.ani.app.ui.foundation.Tag
 import me.him188.ani.app.ui.foundation.avatar.AvatarImage
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
+import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
+import me.him188.ani.app.ui.subject.AiringLabel
+import me.him188.ani.app.ui.subject.AiringLabelState
+import me.him188.ani.app.ui.subject.renderSubjectSeason
+import me.him188.ani.datasources.api.PackedDate
 
 
 object SubjectDetailsDefaults {
@@ -75,6 +85,28 @@ object SubjectDetailsDefaults {
             text,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Suppress("UnusedReceiverParameter")
+@Composable
+fun SubjectDetailsDefaults.SeasonTag(
+    airDate: PackedDate,
+    airingLabelState: AiringLabelState,
+    modifier: Modifier = Modifier,
+) {
+    FlowRow(
+        modifier,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+    ) {
+        OutlinedTag { Text(renderSubjectSeason(airDate)) }
+        AiringLabel(
+            airingLabelState,
+            Modifier.align(Alignment.CenterVertically),
+            style = LocalTextStyle.current,
+            progressColor = LocalContentColor.current,
         )
     }
 }
@@ -93,7 +125,7 @@ fun SubjectDetailsDefaults.DetailsTab(
     relatedSubjects: LazyPagingItems<RelatedSubjectInfo>,
     modifier: Modifier = Modifier,
     state: LazyListState = rememberLazyListState(),
-    horizontalPadding: Dp = 16.dp,
+    horizontalPadding: Dp = currentWindowAdaptiveInfo1().windowSizeClass.paneHorizontalPadding,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     LazyColumn(
@@ -180,7 +212,17 @@ fun SubjectDetailsDefaults.DetailsTab(
                 val navigator = LocalNavigator.current
                 RelatedSubjectsRow(
                     relatedSubjects,
-                    onClick = { navigator.navigateSubjectDetails(it.subjectId) },
+                    onClick = {
+                        navigator.navigateSubjectDetails(
+                            it.subjectId,
+                            placeholder = SubjectDetailPlaceholder(
+                                id = it.subjectId,
+                                name = it.name ?: "",
+                                nameCN = it.nameCn,
+                                coverUrl = it.image ?: "",
+                            ),
+                        )
+                    },
                     Modifier.padding(horizontal = horizontalPadding),
                     horizontalSpacing = horizontalPadding,
                     verticalSpacing = horizontalPadding,
