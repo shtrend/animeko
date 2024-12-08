@@ -15,27 +15,26 @@
 
 package me.him188.ani.datasources.bangumi.next.models
 
-
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param large
- * @param medium 
- * @param small 
+ *
+ * @param order
+ * @param relation
+ * @param subject
  */
 @Serializable
 
-data class BangumiNextGetSubjectEpisodeComments200ResponseInnerAllOfUserAvatar(
+data class BangumiNextSubjectRelation(
 
-    @SerialName(value = "large") @Required val large: kotlin.String,
+    @SerialName(value = "order") @Required val order: kotlin.Int,
 
-    @SerialName(value = "medium") @Required val medium: kotlin.String,
+    @SerialName(value = "relation") @Required val relation: BangumiNextSubjectRelationType,
 
-    @SerialName(value = "small") @Required val small: kotlin.String
+    @SerialName(value = "subject") @Required val subject: BangumiNextSlimSubject
 
 )
 

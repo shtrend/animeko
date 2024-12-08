@@ -15,7 +15,6 @@
 
 package me.him188.ani.datasources.bangumi.next.models
 
-
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -23,20 +22,16 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param cfTurnstileResponse 
- * @param text bbcode
- * @param title 
+ * @param `data` 
+ * @param total 
  */
 @Serializable
 
-data class BangumiNextTopicCreation(
+data class BangumiNextGetSubjectTopics200Response(
 
-    @SerialName(value = "cf-turnstile-response") @Required val cfTurnstileResponse: kotlin.String,
+    @SerialName(value = "data") @Required val `data`: kotlin.collections.List<BangumiNextTopic>,
 
-    /* bbcode */
-    @SerialName(value = "text") @Required val text: kotlin.String,
-
-    @SerialName(value = "title") @Required val title: kotlin.String
+    @SerialName(value = "total") @Required val total: kotlin.Int
 
 )
 

@@ -24,24 +24,24 @@ import kotlinx.serialization.Serializable
  *
  * @param avatar
  * @param id
+ * @param joinedAt
  * @param nickname
  * @param sign
- * @param userGroup 
  * @param username 
  */
 @Serializable
 
-data class BangumiNextUser(
+data class BangumiNextSlimUser(
 
     @SerialName(value = "avatar") @Required val avatar: BangumiNextAvatar,
 
     @SerialName(value = "id") @Required val id: kotlin.Int,
 
+    @SerialName(value = "joinedAt") @Required val joinedAt: kotlin.Int,
+
     @SerialName(value = "nickname") @Required val nickname: kotlin.String,
 
     @SerialName(value = "sign") @Required val sign: kotlin.String,
-
-    @SerialName(value = "user_group") @Required val userGroup: kotlin.Int,
 
     @SerialName(value = "username") @Required val username: kotlin.String
 

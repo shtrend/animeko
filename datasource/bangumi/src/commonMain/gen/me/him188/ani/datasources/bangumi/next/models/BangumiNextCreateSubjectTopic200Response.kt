@@ -15,23 +15,22 @@
 
 package me.him188.ani.datasources.bangumi.next.models
 
+
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param list 
- * @param total 
+ *
+ * @param id new topic id
  */
 @Serializable
 
-data class BangumiNextSubjectInterestComment(
+data class BangumiNextCreateSubjectTopic200Response(
 
-    @SerialName(value = "list") @Required val list: kotlin.collections.List<BangumiNextSubjectInterestCommentListInner>,
-
-    @SerialName(value = "total") @Required val total: kotlin.Int
+    /* new topic id */
+    @SerialName(value = "id") @Required val id: kotlin.Int
 
 )
 

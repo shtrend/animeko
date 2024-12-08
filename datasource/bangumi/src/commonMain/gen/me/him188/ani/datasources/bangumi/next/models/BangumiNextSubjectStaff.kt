@@ -20,24 +20,18 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param comment
- * @param rate
- * @param updatedAt 
- * @param user 
+ *
+ * @param person
+ * @param position
  */
 @Serializable
 
-data class BangumiNextSubjectInterestCommentListInner(
+data class BangumiNextSubjectStaff(
 
-    @SerialName(value = "comment") @Required val comment: kotlin.String,
+    @SerialName(value = "person") @Required val person: BangumiNextSlimPerson,
 
-    @SerialName(value = "rate") @Required val rate: kotlin.Int,
-
-    @SerialName(value = "updatedAt") @Required val updatedAt: kotlin.Int,
-
-    @SerialName(value = "user") @Required val user: BangumiNextGetSubjectEpisodeComments200ResponseInnerAllOfUser?
+    @SerialName(value = "position") @Required val position: BangumiNextSubjectStaffPosition
 
 )
 

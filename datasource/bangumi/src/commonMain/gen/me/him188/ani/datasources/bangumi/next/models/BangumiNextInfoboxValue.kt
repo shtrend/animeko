@@ -15,6 +15,7 @@
 
 package me.him188.ani.datasources.bangumi.next.models
 
+
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -22,25 +23,16 @@ import kotlinx.serialization.Serializable
 /**
  *
  *
- * @param createdAt
- * @param creator
- * @param id
- * @param state
- * @param text
+ * @param v
+ * @param k
  */
 @Serializable
 
-data class BangumiNextBasicReply(
+data class BangumiNextInfoboxValue(
 
-    @SerialName(value = "createdAt") @Required val createdAt: kotlin.Int,
+    @SerialName(value = "v") @Required val v: kotlin.String,
 
-    @SerialName(value = "creator") @Required val creator: BangumiNextSlimUser,
-
-    @SerialName(value = "id") @Required val id: kotlin.Int,
-
-    @SerialName(value = "state") @Required val state: kotlin.Int,
-
-    @SerialName(value = "text") @Required val text: kotlin.String
+    @SerialName(value = "k") val k: kotlin.String? = null
 
 )
 

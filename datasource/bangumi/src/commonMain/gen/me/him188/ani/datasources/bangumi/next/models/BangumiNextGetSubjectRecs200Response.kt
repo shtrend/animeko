@@ -20,21 +20,18 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param avatar
- * @param id 
- * @param nickname 
+ *
+ * @param `data`
+ * @param total
  */
 @Serializable
 
-data class BangumiNextGetSubjectEpisodeComments200ResponseInnerAllOfUser(
+data class BangumiNextGetSubjectRecs200Response(
 
-    @SerialName(value = "avatar") @Required val avatar: BangumiNextGetSubjectEpisodeComments200ResponseInnerAllOfUserAvatar,
+    @SerialName(value = "data") @Required val `data`: kotlin.collections.List<BangumiNextSubjectRec>,
 
-    @SerialName(value = "id") @Required val id: kotlin.Int,
-
-    @SerialName(value = "nickname") @Required val nickname: kotlin.String
+    @SerialName(value = "total") @Required val total: kotlin.Int
 
 )
 

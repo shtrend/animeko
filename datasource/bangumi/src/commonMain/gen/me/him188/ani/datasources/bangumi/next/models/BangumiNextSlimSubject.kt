@@ -20,44 +20,29 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param createdAt
- * @param description
- * @param icon
+ *
  * @param id
- * @param name
- * @param nsfw
- * @param title
- * @param totalMembers
  * @param locked
+ * @param name
  * @param nameCN
+ * @param nsfw
  * @param type
- * @param images 
+ * @param images
  */
 @Serializable
 
-data class BangumiNextTopicDetailParent(
-
-    @SerialName(value = "createdAt") @Required val createdAt: kotlin.Int,
-
-    @SerialName(value = "description") @Required val description: kotlin.String,
-
-    @SerialName(value = "icon") @Required val icon: kotlin.String,
+data class BangumiNextSlimSubject(
 
     @SerialName(value = "id") @Required val id: kotlin.Int,
 
-    @SerialName(value = "name") @Required val name: kotlin.String,
-
-    @SerialName(value = "nsfw") @Required val nsfw: kotlin.Boolean,
-
-    @SerialName(value = "title") @Required val title: kotlin.String,
-
-    @SerialName(value = "totalMembers") @Required val totalMembers: kotlin.Int,
-
     @SerialName(value = "locked") @Required val locked: kotlin.Boolean,
 
+    @SerialName(value = "name") @Required val name: kotlin.String,
+
     @SerialName(value = "nameCN") @Required val nameCN: kotlin.String,
+
+    @SerialName(value = "nsfw") @Required val nsfw: kotlin.Boolean,
 
     @SerialName(value = "type") @Required val type: Int,
 

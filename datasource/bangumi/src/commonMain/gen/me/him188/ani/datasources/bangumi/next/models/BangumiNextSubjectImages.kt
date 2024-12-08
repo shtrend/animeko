@@ -23,14 +23,25 @@ import kotlinx.serialization.Serializable
 /**
  *
  *
- * @param id new topic id
+ * @param common
+ * @param grid
+ * @param large
+ * @param medium
+ * @param small
  */
 @Serializable
 
-data class BangumiNextCreateNewSubjectTopic200Response(
+data class BangumiNextSubjectImages(
 
-    /* new topic id */
-    @SerialName(value = "id") @Required val id: kotlin.Int
+    @SerialName(value = "common") @Required val common: kotlin.String,
+
+    @SerialName(value = "grid") @Required val grid: kotlin.String,
+
+    @SerialName(value = "large") @Required val large: kotlin.String,
+
+    @SerialName(value = "medium") @Required val medium: kotlin.String,
+
+    @SerialName(value = "small") @Required val small: kotlin.String
 
 )
 

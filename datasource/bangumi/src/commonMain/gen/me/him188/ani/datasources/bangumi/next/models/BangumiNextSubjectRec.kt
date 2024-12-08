@@ -22,25 +22,19 @@ import kotlinx.serialization.Serializable
 /**
  *
  *
- * @param createdAt
- * @param creator
- * @param id
- * @param state
- * @param text
+ * @param count
+ * @param sim
+ * @param subject
  */
 @Serializable
 
-data class BangumiNextBasicReply(
+data class BangumiNextSubjectRec(
 
-    @SerialName(value = "createdAt") @Required val createdAt: kotlin.Int,
+    @SerialName(value = "count") @Required val count: kotlin.Int,
 
-    @SerialName(value = "creator") @Required val creator: BangumiNextSlimUser,
+    @SerialName(value = "sim") @Required val sim: @Serializable(me.him188.ani.utils.serialization.BigNumAsDoubleStringSerializer::class) me.him188.ani.utils.serialization.BigNum,
 
-    @SerialName(value = "id") @Required val id: kotlin.Int,
-
-    @SerialName(value = "state") @Required val state: kotlin.Int,
-
-    @SerialName(value = "text") @Required val text: kotlin.String
+    @SerialName(value = "subject") @Required val subject: BangumiNextSlimSubject
 
 )
 

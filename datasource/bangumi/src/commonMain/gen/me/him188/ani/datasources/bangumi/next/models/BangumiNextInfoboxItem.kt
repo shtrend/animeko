@@ -22,25 +22,16 @@ import kotlinx.serialization.Serializable
 /**
  *
  *
- * @param createdAt
- * @param creator
- * @param id
- * @param state
- * @param text
+ * @param key
+ * @param propertyValues
  */
 @Serializable
 
-data class BangumiNextBasicReply(
+data class BangumiNextInfoboxItem(
 
-    @SerialName(value = "createdAt") @Required val createdAt: kotlin.Int,
+    @SerialName(value = "key") @Required val key: kotlin.String,
 
-    @SerialName(value = "creator") @Required val creator: BangumiNextSlimUser,
-
-    @SerialName(value = "id") @Required val id: kotlin.Int,
-
-    @SerialName(value = "state") @Required val state: kotlin.Int,
-
-    @SerialName(value = "text") @Required val text: kotlin.String
+    @SerialName(value = "values") @Required val propertyValues: kotlin.collections.List<BangumiNextInfoboxValue>
 
 )
 

@@ -15,6 +15,7 @@
 
 package me.him188.ani.datasources.bangumi.next.models
 
+
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -22,25 +23,22 @@ import kotlinx.serialization.Serializable
 /**
  *
  *
- * @param createdAt
- * @param creator
- * @param id
- * @param state
- * @param text
+ * @param date
+ * @param month
+ * @param weekday
+ * @param year
  */
 @Serializable
 
-data class BangumiNextBasicReply(
+data class BangumiNextSubjectAirtime(
 
-    @SerialName(value = "createdAt") @Required val createdAt: kotlin.Int,
+    @SerialName(value = "date") @Required val date: kotlin.String,
 
-    @SerialName(value = "creator") @Required val creator: BangumiNextSlimUser,
+    @SerialName(value = "month") @Required val month: kotlin.Int,
 
-    @SerialName(value = "id") @Required val id: kotlin.Int,
+    @SerialName(value = "weekday") @Required val weekday: kotlin.Int,
 
-    @SerialName(value = "state") @Required val state: kotlin.Int,
-
-    @SerialName(value = "text") @Required val text: kotlin.String
+    @SerialName(value = "year") @Required val year: kotlin.Int
 
 )
 

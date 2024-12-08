@@ -22,25 +22,22 @@ import kotlinx.serialization.Serializable
 /**
  *
  *
- * @param createdAt
- * @param creator
- * @param id
- * @param state
- * @param text
+ * @param actors
+ * @param character
+ * @param order
+ * @param type
  */
 @Serializable
 
-data class BangumiNextBasicReply(
+data class BangumiNextSubjectCharacter(
 
-    @SerialName(value = "createdAt") @Required val createdAt: kotlin.Int,
+    @SerialName(value = "actors") @Required val actors: kotlin.collections.List<BangumiNextSlimPerson>,
 
-    @SerialName(value = "creator") @Required val creator: BangumiNextSlimUser,
+    @SerialName(value = "character") @Required val character: BangumiNextSlimCharacter,
 
-    @SerialName(value = "id") @Required val id: kotlin.Int,
+    @SerialName(value = "order") @Required val order: kotlin.Int,
 
-    @SerialName(value = "state") @Required val state: kotlin.Int,
-
-    @SerialName(value = "text") @Required val text: kotlin.String
+    @SerialName(value = "type") @Required val type: kotlin.Int
 
 )
 

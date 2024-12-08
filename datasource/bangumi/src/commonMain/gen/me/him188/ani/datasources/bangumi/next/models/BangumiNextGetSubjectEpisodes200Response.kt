@@ -27,9 +27,9 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 
-data class BangumiNextGetSubjectTopicsBySubjectId200Response(
+data class BangumiNextGetSubjectEpisodes200Response(
 
-    @SerialName(value = "data") @Required val `data`: kotlin.collections.List<BangumiNextTopic>,
+    @SerialName(value = "data") @Required val `data`: kotlin.collections.List<BangumiNextEpisode>,
 
     @SerialName(value = "total") @Required val total: kotlin.Int
 
