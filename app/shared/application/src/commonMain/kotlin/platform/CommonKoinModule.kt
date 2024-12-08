@@ -52,6 +52,7 @@ import me.him188.ani.app.data.repository.media.MediaSourceInstanceRepositoryImpl
 import me.him188.ani.app.data.repository.media.MediaSourceSubscriptionRepository
 import me.him188.ani.app.data.repository.media.MikanIndexCacheRepository
 import me.him188.ani.app.data.repository.media.MikanIndexCacheRepositoryImpl
+import me.him188.ani.app.data.repository.media.SelectorMediaSourceEpisodeCacheRepository
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepository
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepositoryImpl
 import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepository
@@ -346,7 +347,13 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
             requester = MediaSourceSubscriptionRequester(client),
         )
     }
-
+    single<SelectorMediaSourceEpisodeCacheRepository> {
+        SelectorMediaSourceEpisodeCacheRepository(
+            webSubjectInfoDao = database.webSearchSubjectInfoDao(),
+            webEpisodeInfoDao = database.webSearchEpisodeInfoDao(),
+        )
+    }
+    
     // Caching
 
     single<MediaAutoCacheService> {
