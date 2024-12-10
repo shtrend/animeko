@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
-import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.thisLogger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -32,7 +32,7 @@ import kotlin.coroutines.cancellation.CancellationException
 abstract class Repository(
     protected val defaultDispatcher: CoroutineContext = Dispatchers.Default,
 ) {
-    protected val logger = logger(this::class)
+    protected val logger = thisLogger()
 
     private val sharingScope = CoroutineScope(defaultDispatcher)
 

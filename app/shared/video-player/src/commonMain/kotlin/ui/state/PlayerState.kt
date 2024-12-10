@@ -48,7 +48,7 @@ import me.him188.ani.app.videoplayer.data.VideoSourceOpenException
 import me.him188.ani.app.videoplayer.ui.VideoPlayer
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
-import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.thisLogger
 import kotlin.concurrent.Volatile
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -234,7 +234,7 @@ abstract class AbstractPlayerState<D : AbstractPlayerState.Data>(
         }
     }
 
-    protected val logger = logger(this::class)
+    protected val logger = thisLogger()
     override val videoSource: MutableStateFlow<VideoSource<*>?> = MutableStateFlow(null)
 
     override val state: MutableStateFlow<PlaybackState> = MutableStateFlow(PlaybackState.PAUSED_BUFFERING)

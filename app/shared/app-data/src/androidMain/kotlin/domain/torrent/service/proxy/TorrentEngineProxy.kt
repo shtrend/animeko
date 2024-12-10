@@ -49,7 +49,7 @@ class TorrentEngineProxy(
     isClientBound: StateFlow<Boolean>,
     context: CoroutineContext,
 ) : IRemoteAniTorrentEngine.Stub() {
-    private val logger = logger(this::class)
+    private val logger = logger<TorrentEngineProxy>()
     private val scope = context.childScope()
     private val connectivityAware = DefaultConnectivityAware(context.childScope(), isClientBound)
 
