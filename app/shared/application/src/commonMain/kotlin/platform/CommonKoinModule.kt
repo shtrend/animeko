@@ -176,6 +176,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
             animeScheduleRepository = get(),
             bangumiEpisodeService = get(),
             episodeCollectionDao = database.episodeCollection(),
+            sessionManager = get(),
             enableAllEpisodeTypes = settingsRepository.debugSettings.flow.map { it.showAllEpisodes },
         )
     }
