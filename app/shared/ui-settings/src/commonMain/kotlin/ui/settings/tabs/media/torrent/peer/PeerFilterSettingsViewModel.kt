@@ -11,7 +11,6 @@ package me.him188.ani.app.ui.settings.tabs.media.torrent.peer
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -30,21 +29,21 @@ import org.koin.core.component.inject
 @Stable
 class PeerFilterSettingsViewModel : AbstractViewModel(), KoinComponent {
     val settingsRepository: SettingsRepository by inject()
-    
+
     private val peerFilterConfig = settingsRepository.torrentPeerConfig.flow
     private val updateTasker = MonoTasker(backgroundScope)
     private val localConfig: MutableState<TorrentPeerConfig?> = mutableStateOf(null)
-    
+
     val state = PeerFilterSettingsState(
         storage = SaveableStorage(
             localConfig,
             onSave = { update(it) },
-            isSavingState = derivedStateOf { updateTasker.isRunning }
-        )
+            isSavingFlow = updateTasker.isRunning,
+        ),
     )
-    
+
     init {
-        launchInBackground { 
+        launchInBackground {
             peerFilterConfig.distinctUntilChanged().collectLatest { config ->
                 withContext(Dispatchers.Main) {
                     localConfig.value = config
@@ -52,7 +51,7 @@ class PeerFilterSettingsViewModel : AbstractViewModel(), KoinComponent {
             }
         }
     }
-    
+
     private fun update(new: TorrentPeerConfig) {
         updateTasker.launch {
             localConfig.value = new

@@ -511,10 +511,11 @@ private fun DetachedDanmakuEditorLayout(
 ) {
     Column(modifier.padding(all = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("发送弹幕", style = MaterialTheme.typography.titleMedium)
+        val isSending = videoDanmakuState.isSending.collectAsStateWithLifecycle()
         DanmakuEditor(
             text = videoDanmakuState.danmakuEditorText,
             onTextChange = { videoDanmakuState.danmakuEditorText = it },
-            isSending = videoDanmakuState.isSending,
+            isSending = { isSending.value },
             placeholderText = remember { randomDanmakuPlaceholder() },
             onSend = onSend,
             Modifier.fillMaxWidth().focusRequester(focusRequester),

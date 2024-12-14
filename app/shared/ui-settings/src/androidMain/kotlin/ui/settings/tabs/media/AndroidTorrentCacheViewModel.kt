@@ -32,7 +32,6 @@ import me.him188.ani.app.domain.media.cache.storage.DirectoryMediaCacheStorage.M
 import me.him188.ani.app.platform.AppTerminator
 import me.him188.ani.app.platform.ContextMP
 import me.him188.ani.app.platform.PermissionManager
-import me.him188.ani.app.platform.findActivity
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.settings.framework.SettingsState
@@ -50,7 +49,6 @@ import me.him188.ani.utils.logging.warn
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
-import kotlin.system.exitProcess
 
 const val DEFAULT_TORRENT_CACHE_DIR_NAME = "torrent-caches"
 

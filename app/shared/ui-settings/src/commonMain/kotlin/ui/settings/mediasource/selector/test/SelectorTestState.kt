@@ -32,7 +32,7 @@ import kotlin.coroutines.cancellation.CancellationException
 @Stable
 class SelectorTestState(
     searchConfigState: State<SelectorSearchConfig?>,
-    private val engine: SelectorMediaSourceEngine,
+    engine: SelectorMediaSourceEngine,
     backgroundScope: CoroutineScope,
 ) : AbstractMediaSourceTestState() {
     // null for invalid config
