@@ -81,7 +81,7 @@ class AndroidTorrentCacheViewModel(
     val showExternalSharedStorageRequestDialog by derivedStateOf { selectExternalSharedStorageRequest != null }
 
     private val json by lazy { Json { ignoreUnknownKeys = true } }
-    private var migrationTasker = MonoTasker(backgroundScope)
+    private val migrationTasker = MonoTasker(backgroundScope)
     val showMigrationDialog by derivedStateOf { migrationTasker.isRunning }
     var migrationStatus: MigrationStatus by mutableStateOf(MigrationStatus.Init)
         private set
