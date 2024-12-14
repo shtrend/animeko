@@ -111,7 +111,7 @@ class EditSelectorMediaSourceViewModel(
                         settingsRepository.videoResolverSettings.flow.distinctUntilChanged(),
                     ) { proxySettings, videoResolverSettings ->
                         WebViewVideoExtractor(proxySettings, videoResolverSettings)
-                    }.produceState(null),
+                    }.produceState(null, this),
                     codecManager = get<MediaSourceCodecManager>(),
                     backgroundScope = this,
                     context,
