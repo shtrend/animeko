@@ -9,6 +9,9 @@
 
 package me.him188.ani.utils.platform.collections
 
+import androidx.collection.mutableIntListOf
+import androidx.collection.mutableObjectIntMapOf
+
 /**
  * Reorders the elements of this list according to the given [newPartialOrder], ensuring a stable integrated topological order.
  *
@@ -36,24 +39,29 @@ package me.him188.ani.utils.platform.collections
  * @param getKey A function to extract a key from each element. The partial order is defined on these keys.
  * @param newPartialOrder A list of keys describing the desired partial order.
  */
-fun <T, Key : Comparable<Key>> MutableList<T>.partiallyReorderBy(
+fun <T, Key : Comparable<Key>> List<T>.partiallyReorderBy(
     getKey: (T) -> Key,
     newPartialOrder: List<Key>
-) {
-    if (newPartialOrder.isEmpty() || size <= 1) return
+): List<T> {
+    if (newPartialOrder.isEmpty() || size <= 1) return this.toList()
 
-    val elements = this.toList()
+    val elements = this
     val keys = elements.map(getKey)
 
-    val keyToPartialIndex = newPartialOrder.withIndex().associate { (i, k) -> k to i }
+    val keyToPartialIndex = mutableObjectIntMapOf<Key>().apply {
+        keys.forEachIndexed { index, key -> put(key, index) }
+    }
 
     // Identify indices of partial elements in their order
     // Assuming keys in newPartialOrder are unique and exist at most once in the list
-    val partialOrderIndices = newPartialOrder.mapNotNull { pKey ->
-        elements.indexOfFirst { getKey(it) == pKey }.takeIf { it != -1 }
+    val partialOrderIndices = mutableIntListOf().apply {
+        newPartialOrder.forEach { pKey ->
+            val index = elements.indexOfFirst { getKey(it) == pKey }
+            if (index != -1) add(index)
+        }
     }
 
-    val adjacency = MutableList(size) { mutableListOf<Int>() }
+    val adjacency = MutableList(size) { mutableIntListOf() }
     val inDegree = IntArray(size)
 
     // Add edges from partial order
@@ -74,7 +82,7 @@ fun <T, Key : Comparable<Key>> MutableList<T>.partiallyReorderBy(
             if (visited[n] == 1) return true // cycle detected
             if (visited[n] == 2) return false
             visited[n] = 1
-            for (w in adjacency[n]) {
+            adjacency[n].forEach { w ->
                 if (dfs(w)) return true
             }
             visited[n] = 2
@@ -92,10 +100,10 @@ fun <T, Key : Comparable<Key>> MutableList<T>.partiallyReorderBy(
     // Before adding all leftover edges, let's define a helper to check partial contradictions:
     // A direct contradiction occurs if partial order says x<y but we try to add y->x.
     fun partialContradicts(from: Int, to: Int): Boolean {
-        val fromPartialIndex = keyToPartialIndex[keys[from]]
-        val toPartialIndex = keyToPartialIndex[keys[to]]
+        val fromPartialIndex = keyToPartialIndex.getOrElse(keys[from]) { -1 }
+        val toPartialIndex = keyToPartialIndex.getOrElse(keys[to]) { -1 }
         // If both elements are mentioned in partial order:
-        if (fromPartialIndex != null && toPartialIndex != null) {
+        if (fromPartialIndex != -1 && toPartialIndex != -1) {
             // If partial order says from<to (fromPartialIndex<toPartialIndex)
             // Adding from->to is correct. But if partial order says to<from, that contradicts.
             if (fromPartialIndex > toPartialIndex) {
@@ -129,13 +137,13 @@ fun <T, Key : Comparable<Key>> MutableList<T>.partiallyReorderBy(
     // Compute in-degree
     inDegree.fill(0)
     for (u in adjacency.indices) {
-        for (w in adjacency[u]) {
-            inDegree[w]++
+        adjacency[u].forEach { v ->
+            inDegree[v]++
         }
     }
 
     // Stable topological sort
-    val zeroInDegree = ArrayDeque<Int>()
+    val zeroInDegree = IntPriorityQueue()
     for (i in 0 until size) {
         if (inDegree[i] == 0) zeroInDegree.add(i)
     }
@@ -143,10 +151,9 @@ fun <T, Key : Comparable<Key>> MutableList<T>.partiallyReorderBy(
     val resultIndices = mutableListOf<Int>()
     while (zeroInDegree.isNotEmpty()) {
         // pick the vertex with the smallest original index for stability
-        val u = zeroInDegree.minOrNull()!!
-        zeroInDegree.remove(u)
+        val u = zeroInDegree.removeFirst()
         resultIndices.add(u)
-        for (w in adjacency[u]) {
+        adjacency[u].forEach { w ->
             inDegree[w]--
             if (inDegree[w] == 0) {
                 zeroInDegree.add(w)
@@ -155,12 +162,10 @@ fun <T, Key : Comparable<Key>> MutableList<T>.partiallyReorderBy(
     }
 
     // In case of cycle (which should not occur now), revert or do nothing
-    if (resultIndices.size < size) return
+    if (resultIndices.size < size) return this.toList()
 
     // Rebuild list
-    val reordered = resultIndices.map { elements[it] }
-    clear()
-    addAll(reordered)
+    return resultIndices.map { elements[it] }
 }
 
 /**

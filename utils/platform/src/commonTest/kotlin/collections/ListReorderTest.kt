@@ -19,10 +19,8 @@ class PartiallyReorderByTest {
         val list = mutableListOf("a", "b", "c")
         val newPartialOrder = emptyList<String>()
 
-        list.partiallyReorderBy(newPartialOrder)
-
         // Expect the original order since no constraints are given
-        assertEquals(listOf("a", "b", "c"), list)
+        assertEquals(listOf("a", "b", "c"), list.partiallyReorderBy(newPartialOrder))
     }
 
     @Test
@@ -32,8 +30,6 @@ class PartiallyReorderByTest {
         // So, newPartialOrder = [a, d, c]
         val newPartialOrder = listOf("a", "d", "c")
 
-        list.partiallyReorderBy(newPartialOrder)
-
         // Explanation:
         // The desired partial order is a <= d <= c.
         // Original: a, b, c, d, e
@@ -41,7 +37,7 @@ class PartiallyReorderByTest {
         // A consistent result is: a, d, b, c, e
         // 'b' and 'e' are not mentioned, so they maintain their relative order.
         // The partial-ordered subset (a, d, c) must appear in that order.
-        assertEquals(listOf("a", "b", "d", "c", "e"), list)
+        assertEquals(listOf("a", "b", "d", "c", "e"), list.partiallyReorderBy(newPartialOrder))
     }
 
     @Test
@@ -50,10 +46,8 @@ class PartiallyReorderByTest {
         // Fully specify new order
         val newPartialOrder = listOf("c", "a", "b")
 
-        list.partiallyReorderBy(newPartialOrder)
-
         // All elements are constrained, so final order should exactly match newPartialOrder
-        assertEquals(listOf("c", "a", "b"), list)
+        assertEquals(listOf("c", "a", "b"), list.partiallyReorderBy(newPartialOrder))
     }
 
     @Test
@@ -62,14 +56,12 @@ class PartiallyReorderByTest {
         // We only specify order for 'c' and 'a'
         val newPartialOrder = listOf("c", "a")
 
-        list.partiallyReorderBy(newPartialOrder)
-
         // Explanation:
         // Desired partial order: c <= a
         // Original: x, y, a, b, c, z
         // After reordering: x, y, c, a, b, z is a valid sequence.
         // 'c' must come before 'a'. Other elements remain in their relative order.
-        assertEquals(listOf("x", "y", "c", "a", "b", "z"), list)
+        assertEquals(listOf("x", "y", "c", "a", "b", "z"), list.partiallyReorderBy(newPartialOrder))
     }
 
     @Test
@@ -77,10 +69,8 @@ class PartiallyReorderByTest {
         val list = mutableListOf("m", "n", "o")
         val newPartialOrder = listOf("x", "y", "z") // None of these are in the list
 
-        list.partiallyReorderBy(newPartialOrder)
-
         // Since none of the keys are in the list, the list should remain unchanged
-        assertEquals(listOf("m", "n", "o"), list)
+        assertEquals(listOf("m", "n", "o"), list.partiallyReorderBy(newPartialOrder))
     }
 
     @Test
@@ -90,12 +80,10 @@ class PartiallyReorderByTest {
         // The rest (1,4,5,7) are not mentioned.
         val newPartialOrder = listOf("2", "6", "3")
 
-        list.partiallyReorderBy(newPartialOrder)
-
         // Original: 1, 2, 3, 4, 5, 6, 7
         // Result should have 2 before 6 and 6 before 3.
         // One valid final order: 1, 2, 6, 3, 4, 5, 7
-        assertEquals(listOf("1", "2", "6", "3", "4", "5", "7"), list)
+        assertEquals(listOf("1", "2", "6", "3", "4", "5", "7"), list.partiallyReorderBy(newPartialOrder))
     }
 
     @Test
@@ -105,12 +93,10 @@ class PartiallyReorderByTest {
         // The rest (1,4,5,7) are not mentioned.
         val newPartialOrder = listOf("2", "6", "100", "3", "10") // 100 and 10 are redundant
 
-        list.partiallyReorderBy(newPartialOrder)
-
         // Original: 1, 2, 3, 4, 5, 6, 7
         // Result should have 2 before 6 and 6 before 3.
         // One valid final order: 1, 2, 6, 3, 4, 5, 7
-        assertEquals(listOf("1", "2", "6", "3", "4", "5", "7"), list)
+        assertEquals(listOf("1", "2", "6", "3", "4", "5", "7"), list.partiallyReorderBy(newPartialOrder))
     }
 
     @Test
@@ -128,13 +114,10 @@ class PartiallyReorderByTest {
 
         val newPartialOrder = listOf(3, 1) // We want item with key=3 before item with key=1
 
-        // Use the form with getKey explicitly:
-        list.partiallyReorderBy({ it.key }, newPartialOrder)
-
         // Original: (1,a), (2,b), (3,c), (4,d)
         // After reordering for 3 <= 1:
         // A valid result: (2,b), (3,c), (1,a), (4,d)
         // '2' and '4' are not mentioned, so keep their relative order, but ensure 3 comes before 1.
-        assertEquals(listOf(3, 1, 2, 4), list.map { it.key })
+        assertEquals(listOf(3, 1, 2, 4), list.partiallyReorderBy({ it.key }, newPartialOrder).map { it.key })
     }
 }
