@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.update
 
+/**
+ * @see Flow.restartable
+ */
 class FlowRestarter {
     internal val id = MutableStateFlow(0)
 
@@ -26,6 +29,18 @@ class FlowRestarter {
     }
 }
 
+/**
+ * 使 flow 可以被重启. 等价于:
+ *
+ * ```
+ * private val id = MutableStateFlow(0) // FlowRestarter.restart 相当于 id.value++
+ *
+ * val result = id.flatMapLatest { _ ->
+ *    upstream.map { ... }...
+ *    // 重启时, 会重新执行上面的 map, filter 等操作
+ * }
+ * ```
+ */
 fun <T> Flow<T>.restartable(restarter: FlowRestarter): Flow<T> = restarter.id.flatMapLatest { this }
 
 
