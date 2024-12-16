@@ -30,7 +30,7 @@ sealed class MediaSourceFetchState {
      */
     data class PendingSuccess(
         override val id: Int, // restartCount
-    ) : Completed()
+    ) : Completed() // TODO: 2024/12/16 MediaSourceResultImpl 可能会卡 PendingSuccess 状态, 见 #1326
 
     sealed class Completed : MediaSourceFetchState() {
         internal abstract val id: Int // restartCount
