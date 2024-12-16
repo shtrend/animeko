@@ -221,12 +221,18 @@ class MediaSourceMediaFetcher(
                             }
                         }
                     }
+                    .runningFold(emptyList<Media>()) { acc, list ->
+                        acc + list
+                    }
+                    .map { list ->
+                        list.distinctBy { it.mediaId }
+                    }
                     .onCompletion { exception ->
                         if (exception == null) {
                             // catch might have already updated the state
                             if (state.value !is MediaSourceFetchState.Completed && state.value !is MediaSourceFetchState.PendingSuccess) {
-                                state.value = MediaSourceFetchState.PendingSuccess(restartCount)
-                                // 不能直接诶设置为 Succeed, 必须等待 `shareIn` 完成缓存 (replayCache)
+                                state.value = MediaSourceFetchState.Succeed(restartCount)
+                                // 不能直接设置为 Succeed, 必须等待 `shareIn` 完成缓存 (replayCache)
                             }
                         } else {
                             val currentState = state.value
@@ -239,12 +245,6 @@ class MediaSourceMediaFetcher(
                             }
                             // upstream failure re-caught here
                         }
-                    }
-                    .runningFold(emptyList<Media>()) { acc, list ->
-                        acc + list
-                    }
-                    .map { list ->
-                        list.distinctBy { it.mediaId }
                     }
             }.shareIn(
                 CoroutineScope(flowContext), replay = 1, started = SharingStarted.WhileSubscribed(),
