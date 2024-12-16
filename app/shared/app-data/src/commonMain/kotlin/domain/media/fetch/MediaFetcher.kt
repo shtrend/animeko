@@ -36,7 +36,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.io.IOException
 import me.him188.ani.app.data.models.episode.EpisodeInfo
@@ -224,7 +224,7 @@ class MediaSourceMediaFetcher(
                     .onCompletion { exception ->
                         if (exception == null) {
                             // catch might have already updated the state
-                            if (state.value !is MediaSourceFetchState.Completed) {
+                            if (state.value !is MediaSourceFetchState.Completed && state.value !is MediaSourceFetchState.PendingSuccess) {
                                 state.value = MediaSourceFetchState.PendingSuccess(restartCount)
                                 // 不能直接诶设置为 Succeed, 必须等待 `shareIn` 完成缓存 (replayCache)
                             }
@@ -248,11 +248,10 @@ class MediaSourceMediaFetcher(
                     }
             }.shareIn(
                 CoroutineScope(flowContext), replay = 1, started = SharingStarted.WhileSubscribed(),
-            ).transform {
+            ).onEach {
                 // 必须在 shareIn 更新好 replay 之后再标记为 success, 否则 awaitCompletion 不工作
                 // (因为 WhileSubscribed 的 stopTimeoutMillis 为 0)
                 finishPending()
-                emit(it)
             }.onCompletion {
                 if (it == null)
                     logger.error { "results is completed normally, however it shouldn't" }
@@ -260,37 +259,53 @@ class MediaSourceMediaFetcher(
         }
 
         private fun finishPending() {
-            val currentState = state.value
-            if (currentState is MediaSourceFetchState.PendingSuccess) {
-                state.compareAndSet(currentState, MediaSourceFetchState.Succeed(currentState.id))
-                // Ok if we lost race - someone else must set state to Idle from [restart]
+            state.update { currentState ->
+                if (currentState is MediaSourceFetchState.PendingSuccess) {
+                    MediaSourceFetchState.Succeed(currentState.id)
+                    // Ok if we lost race - someone else must set state to Idle from [restart]
+                } else {
+                    return
+                }
             }
         }
 
         override fun restart() {
             // 不允许同时调用 restart
             synchronized(this) {
-                when (val value = state.value) {
-                    is MediaSourceFetchState.Completed,
-                    MediaSourceFetchState.Disabled -> {
-                        restartCount.value += 1
-                        // 必须使用 CAS
-                        // 如果 [results] 现在有人 collect, [state] 可能会被变更. 
-                        // 我们只需要在它没有被其他人修改的时候, 把它修改为 [Idle].
-                        state.compareAndSet(value, MediaSourceFetchState.Idle)
-                        // Ok if we lost race - the [results] must be running
-                    }
+                while (true) {
+                    when (val value = state.value) {
+                        is MediaSourceFetchState.Completed,
+                        is MediaSourceFetchState.PendingSuccess,
+                        MediaSourceFetchState.Disabled -> {
+                            restartCount.value += 1
+                            // 必须使用 CAS
+                            // 如果 [results] 现在有人 collect, [state] 可能会被变更. 
+                            // 我们只需要在它没有被其他人修改的时候, 把它修改为 [Idle].
+                            if (state.compareAndSet(value, MediaSourceFetchState.Idle)) {
+                                break
+                            }
+                            // Ok if we lost race - the [results] must be running
+                        }
 
-                    MediaSourceFetchState.Idle -> {}
-                    MediaSourceFetchState.Working -> {}
+                        MediaSourceFetchState.Idle,
+                        MediaSourceFetchState.Working -> {
+                            break
+                        }
+                    }
                 }
             }
         }
 
         override fun enable() {
-            if (state.value == MediaSourceFetchState.Disabled) {
-                if (restartCount.compareAndSet(0, 1)) { // 非 0 表示有人已经 [restart] 过了
-                    state.compareAndSet(state.value, MediaSourceFetchState.Idle)
+            while (true) {
+                val value = state.value
+                if (value == MediaSourceFetchState.Disabled) {
+                    if (restartCount.compareAndSet(0, 1)) { // 非 0 表示有人已经 [restart] 过了
+                        state.compareAndSet(value, MediaSourceFetchState.Idle)
+                        break
+                    }
+                } else {
+                    break
                 }
             }
         }
