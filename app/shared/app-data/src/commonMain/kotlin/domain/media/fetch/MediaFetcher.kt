@@ -36,7 +36,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.io.IOException
 import me.him188.ani.app.data.models.episode.EpisodeInfo
@@ -184,7 +183,6 @@ class MediaSourceMediaFetcher(
                         return@flatMapLatest flowOf(emptyList()) // 禁用的数据源, 第一次查询给空列表, 必须要 restart 才能发起查询
 
                     val lastRestartCount = when (currentState) {
-                        is MediaSourceFetchState.PendingSuccess -> currentState.id
                         is MediaSourceFetchState.Completed -> currentState.id
                         else -> -1
                     }
@@ -230,7 +228,7 @@ class MediaSourceMediaFetcher(
                     .onCompletion { exception ->
                         if (exception == null) {
                             // catch might have already updated the state
-                            if (state.value !is MediaSourceFetchState.Completed && state.value !is MediaSourceFetchState.PendingSuccess) {
+                            if (state.value !is MediaSourceFetchState.Completed) {
                                 state.value = MediaSourceFetchState.Succeed(restartCount)
                                 // 不能直接设置为 Succeed, 必须等待 `shareIn` 完成缓存 (replayCache)
                             }
@@ -248,24 +246,9 @@ class MediaSourceMediaFetcher(
                     }
             }.shareIn(
                 CoroutineScope(flowContext), replay = 1, started = SharingStarted.WhileSubscribed(),
-            ).onEach {
-                // 必须在 shareIn 更新好 replay 之后再标记为 success, 否则 awaitCompletion 不工作
-                // (因为 WhileSubscribed 的 stopTimeoutMillis 为 0)
-                finishPending()
-            }.onCompletion {
+            ).onCompletion {
                 if (it == null)
                     logger.error { "results is completed normally, however it shouldn't" }
-            }
-        }
-
-        private fun finishPending() {
-            state.update { currentState ->
-                if (currentState is MediaSourceFetchState.PendingSuccess) {
-                    MediaSourceFetchState.Succeed(currentState.id)
-                    // Ok if we lost race - someone else must set state to Idle from [restart]
-                } else {
-                    return
-                }
             }
         }
 
@@ -275,7 +258,6 @@ class MediaSourceMediaFetcher(
                 while (true) {
                     when (val value = state.value) {
                         is MediaSourceFetchState.Completed,
-                        is MediaSourceFetchState.PendingSuccess,
                         MediaSourceFetchState.Disabled -> {
                             restartCount.value += 1
                             // 必须使用 CAS
