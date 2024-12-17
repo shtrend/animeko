@@ -114,6 +114,7 @@ import me.him188.ani.danmaku.api.DanmakuPresentation
 import me.him188.ani.danmaku.ui.DanmakuConfig
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.source.MediaFetchRequest
+import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.datasources.api.topic.isDoneOrDropped
 import me.him188.ani.utils.coroutines.cancellableCoroutineScope
@@ -246,7 +247,7 @@ private class EpisodeViewModelImpl(
     private val bangumiCommentRepository: BangumiCommentRepository by inject()
     private val episodePlayHistoryRepository: EpisodePlayHistoryRepository by inject()
     private val selectorMediaSourceEpisodeCacheRepository: SelectorMediaSourceEpisodeCacheRepository by inject()
-    
+
     private val subjectCollection = subjectCollectionRepository.subjectCollectionFlow(subjectId)
     private val subjectInfo = subjectCollection.map { it.subjectInfo }
     private val episodeCollection = episodeId.transformLatest { episodeId ->
@@ -320,6 +321,18 @@ private class EpisodeViewModelImpl(
                             it,
                             settingsRepository.mediaSelectorSettings.flow.map { it.preferKind },
                         )
+                    }
+                }
+                launchInBackground {
+                    mediaFetchSession.collectLatest { session ->
+                        val result = fastSelectSources(
+                            session,
+                            mediaSourceManager.allInstances.first() // no need to subscribe to changes
+                                .filter { it.source.kind == MediaSourceKind.WEB }
+                                .map { it.mediaSourceId },
+                            preferKind = settingsRepository.mediaSelectorSettings.flow.map { it.preferKind },
+                        )
+                        logger.info { "fastSelectSources result: $result" }
                     }
                 }
                 launchInBackground {
