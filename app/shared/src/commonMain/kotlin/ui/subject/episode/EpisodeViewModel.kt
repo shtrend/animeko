@@ -426,39 +426,46 @@ private class EpisodeViewModelImpl(
         launchInBackground {
             // 播放失败时自动切换下一个 media.
             // 即使是 BT 出错, 我们也会尝试切换到下一个 WEB 类型的数据源, 而不是继续尝试 BT.
-
-            mediaFetchSession.collectLatest { session ->
-                var blacklistedMediaIds = persistentHashSetOf<String>()
-                combine(
-                    playerLauncher.videoLoadingState, // 解析链接出错 (未匹配到链接)
-                    playerState.state, // 解析成功, 但播放器出错 (无法链接到链接, 例如链接错误)
-                ) { videoLoadingState, playerState ->
-                    videoLoadingState is VideoLoadingState.Failed || playerState == PlaybackState.ERROR
-                }.distinctUntilChanged()
-                    .collectLatest { isError ->
-                        if (isError) {
-                            // 播放出错了
-                            logger.info { "Player errored, automatically switching to next media" }
-
-                            // 将当前播放的 mediaId 加入黑名单
-                            mediaSelector.selected.value?.let {
-                                blacklistedMediaIds = blacklistedMediaIds.add(it.mediaId) // thread-safe
-                            }
-
-                            delay(1.seconds) // 稍等让用户看到播放出错
-                            val result = mediaSelector.autoSelect.fastSelectSources(
-                                session,
-                                mediaSourceManager.allInstances.first() // no need to subscribe to changes
-                                    .filter { it.source.kind == MediaSourceKind.WEB }
-                                    .map { it.mediaSourceId },
-                                preferKind = settingsRepository.mediaSelectorSettings.flow.map<MediaSelectorSettings, MediaSourceKind?> { it.preferKind },
-                                overrideUserSelection = true, // Note: 覆盖用户选择
-                                blacklistMediaIds = blacklistedMediaIds,
-                            )
-                            logger.info { "Player errored, automatically switched to next media: $result" }
-                        } // else: cancel selection
+            settingsRepository.videoScaffoldConfig.flow.map { it.autoSwitchMediaOnPlayerError }
+                .collectLatest { autoSwitchMediaOnPlayerError ->
+                    if (!autoSwitchMediaOnPlayerError) {
+                        // 设置关闭, 不要自动切换
+                        return@collectLatest
                     }
-            }
+
+                    mediaFetchSession.collectLatest { session ->
+                        var blacklistedMediaIds = persistentHashSetOf<String>()
+                        combine(
+                            playerLauncher.videoLoadingState, // 解析链接出错 (未匹配到链接)
+                            playerState.state, // 解析成功, 但播放器出错 (无法链接到链接, 例如链接错误)
+                        ) { videoLoadingState, playerState ->
+                            videoLoadingState is VideoLoadingState.Failed || playerState == PlaybackState.ERROR
+                        }.distinctUntilChanged()
+                            .collectLatest { isError ->
+                                if (isError) {
+                                    // 播放出错了
+                                    logger.info { "Player errored, automatically switching to next media" }
+
+                                    // 将当前播放的 mediaId 加入黑名单
+                                    mediaSelector.selected.value?.let {
+                                        blacklistedMediaIds = blacklistedMediaIds.add(it.mediaId) // thread-safe
+                                    }
+
+                                    delay(1.seconds) // 稍等让用户看到播放出错
+                                    val result = mediaSelector.autoSelect.fastSelectSources(
+                                        session,
+                                        mediaSourceManager.allInstances.first() // no need to subscribe to changes
+                                            .filter { it.source.kind == MediaSourceKind.WEB }
+                                            .map { it.mediaSourceId },
+                                        preferKind = settingsRepository.mediaSelectorSettings.flow.map<MediaSelectorSettings, MediaSourceKind?> { it.preferKind },
+                                        overrideUserSelection = true, // Note: 覆盖用户选择
+                                        blacklistMediaIds = blacklistedMediaIds,
+                                    )
+                                    logger.info { "Player errored, automatically switched to next media: $result" }
+                                } // else: cancel selection
+                            }
+                    }
+                }
         }
     }
 
