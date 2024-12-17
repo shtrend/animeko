@@ -859,7 +859,7 @@ class CIHelper(
 
     fun JobBuilder<*>.uploadAndroidApkToCloud() {
         runGradle(
-            name = "Upload Android APK",
+            name = "π",
             `if` = expr { matrix.uploadApk },
             tasks = [":ci-helper:uploadAndroidApk"],
             env = ciHelperSecrets,
