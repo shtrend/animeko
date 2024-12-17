@@ -45,6 +45,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -67,12 +68,15 @@ fun MediaSourceResultsView(
     modifier: Modifier = Modifier,
 ) {
     val presentation by mediaSelector.mediaSource.presentationFlow.collectAsStateWithLifecycle()
+    val scope = rememberCoroutineScope()
     MediaSourceResultsView(
         sourceResults = sourceResults,
         sourceSelected = { presentation.finalSelected == it },
         onClickEnabled = {
-            mediaSelector.mediaSource.preferOrRemove(it)
-            mediaSelector.removePreferencesUntilFirstCandidate()
+            scope.launch {
+                mediaSelector.mediaSource.preferOrRemove(it).join()
+                mediaSelector.removePreferencesUntilFirstCandidate()
+            }
         },
         modifier,
     )
