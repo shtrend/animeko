@@ -349,3 +349,8 @@ jobs:
           name: 'ani-windows-portable'
           path: 'app/desktop/build/compose/binaries/main-release/app'
         if: '${{ (matrix.uploadDesktopInstallers) && ((matrix.os == ''windows'')) }}'
+      - id: 'step-36'
+        name: 'Cleanup temp files'
+        continue-on-error: true
+        run: 'chmod +x ./ci-helper/cleanup-temp-files-macos.sh && ./ci-helper/cleanup-temp-files-macos.sh'
+        if: '${{ (matrix.selfHosted) && (((matrix.os == ''macos'')) && ((matrix.arch == ''aarch64''))) }}'

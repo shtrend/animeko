@@ -45,6 +45,9 @@ import Secrets.SIGNING_RELEASE_KEYALIAS
 import Secrets.SIGNING_RELEASE_KEYPASSWORD
 import Secrets.SIGNING_RELEASE_STOREFILE
 import Secrets.SIGNING_RELEASE_STOREPASSWORD
+import Src_main.Arch
+import Src_main.MatrixContext
+import Src_main.OS
 import io.github.typesafegithub.workflows.actions.actions.Checkout
 import io.github.typesafegithub.workflows.actions.actions.GithubScript
 import io.github.typesafegithub.workflows.actions.actions.UploadArtifact
@@ -343,6 +346,7 @@ workflow(
         gradleCheck()
         uploadAnitorrent()
         packageDesktopAndUpload()
+        cleanupTempFiles()
     }
 }
 
@@ -462,12 +466,7 @@ workflow(
             uploadDesktopInstallers()
             uploadComposeLogs()
         }
-        run(
-            name = "Cleanup temp files",
-            `if` = expr { matrix.selfHosted and matrix.isMacOSAArch64 },
-            command = shell("""find /private/var/folders/sv -type f -name "debugInfo.knd*.tmp" -exec rm {} + -print 2>/dev/null | wc -l"""),
-            continueOnError = true,
-        )
+        cleanupTempFiles()
     }
 }
 
@@ -909,6 +908,15 @@ class CIHelper(
             env = ciHelperSecrets,
         )
     }
+}
+
+fun JobBuilder<*>.cleanupTempFiles() {
+    run(
+        name = "Cleanup temp files",
+        `if` = expr { matrix.selfHosted and matrix.isMacOSAArch64 },
+        command = shell("""chmod +x ./ci-helper/cleanup-temp-files-macos.sh && ./ci-helper/cleanup-temp-files-macos.sh"""),
+        continueOnError = true,
+    )
 }
 
 

@@ -413,5 +413,5 @@ jobs:
       - id: 'step-37'
         name: 'Cleanup temp files'
         continue-on-error: true
-        run: 'find /private/var/folders/sv -type f -name "debugInfo.knd*.tmp" -exec rm {} + -print 2>/dev/null | wc -l'
+        run: 'chmod +x ./ci-helper/cleanup-temp-files-macos.sh && ./ci-helper/cleanup-temp-files-macos.sh'
         if: '${{ (matrix.selfHosted) && (((matrix.os == ''macos'')) && ((matrix.arch == ''aarch64''))) }}'
