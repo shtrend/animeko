@@ -525,9 +525,8 @@ private class EpisodeViewModelImpl(
 
     override val editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState =
         EditableSubjectCollectionTypeState(
-            selfCollectionType = subjectCollection
-                .map { it.collectionType }
-                .produceState(UnifiedCollectionType.NOT_COLLECTED),
+            selfCollectionTypeFlow = subjectCollection
+                .map { it.collectionType },
             hasAnyUnwatched = {
                 val collections =
                     episodeCollectionsFlow.firstOrNull() ?: return@EditableSubjectCollectionTypeState true

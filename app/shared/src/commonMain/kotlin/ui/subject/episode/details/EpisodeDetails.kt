@@ -190,7 +190,8 @@ fun EpisodeDetails(
             // 推荐一些状态修改操作
 
             if (authState.isKnownLoggedIn) {
-                when (editableSubjectCollectionTypeState.selfCollectionType) {
+                val editableSubjectCollectionTypePresentation by editableSubjectCollectionTypeState.presentationFlow.collectAsStateWithLifecycle()
+                when (editableSubjectCollectionTypePresentation.selfCollectionType) {
                     UnifiedCollectionType.NOT_COLLECTED -> {
                         SubjectCollectionTypeSuggestions.Collect(editableSubjectCollectionTypeState)
                     }
