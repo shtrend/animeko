@@ -45,9 +45,6 @@ import Secrets.SIGNING_RELEASE_KEYALIAS
 import Secrets.SIGNING_RELEASE_KEYPASSWORD
 import Secrets.SIGNING_RELEASE_STOREFILE
 import Secrets.SIGNING_RELEASE_STOREPASSWORD
-import Src_main.Arch
-import Src_main.MatrixContext
-import Src_main.OS
 import io.github.typesafegithub.workflows.actions.actions.Checkout
 import io.github.typesafegithub.workflows.actions.actions.GithubScript
 import io.github.typesafegithub.workflows.actions.actions.UploadArtifact
@@ -724,7 +721,7 @@ fun JobBuilder<*>.compileAndAssemble() {
 
 fun JobBuilder<*>.buildAndroidApk(prepareSigningKey: ActionStep<Base64ToFile_Untyped.Outputs>) {
     runGradle(
-        name = "Build Android Debug APK",
+        name = "Build Android Debug APKs",
         `if` = expr { matrix.uploadApk },
         tasks = [
             "assembleDebug",
@@ -733,7 +730,7 @@ fun JobBuilder<*>.buildAndroidApk(prepareSigningKey: ActionStep<Base64ToFile_Unt
 
     for (arch in AndroidArch.entriesWithUniversal) {
         uses(
-            name = "Upload Android Debug APK",
+            name = "Upload Android Debug APK $arch",
             `if` = expr { matrix.uploadApk },
             action = UploadArtifact(
                 name = "ani-android-${arch}-debug",
@@ -744,7 +741,7 @@ fun JobBuilder<*>.buildAndroidApk(prepareSigningKey: ActionStep<Base64ToFile_Unt
     }
 
     runGradle(
-        name = "Build Android Release APK",
+        name = "Build Android Release APKs",
         `if` = expr { github.isAnimekoRepository and matrix.uploadApk },
         tasks = [
             "assembleRelease",

@@ -268,11 +268,11 @@ jobs:
         name: 'Compile Kotlin'
         run: './gradlew compileKotlin compileCommonMainKotlinMetadata compileDebugKotlinAndroid compileReleaseKotlinAndroid compileJvmMainKotlinMetadata compileKotlinDesktop compileKotlinMetadata ${{ matrix.gradleArgs }}'
       - id: 'step-21'
-        name: 'Build Android Debug APK'
+        name: 'Build Android Debug APKs'
         run: './gradlew assembleDebug ${{ matrix.gradleArgs }}'
         if: '${{ matrix.uploadApk }}'
       - id: 'step-22'
-        name: 'Upload Android Debug APK'
+        name: 'Upload Android Debug APK arm64-v8a'
         uses: 'actions/upload-artifact@v4'
         with:
           name: 'ani-android-arm64-v8a-debug'
@@ -280,7 +280,7 @@ jobs:
           overwrite: 'true'
         if: '${{ matrix.uploadApk }}'
       - id: 'step-23'
-        name: 'Upload Android Debug APK'
+        name: 'Upload Android Debug APK x86_64'
         uses: 'actions/upload-artifact@v4'
         with:
           name: 'ani-android-x86_64-debug'
@@ -288,7 +288,7 @@ jobs:
           overwrite: 'true'
         if: '${{ matrix.uploadApk }}'
       - id: 'step-24'
-        name: 'Upload Android Debug APK'
+        name: 'Upload Android Debug APK armeabi-v7a'
         uses: 'actions/upload-artifact@v4'
         with:
           name: 'ani-android-armeabi-v7a-debug'
@@ -296,7 +296,7 @@ jobs:
           overwrite: 'true'
         if: '${{ matrix.uploadApk }}'
       - id: 'step-25'
-        name: 'Upload Android Debug APK'
+        name: 'Upload Android Debug APK universal'
         uses: 'actions/upload-artifact@v4'
         with:
           name: 'ani-android-universal-debug'
@@ -304,7 +304,7 @@ jobs:
           overwrite: 'true'
         if: '${{ matrix.uploadApk }}'
       - id: 'step-26'
-        name: 'Build Android Release APK'
+        name: 'Build Android Release APKs'
         env:
           signing_release_storeFileFromRoot: '${{ steps.step-16.outputs.filePath }}'
           signing_release_storePassword: '${{ secrets.SIGNING_RELEASE_STOREPASSWORD }}'
