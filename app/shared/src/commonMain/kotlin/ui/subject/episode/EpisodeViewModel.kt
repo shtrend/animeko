@@ -331,6 +331,8 @@ private class EpisodeViewModelImpl(
                                 .filter { it.source.kind == MediaSourceKind.WEB }
                                 .map { it.mediaSourceId },
                             preferKind = settingsRepository.mediaSelectorSettings.flow.map { it.preferKind },
+                            overrideUserSelection = false,
+                            blacklistMediaIds = emptySet(),
                         )
                         logger.info { "fastSelectSources result: $result" }
                     }
