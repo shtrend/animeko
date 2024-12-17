@@ -52,6 +52,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.settings.SettingsTab
@@ -64,9 +66,10 @@ fun MediaSourceResultsView(
     mediaSelector: MediaSelectorPresentation,
     modifier: Modifier = Modifier,
 ) {
+    val presentation by mediaSelector.mediaSource.presentationFlow.collectAsStateWithLifecycle()
     MediaSourceResultsView(
         sourceResults = sourceResults,
-        sourceSelected = { mediaSelector.mediaSource.finalSelected == it },
+        sourceSelected = { presentation.finalSelected == it },
         onClickEnabled = {
             mediaSelector.mediaSource.preferOrRemove(it)
             mediaSelector.removePreferencesUntilFirstCandidate()
