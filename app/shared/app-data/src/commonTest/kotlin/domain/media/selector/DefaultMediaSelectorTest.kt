@@ -834,6 +834,51 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
     }
 
     @Test
+    fun `trySelectFromMediaSources respects to preferred mediaSourceId`() = runTest {
+        mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
+        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
+        savedUserPreference.value = MediaPreference.Any.copy(
+            mediaSourceId = "2", // 用户偏好 2
+        )
+        savedDefaultPreference.value = MediaPreference.Empty
+        val media1 = media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB)
+        val media2 = media(sourceId = "2", alliance = "2", episodeRange = EpisodeRange.single("2"), kind = WEB)
+        addMedia(
+            media1,
+            media2,
+        )
+        assertEquals(1, selector.filteredCandidates.first().size)
+        assertEquals(2, selector.mediaList.first().size)
+        assertEquals(
+            media2,
+            selector.trySelectFromMediaSources(
+                listOf("1", "2"),  // 顺序是 1 更先, 但是用户偏好 2, 所以要选择 2
+                allowNonPreferred = false,
+            ),
+        )
+        selector.unselect()
+        assertEquals(
+            media2,
+            selector.trySelectFromMediaSources(
+                listOf("1", "2"),
+                allowNonPreferred = true, // 仍然选 2, 因为只有在没有任何资源匹配偏好时才会选别的
+            ),
+        )
+
+
+        // 对照组
+        savedUserPreference.value = MediaPreference.Any // 没有任何偏好, 按 order 选
+        selector.unselect()
+        assertEquals(
+            media1,
+            selector.trySelectFromMediaSources(
+                listOf("1", "2"),
+                allowNonPreferred = true,
+            ),
+        )
+    }
+
+    @Test
     fun `trySelectFromMediaSources selects non-preferred if all preferred ones are blacklisted`() = runTest {
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
         mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
