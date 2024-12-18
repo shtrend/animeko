@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.settings.tabs.media
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Hd
@@ -39,6 +40,8 @@ import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.datasources.api.topic.Resolution
 import me.him188.ani.datasources.api.topic.SubtitleLanguage
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @Stable
 class MediaSelectionGroupState(
@@ -223,6 +226,52 @@ internal fun SettingsScope.MediaSelectionGroup(
 
             HorizontalDividerItem()
 
+            AnimatedVisibility(mediaSelectorSettings.preferKind == MediaSourceKind.WEB) {
+                SubGroup {
+                    SwitchItem(
+                        checked = mediaSelectorSettings.fastSelectWebKind,
+                        onCheckedChange = {
+                            state.mediaSelectorSettingsState.update(
+                                mediaSelectorSettings.copy(fastSelectWebKind = it),
+                            )
+                        },
+                        title = { Text("快速选择在线数据源") },
+                        description = { Text("按数据源排序，当排序靠前的数据源查询完成后立即选择，不等待其他数据源查询。可大幅减少等待时间") },
+                    )
+
+                    HorizontalDividerItem()
+
+                    DropdownItem(
+                        selected = { mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay },
+                        values = { listOf(0.seconds, 3.seconds, 5.seconds, 10.seconds, Duration.INFINITE) },
+                        itemText = { duration ->
+                            Text(
+                                when (duration) {
+                                    0.seconds -> "立即允许"
+                                    3.seconds -> "3 秒后"
+                                    5.seconds -> "5 秒后"
+                                    10.seconds -> "10 秒后"
+                                    Duration.INFINITE -> "不允许"
+                                    else -> duration.toString() // non-reachable
+                                },
+                            )
+                        },
+                        onSelect = {
+                            state.mediaSelectorSettingsState.update(
+                                mediaSelectorSettings.copy(
+                                    fastSelectWebKindAllowNonPreferredDelay = it,
+                                ),
+                            )
+                        },
+                        title = { Text("允许选择非偏好资源") },
+                        description = { Text("开始查询几秒后允许忽略偏好设置，选择其他数据源的资源。例如偏好简中时允许选择繁中") },
+                        enabled = mediaSelectorSettings.fastSelectWebKind,
+                    )
+
+                    HorizontalDividerItem()
+                }
+            }
+            
             SwitchItem(
                 checked = mediaSelectorSettings.showDisabled,
                 onCheckedChange = {

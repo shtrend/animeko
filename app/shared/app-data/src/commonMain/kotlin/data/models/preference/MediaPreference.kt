@@ -1,11 +1,23 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.data.models.preference
 
 import androidx.compose.runtime.Immutable
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import me.him188.ani.app.data.models.preference.MediaPreference.Companion.ANY_FILTER
+import me.him188.ani.app.data.models.preference.MediaPreference.Companion.Empty
 import me.him188.ani.datasources.api.topic.Resolution
 import me.him188.ani.datasources.api.topic.SubtitleLanguage
 import me.him188.ani.utils.platform.annotations.SerializationOnly
+import me.him188.ani.utils.platform.annotations.TestOnly
 
 // was in me.him188.ani.app.data.models.preference.MediaPreference,
 // moved here in 3.10
@@ -54,7 +66,7 @@ constructor(
     val showWithoutSubtitle: Boolean = false,
 
     /**
-     * 优先使用的媒体源
+     * 优先使用的媒体源. Can be [ANY_FILTER]
      */
     val mediaSourceId: String? = null,
     @Deprecated("Only for migration") // since 3.1.0-beta03
@@ -70,13 +82,27 @@ constructor(
         val PlatformDefault = MediaPreference()
 
         /**
-         * No preference
+         * Prefer nothing
          */
         val Empty = MediaPreference(
             mediaSourceId = null,
             fallbackSubtitleLanguageIds = null,
             fallbackResolutions = null,
         )
+
+        /**
+         * Prefer anything
+         */
+        @TestOnly
+        val Any = MediaPreference.Empty.copy(
+            alliance = ANY_FILTER,
+            resolution = ANY_FILTER,
+            subtitleLanguageId = ANY_FILTER,
+            mediaSourceId = ANY_FILTER,
+            showWithoutSubtitle = true,
+        )
+
+        const val ANY_FILTER = "*"
     }
 
     fun merge(other: MediaPreference): MediaPreference {

@@ -11,9 +11,12 @@ package me.him188.ani.app.domain.media.selector
 
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.IOException
+import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.domain.media.SOURCE_DMHY
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
@@ -22,9 +25,14 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 class MediaSelectorFastSelectSourcesTest {
+    private fun createTestBuilder(): MediaSelectorTestBuilder = MediaSelectorTestBuilder().apply {
+        savedUserPreference.value = MediaPreference.Any
+        savedDefaultPreference.value = MediaPreference.Any
+    }
+
     @Test
     fun `selects none if mediaList is empty`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val (_, session, selector) = test.create()
 
         val selected = selector.autoSelect.fastSelectSources(
@@ -37,7 +45,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects none if order is empty`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val (_, session, selector) = test.create()
 
         val selected = selector.autoSelect.fastSelectSources(
@@ -50,7 +58,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects none if order is preferred is null`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val (_, session, selector) = test.create()
 
         val selected = selector.autoSelect.fastSelectSources(
@@ -63,7 +71,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects none if order is preferred is BT`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val (_, session, selector) = test.create()
 
         val selected = selector.autoSelect.fastSelectSources(
@@ -76,7 +84,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects none when finished source id does not match`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val (_, session, selector) = test.create()
 
@@ -97,7 +105,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects the first WEB when it has already finished`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val (_, session, selector) = test.create()
 
@@ -118,7 +126,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects the first WEB when it finishes`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val (_, session, selector) = test.create()
 
@@ -143,7 +151,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects none if finished source is not expected`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val (_, session, selector) = test.create()
 
@@ -166,7 +174,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects the second WEB when second source finishes first`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val source2 = test.delayedMediaSource("2")
         val (_, session, selector) = test.create()
@@ -197,7 +205,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects the first WEB when second source finishes later`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val source2 = test.delayedMediaSource("2")
         val (_, session, selector) = test.create()
@@ -228,7 +236,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects the second WEB when first has no response`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val source2 = test.delayedMediaSource("2")
         val (_, session, selector) = test.create()
@@ -255,7 +263,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `order has more items than actual`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source2 = test.delayedMediaSource("2")
         val (_, session, selector) = test.create()
 
@@ -280,7 +288,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `actual has more items than order but correct completion order`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val source2 = test.delayedMediaSource("2")
         val (_, session, selector) = test.create()
@@ -307,7 +315,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `actual has more items than order and wrong completion order`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val source2 = test.delayedMediaSource("2")
         val source3 = test.delayedMediaSource("3")
@@ -336,7 +344,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects the second WEB when first source errored`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         val source1 = test.delayedMediaSource("1")
         val source2 = test.delayedMediaSource("2")
         val (_, session, selector) = test.create()
@@ -363,7 +371,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `selects the second WEB when first source disabled`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         test.delayedMediaSource("1", enabled = false)
         val source2 = test.delayedMediaSource("2")
         val (_, session, selector) = test.create()
@@ -389,7 +397,7 @@ class MediaSelectorFastSelectSourcesTest {
 
     @Test
     fun `uses unfiltered list`() = runTest {
-        val test = MediaSelectorTestBuilder()
+        val test = createTestBuilder()
         test.savedUserPreference.value = test.savedUserPreference.value.copy(
             subtitleLanguageId = "dummy", // filters out all
         )
@@ -404,6 +412,40 @@ class MediaSelectorFastSelectSourcesTest {
                 session,
                 listOf("1", "2"),
                 flowOf(MediaSourceKind.WEB),
+                allowNonPreferredFlow = flowOf(true),
+            )
+        }
+
+        source2.complete(
+            listOf(
+                test.createMedia("2", MediaSourceKind.WEB).also { target = it },
+            ),
+        )
+        val selected = selectedDeferred.await()
+        assertEquals(target, selected)
+    }
+
+    @Test
+    fun `allowNonPreferredFlow wont cancel`() = runTest {
+        val test = createTestBuilder()
+        test.savedUserPreference.value = test.savedUserPreference.value.copy(
+            subtitleLanguageId = "dummy", // filters out all
+        )
+        test.delayedMediaSource("1", enabled = false)
+        val source2 = test.delayedMediaSource("2")
+        val (_, session, selector) = test.create()
+
+        lateinit var target: Media
+
+        val selectedDeferred = async(start = CoroutineStart.UNDISPATCHED) {
+            selector.autoSelect.fastSelectSources(
+                session,
+                listOf("1", "2"),
+                flowOf(MediaSourceKind.WEB),
+                allowNonPreferredFlow = flow {
+                    emit(true)
+                    awaitCancellation() // 永远不 cancel, 但 `fastSelectSources` 仍然需要在有限时间内返回 (当 session 查询完成时)
+                },
             )
         }
 

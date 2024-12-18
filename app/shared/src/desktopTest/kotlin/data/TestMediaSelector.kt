@@ -107,7 +107,8 @@ open class TestMediaSelector(
     override suspend fun trySelectFromMediaSources(
         mediaSourceOrder: List<String>,
         overrideUserSelection: Boolean,
-        blacklistMediaIds: Set<String>
+        blacklistMediaIds: Set<String>,
+        allowNonPreferred: Boolean
     ): Media? {
         throw UnsupportedOperationException()
     }

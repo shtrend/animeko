@@ -20,6 +20,7 @@ import androidx.paging.map
 import kotlinx.collections.immutable.persistentHashSetOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -129,6 +131,7 @@ import me.him188.ani.utils.logging.info
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.math.max
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -317,7 +320,8 @@ private class EpisodeViewModelImpl(
             mediaFetchSession.flatMapLatest { it.cumulativeResults },
         )
         .apply {
-            val preferKindFlow = settingsRepository.mediaSelectorSettings.flow.map { it.preferKind }
+            val mediaSelectorSettingsFlow = settingsRepository.mediaSelectorSettings.flow
+            val preferKindFlow = mediaSelectorSettingsFlow.map { it.preferKind }
 
             autoSelect.run {
 
@@ -333,7 +337,12 @@ private class EpisodeViewModelImpl(
                 launchInBackground {
                     // 快速自动选择数据源. 当按数据源顺序排序, 当最高排序的数据源查询完成后立即自动选择. #1322
                     mediaFetchSession.collectLatest { session ->
-                        val result = fastSelectSources(
+                        val mediaSelectorSettings = mediaSelectorSettingsFlow.first()
+                        if (!mediaSelectorSettings.fastSelectWebKind) {
+                            return@collectLatest
+                        }
+
+                        suspend fun doSelect(allowNonPreferred: Flow<Boolean>) = fastSelectSources(
                             session,
                             mediaSourceManager.allInstances.first() // no need to subscribe to changes
                                 .filter { it.source.kind == MediaSourceKind.WEB }
@@ -341,7 +350,22 @@ private class EpisodeViewModelImpl(
                             preferKind = preferKindFlow,
                             overrideUserSelection = false,
                             blacklistMediaIds = emptySet(),
+                            allowNonPreferredFlow = allowNonPreferred,
                         )
+
+                        var result = doSelect(
+                            allowNonPreferred = flow {   // 5 秒未查找到偏好资源, 则允许非偏好资源
+                                emit(false)
+                                delay(mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay)
+                                emit(true)
+                            },
+                        )
+                        if (result == null && mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay != Duration.INFINITE) {
+                            // 所有数据源查询完成, 仍然没有选择到, 有可能是 `allowNonPreferred` 一直为 `false`. 所以我们要最后再尝试 select 一次
+                            result = doSelect(
+                                allowNonPreferred = flowOf(true),
+                            )
+                        }
                         logger.info { "fastSelectSources result: $result" }
                     }
                 }
@@ -460,6 +484,7 @@ private class EpisodeViewModelImpl(
                                         preferKind = settingsRepository.mediaSelectorSettings.flow.map<MediaSelectorSettings, MediaSourceKind?> { it.preferKind },
                                         overrideUserSelection = true, // Note: 覆盖用户选择
                                         blacklistMediaIds = blacklistedMediaIds,
+                                        allowNonPreferredFlow = flowOf(true), // 偏好的如果全都播放错误了, 允许播放非偏好的
                                     )
                                     logger.info { "Player errored, automatically switched to next media: $result" }
                                 } // else: cancel selection

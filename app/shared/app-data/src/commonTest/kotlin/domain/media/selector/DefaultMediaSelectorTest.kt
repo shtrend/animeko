@@ -20,6 +20,7 @@ import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.MediaExtraFiles
 import me.him188.ani.datasources.api.Subtitle
 import me.him188.ani.datasources.api.source.MediaSourceKind
+import me.him188.ani.datasources.api.source.MediaSourceKind.WEB
 import me.him188.ani.datasources.api.topic.EpisodeRange
 import me.him188.ani.utils.coroutines.cancellableCoroutineScope
 import kotlin.test.Test
@@ -606,14 +607,14 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val userSelection: DefaultMedia
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
         mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
-        savedUserPreference.value = MediaPreference.Empty
-        savedDefaultPreference.value = MediaPreference.Empty // 啥都不要, 就一定会 fallback 成选第一个
+        savedUserPreference.value = MediaPreference.Any
+        savedDefaultPreference.value = MediaPreference.Any
         addMedia(
-            media(sourceId = "1", episodeRange = EpisodeRange.single("1")).also { userSelection = it },
-            media(sourceId = "2", episodeRange = EpisodeRange.season(1)),
-            media(sourceId = "3", episodeRange = EpisodeRange.single("2")),
-            media(sourceId = "4", episodeRange = EpisodeRange.single("3")),
-            media(sourceId = "5", episodeRange = EpisodeRange.single("4")),
+            media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB).also { userSelection = it },
+            media(sourceId = "2", episodeRange = EpisodeRange.season(1), kind = WEB),
+            media(sourceId = "3", episodeRange = EpisodeRange.single("2"), kind = WEB),
+            media(sourceId = "4", episodeRange = EpisodeRange.single("3"), kind = WEB),
+            media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
         selector.select(userSelection)
         assertEquals(1, selector.filteredCandidates.first().size) // 因为会自动设置 preference
@@ -621,7 +622,6 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             null,
             selector.trySelectFromMediaSources(
                 listOf("2"),
-                overrideUserSelection = false,
             ),
         )
     }
@@ -632,14 +632,14 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val target: DefaultMedia
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
         mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
-        savedUserPreference.value = MediaPreference.Empty
-        savedDefaultPreference.value = MediaPreference.Empty // 啥都不要, 就一定会 fallback 成选第一个
+        savedUserPreference.value = MediaPreference.Any
+        savedDefaultPreference.value = MediaPreference.Any
         addMedia(
-            media(sourceId = "1", episodeRange = EpisodeRange.single("1")).also { userSelection = it },
-            media(sourceId = "2", episodeRange = EpisodeRange.season(1)).also { target = it },
-            media(sourceId = "3", episodeRange = EpisodeRange.single("2")),
-            media(sourceId = "4", episodeRange = EpisodeRange.single("3")),
-            media(sourceId = "5", episodeRange = EpisodeRange.single("4")),
+            media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB).also { userSelection = it },
+            media(sourceId = "2", episodeRange = EpisodeRange.season(1), kind = WEB).also { target = it },
+            media(sourceId = "3", episodeRange = EpisodeRange.single("2"), kind = WEB),
+            media(sourceId = "4", episodeRange = EpisodeRange.single("3"), kind = WEB),
+            media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
         selector.select(userSelection)
         assertEquals(1, selector.filteredCandidates.first().size)
@@ -648,6 +648,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             selector.trySelectFromMediaSources(
                 listOf("2"),
                 overrideUserSelection = true,
+                allowNonPreferred = true,
             ),
         )
     }
@@ -658,14 +659,14 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val target: DefaultMedia
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
         mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
-        savedUserPreference.value = MediaPreference.Empty
-        savedDefaultPreference.value = MediaPreference.Empty // 啥都不要, 就一定会 fallback 成选第一个
+        savedUserPreference.value = MediaPreference.Any
+        savedDefaultPreference.value = MediaPreference.Any
         addMedia(
-            media(sourceId = "1", episodeRange = EpisodeRange.single("1")).also { userSelection = it },
-            media(sourceId = "2", episodeRange = EpisodeRange.season(1)).also { target = it },
-            media(sourceId = "3", episodeRange = EpisodeRange.single("2")),
-            media(sourceId = "4", episodeRange = EpisodeRange.single("3")),
-            media(sourceId = "5", episodeRange = EpisodeRange.single("4")),
+            media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB).also { userSelection = it },
+            media(sourceId = "2", episodeRange = EpisodeRange.season(1), kind = WEB).also { target = it },
+            media(sourceId = "3", episodeRange = EpisodeRange.single("2"), kind = WEB),
+            media(sourceId = "4", episodeRange = EpisodeRange.single("3"), kind = WEB),
+            media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
         selector.select(userSelection)
         assertEquals(1, selector.filteredCandidates.first().size)
@@ -674,6 +675,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             selector.trySelectFromMediaSources(
                 listOf("2"),
                 overrideUserSelection = true,
+                allowNonPreferred = true,
             ),
         )
         assertEquals(
@@ -687,14 +689,14 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val target: DefaultMedia
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
         mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
-        savedUserPreference.value = MediaPreference.Empty
-        savedDefaultPreference.value = MediaPreference.Empty // 啥都不要, 就一定会 fallback 成选第一个
+        savedUserPreference.value = MediaPreference.Any
+        savedDefaultPreference.value = MediaPreference.Any
         addMedia(
-            media(sourceId = "1", episodeRange = EpisodeRange.single("1")),
-            media(sourceId = "2", episodeRange = EpisodeRange.season(1)).also { target = it },
-            media(sourceId = "3", episodeRange = EpisodeRange.single("2")),
-            media(sourceId = "4", episodeRange = EpisodeRange.single("3")),
-            media(sourceId = "5", episodeRange = EpisodeRange.single("4")),
+            media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB),
+            media(sourceId = "2", episodeRange = EpisodeRange.season(1), kind = WEB).also { target = it },
+            media(sourceId = "3", episodeRange = EpisodeRange.single("2"), kind = WEB),
+            media(sourceId = "4", episodeRange = EpisodeRange.single("3"), kind = WEB),
+            media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
         assertEquals(5, selector.filteredCandidates.first().size)
         assertEquals(null, selector.trySelectFromMediaSources(listOf("2"), blacklistMediaIds = setOf(target.mediaId)))
@@ -705,14 +707,14 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val target: DefaultMedia
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
         mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
-        savedUserPreference.value = MediaPreference.Empty
-        savedDefaultPreference.value = MediaPreference.Empty // 啥都不要, 就一定会 fallback 成选第一个
+        savedUserPreference.value = MediaPreference.Any
+        savedDefaultPreference.value = MediaPreference.Any
         addMedia(
-            media(sourceId = "1", episodeRange = EpisodeRange.single("1")),
-            media(sourceId = "2", episodeRange = EpisodeRange.season(1)).also { target = it },
-            media(sourceId = "3", episodeRange = EpisodeRange.single("2")),
-            media(sourceId = "4", episodeRange = EpisodeRange.single("3")),
-            media(sourceId = "5", episodeRange = EpisodeRange.single("4")),
+            media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB),
+            media(sourceId = "2", episodeRange = EpisodeRange.season(1), kind = WEB).also { target = it },
+            media(sourceId = "3", episodeRange = EpisodeRange.single("2"), kind = WEB),
+            media(sourceId = "4", episodeRange = EpisodeRange.single("3"), kind = WEB),
+            media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
         assertEquals(5, selector.filteredCandidates.first().size)
         assertEquals(target, selector.trySelectFromMediaSources(listOf("2")))
@@ -723,11 +725,11 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val target: DefaultMedia
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
         mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
-        savedUserPreference.value = MediaPreference.Empty
-        savedDefaultPreference.value = MediaPreference.Empty // 啥都不要, 就一定会 fallback 成选第一个
+        savedUserPreference.value = MediaPreference.Any
+        savedDefaultPreference.value = MediaPreference.Any
         addMedia(
-            media(sourceId = "0", episodeRange = EpisodeRange.single("1")),
-            media(sourceId = "2", episodeRange = EpisodeRange.season(1)).also { target = it },
+            media(sourceId = "0", episodeRange = EpisodeRange.single("1"), kind = WEB),
+            media(sourceId = "2", episodeRange = EpisodeRange.season(1), kind = WEB).also { target = it },
         )
         assertEquals(2, selector.filteredCandidates.first().size)
         assertEquals(target, selector.trySelectFromMediaSources(listOf("1", "2", "3")))
@@ -738,14 +740,132 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val target: DefaultMedia
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
         mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
-        savedUserPreference.value = MediaPreference.Empty
-        savedDefaultPreference.value = MediaPreference.Empty // 啥都不要, 就一定会 fallback 成选第一个
+        savedUserPreference.value = MediaPreference.Any
+        savedDefaultPreference.value = MediaPreference.Any
         addMedia(
-            media(sourceId = "0", episodeRange = EpisodeRange.single("1")),
-            media(sourceId = "4", episodeRange = EpisodeRange.season(1)).also { target = it },
+            media(sourceId = "0", episodeRange = EpisodeRange.single("1"), kind = WEB),
+            media(sourceId = "4", episodeRange = EpisodeRange.season(1), kind = WEB).also { target = it },
         )
         assertEquals(2, selector.filteredCandidates.first().size)
         assertEquals(null, selector.trySelectFromMediaSources(listOf("1", "2", "3")))
+    }
+
+    @Test
+    fun `trySelectFromMediaSources does not select non-preferred`() = runTest {
+        mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
+        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
+        savedUserPreference.value = MediaPreference.Empty.copy(
+            alliance = "123123123", // matches nothing
+        )
+        savedDefaultPreference.value = MediaPreference.Empty // 啥都不要, 就一定会 fallback 成选第一个
+        addMedia(
+            media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB),
+        )
+        assertEquals(0, selector.filteredCandidates.first().size)
+        assertEquals(1, selector.mediaList.first().size)
+        assertEquals(null, selector.trySelectFromMediaSources(listOf("1"), allowNonPreferred = false))
+    }
+
+    @Test
+    fun `trySelectFromMediaSources does not select non-preferred if media source ids do not match`() = runTest {
+        val target: DefaultMedia
+        mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
+        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
+        savedUserPreference.value = MediaPreference.Any.copy(
+            alliance = "123123123", // matches nothing
+        )
+        savedDefaultPreference.value = MediaPreference.Any
+        addMedia(
+            media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB).also { target = it },
+        )
+        assertEquals(0, selector.filteredCandidates.first().size)
+        assertEquals(1, selector.mediaList.first().size)
+        assertEquals(null, selector.trySelectFromMediaSources(listOf("0"), allowNonPreferred = true))
+    }
+
+    @Test
+    fun `trySelectFromMediaSources can select non-preferred`() = runTest {
+        val target: DefaultMedia
+        mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
+        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
+        savedUserPreference.value = MediaPreference.Any.copy(
+            alliance = "123123123", // matches nothing
+        )
+        savedDefaultPreference.value = MediaPreference.Any
+        addMedia(
+            media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB).also { target = it },
+        )
+        assertEquals(0, selector.filteredCandidates.first().size)
+        assertEquals(1, selector.mediaList.first().size)
+        assertEquals(target, selector.trySelectFromMediaSources(listOf("1"), allowNonPreferred = true))
+    }
+
+    @Test
+    fun `trySelectFromMediaSources respects to preference`() = runTest {
+        mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
+        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
+        savedUserPreference.value = MediaPreference.Any.copy(
+            alliance = "2", // 用户偏好 2
+        )
+        savedDefaultPreference.value = MediaPreference.Any
+        val media1 = media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB)
+        val media2 = media(sourceId = "2", alliance = "2", episodeRange = EpisodeRange.single("2"), kind = WEB)
+        addMedia(
+            media1,
+            media2,
+        )
+        assertEquals(1, selector.filteredCandidates.first().size)
+        assertEquals(2, selector.mediaList.first().size)
+        assertEquals(
+            media2,
+            selector.trySelectFromMediaSources(
+                listOf("1", "2"),  // 顺序是 1 更先, 但是用户偏好 2, 所以要选择 2
+                allowNonPreferred = false,
+            ),
+        )
+        selector.unselect()
+        assertEquals(
+            media2,
+            selector.trySelectFromMediaSources(
+                listOf("1", "2"),
+                allowNonPreferred = true, // 仍然选 2, 因为只有在没有任何资源匹配偏好时才会选别的
+            ),
+        )
+    }
+
+    @Test
+    fun `trySelectFromMediaSources selects non-preferred if all preferred ones are blacklisted`() = runTest {
+        mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
+        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
+        savedUserPreference.value = MediaPreference.Any.copy(
+            alliance = "2", // 用户偏好 2
+        )
+        savedDefaultPreference.value = MediaPreference.Any
+        val media1 = media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB)
+        val media2 = media(sourceId = "2", alliance = "2", episodeRange = EpisodeRange.single("2"), kind = WEB)
+        addMedia(
+            media1,
+            media2,
+        )
+        assertEquals(1, selector.filteredCandidates.first().size)
+        assertEquals(2, selector.mediaList.first().size)
+        assertEquals(
+            null, // 用户偏好 2, 但是 2 被黑名单了, 而 allowNonPreferred = false, 选不了别的, 所以是 `null`
+            selector.trySelectFromMediaSources(
+                listOf("1", "2"),
+                allowNonPreferred = false,
+                blacklistMediaIds = setOf(media2.mediaId),
+            ),
+        )
+        selector.unselect()
+        assertEquals(
+            media1, // 用户偏好 2, 但是 2 被黑名单了, 但是 allowNonPreferred = true, 所以可以选别的
+            selector.trySelectFromMediaSources(
+                listOf("1", "2"),
+                allowNonPreferred = true,
+                blacklistMediaIds = setOf(media2.mediaId),
+            ),
+        )
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -762,7 +882,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         addMedia(
             media(alliance = "字幕组1", episodeRange = EpisodeRange.single("1")).also { target = it },
             media(
-                alliance = "字幕组2", episodeRange = EpisodeRange.single("2"), kind = MediaSourceKind.WEB,
+                alliance = "字幕组2", episodeRange = EpisodeRange.single("2"), kind = WEB,
             ),
             media(alliance = "字幕组6", episodeRange = EpisodeRange.single("1")),
             media(alliance = "字幕组3", episodeRange = EpisodeRange.single("2")),
@@ -781,9 +901,9 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             preferKind = MediaSourceKind.BitTorrent,
         )
         addMedia(
-            media(alliance = "字幕组1", episodeRange = EpisodeRange.single("1"), kind = MediaSourceKind.WEB),
+            media(alliance = "字幕组1", episodeRange = EpisodeRange.single("1"), kind = WEB),
             media(
-                alliance = "字幕组2", episodeRange = EpisodeRange.single("2"), kind = MediaSourceKind.WEB,
+                alliance = "字幕组2", episodeRange = EpisodeRange.single("2"), kind = WEB,
             ),
             media(alliance = "字幕组3", episodeRange = EpisodeRange.single("1")).also { target = it },
             media(alliance = "字幕组4", episodeRange = EpisodeRange.single("2")),
@@ -799,12 +919,12 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val target: DefaultMedia
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(false)
         mediaSelectorSettings.value = MediaSelectorSettings.Default.copy(
-            preferKind = MediaSourceKind.WEB,
+            preferKind = WEB,
         )
         addMedia(
             media(alliance = "字幕组1", episodeRange = EpisodeRange.single("1")),
             media(
-                alliance = "字幕组2", episodeRange = EpisodeRange.single("2"), kind = MediaSourceKind.WEB,
+                alliance = "字幕组2", episodeRange = EpisodeRange.single("2"), kind = WEB,
             ).also { target = it },
             media(alliance = "字幕组6", episodeRange = EpisodeRange.single("1")),
             media(alliance = "字幕组3", episodeRange = EpisodeRange.single("2")),

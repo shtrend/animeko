@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import me.him188.ani.app.data.models.preference.MediaPreference
+import me.him188.ani.app.data.models.preference.MediaPreference.Companion.ANY_FILTER
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
@@ -98,12 +99,13 @@ interface MediaSelector {
     /**
      * 根据提供的顺序 [mediaSourceOrder], 尝试选择一个 media.
      *
-     * 这会忽略一切用户偏好设置, 只根据数据源顺序选择. 将会选择在 list 中 index 越小的数据源.
-     *
+     * @param mediaSourceOrder 数据源顺序. 会优先选择 index 小的数据源中的 media.
      * @param overrideUserSelection 是否覆盖用户选择.
      * 若为 `true`, 则会忽略用户目前的选择, 使用此函数的结果替换选择.
      * 若为 `false`, 如果用户已经选择了一个 media, 则此函数不会做任何事情.
      * @param blacklistMediaIds 黑名单, 这些 media 不会被选择. 如果遇到黑名单中的 media, 将会跳过.
+     * @param allowNonPreferred 是否允许选择不满足用户偏好设置的项目. 如果为 `false`, 将只会从 [filteredCandidates] 中选择.
+     * 如果为 `true`, 则放弃用户偏好, 只根据数据源顺序选择.
      *
      * @return 成功选择且已经记录的 [Media]. 返回 `null` 时表示没有选择.
      */
@@ -111,6 +113,7 @@ interface MediaSelector {
         mediaSourceOrder: List<String>,
         overrideUserSelection: Boolean = false,
         blacklistMediaIds: Set<String> = emptySet(),
+        allowNonPreferred: Boolean = false,
     ): Media?
 
     /**
@@ -191,8 +194,11 @@ class DefaultMediaSelector(
             mediaList: List<Media>,
             mergedPreferences: MediaPreference,
         ): List<Media> {
-            infix fun <Pref : Any> Pref?.matches(prop: Pref): Boolean = this == null || this == prop
-            infix fun <Pref : Any> Pref?.matches(prop: List<Pref>): Boolean = this == null || this in prop
+            infix fun <Pref : Any> Pref?.matches(prop: Pref): Boolean =
+                this == null || this == prop || this == ANY_FILTER
+
+            infix fun <Pref : Any> Pref?.matches(prop: List<Pref>): Boolean =
+                this == null || this in prop || this == ANY_FILTER
 
             /**
              * 当 [it] 满足当前筛选条件时返回 `true`.
@@ -363,10 +369,14 @@ class DefaultMediaSelector(
         return selectImpl(candidate, updatePreference = true)
     }
 
-    private suspend fun selectImpl(candidate: Media, updatePreference: Boolean): Boolean {
+    /**
+     * 选择一个 [Media].设置为 [selected], 并广播事件.
+     * @param force 是否强制选择, 即使 [selected] 已经是 [candidate] 时也会选择.
+     */
+    private suspend fun selectImpl(candidate: Media, updatePreference: Boolean, force: Boolean = false): Boolean {
         events.onBeforeSelect.emit(SelectEvent(candidate, null))
-        if (selected.value == candidate) return false
-        selected.value = candidate
+        if (selected.value == candidate && !force) return false
+        selected.value = candidate // MSF, will not trigger new emit
 
         if (updatePreference) {
             alliance.preferWithoutBroadcast(candidate.properties.alliance)
@@ -408,11 +418,14 @@ class DefaultMediaSelector(
         )
     }
 
-
-    override suspend fun trySelectDefault(): Media? {
-        if (selected.value != null) return null
-
-        val mergedPreference = newPreferences.first()
+    /**
+     * 参照用户偏好和各种限制设置, 从 [candidates] 中选择出最合适的 media.
+     * 不会调用 [selectImpl] nor [selectDefault], 也就是说不会更新 [selected]
+     */
+    private suspend fun findUsingPreferenceFromCandidates(
+        candidates: List<Media>,
+        mergedPreference: MediaPreference,
+    ): Media? {
         val selectedSubtitleLanguageId = mergedPreference.subtitleLanguageId
         val selectedResolution = mergedPreference.resolution
         val selectedAlliance = mergedPreference.alliance
@@ -420,8 +433,6 @@ class DefaultMediaSelector(
         val allianceRegexes = mergedPreference.alliancePatterns.orEmpty().map { it.toRegex() }
         val availableAlliances = alliance.available.first()
 
-        val candidates = filteredCandidates.first()
-        if (candidates.isEmpty()) return null
 
         val mediaSelectorContext = mediaSelectorContext.filter {
             it.allFieldsLoaded()
@@ -433,8 +444,6 @@ class DefaultMediaSelector(
                 && mediaSelectorSettings.preferSeasons
 
         val preferKind = mediaSelectorSettings.preferKind
-
-        val anyFilter = "*"
 
         val languageIds = sequence {
             selectedSubtitleLanguageId?.let {
@@ -456,7 +465,7 @@ class DefaultMediaSelector(
                 return@sequence
             }
             if (allianceRegexes.isEmpty()) {
-                yield("*")
+                yield(ANY_FILTER)
             } else {
                 for (regex in allianceRegexes) {
                     for (alliance in availableAlliances) {
@@ -498,12 +507,10 @@ class DefaultMediaSelector(
                 return null
             }
             if (shouldPreferSeasons) {
-                return selectDefault(
-                    list.fastFirstOrNull { it.episodeRange?.hasSeason() == null }
-                        ?: list.first(),
-                )
+                return list.fastFirstOrNull { it.episodeRange?.hasSeason() == null }
+                    ?: list.first()
             }
-            return selectDefault(list.first())
+            return list.first()
         }
 
         // TODO: too complex, should refactor
@@ -511,26 +518,26 @@ class DefaultMediaSelector(
         fun selectImpl(candidates: List<Media>): Media? {
             for (resolution in resolutions) { // DFS 尽可能匹配第一个分辨率
                 val filteredByResolution =
-                    if (resolution == anyFilter) candidates
+                    if (resolution == ANY_FILTER) candidates
                     else candidates.filter { resolution == it.properties.resolution }
                 if (filteredByResolution.isEmpty()) continue
 
                 for (languageId in languageIds) {
                     val filteredByLanguage =
-                        if (languageId == anyFilter) filteredByResolution
+                        if (languageId == ANY_FILTER) filteredByResolution
                         else filteredByResolution.filter { languageId in it.properties.subtitleLanguageIds }
                     if (filteredByLanguage.isEmpty()) continue
 
                     for (alliance in alliances) { // 能匹配第一个最好
                         // 这里是消耗最大的地方, 因为有正则匹配
                         val filteredByAlliance =
-                            if (alliance == anyFilter) filteredByLanguage
+                            if (alliance == ANY_FILTER) filteredByLanguage
                             else filteredByLanguage.filter { alliance == it.properties.alliance }
                         if (filteredByAlliance.isEmpty()) continue
 
                         for (mediaSource in mediaSources) {
                             val filteredByMediaSource =
-                                if (mediaSource == anyFilter) filteredByAlliance
+                                if (mediaSource == ANY_FILTER) filteredByAlliance
                                 else filteredByAlliance.filter {
                                     mediaSource == null || mediaSource == it.mediaSourceId
                                 }
@@ -543,7 +550,7 @@ class DefaultMediaSelector(
 
                     for (mediaSource in mediaSources) {
                         val filteredByMediaSource =
-                            if (mediaSource == anyFilter) filteredByLanguage
+                            if (mediaSource == ANY_FILTER) filteredByLanguage
                             else filteredByLanguage.filter {
                                 mediaSource == null || mediaSource == it.mediaSourceId
                             }
@@ -571,27 +578,64 @@ class DefaultMediaSelector(
             }
         }
         selectImpl(candidates)?.let { return it }
-
         return selectAny(candidates)
+    }
+
+    override suspend fun trySelectDefault(): Media? {
+        if (selected.value != null) return null
+        val candidates = filteredCandidates.first()
+        if (candidates.isEmpty()) return null
+        val mergedPreference = newPreferences.first()
+        return findUsingPreferenceFromCandidates(candidates, mergedPreference)?.let {
+            selectDefault(it)
+        }
     }
 
     override suspend fun trySelectFromMediaSources(
         mediaSourceOrder: List<String>,
         overrideUserSelection: Boolean,
-        blacklistMediaIds: Set<String>
+        blacklistMediaIds: Set<String>,
+        allowNonPreferred: Boolean
     ): Media? {
         if (mediaSourceOrder.isEmpty()) return null
 
-        val candidates = mediaList.first()
-        if (candidates.isEmpty()) return null
+        val selected = run {
+            val mergedPreference = newPreferences.first()
+            findUsingPreferenceFromCandidates(
+                filteredCandidates.first()
+                    .filter { it.mediaSourceId in mediaSourceOrder && it.mediaId !in blacklistMediaIds }
+                    .sortedBy { mediaSourceOrder.indexOf(it.mediaSourceId) },
+                mergedPreference.copy(
+                    alliance = ANY_FILTER,
+                ),
+            )?.let { return@run it } // 先考虑用户偏好
 
-        val selected = mediaSourceOrder.firstNotNullOfOrNull { mediaSourceId ->
-            candidates.fastFirstOrNull { it.mediaSourceId == mediaSourceId && it.mediaId !in blacklistMediaIds }
+            if (allowNonPreferred) {
+
+                // 如果用户偏好里面没有, 并且允许选择非偏好的, 才考虑全部列表
+                findUsingPreferenceFromCandidates(
+                    mediaList.first()
+                        .filter { it.mediaSourceId in mediaSourceOrder && it.mediaId !in blacklistMediaIds }
+                        .sortedBy { mediaSourceOrder.indexOf(it.mediaSourceId) },
+                    mergedPreference.copy(
+                        alliance = ANY_FILTER,
+                        resolution = ANY_FILTER,
+                        subtitleLanguageId = ANY_FILTER,
+                        mediaSourceId = ANY_FILTER,
+                    ),
+                )?.let { return@run it }
+            }
+            null
         }
+        // 实际上 this.selected 已经更新了
+
         return selected?.let {
             if (overrideUserSelection) {
-                selectImpl(it, updatePreference = false)
-                it
+                if (selectImpl(it, updatePreference = false)) {
+                    it
+                } else {
+                    null
+                }
             } else {
                 selectDefault(it)
             }

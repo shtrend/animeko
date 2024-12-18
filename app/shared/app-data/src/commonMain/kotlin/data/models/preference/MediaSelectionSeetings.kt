@@ -14,6 +14,8 @@ import androidx.compose.runtime.Stable
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import me.him188.ani.datasources.api.source.MediaSourceKind
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * 数据源选择器 (播放页面点击 "数据源" 按钮弹出的) 的设置
@@ -47,6 +49,16 @@ constructor(
      * @since 3.5
      */
     val preferKind: MediaSourceKind? = null, // 旧用户不 prefer
+    /**
+     * 快速选择在线数据源 [MediaSourceKind.WEB]
+     * @since 4.1
+     */
+    val fastSelectWebKind: Boolean = true,
+    /**
+     * 在快速选择在线数据源时, 多少毫秒后允许选择非偏好数据源
+     * @since 4.1
+     */
+    val fastSelectWebKindAllowNonPreferredDelay: Duration = 3.seconds, // 注意, 这是 'enum'. 查看 UI 代码以确定有哪些值可以选.
     @Suppress("PropertyName") @Transient val _placeholder: Int = 0,
 ) {
     companion object {

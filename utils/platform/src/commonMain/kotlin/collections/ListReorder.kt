@@ -171,6 +171,6 @@ fun <T, Key : Comparable<Key>> List<T>.partiallyReorderBy(
 /**
  * Convenience method when [T] is comparable and the key is the element itself.
  */
-fun <T : Comparable<T>> MutableList<T>.partiallyReorderBy(
+fun <T : Comparable<T>> List<T>.partiallyReorderBy(
     newPartialOrder: List<T>
 ) = partiallyReorderBy({ it }, newPartialOrder)
