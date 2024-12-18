@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -434,6 +435,7 @@ private class EpisodeViewModelImpl(
         }
         if (positionMillis in 0..<durationMillis) {
             launchInBackground {
+                logger.info { "Saving position for epId=$epId: ${positionMillis.milliseconds}" }
                 episodePlayHistoryRepository.saveOrUpdate(epId, positionMillis)
             }
         }
@@ -878,7 +880,12 @@ private class EpisodeViewModelImpl(
                     PlaybackState.READY -> {
                         val positionMillis =
                             episodePlayHistoryRepository.getPositionMillisByEpisodeId(episodeId = episodeId.value)
-                        positionMillis?.let {
+                        if (positionMillis == null) {
+                            logger.info { "Did not find saved position" }
+                        } else {
+                            logger.info { "Loaded saved position: $positionMillis, waiting for video properties" }
+                            playerState.videoProperties.filter { it != null && it.durationMillis > 0L }.firstOrNull()
+                            logger.info { "Loaded saved position: $positionMillis, video properties ready, seeking" }
                             withContext(Dispatchers.Main) { // android must call in main thread
                                 playerState.seekTo(positionMillis)
                             }
@@ -887,8 +894,14 @@ private class EpisodeViewModelImpl(
 
                     PlaybackState.PAUSED -> savePlayProgress()
 
-                    PlaybackState.FINISHED ->
-                        episodePlayHistoryRepository.remove(episodeId.value)
+                    PlaybackState.FINISHED -> {
+                        if (playerState.videoProperties.value.let { it != null && it.durationMillis > 0L }) {
+                            // 视频长度有效, 说明正常播放中
+                            episodePlayHistoryRepository.remove(episodeId.value)
+                        } else {
+                            // 视频加载失败或者在切换数据源时又切换了另一个数据源, 不要删除记录
+                        }
+                    }
 
                     else -> Unit
                 }

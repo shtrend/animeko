@@ -511,9 +511,11 @@ class VlcjVideoPlayerState(parentCoroutineContext: CoroutineContext) : PlayerSta
     override fun seekTo(positionMillis: Long) {
         @Suppress("NAME_SHADOWING")
         val positionMillis = positionMillis.coerceIn(0, videoProperties.value?.durationMillis ?: 0)
-        if (positionMillis == currentPositionMillis.value) {
-            return
-        }
+
+        // 不要检查这个, 当切换数据源后, `currentPositionMillis` 可能没有更新.
+//        if (positionMillis == currentPositionMillis.value) {
+//            return
+//        }
 
         currentPositionMillis.value = positionMillis
         player.submit {
