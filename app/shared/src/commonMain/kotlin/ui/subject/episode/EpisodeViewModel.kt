@@ -355,10 +355,22 @@ private class EpisodeViewModelImpl(
                         )
 
                         var result = doSelect(
-                            allowNonPreferred = flow {   // 5 秒未查找到偏好资源, 则允许非偏好资源
-                                emit(false)
-                                delay(mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay)
-                                emit(true)
+                            allowNonPreferred = flow {
+                                when (val delay = mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay) {
+                                    Duration.ZERO -> {
+                                        emit(true)
+                                    }
+
+                                    Duration.INFINITE -> {
+                                        emit(false)
+                                    }
+
+                                    else -> {
+                                        emit(false)
+                                        delay(delay)
+                                        emit(true)
+                                    }
+                                }
                             },
                         )
                         if (result == null && mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay != Duration.INFINITE) {
