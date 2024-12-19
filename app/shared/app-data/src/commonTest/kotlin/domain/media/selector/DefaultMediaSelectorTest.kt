@@ -914,6 +914,51 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    // 排除第二季 (#1324)
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Test
+    fun `respect to subjectSequelNames`() = runTest {
+        mediaSelectorContext.value = createMediaSelectorContextFromEmpty(
+            false,
+            subjectSequelNames = setOf("孤独摇滚 第二季"),
+        )
+        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy()
+        savedUserPreference.value = MediaPreference.Any.copy(alliance = "1") // prefer 被过滤掉的那个, 以便测试
+        savedDefaultPreference.value = MediaPreference.Any
+        val target: DefaultMedia
+        val media1 = media(
+            sourceId = "1",
+            originalTitle = "孤独摇滚 第二季",
+            episodeRange = EpisodeRange.single("1"),
+            kind = WEB,
+        )
+        val media2 = media(
+            sourceId = "2",
+            originalTitle = "孤独摇滚",
+            alliance = "2",
+            episodeRange = EpisodeRange.single("2"),
+            kind = WEB,
+        ).also {
+            target = it
+        }
+        addMedia(media1, media2)
+        assertEquals(0, selector.filteredCandidates.first().size)
+        assertEquals(1, selector.mediaList.first().size)
+        assertEquals(
+            null,
+            selector.trySelectDefault(),
+        )
+        assertEquals(
+            target,
+            selector.trySelectFromMediaSources(
+                listOf("1", "2"),
+                allowNonPreferred = true,
+            ),
+        )
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     // 优先选择在线数据源
     ///////////////////////////////////////////////////////////////////////////
 

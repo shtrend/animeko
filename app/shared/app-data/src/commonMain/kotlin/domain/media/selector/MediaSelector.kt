@@ -285,6 +285,12 @@ class DefaultMediaSelector(
                 }
             }
 
+            context.subjectSequelNames?.forEach { name ->
+                if (name.isNotBlank() && name in media.originalTitle) {
+                    return@filter false // 是其他季度
+                }
+            }
+
             true
         }
 

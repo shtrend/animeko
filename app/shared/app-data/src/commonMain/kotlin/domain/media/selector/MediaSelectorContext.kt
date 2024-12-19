@@ -13,7 +13,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.data.repository.RepositoryUnknownException
 import me.him188.ani.app.domain.mediasource.instance.MediaSourceInstance
+import me.him188.ani.utils.coroutines.retryWithBackoffDelay
+import me.him188.ani.utils.logging.error
+import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.warn
 import kotlin.jvm.JvmName
 
 data class MediaSelectorContext(
@@ -32,18 +38,32 @@ data class MediaSelectorContext(
      * 用于针对各个平台的播放器缺陷，调整选择资源的优先级
      */
     val subtitlePreferences: MediaSelectorSubtitlePreferences?,
+    /**
+     * 该条目的续集条目的名称. 用于在选择资源时排除相关条目的资源.
+     */
+    val subjectSequelNames: Set<String>?
 ) {
     fun allFieldsLoaded() = subjectFinished != null
             && mediaSourcePrecedence != null
             && subtitlePreferences != null
+            && subjectSequelNames != null
 
     companion object {
         /**
          * 刚开始查询时的默认值
          */
-        val Initial = MediaSelectorContext(null, null, null)
+        val Initial = MediaSelectorContext(null, null, null, null)
 
-        val EmptyForPreview get() = MediaSelectorContext(false, emptyList(), MediaSelectorSubtitlePreferences.AllNormal)
+        val EmptyForPreview
+            get() = MediaSelectorContext(
+                false,
+                emptyList(),
+                MediaSelectorSubtitlePreferences.AllNormal,
+                emptySet(),
+            )
+
+
+        internal val logger = logger<MediaSelectorContext>()
     }
 }
 
@@ -54,13 +74,27 @@ fun MediaSelectorContext.Companion.createFlow(
     subjectCompleted: Flow<Boolean>,
     mediaSourcePrecedence: Flow<List<String>>,
     subtitleKindFilters: Flow<MediaSelectorSubtitlePreferences>,
+    sequelSubjectNames: Flow<Set<String>>,
 ): Flow<MediaSelectorContext> = combine(
-    subjectCompleted, mediaSourcePrecedence, subtitleKindFilters,
-) { completed, instances, filters ->
+    subjectCompleted,
+    mediaSourcePrecedence,
+    subtitleKindFilters,
+    sequelSubjectNames.retryWithBackoffDelay { e, _ ->
+        val wrapped = RepositoryException.wrapOrThrowCancellation(e)
+        if (wrapped is RepositoryUnknownException) {
+            logger.warn { "Failed to load related subject names due to $wrapped" }
+        } else {
+            logger.error(wrapped) { "Failed to load related subject names" }
+        }
+        emit(emptySet())
+        true
+    },
+) { completed, instances, filters, sequels ->
     MediaSelectorContext(
         subjectFinished = completed,
         mediaSourcePrecedence = instances,
         subtitlePreferences = filters,
+        subjectSequelNames = sequels,
     )
 }.onStart {
     emit(Initial) // 否则如果一直没获取到剧集信息, 就无法选集, #385
@@ -74,10 +108,12 @@ fun MediaSelectorContext.Companion.createFlow(
     subjectCompleted: Flow<Boolean>,
     mediaSourcePrecedence: Flow<List<MediaSourceInstance>>,
     subtitleKindFilters: Flow<MediaSelectorSubtitlePreferences>,
+    sequelSubjectNames: Flow<Set<String>>,
 ): Flow<MediaSelectorContext> = createFlow(
     subjectCompleted,
     mediaSourcePrecedence.map { list ->
         list.map { it.mediaSourceId }
     },
     subtitleKindFilters,
+    sequelSubjectNames,
 )

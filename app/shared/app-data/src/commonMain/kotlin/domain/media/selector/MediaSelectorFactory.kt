@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.media.EpisodePreferencesRepository
+import me.him188.ani.app.data.repository.subject.SubjectRelationsRepository
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.media.fetch.MediaSourceManager
 import me.him188.ani.app.domain.media.selector.MediaSelectorFactory.Companion.withRepositories
@@ -40,6 +41,7 @@ interface MediaSelectorFactory {
             settingsRepository = koin.get(),
             episodeCollectionRepository = koin.get(),
             mediaSourceManager = koin.get(),
+            subjectRelationsRepository = koin.get(),
         )
 
         fun withRepositories(
@@ -47,6 +49,7 @@ interface MediaSelectorFactory {
             settingsRepository: SettingsRepository,
             episodeCollectionRepository: EpisodeCollectionRepository,
             mediaSourceManager: MediaSourceManager,
+            subjectRelationsRepository: SubjectRelationsRepository,
             subtitlePreferences: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.CurrentPlatform,
         ): MediaSelectorFactory = object : MediaSelectorFactory {
             override fun create(
@@ -59,6 +62,7 @@ interface MediaSelectorFactory {
                         episodeCollectionRepository.subjectCompletedFlow(subjectId),
                         mediaSourceManager.allInstances,
                         flowOf(subtitlePreferences),
+                        subjectRelationsRepository.subjectSequelSubjectNamesFlow(subjectId),
                     ),
                     mediaList,
                     savedUserPreference = episodePreferencesRepository.mediaPreferenceFlow(subjectId),

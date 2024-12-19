@@ -68,6 +68,7 @@ class MediaSelectorAutoSelectTest {
             subjectFinished = false,
             mediaSourcePrecedence = emptyList(),
             subtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
+            subjectSequelNames = emptySet(),
         ),
     )
 

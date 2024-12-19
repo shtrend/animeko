@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.configIfEnabledOrNull
+import me.him188.ani.app.data.network.AniSubjectRelationIndexService
 import me.him188.ani.app.data.network.AnimeScheduleService
 import me.him188.ani.app.data.network.BangumiBangumiCommentServiceImpl
 import me.him188.ani.app.data.network.BangumiCommentService
@@ -204,6 +205,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
             database.subjectRelations(),
             bangumiSubjectService = get(),
             subjectCollectionRepository = get(),
+            aniSubjectRelationIndexService = get(),
         )
     }
 
@@ -253,6 +255,9 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
     }
     single<EpisodePlayHistoryRepository> {
         EpisodePlayHistoryRepository(getContext().dataStores.episodeHistoryStore)
+    }
+    single<AniSubjectRelationIndexService> {
+        AniSubjectRelationIndexService(lazy { get<AniAuthClient>().subjectRelationsApi })
     }
     single<PeerFilterSubscriptionRepository> {
         val settings = get<SettingsRepository>()
@@ -377,7 +382,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
             webEpisodeInfoDao = database.webSearchEpisodeInfoDao(),
         )
     }
-    
+
     // Caching
 
     single<MediaAutoCacheService> {

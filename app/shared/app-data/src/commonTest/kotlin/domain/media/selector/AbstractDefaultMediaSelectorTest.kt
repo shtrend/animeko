@@ -10,9 +10,9 @@
 package me.him188.ani.app.domain.media.selector
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.domain.media.createTestDefaultMedia
-import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.MediaExtraFiles
@@ -40,11 +40,7 @@ sealed class AbstractDefaultMediaSelectorTest {
     protected val savedDefaultPreference = MutableStateFlow(DEFAULT_PREFERENCE)
     protected val mediaSelectorSettings = MutableStateFlow(MediaSelectorSettings.Default)
     protected val mediaSelectorContext = MutableStateFlow(
-        MediaSelectorContext(
-            subjectFinished = false,
-            mediaSourcePrecedence = emptyList(),
-            subtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
-        ),
+        createMediaSelectorContextFromEmpty(),
     )
 
     protected fun setSubtitlePreferences(
@@ -97,12 +93,14 @@ sealed class AbstractDefaultMediaSelectorTest {
         fun createMediaSelectorContextFromEmpty(
             subjectCompleted: Boolean = false,
             mediaSourcePrecedence: List<String> = emptyList(),
-            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal
+            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
+            subjectSequelNames: Set<String> = emptySet(),
         ) =
             MediaSelectorContext(
                 subjectFinished = subjectCompleted,
                 mediaSourcePrecedence = mediaSourcePrecedence,
                 subtitlePreferences = subtitleKindFilters,
+                subjectSequelNames = subjectSequelNames,
             )
     }
 
@@ -119,12 +117,13 @@ sealed class AbstractDefaultMediaSelectorTest {
         episodeRange: EpisodeRange = EpisodeRange.single(EpisodeSort(1)),
         subtitleKind: SubtitleKind? = null,
         extraFiles: MediaExtraFiles = MediaExtraFiles.Empty,
+        id: Int = mediaId++,
+        originalTitle: String = "[字幕组] 孤独摇滚 $id",
     ): DefaultMedia {
-        val id = mediaId++
         return createTestDefaultMedia(
             mediaId = "$sourceId.$id",
             mediaSourceId = sourceId,
-            originalTitle = "[字幕组] 孤独摇滚 $id",
+            originalTitle = originalTitle,
             download = ResourceLocation.MagnetLink("magnet:?xt=urn:btih:$id"),
             originalUrl = "https://example.com/$id",
             publishedTime = publishedTime,

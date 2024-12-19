@@ -21,6 +21,8 @@ import me.him188.ani.app.data.models.subject.CharacterInfo
 import me.him188.ani.app.data.models.subject.PersonInfo
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
 import me.him188.ani.app.data.models.subject.RelatedPersonInfo
+import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
+import me.him188.ani.app.data.network.AniSubjectRelationIndexService
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.BatchSubjectRelations
 import me.him188.ani.app.data.persistent.database.dao.RelatedCharacterView
@@ -43,6 +45,21 @@ import kotlin.time.Duration.Companion.milliseconds
 sealed class SubjectRelationsRepository(
     defaultDispatcher: CoroutineContext = Dispatchers.Default
 ) : Repository(defaultDispatcher) {
+    /**
+     * 获取指定条目的所有续集 ID 列表, 包含正片和 SP 等特殊剧集. (仅包含 Anime 类型)
+     */
+    abstract fun subjectSequelSubjectIdsFlow(subjectId: Int): Flow<List<Int>>
+
+    /**
+     * 获取指定条目的所有续集列表, 包含正片和 SP 等特殊剧集. (仅包含 Anime 类型)
+     */
+    abstract fun subjectSequelSubjectsFlow(subjectId: Int): Flow<List<SubjectCollectionInfo>>
+
+    /**
+     * 获取指定条目的所有续集的名称列表, 包含正片和 SP 等特殊剧集, 并排除 [subjectId] 的名称. (仅包含 Anime 类型)
+     */
+    abstract fun subjectSequelSubjectNamesFlow(subjectId: Int): Flow<Set<String>>
+
     abstract fun subjectRelatedPersonsFlow(subjectId: Int): Flow<List<RelatedPersonInfo>>
     abstract fun subjectRelatedCharactersFlow(subjectId: Int): Flow<List<RelatedCharacterInfo>>
 }
@@ -52,10 +69,36 @@ class DefaultSubjectRelationsRepository(
     private val subjectRelationsDao: SubjectRelationsDao,
     private val bangumiSubjectService: BangumiSubjectService,
     private val subjectCollectionRepository: SubjectCollectionRepository,
+    private val aniSubjectRelationIndexService: AniSubjectRelationIndexService,
     defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val autoRefreshPeriod: Duration = 1.hours,
     private val cacheExpiry: Duration = 1.hours,
 ) : SubjectRelationsRepository(defaultDispatcher) {
+    override fun subjectSequelSubjectIdsFlow(subjectId: Int): Flow<List<Int>> = flow {
+        emit(aniSubjectRelationIndexService.getSubjectSequelSubjects(subjectId))
+    }.flowOn(defaultDispatcher) // no auto refresh
+
+    override fun subjectSequelSubjectsFlow(subjectId: Int): Flow<List<SubjectCollectionInfo>> {
+        // no auto refresh
+        return subjectSequelSubjectIdsFlow(subjectId)
+            .flatMapLatest { list ->
+                combine(
+                    list.map { relatedSubjectId ->
+                        subjectCollectionRepository.subjectCollectionFlow(relatedSubjectId)
+                    },
+                ) {
+                    it.toList()
+                }
+            }.flowOn(defaultDispatcher)
+    }
+
+    override fun subjectSequelSubjectNamesFlow(subjectId: Int): Flow<Set<String>> {
+        return subjectSequelSubjectsFlow(subjectId)
+            .combine(subjectCollectionRepository.subjectCollectionFlow(subjectId)) { list, requestingSubject ->
+                list.flatMapTo(mutableSetOf()) { it.subjectInfo.allNames } - requestingSubject.subjectInfo.allNames
+            }
+    }
+
     override fun subjectRelatedPersonsFlow(subjectId: Int): Flow<List<RelatedPersonInfo>> {
         return subjectCollectionRepository.subjectCollectionFlow(subjectId)
             .autoRefresh()

@@ -46,6 +46,7 @@ import me.him188.ani.app.data.models.subject.nameCnOrName
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.media.EpisodePreferencesRepository
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
+import me.him188.ani.app.data.repository.subject.SubjectRelationsRepository
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.episode.EpisodeCompletionContext.isKnownCompleted
 import me.him188.ani.app.domain.media.cache.MediaCacheManager
@@ -98,6 +99,7 @@ class SubjectCacheViewModelImpl(
     private val cacheManager: MediaCacheManager by inject()
     private val mediaSourceManager: MediaSourceManager by inject()
     private val episodePreferencesRepository: EpisodePreferencesRepository by inject()
+    private val subjectRelationsRepository: SubjectRelationsRepository by inject()
 
     private val subjectInfoFlow = subjectCollectionRepository.subjectCollectionFlow(subjectId)
         .retryWithBackoffDelay()

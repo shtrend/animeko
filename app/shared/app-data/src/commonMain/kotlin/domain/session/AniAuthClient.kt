@@ -26,6 +26,7 @@ import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.platform.getAniUserAgent
 import me.him188.ani.client.apis.BangumiOAuthAniApi
 import me.him188.ani.client.apis.ScheduleAniApi
+import me.him188.ani.client.apis.SubjectRelationsAniApi
 import me.him188.ani.client.apis.TrendsAniApi
 import me.him188.ani.client.models.AniBangumiUserToken
 import me.him188.ani.client.models.AniRefreshBangumiTokenRequest
@@ -74,6 +75,11 @@ class AniAuthClient : AutoCloseable {
     )
 
     private val oauthApi = BangumiOAuthAniApi(
+        baseUrl = currentAniBuildConfig.aniAuthServerUrl,
+        httpClient,
+    )
+
+    val subjectRelationsApi = SubjectRelationsAniApi(
         baseUrl = currentAniBuildConfig.aniAuthServerUrl,
         httpClient,
     )

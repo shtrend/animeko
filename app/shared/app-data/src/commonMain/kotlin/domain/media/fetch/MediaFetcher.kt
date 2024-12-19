@@ -122,16 +122,6 @@ fun MediaFetchRequest.Companion.create(
     )
 }
 
-/**
- * 根据 [SubjectInfo] 和 [EpisodeInfo] 创建一个 [MediaFetchRequest].
- * @see create
- */
-fun MediaFetchRequest.Companion.createFlow(
-    info: Flow<Pair<SubjectInfo, EpisodeInfo>>,
-): Flow<MediaFetchRequest> = info.map { (subject, episode) ->
-    MediaFetchRequest.create(subject = subject, episode = episode)
-}
-
 class MediaFetcherConfig { // 战未来
     companion object {
         val Default = MediaFetcherConfig()
