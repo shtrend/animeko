@@ -32,7 +32,7 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param clientPlatforms
+ * @param clientPlatforms 
  * @param id 
  * @param largeAvatar 
  * @param lastLoginTime 

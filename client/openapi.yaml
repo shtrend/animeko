@@ -908,6 +908,81 @@
         },
         "deprecated": false
       }
+    },
+    "/v1/subs/proxy": {
+      "get": {
+        "tags": [ "Subscriptions" ],
+        "summary": "获取订阅数据",
+        "description": "获取订阅数据",
+        "operationId": "getSubscriptionData",
+        "parameters": [ {
+          "name": "url",
+          "in": "path",
+          "required": true,
+          "deprecated": false,
+          "allowEmptyValue": true,
+          "explode": false,
+          "allowReserved": true,
+          "schema": {
+            "title": "String",
+            "type": "string"
+          }
+        } ],
+        "responses": {
+          "200": {
+            "description": "成功获取订阅数据",
+            "headers": { },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "JsonObject",
+                  "type": "object",
+                  "additionalProperties": {
+                    "title": "*",
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    },
+    "/v1/subject-relations/{subjectId}": {
+      "get": {
+        "tags": [ "Subject Relations" ],
+        "summary": "获取关联条目",
+        "description": "获取关联条目",
+        "operationId": "getSubjectRelations",
+        "parameters": [ {
+          "name": "subjectId",
+          "in": "path",
+          "required": true,
+          "deprecated": false,
+          "allowEmptyValue": true,
+          "explode": false,
+          "allowReserved": true,
+          "schema": {
+            "title": "String",
+            "type": "string"
+          }
+        } ],
+        "responses": {
+          "200": {
+            "description": "成功获取关联条目",
+            "headers": { },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectRelations"
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
     }
   },
   "components": {
@@ -1367,6 +1442,27 @@
             "items": {
               "$ref": "#/components/schemas/AnimeRecurrence"
             }
+          }
+        }
+      },
+      "SubjectRelations": {
+        "title": "SubjectRelations",
+        "required": [ "sequelSubjects", "subjectId" ],
+        "type": "object",
+        "properties": {
+          "sequelSubjects": {
+            "title": "List<Int>",
+            "type": "array",
+            "items": {
+              "title": "Int",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "subjectId": {
+            "title": "Int",
+            "type": "integer",
+            "format": "int32"
           }
         }
       }

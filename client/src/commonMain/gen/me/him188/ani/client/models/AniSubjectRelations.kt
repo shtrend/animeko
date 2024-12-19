@@ -24,6 +24,7 @@
 
 package me.him188.ani.client.models
 
+
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -31,31 +32,16 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param aliases
- * @param bangumiId
- * @param name 
- * @param begin 
- * @param end 
- * @param mikanId 
- * @param recurrence 
+ * @param sequelSubjects
+ * @param subjectId 
  */
 @Serializable
 
-data class AniOnAirAnimeInfo(
+data class AniSubjectRelations(
 
-    @SerialName(value = "aliases") @Required val aliases: kotlin.collections.List<kotlin.String>,
+    @SerialName(value = "sequelSubjects") @Required val sequelSubjects: kotlin.collections.List<kotlin.Int>,
 
-    @SerialName(value = "bangumiId") @Required val bangumiId: kotlin.Int,
-
-    @SerialName(value = "name") @Required val name: kotlin.String,
-
-    @SerialName(value = "begin") val begin: kotlin.String? = null,
-
-    @SerialName(value = "end") val end: kotlin.String? = null,
-
-    @SerialName(value = "mikanId") val mikanId: kotlin.Int? = null,
-
-    @SerialName(value = "recurrence") val recurrence: AniAnimeRecurrence? = null
+    @SerialName(value = "subjectId") @Required val subjectId: kotlin.Int
 
 )
 

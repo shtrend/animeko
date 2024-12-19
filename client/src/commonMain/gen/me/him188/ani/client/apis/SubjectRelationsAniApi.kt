@@ -24,7 +24,7 @@
 
 package me.him188.ani.client.apis
 
-import me.him188.ani.client.models.AniAniUser
+import me.him188.ani.client.models.AniSubjectRelations
 
 import me.him188.ani.client.infrastructure.*
 import io.ktor.client.HttpClient
@@ -37,7 +37,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.encoding.*
 
-open class UserAniApi : ApiClient {
+open class SubjectRelationsAniApi : ApiClient {
 
     constructor(
         baseUrl: String = ApiClient.BASE_URL,
@@ -57,14 +57,15 @@ open class UserAniApi : ApiClient {
     ) : super(baseUrl = baseUrl, httpClient = httpClient)
 
     /**
-     * 查看当前用户信息
-     * 查看当前携带的 token 对应用户的信息，包含其 Ani ID，Bangumi 昵称以及 Bangumi 头像 URL。
-     * @return AniAniUser
+     * 获取关联条目
+     * 获取关联条目
+     * @param subjectId 
+     * @return AniSubjectRelations
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun getUser(): HttpResponse<AniAniUser> {
+    open suspend fun getSubjectRelations(subjectId: kotlin.String): HttpResponse<AniSubjectRelations> {
 
-        val localVariableAuthNames = listOf<String>("auth-jwt")
+        val localVariableAuthNames = listOf<String>()
 
         val localVariableBody = 
             io.ktor.client.utils.EmptyContent
@@ -74,10 +75,10 @@ open class UserAniApi : ApiClient {
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
             RequestMethod.GET,
-            "/v1/me",
+            "/v1/subject-relations/{subjectId}".replace("{" + "subjectId" + "}", "$subjectId"),
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = true,
+            requiresAuthentication = false,
         )
 
         return request(

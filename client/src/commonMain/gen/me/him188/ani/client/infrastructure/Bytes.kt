@@ -7,8 +7,6 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-@file:Suppress("DEPRECATION")
-
 package me.him188.ani.client.infrastructure
 
 import io.ktor.utils.io.core.ByteReadPacket
