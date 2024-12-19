@@ -10,7 +10,7 @@
       <list>
         <IssueNavigationLink>
           <option name="issueRegexp" value="#(\d+)" />
-          <option name="linkRegexp" value="https://github.com/him188/ani/issues/$1" />
+          <option name="linkRegexp" value="https://github.com/open-ani/animeko/issues/$1" />
         </IssueNavigationLink>
         <IssueNavigationLink>
           <option name="issueRegexp" value="([^\s]+)/([^\s]+)#(\d+)" />
