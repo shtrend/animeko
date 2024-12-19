@@ -78,6 +78,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.window.core.layout.WindowHeightSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -203,8 +204,17 @@ private fun EpisodeSceneContent(
     }
 
     BoxWithConstraints(modifier) {
-        val showExpandedUI =
-            currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass >= WindowWidthSizeClass.EXPANDED
+        val windowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass
+        val width = windowSizeClass.windowWidthSizeClass
+        val height = windowSizeClass.windowHeightSizeClass
+
+        val showExpandedUI = when {
+            width == WindowWidthSizeClass.COMPACT && height == WindowHeightSizeClass.COMPACT -> false
+            width == WindowWidthSizeClass.COMPACT && height > WindowHeightSizeClass.COMPACT -> false
+            width > WindowWidthSizeClass.COMPACT && height == WindowHeightSizeClass.COMPACT -> true // #1279
+            windowSizeClass.windowWidthSizeClass >= WindowWidthSizeClass.EXPANDED -> true // #932
+            else -> false
+        }
         CompositionLocalProvider(LocalImageViewerHandler provides imageViewer) {
             when {
                 showExpandedUI || isSystemInFullscreen() ->
