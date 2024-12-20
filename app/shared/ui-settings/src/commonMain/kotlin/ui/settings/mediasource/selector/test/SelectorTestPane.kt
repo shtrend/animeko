@@ -201,9 +201,9 @@ fun SharedTransitionScope.SelectorTestPane(
                             ) {
                                 items(channels) {
                                     FilterChip(
-                                        selected = state.filterByChannel == it,
+                                        selected = presentation.filterByChannel == it,
                                         onClick = {
-                                            state.filterByChannel = if (state.filterByChannel == it) null else it
+                                            state.filterByChannel(if (presentation.filterByChannel == it) null else it)
                                         },
                                         label = { Text(it) },
                                     )

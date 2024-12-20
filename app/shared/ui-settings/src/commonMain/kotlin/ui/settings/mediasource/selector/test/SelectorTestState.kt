@@ -16,11 +16,11 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -48,6 +48,7 @@ data class SelectorTestPresentation(
     val episodeListSearchResult: SelectorTestEpisodeListResult?,
     val selectedSubject: SelectorTestSubjectPresentation?,
     val filteredEpisodes: List<SelectorTestEpisodePresentation>?,
+    val filterByChannel: String?,
     val isPlaceholder: Boolean = false,
 ) {
     @Stable
@@ -60,6 +61,7 @@ data class SelectorTestPresentation(
             episodeListSearchResult = null,
             selectedSubject = null,
             filteredEpisodes = null,
+            filterByChannel = null,
             isPlaceholder = true,
         )
     }
@@ -79,7 +81,10 @@ class SelectorTestState(
         tester.setSubjectIndex(index)
     }
 
-    var filterByChannel by mutableStateOf<String?>(null)
+    private val filterByChannelFlow = MutableStateFlow<String?>(null)
+    fun filterByChannel(channel: String?) {
+        filterByChannelFlow.value = channel
+    }
 
     private val selectedSubjectFlow = tester.subjectSelectionResultFlow.map { subjectSearchSelectResult ->
         val success = subjectSearchSelectResult as? SelectorTestSearchSubjectResult.Success
@@ -94,17 +99,18 @@ class SelectorTestState(
         searchConfigState.value?.searchUseOnlyFirstWord
     }
 
-    private val filteredEpisodesFlow = tester.episodeListSelectionResultFlow.map { result ->
-        when (result) {
-            is SelectorTestEpisodeListResult.Success -> result.episodes.filter {
-                filterByChannel == null || it.channel == filterByChannel
-            }
+    private val filteredEpisodesFlow = tester.episodeListSelectionResultFlow
+        .combine(filterByChannelFlow) { result, filterByChannel ->
+            when (result) {
+                is SelectorTestEpisodeListResult.Success -> result.episodes.filter {
+                    filterByChannel == null || it.channel == filterByChannel
+                }
 
-            is SelectorTestEpisodeListResult.ApiError -> null
-            SelectorTestEpisodeListResult.InvalidConfig -> null
-            is SelectorTestEpisodeListResult.UnknownError -> null
+                is SelectorTestEpisodeListResult.ApiError -> null
+                SelectorTestEpisodeListResult.InvalidConfig -> null
+                is SelectorTestEpisodeListResult.UnknownError -> null
+            }
         }
-    }
 
     val presentation = combine(
         tester.subjectSearchRunning.isRunning,
@@ -113,7 +119,8 @@ class SelectorTestState(
         tester.episodeListSelectionResultFlow,
         selectedSubjectFlow,
         filteredEpisodesFlow,
-    ) { isSearchingSubject, isSearchingEpisode, subjectSearchSelectResult, episodeListSearchSelectResult, selectedSubject, filteredEpisodes ->
+        filterByChannelFlow,
+    ) { isSearchingSubject, isSearchingEpisode, subjectSearchSelectResult, episodeListSearchSelectResult, selectedSubject, filteredEpisodes, filterByChannel ->
         SelectorTestPresentation(
             isSearchingSubject,
             isSearchingEpisode,
@@ -121,6 +128,7 @@ class SelectorTestState(
             episodeListSearchSelectResult,
             selectedSubject,
             filteredEpisodes,
+            filterByChannel,
         )
     }.shareIn(backgroundScope, SharingStarted.WhileSubscribed(5000), 1)
 
