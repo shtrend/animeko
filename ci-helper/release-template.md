@@ -79,8 +79,11 @@ uploaded.
 | armeabi-v7a (32 位) | 旧手机和部分电视        | [主线][cf-android-armeabi-v7a] / [备线][ghproxy-android-armeabi-v7a] / [GitHub][github-android-armeabi-v7a] |
 | x86_64             | Chromebook 及模拟器 | [主线][cf-android-x86_64] / [备线][ghproxy-android-x86_64] / [GitHub][github-android-x86_64]                |
 
-> 如果不知道自己是什么架构, 建议下载 `universal`
-> 版本: [主线][cf-android] / [备线][ghproxy-android] / [GitHub][github-android]
+[//]: # (@formatter:off  因为"版本"前面不能换行)
+
+> 如果不知道自己是什么架构, 建议下载 `universal` 版本: [主线][cf-android] / [备线][ghproxy-android] / [GitHub][github-android]
+
+[//]: # (@formatter:on)
 
 也可以扫描二维码下载适用于所有 Android 设备的安装包:
 
