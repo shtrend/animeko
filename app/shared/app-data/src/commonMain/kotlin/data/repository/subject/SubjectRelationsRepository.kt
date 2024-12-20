@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -91,6 +92,9 @@ class DefaultSubjectRelationsRepository(
         // no auto refresh
         return subjectSequelSubjectIdsFlow(subjectId)
             .flatMapLatest { list ->
+                if (list.isEmpty()) { // combine(emptyList()) 不会 emit
+                    return@flatMapLatest flowOf(emptyList())
+                }
                 combine(
                     list.map { relatedSubjectId ->
                         subjectCollectionRepository.subjectCollectionFlow(relatedSubjectId)
