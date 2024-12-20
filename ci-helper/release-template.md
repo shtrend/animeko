@@ -74,7 +74,7 @@ uploaded.
 
 | 处理器架构              | 适用于             | 下载                                                                                                      |
 |--------------------|-----------------|---------------------------------------------------------------------------------------------------------|
-| universal          | 所有设备            | [主线][cf-android] / [备线][ghproxy-android] / [GitHub][github-android]                                     |
+| universal (推荐)     | 所有设备            | [主线][cf-android] / [备线][ghproxy-android] / [GitHub][github-android]                                     |
 | arm64-v8a (64 位)   | 几乎所有手机和平板       | [主线][cf-android-arm64-v8a] / [备线][ghproxy-android-arm64-v8a] / [GitHub][github-android-arm64-v8a]       |
 | armeabi-v7a (32 位) | 旧手机和部分电视        | [主线][cf-android-armeabi-v7a] / [备线][ghproxy-android-armeabi-v7a] / [GitHub][github-android-armeabi-v7a] |
 | x86_64             | Chromebook 及模拟器 | [主线][cf-android-x86_64] / [备线][ghproxy-android-x86_64] / [GitHub][github-android-x86_64]                |
