@@ -120,7 +120,7 @@ fun SharedTransitionScope.SelectorTestPane(
                     if (result is SelectorTestSearchSubjectResult.Success) {
                         SelectorTestSubjectResultLazyRow(
                             items = result.subjects,
-                            state.selectedSubjectIndex,
+                            presentation.selectedSubjectIndex,
                             onSelect = { index, _ ->
                                 state.selectSubjectIndex(index)
                             },

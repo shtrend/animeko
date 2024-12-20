@@ -15,8 +15,6 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
@@ -25,7 +23,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import me.him188.ani.app.domain.mediasource.test.web.SelectorMediaSourceTester
@@ -49,6 +46,7 @@ data class SelectorTestPresentation(
     val selectedSubject: SelectorTestSubjectPresentation?,
     val filteredEpisodes: List<SelectorTestEpisodePresentation>?,
     val filterByChannel: String?,
+    val selectedSubjectIndex: Int,
     val isPlaceholder: Boolean = false,
 ) {
     @Stable
@@ -62,6 +60,7 @@ data class SelectorTestPresentation(
             selectedSubject = null,
             filteredEpisodes = null,
             filterByChannel = null,
+            selectedSubjectIndex = 0,
             isPlaceholder = true,
         )
     }
@@ -73,11 +72,10 @@ class SelectorTestState(
     private val tester: SelectorMediaSourceTester,
     backgroundScope: CoroutineScope,
 ) : AbstractMediaSourceTestState() {
-    var selectedSubjectIndex by mutableIntStateOf(0)
-        private set
+    private val selectedSubjectIndexFlow = MutableStateFlow<Int>(0)
 
     fun selectSubjectIndex(index: Int) {
-        selectedSubjectIndex = index
+        selectedSubjectIndexFlow.value = index
         tester.setSubjectIndex(index)
     }
 
@@ -86,11 +84,12 @@ class SelectorTestState(
         filterByChannelFlow.value = channel
     }
 
-    private val selectedSubjectFlow = tester.subjectSelectionResultFlow.map { subjectSearchSelectResult ->
-        val success = subjectSearchSelectResult as? SelectorTestSearchSubjectResult.Success
-            ?: return@map null
-        success.subjects.getOrNull(selectedSubjectIndex)
-    }
+    private val selectedSubjectFlow = tester.subjectSelectionResultFlow
+        .combine(selectedSubjectIndexFlow) { subjectSearchSelectResult, selectedSubjectIndex ->
+            val success = subjectSearchSelectResult as? SelectorTestSearchSubjectResult.Success
+                ?: return@combine null
+            success.subjects.getOrNull(selectedSubjectIndex)
+        }
 
     private val searchUrl by derivedStateOf {
         searchConfigState.value?.searchUrl
@@ -120,7 +119,8 @@ class SelectorTestState(
         selectedSubjectFlow,
         filteredEpisodesFlow,
         filterByChannelFlow,
-    ) { isSearchingSubject, isSearchingEpisode, subjectSearchSelectResult, episodeListSearchSelectResult, selectedSubject, filteredEpisodes, filterByChannel ->
+        selectedSubjectIndexFlow,
+    ) { isSearchingSubject, isSearchingEpisode, subjectSearchSelectResult, episodeListSearchSelectResult, selectedSubject, filteredEpisodes, filterByChannel, selectedSubjectIndex ->
         SelectorTestPresentation(
             isSearchingSubject,
             isSearchingEpisode,
@@ -129,6 +129,7 @@ class SelectorTestState(
             selectedSubject,
             filteredEpisodes,
             filterByChannel,
+            selectedSubjectIndex,
         )
     }.shareIn(backgroundScope, SharingStarted.WhileSubscribed(5000), 1)
 
