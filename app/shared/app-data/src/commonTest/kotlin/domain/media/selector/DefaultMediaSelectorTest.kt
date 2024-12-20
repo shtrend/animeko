@@ -113,7 +113,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
     @Test
     fun `empty preferences select all`() = runTest {
         addMedia(media(alliance = "字幕组"), media(alliance = "字幕组2"))
-        assertEquals(mediaList.value, selector.filteredCandidates.first())
+        assertEquals(mediaList.value, selector.preferredCandidates.first())
     }
 
     @Test
@@ -121,7 +121,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val media = media(alliance = "字幕组")
         addMedia(media, media(alliance = "字幕组2"))
         savedUserPreference.value = DEFAULT_PREFERENCE.copy(alliance = "字幕组")
-        assertEquals(media, selector.filteredCandidates.first().single())
+        assertEquals(media, selector.preferredCandidates.first().single())
     }
 
     @Test
@@ -129,7 +129,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val media = media(alliance = "字幕组")
         addMedia(media, media(alliance = "字幕组2"))
         savedDefaultPreference.value = DEFAULT_PREFERENCE.copy(alliance = "字幕组")
-        assertEquals(media, selector.filteredCandidates.first().single())
+        assertEquals(media, selector.preferredCandidates.first().single())
     }
 
     @Test
@@ -137,7 +137,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val media = media(resolution = "字幕组")
         addMedia(media, media(resolution = "字幕组2"))
         savedUserPreference.value = DEFAULT_PREFERENCE.copy(resolution = "字幕组")
-        assertEquals(media, selector.filteredCandidates.first().single())
+        assertEquals(media, selector.preferredCandidates.first().single())
     }
 
     @Test
@@ -145,7 +145,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val media = media(resolution = "字幕组")
         addMedia(media, media(resolution = "字幕组2"))
         savedDefaultPreference.value = DEFAULT_PREFERENCE.copy(resolution = "字幕组")
-        assertEquals(media, selector.filteredCandidates.first().single())
+        assertEquals(media, selector.preferredCandidates.first().single())
     }
 
     @Test
@@ -153,7 +153,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val media = media(subtitleLanguages = listOf("字幕组", "a"))
         addMedia(media, media(subtitleLanguages = listOf("b")))
         savedUserPreference.value = DEFAULT_PREFERENCE.copy(subtitleLanguageId = "a")
-        assertEquals(media, selector.filteredCandidates.first().single())
+        assertEquals(media, selector.preferredCandidates.first().single())
     }
 
     @Test
@@ -162,34 +162,34 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         addMedia(media, media(subtitleLanguages = listOf("b")))
         savedDefaultPreference.value = DEFAULT_PREFERENCE.copy(subtitleLanguageId = "a")
         assertEquals("a", selector.subtitleLanguageId.finalSelected.first())
-        assertEquals(media, selector.filteredCandidates.first().single())
+        assertEquals(media, selector.preferredCandidates.first().single())
     }
 
     @Test
     fun `select none because pref not match`() = runTest {
         addMedia(media(alliance = "字幕组"), media(alliance = "字幕组"))
         savedDefaultPreference.value = DEFAULT_PREFERENCE.copy(alliance = "a")
-        assertEquals(0, selector.filteredCandidates.first().size)
+        assertEquals(0, selector.preferredCandidates.first().size)
     }
 
     @Test
     fun `select with user override no preference`() = runTest {
         addMedia(media(alliance = "字幕组"))
         savedDefaultPreference.value = DEFAULT_PREFERENCE.copy(alliance = "组")
-        assertEquals(0, selector.filteredCandidates.first().size)
+        assertEquals(0, selector.preferredCandidates.first().size)
         selector.alliance.removePreference()
-        assertEquals(1, selector.filteredCandidates.first().size)
+        assertEquals(1, selector.preferredCandidates.first().size)
     }
 
     @Test
     fun `select with user override no preference then prefer`() = runTest {
         addMedia(media(alliance = "字幕组"), media(alliance = "字幕组2"))
         savedDefaultPreference.value = DEFAULT_PREFERENCE.copy(alliance = "组")
-        assertEquals(0, selector.filteredCandidates.first().size)
+        assertEquals(0, selector.preferredCandidates.first().size)
         selector.alliance.removePreference()
-        assertEquals(2, selector.filteredCandidates.first().size)
+        assertEquals(2, selector.preferredCandidates.first().size)
         selector.alliance.prefer("字幕组")
-        assertEquals(1, selector.filteredCandidates.first().size)
+        assertEquals(1, selector.preferredCandidates.first().size)
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -376,7 +376,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(alliance = "字幕组5", subtitleLanguages = listOf("CHS")),
         )
         selector.alliance.prefer("a")
-        assertEquals(listOf(target), selector.filteredCandidates.first())
+        assertEquals(listOf(target), selector.preferredCandidates.first())
     }
 
     @Test
@@ -504,8 +504,8 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(alliance = "字幕组4", episodeRange = EpisodeRange.single("3")),
             media(alliance = "字幕组5", episodeRange = EpisodeRange.single("4")),
         )
-        assertEquals(2, selector.filteredCandidates.first().size)
-        assertEquals(target, selector.filteredCandidates.first()[0])
+        assertEquals(2, selector.preferredCandidates.first().size)
+        assertEquals(target, selector.preferredCandidates.first()[0])
     }
 
     @Test
@@ -523,7 +523,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(alliance = "字幕组4", episodeRange = EpisodeRange.single("3")),
             media(alliance = "字幕组5", episodeRange = EpisodeRange.single("4")),
         )
-        assertEquals(6, selector.filteredCandidates.first().size)
+        assertEquals(6, selector.preferredCandidates.first().size)
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -547,7 +547,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(alliance = "字幕组4", episodeRange = EpisodeRange.single("3")),
             media(alliance = "字幕组5", episodeRange = EpisodeRange.single("4")),
         )
-        assertEquals(5, selector.filteredCandidates.first().size)
+        assertEquals(5, selector.preferredCandidates.first().size)
         assertEquals(target, selector.trySelectDefault())
     }
 
@@ -568,7 +568,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(alliance = "字幕组4", episodeRange = EpisodeRange.single("3")),
             media(alliance = "字幕组5", episodeRange = EpisodeRange.single("4")),
         )
-        assertEquals(5, selector.filteredCandidates.first().size)
+        assertEquals(5, selector.preferredCandidates.first().size)
         assertEquals(target, selector.trySelectDefault())
     }
 
@@ -589,7 +589,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(alliance = "字幕组4", episodeRange = EpisodeRange.single("3")),
             media(alliance = "字幕组5", episodeRange = EpisodeRange.single("4")),
         )
-        assertEquals(5, selector.filteredCandidates.first().size)
+        assertEquals(5, selector.preferredCandidates.first().size)
         assertEquals(target, selector.trySelectDefault())
     }
 
@@ -617,7 +617,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
         selector.select(userSelection)
-        assertEquals(1, selector.filteredCandidates.first().size) // 因为会自动设置 preference
+        assertEquals(1, selector.preferredCandidates.first().size) // 因为会自动设置 preference
         assertEquals(
             null,
             selector.trySelectFromMediaSources(
@@ -642,7 +642,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
         selector.select(userSelection)
-        assertEquals(1, selector.filteredCandidates.first().size)
+        assertEquals(1, selector.preferredCandidates.first().size)
         assertEquals(
             target,
             selector.trySelectFromMediaSources(
@@ -669,7 +669,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
         selector.select(userSelection)
-        assertEquals(1, selector.filteredCandidates.first().size)
+        assertEquals(1, selector.preferredCandidates.first().size)
         assertEquals(
             target,
             selector.trySelectFromMediaSources(
@@ -698,7 +698,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(sourceId = "4", episodeRange = EpisodeRange.single("3"), kind = WEB),
             media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
-        assertEquals(5, selector.filteredCandidates.first().size)
+        assertEquals(5, selector.preferredCandidates.first().size)
         assertEquals(null, selector.trySelectFromMediaSources(listOf("2"), blacklistMediaIds = setOf(target.mediaId)))
     }
 
@@ -716,7 +716,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(sourceId = "4", episodeRange = EpisodeRange.single("3"), kind = WEB),
             media(sourceId = "5", episodeRange = EpisodeRange.single("4"), kind = WEB),
         )
-        assertEquals(5, selector.filteredCandidates.first().size)
+        assertEquals(5, selector.preferredCandidates.first().size)
         assertEquals(target, selector.trySelectFromMediaSources(listOf("2")))
     }
 
@@ -731,7 +731,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(sourceId = "0", episodeRange = EpisodeRange.single("1"), kind = WEB),
             media(sourceId = "2", episodeRange = EpisodeRange.season(1), kind = WEB).also { target = it },
         )
-        assertEquals(2, selector.filteredCandidates.first().size)
+        assertEquals(2, selector.preferredCandidates.first().size)
         assertEquals(target, selector.trySelectFromMediaSources(listOf("1", "2", "3")))
     }
 
@@ -746,7 +746,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(sourceId = "0", episodeRange = EpisodeRange.single("1"), kind = WEB),
             media(sourceId = "4", episodeRange = EpisodeRange.season(1), kind = WEB).also { target = it },
         )
-        assertEquals(2, selector.filteredCandidates.first().size)
+        assertEquals(2, selector.preferredCandidates.first().size)
         assertEquals(null, selector.trySelectFromMediaSources(listOf("1", "2", "3")))
     }
 
@@ -761,8 +761,8 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         addMedia(
             media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB),
         )
-        assertEquals(0, selector.filteredCandidates.first().size)
-        assertEquals(1, selector.mediaList.first().size)
+        assertEquals(0, selector.preferredCandidates.first().size)
+        assertEquals(1, selector.filteredCandidates.first().size)
         assertEquals(null, selector.trySelectFromMediaSources(listOf("1"), allowNonPreferred = false))
     }
 
@@ -778,8 +778,8 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         addMedia(
             media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB).also { target = it },
         )
-        assertEquals(0, selector.filteredCandidates.first().size)
-        assertEquals(1, selector.mediaList.first().size)
+        assertEquals(0, selector.preferredCandidates.first().size)
+        assertEquals(1, selector.filteredCandidates.first().size)
         assertEquals(null, selector.trySelectFromMediaSources(listOf("0"), allowNonPreferred = true))
     }
 
@@ -795,8 +795,8 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         addMedia(
             media(sourceId = "1", episodeRange = EpisodeRange.single("1"), kind = WEB).also { target = it },
         )
-        assertEquals(0, selector.filteredCandidates.first().size)
-        assertEquals(1, selector.mediaList.first().size)
+        assertEquals(0, selector.preferredCandidates.first().size)
+        assertEquals(1, selector.filteredCandidates.first().size)
         assertEquals(target, selector.trySelectFromMediaSources(listOf("1"), allowNonPreferred = true))
     }
 
@@ -814,8 +814,8 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media1,
             media2,
         )
-        assertEquals(1, selector.filteredCandidates.first().size)
-        assertEquals(2, selector.mediaList.first().size)
+        assertEquals(1, selector.preferredCandidates.first().size)
+        assertEquals(2, selector.filteredCandidates.first().size)
         assertEquals(
             media2,
             selector.trySelectFromMediaSources(
@@ -847,8 +847,8 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media1,
             media2,
         )
-        assertEquals(1, selector.filteredCandidates.first().size)
-        assertEquals(2, selector.mediaList.first().size)
+        assertEquals(1, selector.preferredCandidates.first().size)
+        assertEquals(2, selector.filteredCandidates.first().size)
         assertEquals(
             media2,
             selector.trySelectFromMediaSources(
@@ -892,8 +892,8 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media1,
             media2,
         )
-        assertEquals(1, selector.filteredCandidates.first().size)
-        assertEquals(2, selector.mediaList.first().size)
+        assertEquals(1, selector.preferredCandidates.first().size)
+        assertEquals(2, selector.filteredCandidates.first().size)
         assertEquals(
             null, // 用户偏好 2, 但是 2 被黑名单了, 而 allowNonPreferred = false, 选不了别的, 所以是 `null`
             selector.trySelectFromMediaSources(
@@ -943,8 +943,8 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             target = it
         }
         addMedia(media1, media2)
-        assertEquals(0, selector.filteredCandidates.first().size)
-        assertEquals(1, selector.mediaList.first().size)
+        assertEquals(0, selector.preferredCandidates.first().size)
+        assertEquals(1, selector.filteredCandidates.first().size)
         assertEquals(
             null,
             selector.trySelectDefault(),
@@ -979,7 +979,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(alliance = "字幕组4", episodeRange = EpisodeRange.single("3")),
             media(alliance = "字幕组5", episodeRange = EpisodeRange.single("4")),
         )
-        assertEquals(6, selector.filteredCandidates.first().size)
+        assertEquals(6, selector.preferredCandidates.first().size)
         assertEquals(target, selector.trySelectDefault())
     }
 
@@ -1000,7 +1000,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(alliance = "字幕组5", episodeRange = EpisodeRange.single("3")),
             media(alliance = "字幕组6", episodeRange = EpisodeRange.single("4")),
         )
-        assertEquals(6, selector.filteredCandidates.first().size)
+        assertEquals(6, selector.preferredCandidates.first().size)
         assertEquals(target, selector.trySelectDefault())
     }
 
@@ -1021,7 +1021,7 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
             media(alliance = "字幕组4", episodeRange = EpisodeRange.single("3")),
             media(alliance = "字幕组5", episodeRange = EpisodeRange.single("4")),
         )
-        assertEquals(6, selector.filteredCandidates.first().size)
+        assertEquals(6, selector.preferredCandidates.first().size)
         assertEquals(target, selector.trySelectDefault())
     }
 
@@ -1037,8 +1037,8 @@ class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
         val m3 = media(alliance = "字幕组6", publishedTime = 3)
         val m2 = media(alliance = "字幕组5", publishedTime = 2)
         addMedia(m1, m4, m3, m2)
-        assertEquals(listOf(m4, m3, m2, m1), selector.mediaList.first())
         assertEquals(listOf(m4, m3, m2, m1), selector.filteredCandidates.first())
+        assertEquals(listOf(m4, m3, m2, m1), selector.preferredCandidates.first())
     }
 
     ///////////////////////////////////////////////////////////////////////////

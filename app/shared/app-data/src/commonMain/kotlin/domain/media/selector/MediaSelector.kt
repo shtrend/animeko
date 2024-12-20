@@ -36,7 +36,7 @@ import kotlin.coroutines.CoroutineContext
 /**
  * 数据源选择器.
  *
- * 从 [mediaList] 中, 根据用户默认偏好和本次选择的即时偏好, 过滤出 [filteredCandidates].
+ * 从 [filteredCandidates] 中, 根据用户默认偏好和本次选择的即时偏好, 过滤出 [preferredCandidates].
  * 支持默认选择 [trySelectDefault], [trySelectCached].
  * 用户操作的 [select] 将覆盖默认的选项.
  *
@@ -48,20 +48,35 @@ interface MediaSelector {
     /**
      * 搜索到的全部的列表, 经过了设置 [MediaSelectorSettings] 筛选.
      */
-    val mediaList: Flow<List<Media>>
-
-    val alliance: MediaPreferenceItem<String>
-    val resolution: MediaPreferenceItem<String>
-    val subtitleLanguageId: MediaPreferenceItem<String>
-    val mediaSourceId: MediaPreferenceItem<String>
-
-    /**
-     * 经过 [alliance], [resolution] 等[偏好][MediaPreference]筛选后的列表.
-     */
     val filteredCandidates: Flow<List<Media>>
 
     /**
-     * 目前选中的项目. 它不一定是 [filteredCandidates] 中的一个项目.
+     * 用户的偏好字幕组设置
+     */
+    val alliance: MediaPreferenceItem<String>
+
+    /**
+     * 用户的偏好分辨率设置
+     */
+    val resolution: MediaPreferenceItem<String>
+
+    /**
+     * 用户的偏好字幕语言设置
+     */
+    val subtitleLanguageId: MediaPreferenceItem<String>
+
+    /**
+     * 用户的偏好数据源 ID 设置
+     */
+    val mediaSourceId: MediaPreferenceItem<String>
+
+    /**
+     * [filteredCandidates] 经过 [alliance], [resolution], [subtitleLanguageId] 和 [mediaSourceId] 筛选后的列表.
+     */
+    val preferredCandidates: Flow<List<Media>>
+
+    /**
+     * 目前选中的项目. 它不一定是 [preferredCandidates] 中的一个项目.
      */
     val selected: StateFlow<Media?>
 
@@ -72,7 +87,7 @@ interface MediaSelector {
     val events: MediaSelectorEvents
 
     /**
-     * 选择一个 [Media]. 该 [Media] 可以是位于 [filteredCandidates] 中的, 也可以不是.
+     * 选择一个 [Media]. 该 [Media] 可以是位于 [preferredCandidates] 中的, 也可以不是.
      * 将会更新 [selected] 并广播事件 [MediaSelectorEvents.onChangePreference] 和 [MediaSelectorEvents.onSelect].
      *
      * 该操作优先级高于任何其他的选择. 即会覆盖 [trySelectDefault] 和 [trySelectCached] 的结果.
@@ -104,7 +119,7 @@ interface MediaSelector {
      * 若为 `true`, 则会忽略用户目前的选择, 使用此函数的结果替换选择.
      * 若为 `false`, 如果用户已经选择了一个 media, 则此函数不会做任何事情.
      * @param blacklistMediaIds 黑名单, 这些 media 不会被选择. 如果遇到黑名单中的 media, 将会跳过.
-     * @param allowNonPreferred 是否允许选择不满足用户偏好设置的项目. 如果为 `false`, 将只会从 [filteredCandidates] 中选择.
+     * @param allowNonPreferred 是否允许选择不满足用户偏好设置的项目. 如果为 `false`, 将只会从 [preferredCandidates] 中选择.
      * 如果为 `true`, 则放弃用户偏好, 只根据数据源顺序选择.
      *
      * @return 成功选择且已经记录的 [Media]. 返回 `null` 时表示没有选择.
@@ -124,7 +139,7 @@ interface MediaSelector {
     suspend fun trySelectCached(): Media?
 
     /**
-     * 逐渐取消选择, 直到 [filteredCandidates] 有至少一个元素.
+     * 逐渐取消选择, 直到 [preferredCandidates] 有至少一个元素.
      */
     suspend fun removePreferencesUntilFirstCandidate()
 }
@@ -228,7 +243,7 @@ class DefaultMediaSelector(
     private val mediaSelectorSettings = mediaSelectorSettings.cached()
     private val mediaSelectorContext = mediaSelectorContextNotCached.cached()
 
-    override val mediaList: Flow<List<Media>> = combine(
+    override val filteredCandidates: Flow<List<Media>> = combine(
         mediaListNotCached.cached(), // cache 是必要的, 当 newPreferences 变更的时候不能重新加载 media list (网络)
         savedDefaultPreference, // 只需要使用 default, 因为目前不能覆盖生肉设置
         // 如果依赖 merged pref, 会产生循环依赖 (mediaList -> mediaPreferenceItem -> newPreferences -> mediaList)
@@ -362,11 +377,12 @@ class DefaultMediaSelector(
     }.flowOn(flowCoroutineContext) // must not cache
 
     // collect 一定会计算
-    private val filteredCandidatesNotCached = combine(this.mediaList, newPreferences) { mediaList, mergedPreferences ->
+    private val filteredCandidatesNotCached =
+        combine(this.filteredCandidates, newPreferences) { mediaList, mergedPreferences ->
         filterCandidates(mediaList, mergedPreferences)
     }
 
-    override val filteredCandidates: Flow<List<Media>> = filteredCandidatesNotCached.cached()
+    override val preferredCandidates: Flow<List<Media>> = filteredCandidatesNotCached.cached()
 
     override val selected: MutableStateFlow<Media?> = MutableStateFlow(null)
     override val events = MutableMediaSelectorEvents()
@@ -589,7 +605,7 @@ class DefaultMediaSelector(
 
     override suspend fun trySelectDefault(): Media? {
         if (selected.value != null) return null
-        val candidates = filteredCandidates.first()
+        val candidates = preferredCandidates.first()
         if (candidates.isEmpty()) return null
         val mergedPreference = newPreferences.first()
         return findUsingPreferenceFromCandidates(candidates, mergedPreference)?.let {
@@ -608,7 +624,7 @@ class DefaultMediaSelector(
         val selected = run {
             val mergedPreference = newPreferences.first()
             findUsingPreferenceFromCandidates(
-                filteredCandidates.first()
+                preferredCandidates.first()
                     .filter { it.mediaSourceId in mediaSourceOrder && it.mediaId !in blacklistMediaIds }
                     .sortedBy { mediaSourceOrder.indexOf(it.mediaSourceId) },
                 mergedPreference.copy(
@@ -620,7 +636,7 @@ class DefaultMediaSelector(
 
                 // 如果用户偏好里面没有, 并且允许选择非偏好的, 才考虑全部列表
                 findUsingPreferenceFromCandidates(
-                    mediaList.first()
+                    filteredCandidates.first()
                         .filter { it.mediaSourceId in mediaSourceOrder && it.mediaId !in blacklistMediaIds }
                         .sortedBy { mediaSourceOrder.indexOf(it.mediaSourceId) },
                     mergedPreference.copy(
@@ -650,13 +666,13 @@ class DefaultMediaSelector(
 
     override suspend fun trySelectCached(): Media? {
         if (selected.value != null) return null
-        val candidates = filteredCandidates.first()
+        val candidates = preferredCandidates.first()
         val cached = candidates.fastFirstOrNull { isLocalCache(it) } ?: return null
         return selectDefault(cached)
     }
 
     override suspend fun removePreferencesUntilFirstCandidate() {
-        if (filteredCandidates.first().isNotEmpty()) return
+        if (preferredCandidates.first().isNotEmpty()) return
         alliance.removePreference()
         if (filteredCandidatesNotCached.first().isNotEmpty()) return
         resolution.removePreference()
@@ -675,7 +691,7 @@ class DefaultMediaSelector(
         crossinline getFromMediaList: (list: List<Media>) -> List<T>,
         crossinline getFromPreference: (MediaPreference) -> T?,
     ) = object : MediaPreferenceItemImpl<T> {
-        override val available: Flow<List<T>> = mediaList.map { list ->
+        override val available: Flow<List<T>> = filteredCandidates.map { list ->
             getFromMediaList(list)
         }.flowOn(flowCoroutineContext).cached()
 

@@ -77,7 +77,7 @@ class DefaultMediaSelectorSubtitleKindTest : AbstractDefaultMediaSelectorTest() 
             media(alliance = "字幕组4"),
             media(alliance = "字幕组5"),
         )
-        assertEquals(4, selector.mediaList.first().size)
+        assertEquals(4, selector.filteredCandidates.first().size)
     }
 
     @Test
@@ -90,7 +90,7 @@ class DefaultMediaSelectorSubtitleKindTest : AbstractDefaultMediaSelectorTest() 
             media(alliance = "字幕组4"),
             media(alliance = "字幕组5"),
         )
-        assertEquals(4, selector.filteredCandidates.first().size)
+        assertEquals(4, selector.preferredCandidates.first().size)
     }
 }
 

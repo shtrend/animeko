@@ -81,7 +81,7 @@ value class MediaSelectorAutoSelect(
      * 若为 `true`, 则会忽略用户目前的选择, 使用此函数的结果替换选择.
      * 若为 `false`, 如果用户已经选择了一个 media, 则此函数不会做任何事情.
      * @param blacklistMediaIds 黑名单, 这些 media 不会被选择. 如果遇到黑名单中的 media, 将会跳过.
-     * @param allowNonPreferredFlow 是否允许选择不满足用户偏好设置的项目. 如果为 `false`, 将只会从 [me.him188.ani.app.domain.media.selector.MediaSelector.filteredCandidates] 中选择.
+     * @param allowNonPreferredFlow 是否允许选择不满足用户偏好设置的项目. 如果为 `false`, 将只会从 [me.him188.ani.app.domain.media.selector.MediaSelector.preferredCandidates] 中选择.
      * 如果为 `true`, 则放弃用户偏好, 只根据数据源顺序选择. 自动选择将会挂起直到此 flow emit 第一个值. 如果此 flow 为 empty, 将不会选择任何 media.
      * 该 flow 每 emit 一个新的值, 都会导致重新选择. 例如可以 `flow { emit(false); delay(5.seconds); emit(true) }` 来做到 5 秒后允许选择非偏好数据源并立即选择一次.
      * 当数据源查询完成后, 将停止监控此 flow 的新的值, 函数返回.

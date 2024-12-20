@@ -46,7 +46,7 @@ class TestMediaPreferenceItem<T : Any>(
 }
 
 open class TestMediaSelector(
-    final override val mediaList: Flow<List<Media>>,
+    final override val filteredCandidates: Flow<List<Media>>,
     val defaultPreference: MutableStateFlow<MediaPreference> = MutableStateFlow(
         MediaPreference.Empty.copy(
             fallbackResolutions = listOf(
@@ -82,8 +82,8 @@ open class TestMediaSelector(
         )
     }
 
-    final override val filteredCandidates: Flow<List<Media>> =
-        combine(mediaList, mergedPreference) { mediaList, preference ->
+    final override val preferredCandidates: Flow<List<Media>> =
+        combine(filteredCandidates, mergedPreference) { mediaList, preference ->
             DefaultMediaSelector.filterCandidates(mediaList, preference)
         }
 

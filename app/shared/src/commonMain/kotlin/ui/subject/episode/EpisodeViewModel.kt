@@ -289,18 +289,18 @@ private class EpisodeViewModelImpl(
      *
      * 之所以需要这个状态, 是因为当切换 EP 时, [mediaFetchSession] 会变更,
      * 随后 [MediaFetchSession.cumulativeResults] 会传递给 [mediaSelector],
-     * 但是 [MediaSelector.mediaList] 是 share 在后台的, 也就是说它可能会在任意时间之后才会发现 [mediaFetchSession] 有更新.
+     * 但是 [MediaSelector.filteredCandidates] 是 share 在后台的, 也就是说它可能会在任意时间之后才会发现 [mediaFetchSession] 有更新.
      *
-     * 这就导致当切换 EP 后, [MediaSelector.mediaList] 会有一段时间仍然是旧的值.
+     * 这就导致当切换 EP 后, [MediaSelector.filteredCandidates] 会有一段时间仍然是旧的值.
      *
      * 问题在于, [mediaFetchSession] 的变更会触发 [MediaSelectorAutoSelect.selectCached].
-     * 自动选择可能比 [MediaSelector.mediaList] 更新更早, 所以自动选择就会用久的 `mediaList` 选择缓存, 导致将会播放旧的视频.
+     * 自动选择可能比 [MediaSelector.filteredCandidates] 更新更早, 所以自动选择就会用久的 `mediaList` 选择缓存, 导致将会播放旧的视频.
      *
      *
      * 因此我们增加 [switchEpisodeCompleted], 在操作 EP 时, 先将其设置为 `false`, 然后再修改 [episodeId],
      * 并在 [mediaSelector] 更新时设置为 true.
      *
-     * 这样也并不是一定安全的, 有可能在我们修改 [episodeId] 后, 正好旧的查询触发了 [MediaSelector.mediaList] 更新,
+     * 这样也并不是一定安全的, 有可能在我们修改 [episodeId] 后, 正好旧的查询触发了 [MediaSelector.filteredCandidates] 更新,
      * 就导致 [switchEpisodeCompleted] 被设置为 `true`, [MediaSelectorAutoSelect.selectCached] 仍然会参考旧的 `mediaList` 选择缓存.
      *
      * 但是这种情况发生的概率比较小, 仅限于后台还有一个查询正在进行的时候用户切换了 EP, 并且旧的 EP 要至少有一个缓存, 而且恰好在一个比较短的时间内旧的查询完成了.
@@ -406,7 +406,7 @@ private class EpisodeViewModelImpl(
                 }
             }
             launchInBackground {
-                mediaList.collect {
+                filteredCandidates.collect {
                     switchEpisodeCompleted.value = true
                 }
             }

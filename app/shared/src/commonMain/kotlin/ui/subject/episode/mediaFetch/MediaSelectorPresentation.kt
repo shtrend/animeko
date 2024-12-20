@@ -84,7 +84,7 @@ interface MediaSelectorPresentation : AutoCloseable {
     val mediaSource: MediaPreferenceItemState<String>
 
     /**
-     * @see MediaSelector.filteredCandidates
+     * @see MediaSelector.preferredCandidates
      */
     val filteredCandidates: List<Media>
 
@@ -165,8 +165,8 @@ internal class MediaSelectorPresentationImpl(
     override val mediaSourceInfoProvider: MediaSourceInfoProvider,
     parentCoroutineContext: CoroutineContext,
 ) : MediaSelectorPresentation, HasBackgroundScope by BackgroundScope(parentCoroutineContext) {
-    override val mediaList: List<Media> by mediaSelector.mediaList.produceState(emptyList())
-    override val filteredCandidates: List<Media> by mediaSelector.filteredCandidates.produceState(emptyList())
+    override val mediaList: List<Media> by mediaSelector.filteredCandidates.produceState(emptyList())
+    override val filteredCandidates: List<Media> by mediaSelector.preferredCandidates.produceState(emptyList())
 
     private val groupStates: SnapshotStateMap<MediaGroupId, MediaGroupState> = SnapshotStateMap()
     override val groupedMediaList: List<MediaGroup> by derivedStateOf {
