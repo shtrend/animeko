@@ -97,4 +97,10 @@ uploaded.
 |------------------------------|------------------------------|
 | ![GitHub][github-android-qr] | ![Cloudflare][cf-android-qr] |
 
+### 适用于 iOS
+
+[ios-issue]: https://github.com/open-ani/animeko/issues/496
+
+iOS 版正在开发中. 可为此 issue 点赞以加快开发速度: [#496][ios-issue]
+
 </details>
