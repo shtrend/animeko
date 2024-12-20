@@ -10,6 +10,7 @@
 package me.him188.ani.app.domain.mediasource.codec
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import me.him188.ani.datasources.api.source.FactoryId
@@ -33,12 +34,13 @@ abstract class MediaSourceCodec<T : MediaSourceArguments>(
      * 考虑版本兼容性. 潜在地会转换不兼容数据的为当前支持的
      * [ExportedMediaSourceData.factoryId] must match current [factoryId]
      */
-    @Throws(UnsupportedVersionException::class)
+    @Throws(MediaSourceDecodeException::class)
     abstract fun MediaSourceCodecContext.decode(data: ExportedMediaSourceData): T
 
     /**
      * 直接使用 [KSerializer] 反序列化 [data]
      */
+    @Throws(MediaSourceDecodeException::class)
     abstract fun MediaSourceCodecContext.deserialize(data: JsonElement): T
 
     override fun toString(): String {
@@ -55,6 +57,10 @@ class UnsupportedVersionException(
     unexpectedVersion: Int,
     currentVersion: Int,
 ) : MediaSourceDecodeException(message = "Current version $currentVersion < $unexpectedVersion")
+
+class InvalidMediaSourceContentException(
+    override val cause: Throwable?,
+) : MediaSourceDecodeException(cause = cause)
 
 open class DefaultMediaSourceCodec<T : MediaSourceArguments>(
     factoryId: FactoryId,
@@ -80,7 +86,11 @@ open class DefaultMediaSourceCodec<T : MediaSourceArguments>(
     }
 
     override fun MediaSourceCodecContext.deserialize(data: JsonElement): T {
-        return json.decodeFromJsonElement(serializer, data)
+        return try {
+            json.decodeFromJsonElement(serializer, data)
+        } catch (e: SerializationException) {
+            throw InvalidMediaSourceContentException(e)
+        }
     }
 }
 

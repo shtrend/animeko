@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import me.him188.ani.app.domain.mediasource.codec.FactoryNotFoundException
+import me.him188.ani.app.domain.mediasource.codec.InvalidMediaSourceContentException
 import me.him188.ani.app.domain.mediasource.codec.MediaSourceArguments
 import me.him188.ani.app.domain.mediasource.codec.MediaSourceCodecManager
 import me.him188.ani.app.domain.mediasource.codec.MediaSourceDecodeException
@@ -86,6 +87,7 @@ class ImportMediaSourceState<T : MediaSourceArguments>(
             parseResult = when (e) {
                 is UnsupportedVersionException -> ParseResult.UnsupportedVersion
                 is FactoryNotFoundException -> ParseResult.UnsupportedFactory
+                is InvalidMediaSourceContentException -> ParseResult.InvalidContent
             }
             return
         }
@@ -191,7 +193,7 @@ fun <T : MediaSourceArguments> MediaSourceConfigurationDefaults.DropdownMenuImpo
                 when (error) {
                     ParseResult.EmptyContent -> Text("剪贴板内容为空")
                     ParseResult.HasMoreThanOneArgument -> Text("剪贴板内容包含多个数据源配置，当前导入功能只支持单个配置")
-                    ParseResult.InvalidContent -> Text("剪贴板内容无效")
+                    ParseResult.InvalidContent -> Text("剪贴板内容无效，请检查数据源类型 (Selector 还是 RSS) 以及导出时使用的 Ani 的版本")
                     ParseResult.UnsupportedFactory -> Text("数据源类型不受支持，请先升级软件")
                     ParseResult.UnsupportedVersion -> Text("数据源版本不受支持，请先升级软件")
                 }
