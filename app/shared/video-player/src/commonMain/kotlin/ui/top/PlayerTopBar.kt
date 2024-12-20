@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.videoplayer.ui.top
 
 import androidx.compose.foundation.layout.RowScope
@@ -20,9 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import me.him188.ani.app.ui.foundation.navigation.LocalBackHandler
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.ifThen
+import me.him188.ani.app.ui.foundation.navigation.LocalBackDispatcher
 import me.him188.ani.app.ui.foundation.theme.aniDarkColorTheme
 import me.him188.ani.utils.platform.isDesktop
 
@@ -48,7 +57,7 @@ fun PlayerTopBar(
         modifier
             .fillMaxWidth(),
         navigationIcon = {
-            val back = LocalBackHandler.current
+            val back = LocalBackDispatcher.current
             CompositionLocalProvider(LocalContentColor provides color) {
                 val focusManager by rememberUpdatedState(LocalFocusManager.current) // workaround for #288
                 IconButton(
