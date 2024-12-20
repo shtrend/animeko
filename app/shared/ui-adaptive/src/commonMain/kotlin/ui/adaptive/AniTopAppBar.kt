@@ -136,7 +136,7 @@ fun AniTopAppBar(
                         }
                     Box(
                         Modifier.sizeIn(
-                            minWidth = minSize, maxWidth = 128.dp,  // maxWidth unspecified
+                            minWidth = minSize, maxWidth = 128.dp,
                             minHeight = minSize, maxHeight = minSize,
                         ),
                     ) {
