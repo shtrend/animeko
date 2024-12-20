@@ -191,7 +191,15 @@ fun CollectionPage(
 ) {
     // 如果有缓存, 列表区域要展示缓存, 错误就用图标放在角落
     CollectionPageLayout(
-        onClickSettings = onClickSettings,
+        settingsIcon = {
+            if (state.authState.isKnownGuest // #1269 游客模式下无法打开设置界面
+                || currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass.isAtLeastMedium
+            ) {
+                IconButton(onClick = onClickSettings) {
+                    Icon(Icons.Rounded.Settings, "设置")
+                }
+            }
+        },
         actions = {
             SessionTipsIcon(state.authState)
             actions()
@@ -280,7 +288,7 @@ fun CollectionPage(
  */
 @Composable
 private fun CollectionPageLayout(
-    onClickSettings: () -> Unit,
+    settingsIcon: @Composable () -> Unit,
     actions: @Composable RowScope.() -> Unit,
     avatar: @Composable (recommendedSize: DpSize) -> Unit,
     filters: @Composable CollectionPageFilters.() -> Unit,
@@ -312,11 +320,7 @@ private fun CollectionPageLayout(
                             }
                         }
 
-                        if (currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass.isAtLeastMedium) {
-                            IconButton(onClick = onClickSettings) {
-                                Icon(Icons.Rounded.Settings, "设置")
-                            }
-                        }
+                        settingsIcon()
                     },
                     avatar = avatar,
                     windowInsets = AniWindowInsets.forTopAppBarWithoutDesktopTitle(),

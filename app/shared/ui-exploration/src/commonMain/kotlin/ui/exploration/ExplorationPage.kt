@@ -101,7 +101,9 @@ fun ExplorationPage(
                 Modifier.fillMaxWidth(),
                 actions = {
                     actions()
-                    if (currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass.isAtLeastMedium) {
+                    if (state.authState.isKnownGuest // #1269 游客模式下无法打开设置界面
+                        || currentWindowAdaptiveInfo1().windowSizeClass.windowWidthSizeClass.isAtLeastMedium
+                    ) {
                         IconButton(onClick = onClickSettings) {
                             Icon(Icons.Rounded.Settings, "设置")
                         }
