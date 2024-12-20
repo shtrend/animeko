@@ -145,7 +145,7 @@ class DefaultSubjectRelationsRepository(
             }.flowOn(defaultDispatcher)
     }
 
-    private fun <T> Flow<T>.autoRefresh() = combine(refreshTicker()) { value, _ -> value }
+    private fun <T> Flow<T>.autoRefresh() = refreshTicker().flatMapLatest { this@autoRefresh }
 
     private fun refreshTicker() = flow {
         while (true) {
