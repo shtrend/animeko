@@ -36,6 +36,7 @@ import me.him188.ani.app.data.persistent.database.entity.PersonEntity
 import me.him188.ani.app.data.persistent.database.entity.SubjectCharacterRelationEntity
 import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEntity
 import me.him188.ani.app.data.repository.Repository
+import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.platform.collections.mapToIntArray
 import me.him188.ani.utils.platform.currentTimeMillis
@@ -77,7 +78,13 @@ class DefaultSubjectRelationsRepository(
     private val cacheExpiry: Duration = 1.hours,
 ) : SubjectRelationsRepository(defaultDispatcher) {
     override fun subjectSequelSubjectIdsFlow(subjectId: Int): Flow<List<Int>> = flow {
-        emit(aniSubjectRelationIndexService.getSubjectSequelSubjects(subjectId))
+        emit(
+            kotlinx.coroutines.withTimeoutOrNull(10_000) {
+                // 这服务极快, 不会超时. 10 秒还没完, 只能是服务器重启了一下, 正在构造索引
+                aniSubjectRelationIndexService.getSubjectSequelSubjects(subjectId)
+            }
+                ?: throw RepositoryServiceUnavailableException("Failed to fetch subject sequel subjects for $subjectId due to timeout"),
+        )
     }.flowOn(defaultDispatcher) // no auto refresh
 
     override fun subjectSequelSubjectsFlow(subjectId: Int): Flow<List<SubjectCollectionInfo>> {
