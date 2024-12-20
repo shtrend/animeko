@@ -37,9 +37,11 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.InputChip
+import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -54,6 +56,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -62,6 +65,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
+import me.him188.ani.app.domain.media.selector.MediaExclusionReason
+import me.him188.ani.app.domain.media.selector.UnsafeOriginalMediaAccess
+import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.tools.formatDateTime
 import me.him188.ani.app.ui.foundation.widgets.FastLinearProgressIndicator
 import me.him188.ani.app.ui.media.renderSubtitleLanguage
@@ -79,15 +85,17 @@ private inline val WINDOW_VERTICAL_PADDING get() = 8.dp
  *
  * @param bottomActions shown at the bottom
  */
+@OptIn(UnsafeOriginalMediaAccess::class)
 @Composable
 fun MediaSelectorView(
-    state: MediaSelectorPresentation,
+    state: MediaSelectorState,
     sourceResults: @Composable LazyItemScope.() -> Unit,
     modifier: Modifier = Modifier,
     stickyHeaderBackgroundColor: Color = Color.Unspecified,
-    itemProgressBar: @Composable RowScope.(MediaGroup) -> Unit = {
+    itemProgressBar: @Composable RowScope.(MediaGroup) -> Unit = { group ->
+        val presentation by state.presentationFlow.collectAsStateWithLifecycle()
         FastLinearProgressIndicator(
-            state.selected in it.list,
+            group.list.any { it.original === presentation.selected },
             Modifier.fillMaxWidth().padding(horizontal = 4.dp),
             delayMillis = 300,
         )
@@ -97,8 +105,10 @@ fun MediaSelectorView(
     singleLineFilter: Boolean = false,
 ) {
     val bringIntoViewRequesters = remember { mutableStateMapOf<Media, BringIntoViewRequester>() }
+    val presentation by state.presentationFlow.collectAsStateWithLifecycle()
     Column(modifier) {
         val lazyListState = rememberLazyListState()
+        var showExcluded by rememberSaveable { mutableStateOf(false) }
         LazyColumn(
             Modifier.padding(bottom = WINDOW_VERTICAL_PADDING).weight(1f, fill = false),
             lazyListState,
@@ -121,8 +131,8 @@ fun MediaSelectorView(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        remember(state.filteredCandidates.size, state.mediaList.size) {
-                            "筛选到 ${state.filteredCandidates.size}/${state.mediaList.size} 条资源"
+                        remember(presentation.preferredCandidates.size, presentation.filteredCandidates.size) {
+                            "筛选到 ${presentation.preferredCandidates.size}/${presentation.filteredCandidates.size} 条资源"
                         },
                         style = MaterialTheme.typography.titleMedium,
                     )
@@ -139,37 +149,32 @@ fun MediaSelectorView(
                 }
             }
 
-            items(state.groupedMediaList, key = { it.groupId }) { group ->
-                Column {
-                    val requester = remember { BringIntoViewRequester() }
-                    // 记录 item 对应的 requester
-                    for (item in group.list) {
-                        DisposableEffect(requester) {
-                            bringIntoViewRequesters[item] = requester
-                            onDispose {
-                                bringIntoViewRequesters.remove(item)
-                            }
-                        }
-                    }
-                    MediaItem(
-                        group,
-                        state.mediaSourceInfoProvider,
-                        state.selected in group.list,
-                        state,
-                        onSelect = {
-                            // 点击这个卡片时, 如果这个卡片是一个 group, 那么应当取用 group 的选中项目
-                            onClickItem(state.getGroupState(group.groupId).selectedItem ?: it)
-                        },
-                        Modifier
-                            .animateItem()
-                            .fillMaxWidth()
-                            .bringIntoViewRequester(requester),
-                    )
-                    Row(Modifier.height(8.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        itemProgressBar(group)
+            items(presentation.groupedMediaListIncluded, key = { it.groupId }) { group ->
+                MediaItemGroup(group, bringIntoViewRequesters, state, presentation, onClickItem, itemProgressBar)
+            }
+
+            if (presentation.groupedMediaListExcluded.isNotEmpty()) {
+                item {
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            "显示已被排除的资源 (${presentation.groupedMediaListExcluded.size})",
+                            Modifier.padding(end = 8.dp),
+                            style = MaterialTheme.typography.labelLarge,
+                        )
+                        Switch(showExcluded, { showExcluded = !showExcluded })
                     }
                 }
             }
+            if (showExcluded) {
+                items(presentation.groupedMediaListExcluded, key = { it.groupId }) { group ->
+                    MediaItemGroup(group, bringIntoViewRequesters, state, presentation, onClickItem, itemProgressBar)
+                }
+            }
+
             item { } // dummy spacer
         }
 
@@ -189,7 +194,7 @@ fun MediaSelectorView(
 
     LaunchedEffect(Unit) {
         // 当选择一个资源时 (例如自动选择)，自动滚动到该资源 #667
-        snapshotFlow { state.selected }
+        snapshotFlow { presentation.selected }
             .filterNotNull()
             .collectLatest {
                 bringIntoViewRequesters[it]?.bringIntoView()
@@ -197,22 +202,65 @@ fun MediaSelectorView(
     }
 }
 
+@OptIn(UnsafeOriginalMediaAccess::class)
+@Composable
+private fun LazyItemScope.MediaItemGroup(
+    group: MediaGroup,
+    bringIntoViewRequesters: SnapshotStateMap<Media, BringIntoViewRequester>,
+    state: MediaSelectorState,
+    presentation: MediaSelectorState.Presentation,
+    onClickItem: (Media) -> Unit,
+    itemProgressBar: @Composable (RowScope.(MediaGroup) -> Unit)
+) {
+    Column {
+        val requester = remember { BringIntoViewRequester() }
+        // 记录 item 对应的 requester
+        for (item in group.list) {
+            DisposableEffect(requester) {
+                bringIntoViewRequesters[item.original] = requester
+                onDispose {
+                    bringIntoViewRequesters.remove(item.original)
+                }
+            }
+        }
+        MediaItem(
+            group,
+            state.mediaSourceInfoProvider,
+            group.list.any { it.original === presentation.selected },
+            state,
+            onSelect = {
+                // 点击这个卡片时, 如果这个卡片是一个 group, 那么应当取用 group 的选中项目
+                onClickItem(state.getGroupState(group.groupId).selectedItem ?: it)
+            },
+            Modifier
+                .animateItem()
+                .fillMaxWidth()
+                .bringIntoViewRequester(requester),
+        )
+        Row(Modifier.height(8.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            itemProgressBar(group)
+        }
+    }
+}
+
 /**
  * 一个资源的卡片
  */
+@OptIn(UnsafeOriginalMediaAccess::class)
 @Composable
 internal fun MediaItem(
     group: MediaGroup,
     mediaSourceInfoProvider: MediaSourceInfoProvider,
     selected: Boolean,
-    state: MediaSelectorPresentation,
+    state: MediaSelectorState,
     onSelect: (Media) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val media: Media = group.first // 信息都一样的, 用第一个的就行
+    val media: Media = group.first.original // 信息都一样的, 用第一个的就行
     ElevatedCard(
         { onSelect(media) },
-        modifier.width(IntrinsicSize.Min),
+        modifier
+            .width(IntrinsicSize.Min),
         colors = CardDefaults.elevatedCardColors(
             containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer
             else MaterialTheme.colorScheme.surface,
@@ -253,6 +301,32 @@ internal fun MediaItem(
                         onClick = { state.subtitleLanguageId.preferOrRemove(it) },
                         label = { Text(renderSubtitleLanguage(it)) },
                         enabled = subjectLanguageIdPresentation.finalSelected != it,
+                    )
+                }
+
+                group.exclusionReason?.let { reason ->
+                    val reasonText = if (currentAniBuildConfig.isDebug) {
+                        reason.toString()
+                    } else {
+                        when (reason) {
+                            MediaExclusionReason.FromSequelSeason -> "季度不匹配"
+                            MediaExclusionReason.MediaWithoutSubtitle -> "无字幕"
+                            is MediaExclusionReason.SingleEpisodeForCompleteSubject -> "单集资源"
+                            MediaExclusionReason.UnsupportedByPlatformPlayer -> "不支持播放"
+                        }
+                    }
+                    InputChip(
+                        false,
+                        onClick = { },
+                        label = { Text(reasonText) },
+                        colors = InputChipDefaults.inputChipColors(
+                            labelColor = MaterialTheme.colorScheme.error,
+                        ),
+                        border = InputChipDefaults.inputChipBorder(
+                            true,
+                            false,
+                            borderColor = MaterialTheme.colorScheme.error,
+                        ),
                     )
                 }
             }
@@ -300,17 +374,18 @@ internal fun MediaItem(
     }
 }
 
+@OptIn(UnsafeOriginalMediaAccess::class)
 @Composable
 private fun ExposedMediaSourceMenu(
     group: MediaGroup,
     mediaSourceInfoProvider: MediaSourceInfoProvider,
-    state: MediaSelectorPresentation,
+    state: MediaSelectorState,
     onSelect: (Media) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showMenu by rememberSaveable { mutableStateOf(false) }
     ExposedDropdownMenuBox(showMenu, { showMenu = it }, modifier) {
-        val currentItem = state.getGroupState(group.groupId).selectedItem ?: group.first
+        val currentItem = state.getGroupState(group.groupId).selectedItem ?: group.first.original
         val currentSourceInfo by mediaSourceInfoProvider.rememberMediaSourceInfo(currentItem.mediaSourceId)
         TextField(
             value = currentSourceInfo?.displayName ?: "未知",
@@ -341,7 +416,8 @@ private fun ExposedMediaSourceMenu(
             ),
         )
         ExposedDropdownMenu(showMenu, { showMenu = false }) {
-            for (item in group.list) {
+            for (maybeExcluded in group.list) {
+                val item = maybeExcluded.original
                 val sourceInfo by mediaSourceInfoProvider.rememberMediaSourceInfo(item.mediaSourceId)
                 DropdownMenuItem(
                     text = { Text(sourceInfo?.displayName ?: "未知") },

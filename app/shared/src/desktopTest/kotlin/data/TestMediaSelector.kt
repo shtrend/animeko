@@ -14,8 +14,10 @@ package me.him188.ani.app.domain.media.framework
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.domain.media.selector.DefaultMediaSelector
+import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
 import me.him188.ani.app.domain.media.selector.MediaPreferenceItem
 import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.domain.media.selector.MediaSelectorEvents
@@ -46,7 +48,7 @@ class TestMediaPreferenceItem<T : Any>(
 }
 
 open class TestMediaSelector(
-    final override val filteredCandidates: Flow<List<Media>>,
+    override val filteredCandidates: Flow<List<MaybeExcludedMedia>>,
     val defaultPreference: MutableStateFlow<MediaPreference> = MutableStateFlow(
         MediaPreference.Empty.copy(
             fallbackResolutions = listOf(
@@ -62,6 +64,8 @@ open class TestMediaSelector(
         ),
     ),
 ) : MediaSelector {
+    final override val filteredCandidatesMedia: Flow<List<Media>> =
+        filteredCandidates.map { list -> list.mapNotNull { it.result } }
     final override val alliance: TestMediaPreferenceItem<String> = TestMediaPreferenceItem()
     final override val resolution: TestMediaPreferenceItem<String> = TestMediaPreferenceItem()
     final override val subtitleLanguageId: TestMediaPreferenceItem<String> = TestMediaPreferenceItem()
@@ -81,11 +85,13 @@ open class TestMediaSelector(
             mediaSourceId = mediaSourceId,
         )
     }
-
-    final override val preferredCandidates: Flow<List<Media>> =
+    final override val preferredCandidates: Flow<List<MaybeExcludedMedia>> =
         combine(filteredCandidates, mergedPreference) { mediaList, preference ->
             DefaultMediaSelector.filterCandidates(mediaList, preference)
         }
+
+    final override val preferredCandidatesMedia: Flow<List<Media>> =
+        preferredCandidates.map { list -> list.mapNotNull { it.result } }
 
     final override val selected: MutableStateFlow<Media?> = MutableStateFlow(null)
     final override val events: MediaSelectorEvents = MutableMediaSelectorEvents()

@@ -82,7 +82,7 @@ import me.him188.ani.app.ui.subject.episode.details.components.DanmakuMatchInfoG
 import me.him188.ani.app.ui.subject.episode.details.components.EpisodeWatchStatusButton
 import me.him188.ani.app.ui.subject.episode.details.components.PlayingEpisodeItem
 import me.him188.ani.app.ui.subject.episode.details.components.PlayingEpisodeItemDefaults
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorPresentation
+import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultsPresentation
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuLoadingState
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuMatchInfoSummaryRow
@@ -127,7 +127,7 @@ fun EpisodeDetails(
     editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState,
     danmakuStatistics: DanmakuStatistics,
     videoStatistics: VideoStatistics,
-    mediaSelectorPresentation: MediaSelectorPresentation,
+    mediaSelectorState: MediaSelectorState,
     mediaSourceResultsPresentation: MediaSourceResultsPresentation,
     authState: AuthState,
     onSwitchEpisode: (episodeId: Int) -> Unit,
@@ -289,7 +289,7 @@ fun EpisodeDetails(
                                     contentWindowInsets = { BottomSheetDefaults.windowInsets.add(WindowInsets.desktopTitleBar()) },
                                 ) {
                                     EpisodePlayMediaSelector(
-                                        mediaSelectorPresentation,
+                                        mediaSelectorState,
                                         mediaSourceResultsPresentation,
                                         onDismissRequest = { showMediaSelector = false },
                                         onSelected = { showMediaSelector = false },

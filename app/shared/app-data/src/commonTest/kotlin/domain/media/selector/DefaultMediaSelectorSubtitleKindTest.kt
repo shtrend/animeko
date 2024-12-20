@@ -77,7 +77,11 @@ class DefaultMediaSelectorSubtitleKindTest : AbstractDefaultMediaSelectorTest() 
             media(alliance = "字幕组4"),
             media(alliance = "字幕组5"),
         )
-        assertEquals(4, selector.filteredCandidates.first().size)
+        selector.filteredCandidates.first().run {
+            assertEquals(5, size)
+            assertEquals(MediaExclusionReason.UnsupportedByPlatformPlayer, get(4).exclusionReason)
+        }
+        assertEquals(4, selector.filteredCandidatesMedia.first().size)
     }
 
     @Test
@@ -90,7 +94,7 @@ class DefaultMediaSelectorSubtitleKindTest : AbstractDefaultMediaSelectorTest() 
             media(alliance = "字幕组4"),
             media(alliance = "字幕组5"),
         )
-        assertEquals(4, selector.preferredCandidates.first().size)
+        assertEquals(4, selector.preferredCandidatesMedia.first().size)
     }
 }
 

@@ -11,6 +11,9 @@ package me.him188.ani.app.ui.subject.episode.mediaFetch
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
+import me.him188.ani.app.domain.media.selector.MediaExclusionReason
+import me.him188.ani.app.domain.media.selector.UnsafeOriginalMediaAccess
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
 
@@ -19,14 +22,20 @@ class MediaGroup @MediaGroupBuilderApi internal constructor(
     val groupId: MediaGroupId,
 ) {
     // 原地 build, 节约内存
-    private val _list: ArrayList<Media> = ArrayList(4)
-    val list: List<Media> get() = _list
+    private val _list: ArrayList<MaybeExcludedMedia> = ArrayList(4)
+    val list: List<MaybeExcludedMedia> get() = _list
 
     @Stable
     val first get() = list.first()
 
+    @Stable
+    val isExcluded by lazy(LazyThreadSafetyMode.NONE) { list.all { it is MaybeExcludedMedia.Excluded } }
+
+    @Stable
+    val exclusionReason: MediaExclusionReason? by lazy(LazyThreadSafetyMode.NONE) { list.firstOrNull { it.exclusionReason != null }?.exclusionReason }
+
     @MediaGroupBuilderApi
-    internal fun add(media: Media) {
+    internal fun add(media: MaybeExcludedMedia) {
         _list.add(media)
     }
 }
@@ -68,10 +77,11 @@ object MediaGrouper {
         return title
     }
 
-    fun buildGroups(list: List<Media>): List<MediaGroup> {
+    @OptIn(UnsafeOriginalMediaAccess::class)
+    fun buildGroups(list: List<MaybeExcludedMedia>): List<MediaGroup> {
         val groups = HashMap<String, MediaGroup>()
         for (media in list) {
-            val groupId = getGroupId(media)
+            val groupId = getGroupId(media.original)
             groups.getOrPut(groupId) { MediaGroup(groupId) }
                 .add(media)
         }

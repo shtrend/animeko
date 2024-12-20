@@ -64,7 +64,7 @@ import me.him188.ani.app.ui.settings.rendering.SmallMediaSourceIcon
 @Composable
 fun MediaSourceResultsView(
     sourceResults: MediaSourceResultsPresentation,
-    mediaSelector: MediaSelectorPresentation,
+    mediaSelector: MediaSelectorState,
     modifier: Modifier = Modifier,
 ) {
     val presentation by mediaSelector.mediaSource.presentationFlow.collectAsStateWithLifecycle()

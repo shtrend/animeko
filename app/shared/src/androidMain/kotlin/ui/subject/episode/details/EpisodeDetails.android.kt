@@ -37,7 +37,7 @@ import me.him188.ani.app.ui.subject.collection.components.rememberTestEditableSu
 import me.him188.ani.app.ui.subject.createTestAiringLabelState
 import me.him188.ani.app.ui.subject.details.state.createTestSubjectDetailsLoader
 import me.him188.ani.app.ui.subject.episode.EpisodePresentation
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorPresentation
+import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberTestMediaSelectorPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberTestMediaSourceResults
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuLoadingState
@@ -201,7 +201,7 @@ private fun PreviewEpisodeDetailsImpl(
         }
     },
     editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState = rememberTestEditableSubjectCollectionTypeState(),
-    mediaSelectorPresentation: MediaSelectorPresentation = rememberTestMediaSelectorPresentation(),
+    mediaSelectorState: MediaSelectorState = rememberTestMediaSelectorPresentation(),
     playingMedia: Media? = TestMediaList.first(),
     authState: AuthState = rememberTestAuthState(),
 ) {
@@ -227,7 +227,7 @@ private fun PreviewEpisodeDetailsImpl(
                     videoLoadingState = VideoLoadingState.Succeed(isBt = true),
                 )
             },
-            mediaSelectorPresentation = mediaSelectorPresentation,
+            mediaSelectorState = mediaSelectorState,
             mediaSourceResultsPresentation = rememberTestMediaSourceResults(),
             authState = authState,
             onSwitchEpisode = {},

@@ -313,7 +313,7 @@ private fun EpisodeSceneTabletVeryWide(
                                 vm.editableSubjectCollectionTypeState,
                                 vm.danmakuStatistics,
                                 vm.videoStatistics,
-                                vm.mediaSelectorPresentation,
+                                vm.mediaSelectorState,
                                 vm.mediaSourceResultsPresentation,
                                 vm.authState,
                                 onSwitchEpisode = { episodeId ->
@@ -434,7 +434,7 @@ private fun EpisodeSceneContentPhone(
                 vm.editableSubjectCollectionTypeState,
                 vm.danmakuStatistics,
                 vm.videoStatistics,
-                vm.mediaSelectorPresentation,
+                vm.mediaSelectorState,
                 vm.mediaSourceResultsPresentation,
                 vm.authState,
                 onSwitchEpisode = { episodeId ->
@@ -699,7 +699,7 @@ private fun EpisodeVideo(
             vm.sidebarVisible = it
         },
         progressSliderState = progressSliderState,
-        mediaSelectorPresentation = vm.mediaSelectorPresentation,
+        mediaSelectorState = vm.mediaSelectorState,
         mediaSourceResultsPresentation = vm.mediaSourceResultsPresentation,
         episodeSelectorState = vm.episodeSelectorState,
         mediaSourceInfoProvider = vm.mediaSourceInfoProvider,

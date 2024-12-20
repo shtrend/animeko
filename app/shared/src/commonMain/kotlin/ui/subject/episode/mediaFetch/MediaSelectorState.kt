@@ -9,10 +9,8 @@
 
 package me.him188.ani.app.ui.subject.episode.mediaFetch
 
-import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,90 +20,45 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.domain.media.TestMediaList
 import me.him188.ani.app.domain.media.selector.DefaultMediaSelector
+import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
 import me.him188.ani.app.domain.media.selector.MediaPreferenceItem
 import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.domain.media.selector.MediaSelectorContext
 import me.him188.ani.app.tools.MonoTasker
-import me.him188.ani.app.ui.foundation.BackgroundScope
-import me.him188.ani.app.ui.foundation.HasBackgroundScope
-import me.him188.ani.app.ui.foundation.launchInBackground
 import me.him188.ani.app.ui.foundation.rememberBackgroundScope
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.utils.platform.annotations.TestOnly
-import kotlin.coroutines.CoroutineContext
 
 fun MediaSelectorPresentation(
     mediaSelector: MediaSelector,
     mediaSourceInfoProvider: MediaSourceInfoProvider,
-    parentCoroutineContext: CoroutineContext,
-): MediaSelectorPresentation = MediaSelectorPresentationImpl(
-    mediaSelector, mediaSourceInfoProvider, parentCoroutineContext,
+    backgroundScope: CoroutineScope,
+): MediaSelectorState = MediaSelectorState(
+    mediaSelector, mediaSourceInfoProvider, backgroundScope,
 )
 
 @Composable
 fun rememberMediaSelectorPresentation(
     mediaSourceInfoProvider: MediaSourceInfoProvider,
     mediaSelector: () -> MediaSelector,// lambda remembered
-): MediaSelectorPresentation {
+): MediaSelectorState {
     val scope = rememberBackgroundScope()
     val selector by remember {
         derivedStateOf(mediaSelector)
     }
     return remember {
-        MediaSelectorPresentation(selector, mediaSourceInfoProvider, scope.backgroundScope.coroutineContext)
+        MediaSelectorPresentation(selector, mediaSourceInfoProvider, scope.backgroundScope)
     }
-}
-
-/**
- * 数据源选择器 UI 的状态.
- */
-@Stable
-interface MediaSelectorPresentation : AutoCloseable {
-    val mediaSourceInfoProvider: MediaSourceInfoProvider
-
-    /**
-     * The list of media available for selection.
-     */
-    val mediaList: List<Media>
-
-    val alliance: MediaPreferenceItemState<String>
-    val resolution: MediaPreferenceItemState<String>
-    val subtitleLanguageId: MediaPreferenceItemState<String>
-    val mediaSource: MediaPreferenceItemState<String>
-
-    /**
-     * @see MediaSelector.preferredCandidates
-     */
-    val filteredCandidates: List<Media>
-
-    /**
-     * @see MediaSelector.selected
-     */
-    val selected: Media?
-
-    /**
-     * @see MediaSelector.select
-     */
-    fun select(candidate: Media)
-
-    val groupedMediaList: List<MediaGroup>
-
-    @Stable
-    fun getGroupState(groupId: MediaGroupId): MediaGroupState
-
-    fun bringIntoViewRequester(media: Media): State<BringIntoViewRequester?>
-
-    fun removePreferencesUntilFirstCandidate()
 }
 
 @Stable
@@ -129,7 +82,7 @@ class MediaPreferenceItemState<T : Any>(
     ) { available, finalSelected, isWorking ->
         Presentation<T>(available, finalSelected, isWorking)
     }.stateIn(
-        backgroundScope, started = SharingStarted.WhileSubscribed(5000),
+        backgroundScope, started = SharingStarted.WhileSubscribed(),
         Presentation<T>(emptyList(), null, isWorking = false, isPlaceholder = true),
     )
 
@@ -160,69 +113,78 @@ fun <T : Any> MediaPreferenceItemState<T>.preferOrRemove(value: T?): Job {
 /**
  * Wraps [MediaSelector] to provide states for UI.
  */
-internal class MediaSelectorPresentationImpl(
+class MediaSelectorState(
     private val mediaSelector: MediaSelector,
-    override val mediaSourceInfoProvider: MediaSourceInfoProvider,
-    parentCoroutineContext: CoroutineContext,
-) : MediaSelectorPresentation, HasBackgroundScope by BackgroundScope(parentCoroutineContext) {
-    override val mediaList: List<Media> by mediaSelector.filteredCandidates.produceState(emptyList())
-    override val filteredCandidates: List<Media> by mediaSelector.preferredCandidates.produceState(emptyList())
+    val mediaSourceInfoProvider: MediaSourceInfoProvider,
+    private val backgroundScope: CoroutineScope,
+) {
+    data class Presentation(
+        val filteredCandidates: List<MaybeExcludedMedia>,
+        val preferredCandidates: List<Media>,
+        val groupedMediaListIncluded: List<MediaGroup>,
+        val groupedMediaListExcluded: List<MediaGroup>,
+        val selected: Media?,
+        val isPlaceholder: Boolean = false,
+    )
+
+    val presentationFlow = combine(
+        mediaSelector.filteredCandidates,
+        mediaSelector.preferredCandidates,
+        mediaSelector.selected,
+    ) { filteredCandidatesMedia, preferredCandidates, selected ->
+        val (groupsExcluded, groupsIncluded) = MediaGrouper.buildGroups(preferredCandidates).partition { it.isExcluded }
+        Presentation(
+            filteredCandidatesMedia,
+            preferredCandidates.mapNotNull { it.result },
+            groupsIncluded,
+            groupsExcluded,
+            selected,
+        )
+    }.stateIn(
+        backgroundScope,
+        started = SharingStarted.WhileSubscribed(),
+        Presentation(
+            emptyList(), emptyList(), emptyList(), emptyList(), null,
+            isPlaceholder = true,
+        ),
+    )
 
     private val groupStates: SnapshotStateMap<MediaGroupId, MediaGroupState> = SnapshotStateMap()
-    override val groupedMediaList: List<MediaGroup> by derivedStateOf {
-        MediaGrouper.buildGroups(filteredCandidates)
-    }
 
-    override fun getGroupState(groupId: MediaGroupId): MediaGroupState {
+    fun getGroupState(groupId: MediaGroupId): MediaGroupState {
         return groupStates.getOrPut(groupId) {
-            MediaGroupState(
-                groupId,
-                derivedStateOf {
-                    groupedMediaList.find { it.groupId == groupId }
-                },
-            )
+            MediaGroupState(groupId)
         }
     }
 
-    private val bringIntoViewRequesters by derivedStateOf {
-        mediaList.associateWith { BringIntoViewRequester() }
-    }
-
-    override val alliance: MediaPreferenceItemState<String> =
+    val alliance: MediaPreferenceItemState<String> =
         MediaPreferenceItemState(mediaSelector.alliance, backgroundScope)
-    override val resolution: MediaPreferenceItemState<String> =
+    val resolution: MediaPreferenceItemState<String> =
         MediaPreferenceItemState(mediaSelector.resolution, backgroundScope)
-    override val subtitleLanguageId: MediaPreferenceItemState<String> =
+    val subtitleLanguageId: MediaPreferenceItemState<String> =
         MediaPreferenceItemState(mediaSelector.subtitleLanguageId, backgroundScope)
-    override val mediaSource: MediaPreferenceItemState<String> =
+    val mediaSource: MediaPreferenceItemState<String> =
         MediaPreferenceItemState(mediaSelector.mediaSourceId, backgroundScope)
-    override val selected: Media? by mediaSelector.selected.produceState(null)
 
-    override fun select(candidate: Media) {
-        launchInBackground {
+    /**
+     * @see MediaSelector.select
+     */
+    fun select(candidate: Media) {
+        backgroundScope.launch {
             mediaSelector.select(candidate)
         }
     }
 
-    override fun bringIntoViewRequester(media: Media): State<BringIntoViewRequester?> = derivedStateOf {
-        bringIntoViewRequesters.get(media)
-    }
-
-    override fun removePreferencesUntilFirstCandidate() {
-        launchInBackground {
+    fun removePreferencesUntilFirstCandidate() {
+        backgroundScope.launch {
             mediaSelector.removePreferencesUntilFirstCandidate()
         }
-    }
-
-    override fun close() {
-        backgroundScope.cancel()
     }
 }
 
 @Stable
 class MediaGroupState(
     val groupId: MediaGroupId,
-    private val group: State<MediaGroup?>,
 ) {
     var selectedItem: Media? by mutableStateOf(null)
 }
@@ -233,7 +195,7 @@ class MediaGroupState(
 
 @Composable
 @TestOnly
-fun rememberTestMediaSelectorPresentation(): MediaSelectorPresentation {
+fun rememberTestMediaSelectorPresentation(): MediaSelectorState {
     val backgroundScope = rememberBackgroundScope()
     return remember(backgroundScope) { createState(backgroundScope.backgroundScope) }
 }
@@ -249,6 +211,6 @@ private fun createState(backgroundScope: CoroutineScope) =
             mediaSelectorSettings = flowOf(MediaSelectorSettings.Default),
         ),
         createTestMediaSourceInfoProvider(),
-        backgroundScope.coroutineContext,
+        backgroundScope,
     )
 

@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -32,6 +33,7 @@ import me.him188.ani.app.domain.media.cache.storage.TestMediaCacheStorage
 import me.him188.ani.app.domain.media.fetch.MediaFetcherConfig
 import me.him188.ani.app.domain.media.fetch.MediaSourceMediaFetcher
 import me.him188.ani.app.domain.media.framework.TestMediaSelector
+import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
 import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.domain.media.selector.MediaSelectorFactory
 import me.him188.ani.app.domain.mediasource.instance.createTestMediaSourceInstance
@@ -110,7 +112,8 @@ class EpisodeCacheStateTest {
                     subjectId: Int,
                     mediaList: Flow<List<Media>>,
                     flowCoroutineContext: CoroutineContext
-                ): MediaSelector = TestMediaSelector(mediaList)
+                ): MediaSelector =
+                    TestMediaSelector(mediaList.map { list -> list.map { MaybeExcludedMedia.Included(it) } })
             },
             storagesLazy = flowOf(listOf(TestMediaCacheStorage())),
         )

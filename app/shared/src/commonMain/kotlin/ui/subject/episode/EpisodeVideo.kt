@@ -72,7 +72,7 @@ import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.rememberDebugSettingsViewModel
 import me.him188.ani.app.ui.settings.danmaku.DanmakuRegexFilterState
 import me.him188.ani.app.ui.subject.episode.danmaku.DanmakuEditor
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorPresentation
+import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceInfoProvider
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultsPresentation
 import me.him188.ani.app.ui.subject.episode.statistics.VideoLoadingState
@@ -151,7 +151,7 @@ internal fun EpisodeVideoImpl(
     sidebarVisible: Boolean,
     onToggleSidebar: (isCollapsed: Boolean) -> Unit,
     progressSliderState: MediaProgressSliderState,
-    mediaSelectorPresentation: MediaSelectorPresentation,
+    mediaSelectorState: MediaSelectorState,
     mediaSourceResultsPresentation: MediaSourceResultsPresentation,
     episodeSelectorState: EpisodeSelectorState,
     mediaSourceInfoProvider: MediaSourceInfoProvider,
@@ -502,7 +502,7 @@ internal fun EpisodeVideoImpl(
 
             if (isMediaSelectorVisible) {
                 EpisodeVideoMediaSelectorSideSheet(
-                    mediaSelectorPresentation,
+                    mediaSelectorState,
                     mediaSourceResultsPresentation,
                     mediaSourceInfoProvider,
                     onDismissRequest = { isMediaSelectorVisible = false },

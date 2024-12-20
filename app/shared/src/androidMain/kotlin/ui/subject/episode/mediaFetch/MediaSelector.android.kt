@@ -20,6 +20,8 @@ import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.domain.media.TestMediaList
 import me.him188.ani.app.domain.media.cache.MediaCacheManager
 import me.him188.ani.app.domain.media.selector.DefaultMediaSelector
+import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
+import me.him188.ani.app.domain.media.selector.MediaExclusionReason
 import me.him188.ani.app.domain.media.selector.MediaSelectorContext
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.datasources.api.CachedMedia
@@ -86,10 +88,26 @@ private fun rememberTestMediaSelectorPresentation(previewMediaList: List<Media>)
 @OptIn(TestOnly::class, MediaGroupBuilderApi::class)
 @PreviewLightDark
 @Composable
-private fun PreviewMediaItem(modifier: Modifier = Modifier) = ProvideFoundationCompositionLocalsForPreview {
+private fun PreviewMediaItemIncluded(modifier: Modifier = Modifier) = ProvideFoundationCompositionLocalsForPreview {
     MediaItem(
         MediaGroup("Test").apply {
-            add(previewMediaList[0])
+            add(previewMediaList[0].let { MaybeExcludedMedia.Included(it) })
+        },
+        rememberTestMediaSourceInfoProvider(),
+        selected = false,
+        rememberTestMediaSelectorPresentation(),
+        {},
+        modifier = modifier,
+    )
+}
+
+@OptIn(TestOnly::class, MediaGroupBuilderApi::class)
+@PreviewLightDark
+@Composable
+private fun PreviewMediaItemExcluded(modifier: Modifier = Modifier) = ProvideFoundationCompositionLocalsForPreview {
+    MediaItem(
+        MediaGroup("Test").apply {
+            add(previewMediaList[0].let { MaybeExcludedMedia.Excluded(it, MediaExclusionReason.FromSequelSeason) })
         },
         rememberTestMediaSourceInfoProvider(),
         selected = false,
