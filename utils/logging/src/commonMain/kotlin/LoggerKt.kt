@@ -57,6 +57,11 @@ expect fun Any.thisLogger(): Logger
 
 expect inline fun <@Suppress("unused") reified T : Any> logger(): Logger
 
+/**
+ * 忽略所有日志
+ */
+expect val SilentLogger: Logger
+
 inline fun Logger.trace(message: () -> String) {
     if (isTraceEnabled()) {
         trace(message())

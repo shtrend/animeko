@@ -85,3 +85,27 @@ actual inline fun <reified T : Any> logger(): Logger {
 actual fun Any.thisLogger(): Logger {
     return logger(this::class)
 }
+
+actual val SilentLogger: Logger get() = SilentLoggerImpl
+
+private object SilentLoggerImpl : Logger {
+    override fun isTraceEnabled(): Boolean = false
+    override fun trace(message: String?, throwable: Throwable?) {
+    }
+
+    override fun isDebugEnabled(): Boolean = false
+    override fun debug(message: String?, throwable: Throwable?) {
+    }
+
+    override fun isInfoEnabled(): Boolean = false
+    override fun info(message: String?, throwable: Throwable?) {
+    }
+
+    override fun isWarnEnabled(): Boolean = false
+    override fun warn(message: String?, throwable: Throwable?) {
+    }
+
+    override fun isErrorEnabled(): Boolean = false
+    override fun error(message: String?, throwable: Throwable?) {
+    }
+}
