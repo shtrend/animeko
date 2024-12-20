@@ -76,9 +76,10 @@ fun MediaSelectorContext.Companion.createFlow(
     subtitleKindFilters: Flow<MediaSelectorSubtitlePreferences>,
     sequelSubjectNames: Flow<Set<String>>,
 ): Flow<MediaSelectorContext> = combine(
-    subjectCompleted,
-    mediaSourcePrecedence,
-    subtitleKindFilters,
+    // 都 emit null, debug 时能知道是谁没 emit
+    subjectCompleted.onStart<Boolean?> { emit(null) },
+    mediaSourcePrecedence.onStart<List<String>?> { emit(null) },
+    subtitleKindFilters.onStart<MediaSelectorSubtitlePreferences?> { emit(null) },
     sequelSubjectNames.retryWithBackoffDelay { e, _ ->
         val wrapped = RepositoryException.wrapOrThrowCancellation(e)
         if (wrapped is RepositoryUnknownException) {
@@ -88,7 +89,7 @@ fun MediaSelectorContext.Companion.createFlow(
         }
         emit(emptySet())
         true
-    },
+    }.onStart<Set<String>?> { emit(null) },
 ) { completed, instances, filters, sequels ->
     MediaSelectorContext(
         subjectFinished = completed,
