@@ -105,7 +105,14 @@ class BangumiCommentRepository(
             val offset = when (loadType) {
                 LoadType.REFRESH -> 0
                 LoadType.PREPEND -> return@withContext MediatorResult.Success(endOfPaginationReached = true)
-                LoadType.APPEND -> state.pages.size * state.config.pageSize
+                LoadType.APPEND -> {
+                    val lastLoadedPage = state.pages.lastOrNull()
+                    if (lastLoadedPage != null) {
+                        lastLoadedPage.itemsBefore + lastLoadedPage.data.size
+                    } else {
+                        0
+                    }
+                }
             }
 
             try {
