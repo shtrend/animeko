@@ -42,6 +42,7 @@ import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.nameCnOrName
+import me.him188.ani.app.data.repository.RepositoryNetworkException
 import me.him188.ani.app.domain.mediasource.instance.MediaSourceInstance
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.datasources.api.Media
@@ -193,19 +194,19 @@ class MediaSourceMediaFetcher(
                         state.value = MediaSourceFetchState.Failed(exception, restartCount)
                         when (exception) {
                             is ServerResponseException -> {
-                                logger.error { "Failed to fetch media from $mediaSourceId due to ${exception.response.status}" }
+                                logger.error { "Failed to fetch media from ${sourceInfo.displayName} due to ${exception.response.status}" }
                             }
 
-                            is IOException -> {
-                                logger.warn { "Failed to fetch media from $mediaSourceId due to network error" }
+                            is IOException, is RepositoryNetworkException -> {
+                                logger.warn { "Failed to fetch media from ${sourceInfo.displayName} due to network error" }
                             }
 
                             is CancellationException -> {
-                                logger.error { "Failed to fetch media from $mediaSourceId due to CancellationException" }
+                                logger.error { "Failed to fetch media from ${sourceInfo.displayName} due to CancellationException" }
                             }
 
                             else -> {
-                                logger.error(exception) { "Failed to fetch media from $mediaSourceId due to upstream error" }
+                                logger.error(exception) { "Failed to fetch media from ${sourceInfo.displayName} due to upstream error" }
                             }
                         }
                     }
