@@ -28,7 +28,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowOutward
@@ -80,7 +79,7 @@ fun SharedTransitionScope.SelectorTestPane(
     LazyVerticalGrid(
         columns = GridCells.Adaptive(300.dp),
         modifier,
-        rememberLazyGridState(),
+        state.gridState,
         contentPadding,
         horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo1().windowSizeClass.cardHorizontalPadding),
     ) {

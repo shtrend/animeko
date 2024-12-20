@@ -10,6 +10,7 @@
 package me.him188.ani.app.ui.settings.mediasource.selector.test
 
 import androidx.annotation.UiThread
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
@@ -132,6 +133,8 @@ class SelectorTestState(
             selectedSubjectIndex,
         )
     }.shareIn(backgroundScope, SharingStarted.WhileSubscribed(5000), 1)
+
+    val gridState = LazyGridState()
 
     @UiThread
     suspend fun observeChanges() {
