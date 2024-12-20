@@ -79,9 +79,8 @@ class MediaPreferenceItemState<T : Any>(
         item.available,
         item.finalSelected,
         tasker.isRunning,
-    ) { available, finalSelected, isWorking ->
-        Presentation<T>(available, finalSelected, isWorking)
-    }.stateIn(
+        transform = ::Presentation,
+    ).stateIn(
         backgroundScope, started = SharingStarted.WhileSubscribed(),
         Presentation<T>(emptyList(), null, isWorking = false, isPlaceholder = true),
     )

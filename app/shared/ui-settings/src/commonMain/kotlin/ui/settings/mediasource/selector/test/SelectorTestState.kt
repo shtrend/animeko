@@ -121,18 +121,8 @@ class SelectorTestState(
         filteredEpisodesFlow,
         filterByChannelFlow,
         selectedSubjectIndexFlow,
-    ) { isSearchingSubject, isSearchingEpisode, subjectSearchSelectResult, episodeListSearchSelectResult, selectedSubject, filteredEpisodes, filterByChannel, selectedSubjectIndex ->
-        SelectorTestPresentation(
-            isSearchingSubject,
-            isSearchingEpisode,
-            subjectSearchSelectResult,
-            episodeListSearchSelectResult,
-            selectedSubject,
-            filteredEpisodes,
-            filterByChannel,
-            selectedSubjectIndex,
-        )
-    }.shareIn(backgroundScope, SharingStarted.WhileSubscribed(5000), 1)
+        transform = ::SelectorTestPresentation,
+    ).shareIn(backgroundScope, SharingStarted.WhileSubscribed(5000), 1)
 
     val gridState = LazyGridState()
 
