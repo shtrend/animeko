@@ -32,9 +32,11 @@ import me.him188.ani.app.domain.media.fetch.MediaSourceFetchState
 import me.him188.ani.app.domain.media.fetch.awaitCompletion
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
-import me.him188.ani.utils.coroutines.CancellationException
 import me.him188.ani.utils.coroutines.cancellableCoroutineScope
+import me.him188.ani.utils.logging.SilentLogger
+import me.him188.ani.utils.logging.debug
 import kotlin.concurrent.Volatile
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmInline
 
 /**
@@ -141,7 +143,7 @@ value class MediaSelectorAutoSelect(
                 }
             }
 
-            combine(
+            combine<MediaSourceFetchState, _>(
                 // 每个 source 的 state.
                 fastSources
                     .map { source ->
@@ -154,11 +156,28 @@ value class MediaSelectorAutoSelect(
                             }
                     }, // 这会 launch 很多协程来收集状态
             ) { states ->
+                logger.debug {
+                    val msg = states.zip(fastSources) { state, source ->
+                        "${source.sourceInfo.displayName.take(2)}=$state"
+                    }.joinToString(", ")
+
+                    "fastSources state updated: $msg"
+                }
+
                 states.toList()
             }.onCompletion {
                 // 源完结后, 停止接受新的 allowNonPreferredFlow, 否则函数要等待 allowNonPreferredFlow 完结才能结束.
+                logger.debug {
+                    "fastSources onCompletion"
+                }
                 allowNonPreferredChannel.close()
-            }.combine(allowNonPreferredChannelFlow) { states, allowNonPreferred ->
+            }.combine(
+                allowNonPreferredChannelFlow.onCompletion {
+                    logger.debug {
+                        "allowNonPreferredChannelFlow onCompletion"
+                    }
+                },
+            ) { states, allowNonPreferred ->
                 // 注意, 此时可能有多个 source 同时完成 (状态同时变成 Completed). 所以需要遍历检验所有在此刻完成的 sources.
 
                 // 我们只需要从 index 开始按顺序考虑所有已经完成了的 source, 遇到第一个未完成的就停止. 
@@ -167,12 +186,18 @@ value class MediaSelectorAutoSelect(
                     when (states[index]) {
                         is MediaSourceFetchState.Completed,
                         is MediaSourceFetchState.Disabled -> {
+                            logger.debug {
+                                "calling trySelectFromMediaSources"
+                            }
                             val selected: Media? = mediaSelector.trySelectFromMediaSources(
                                 fastSources.subList(0, index + 1).map { it.mediaSourceId },
                                 overrideUserSelection = overrideUserSelection,
                                 blacklistMediaIds = blacklistMediaIds,
                                 allowNonPreferred = allowNonPreferred,
                             )
+                            logger.debug {
+                                "done trySelectFromMediaSources"
+                            }
 
                             if (selected != null) {
                                 // selected one
@@ -189,7 +214,16 @@ value class MediaSelectorAutoSelect(
                 }
                 null
             }.filterNotNull()
-                .firstOrNull()
+                .run {
+                    try {
+                        firstOrNull().also {
+                            logger.debug { "fastSources selected: $it" }
+                        }
+                    } catch (e: CancellationException) {
+                        logger.debug { "fastSources cancelled" }
+                        throw e
+                    }
+                }
                 .also {
                     backgroundTasks.cancel() // 不可以使用 cancelScope, 否则会取消整个函数, 导致总是 return null.
                 }
@@ -249,3 +283,6 @@ value class MediaSelectorAutoSelect(
 }
 
 private const val STOP = true
+
+// 日常没啥用, 只有出 bug 了才会用到
+private val logger = SilentLogger//logger<MediaSelectorAutoSelect>()
