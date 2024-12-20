@@ -55,27 +55,29 @@ class AniDanmakuProvider(
 
     override val id: String get() = ID
 
-    override suspend fun fetch(request: DanmakuSearchRequest): DanmakuFetchResult {
+    override suspend fun fetch(request: DanmakuSearchRequest): List<DanmakuFetchResult> {
         val resp = client.get("${baseUrl}/v1/danmaku/${request.episodeId}")
         val list = resp.body<DanmakuGetResponse>().danmakuList
         logger.info { "$ID Fetched danmaku list: ${list.size}" }
-        return DanmakuFetchResult(
-            matchInfo = DanmakuMatchInfo(
-                providerId = id,
-                count = list.size,
-                method = DanmakuMatchMethod.ExactId(request.subjectId, request.episodeId),
+        return listOf(
+            DanmakuFetchResult(
+                matchInfo = DanmakuMatchInfo(
+                    providerId = id,
+                    count = list.size,
+                    method = DanmakuMatchMethod.ExactId(request.subjectId, request.episodeId),
+                ),
+                list = list.asSequence().map {
+                    ApiDanmaku(
+                        id = it.id,
+                        providerId = ID,
+                        playTimeMillis = it.danmakuInfo.playTime,
+                        senderId = it.senderId,
+                        location = it.danmakuInfo.location.toApi(),
+                        text = it.danmakuInfo.text,
+                        color = it.danmakuInfo.color,
+                    )
+                },
             ),
-            list = list.asSequence().map {
-                ApiDanmaku(
-                    id = it.id,
-                    providerId = ID,
-                    playTimeMillis = it.danmakuInfo.playTime,
-                    senderId = it.senderId,
-                    location = it.danmakuInfo.location.toApi(),
-                    text = it.danmakuInfo.text,
-                    color = it.danmakuInfo.color,
-                )
-            },
         )
     }
 }

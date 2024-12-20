@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.danmaku.dandanplay
 
 import io.ktor.client.HttpClientConfig
@@ -49,9 +58,43 @@ class DandanplayDanmakuProvider(
         }
     }
 
+    private enum class DanmakuOrigin(val displayName: String) {
+        BiliBili("哔哩哔哩"),
+        AcFun("Acfun"),
+        Tucao("Tucao"),
+        Baha("Baha"),
+    }
+
     override suspend fun fetch(
         request: DanmakuSearchRequest,
-    ): DanmakuFetchResult {
+    ): List<DanmakuFetchResult> {
+        val raw = fetchImpl(request)
+        val rawList = raw.list.toList()
+        return rawList.groupBy {
+            when {
+                it.senderId.startsWith("[BiliBili]") -> DanmakuOrigin.BiliBili // 这个是确定的, 其他的不确定
+                it.senderId.startsWith("[Acfun]") -> DanmakuOrigin.AcFun
+                it.senderId.startsWith("[Tucao]") -> DanmakuOrigin.Tucao
+
+                it.senderId.startsWith("[Gamer]", ignoreCase = true)
+                        || it.senderId.startsWith("[Gamers]", ignoreCase = true)
+                        || it.senderId.startsWith("[Baha]", ignoreCase = true) -> DanmakuOrigin.Baha
+
+                else -> null
+            }
+        }.map { (origin, list) ->
+            DanmakuFetchResult(
+                matchInfo = DanmakuMatchInfo(
+                    providerId = origin?.displayName ?: id,
+                    count = list.size,
+                    method = raw.matchInfo.method,
+                ),
+                list = list.asSequence(),
+            )
+        }
+    }
+
+    private suspend fun fetchImpl(request: DanmakuSearchRequest): DanmakuFetchResult {
         // 获取剧集流程:
         //
         // 1. 获取该番剧所属季度的所有番的名字, 匹配 bangumi 条目所有别名
@@ -65,11 +108,11 @@ class DandanplayDanmakuProvider(
         // 3. 用剧集名字模糊匹配
 
         val episodes: List<DanmakuEpisode>? =
-            kotlin.runCatching { getEpisodesByExactSubjectMatch(request) }
+            runCatching { getEpisodesByExactSubjectMatch(request) }
                 .onFailure {
                     logger.error(it) { "Failed to fetch episodes by exact match" }
                 }.getOrNull()
-                ?: kotlin.runCatching {
+                ?: runCatching {
                     getEpisodesByFuzzyEpisodeSearch(request)
                 }.onFailure {
                     logger.error(it) { "Failed to fetch episodes by fuzzy search" }

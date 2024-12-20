@@ -36,7 +36,7 @@ interface DanmakuProvider : AutoCloseable {
      */
     suspend fun fetch(
         request: DanmakuSearchRequest,
-    ): DanmakuFetchResult
+    ): List<DanmakuFetchResult>
 }
 
 class DanmakuSearchRequest(
@@ -76,9 +76,6 @@ class DanmakuFetchResult(
 }
 
 class DanmakuMatchInfo(
-    /**
-     * @see DanmakuProvider.id
-     */
     val providerId: String,
     val count: Int,
     val method: DanmakuMatchMethod,

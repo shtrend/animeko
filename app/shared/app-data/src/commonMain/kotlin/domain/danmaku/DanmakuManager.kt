@@ -139,13 +139,15 @@ class DanmakuManagerImpl(
                 true
             }.catch {
                 emit(
-                    DanmakuFetchResult(
-                        DanmakuMatchInfo(
-                            provider.id,
-                            0,
-                            DanmakuMatchMethod.NoMatch,
+                    listOf(
+                        DanmakuFetchResult(
+                            DanmakuMatchInfo(
+                                provider.id,
+                                0,
+                                DanmakuMatchMethod.NoMatch,
+                            ),
+                            list = emptySequence(),
                         ),
-                        list = emptySequence(),
                     ),
                 )// 忽略错误, 否则一个源炸了会导致所有弹幕都不发射了
                 // 必须要 emit 一个, 否则下面 .first 会出错
@@ -155,7 +157,7 @@ class DanmakuManagerImpl(
             return CombinedDanmakuFetchResult(emptyList(), emptySequence())
         }
         val results = combine(flows) {
-            it.toList()
+            it.asSequence().flatten().toList()
         }.first()
         return CombinedDanmakuFetchResult(
             results.map { it.matchInfo },
