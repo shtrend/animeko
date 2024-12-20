@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import me.him188.ani.app.data.models.subject.CharacterInfo
 import me.him188.ani.app.data.models.subject.PersonInfo
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
@@ -35,6 +36,7 @@ import me.him188.ani.app.data.persistent.database.entity.PersonEntity
 import me.him188.ani.app.data.persistent.database.entity.SubjectCharacterRelationEntity
 import me.him188.ani.app.data.persistent.database.entity.SubjectPersonRelationEntity
 import me.him188.ani.app.data.repository.Repository
+import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.platform.collections.mapToIntArray
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
@@ -95,8 +97,15 @@ class DefaultSubjectRelationsRepository(
     override fun subjectSequelSubjectNamesFlow(subjectId: Int): Flow<Set<String>> {
         return subjectSequelSubjectsFlow(subjectId)
             .combine(subjectCollectionRepository.subjectCollectionFlow(subjectId)) { list, requestingSubject ->
-                list.flatMapTo(mutableSetOf()) { it.subjectInfo.allNames } - requestingSubject.subjectInfo.allNames
-            }
+                list.flatMapTo(mutableSetOf()) { it.subjectInfo.allNames }.apply {
+                    removeAll { sequelName ->
+                        // 如果续集名称存在于当前名称中, 则删除, 否则可能导致过滤掉当前季度的条目
+                        requestingSubject.subjectInfo.allNames.any { it.contains(sequelName, ignoreCase = true) }
+                    }
+                }
+            }.onEach {
+                logger.info { "subjectSequelSubjectNamesFlow($subjectId): " + it.joinToString() }
+            }.flowOn(defaultDispatcher)
     }
 
     override fun subjectRelatedPersonsFlow(subjectId: Int): Flow<List<RelatedPersonInfo>> {
