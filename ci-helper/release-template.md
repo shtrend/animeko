@@ -60,6 +60,8 @@ uploaded.
 
 [windows解决方案]: https://github.com/open-ani/ani/wiki/Windows-%E4%B8%8B%E5%AD%97%E4%BD%93%E4%B8%8E%E8%83%8C%E6%99%AF%E9%A2%9C%E8%89%B2%E5%BC%82%E5%B8%B8
 
+[macos-intel-issue]: https://github.com/open-ani/animeko/issues/1345
+
 - macOS 安装后如果无法打开: [解决方案][macos解决方案]
 - Windows 打开时如果显示异常: [解决方案][windows解决方案]
 - **Windows 解压目录不要带中文, 尽量不要有空格**
@@ -68,7 +70,7 @@ uploaded.
 |------------------|---------------------------------------------------------------------------------|
 | Windows          | [主线][cf-win-x64] / [备线][ghproxy-win-x64] / [GitHub][github-win-x64]             |
 | macOS (M 系列芯片)   | [主线][cf-mac-aarch64] / [备线][ghproxy-mac-aarch64] / [GitHub][github-mac-aarch64] |
-| macOS (Intel 芯片) | 不再支持. 如有需要, 请发起 issue                                                           |
+| macOS (Intel 芯片) | 不再支持. 如有需要, 请为此 issue 点赞: [#1345][macos-intel-issue]                            |
 
 ### 适用于 Android 手机和平板
 
