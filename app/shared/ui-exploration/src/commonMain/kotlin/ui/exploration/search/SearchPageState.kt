@@ -10,9 +10,7 @@
 package me.him188.ani.app.ui.exploration.search
 
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +18,7 @@ import androidx.compose.runtime.setValue
 import androidx.paging.PagingData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.search.PagingSearchState
@@ -30,13 +29,14 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Stable
 class SearchPageState(
-    searchHistoryState: State<List<String>>,
-    suggestionsState: State<List<String>>,
+    searchHistoryPager: Flow<PagingData<String>>,
+    suggestionsPager: Flow<PagingData<String>>,
+    queryFlow: Flow<String>,
+    val setQuery: (String) -> Unit,
     val onRequestPlay: suspend (SubjectPreviewItemInfo) -> EpisodeTarget?,
     val searchState: SearchState<SubjectPreviewItemInfo>,
     private val onRemoveHistory: suspend (String) -> Unit,
     backgroundScope: CoroutineScope,
-    queryState: MutableState<String> = mutableStateOf(""),
     private val onStartSearch: (String) -> Unit = {},
 ) {
     // to navigate to episode page
@@ -46,10 +46,11 @@ class SearchPageState(
     )
 
     val suggestionSearchBarState = SuggestionSearchBarState(
-        historyState = searchHistoryState,
-        suggestionsState = suggestionsState,
+        historyPager = searchHistoryPager,
+        suggestionsPager = suggestionsPager,
         searchState = searchState,
-        queryState = queryState,
+        queryFlow = queryFlow,
+        setQueryValue = setQuery,
         onRemoveHistory = { onRemoveHistory(it) },
         onStartSearch = { query ->
             onStartSearch(query)
@@ -82,18 +83,20 @@ fun createTestSearchPageState(
     )
 ): SearchPageState {
     val results = mutableStateOf<List<SubjectPreviewItemInfo>>(emptyList())
+    val queryFlow = MutableStateFlow("")
     return SearchPageState(
-        searchHistoryState = mutableStateOf(emptyList()),
-        suggestionsState = mutableStateOf(emptyList()),
+        searchHistoryPager = MutableStateFlow(PagingData.from(listOf("test history"))),
+        suggestionsPager = MutableStateFlow(PagingData.from(listOf("suggestion1"))),
+        queryFlow = queryFlow,
+        setQuery = { queryFlow.value = it },
         onRequestPlay = {
             delay(3000)
             SearchPageState.EpisodeTarget(1, 2)
         },
+        searchState = searchState,
         onRemoveHistory = {
 
         },
-        queryState = mutableStateOf(""),
-        searchState = searchState,
         backgroundScope = backgroundScope,
     )
 }

@@ -9,9 +9,10 @@
 
 package me.him188.ani.app.data.repository.subject
 
+import androidx.paging.Pager
+import androidx.paging.PagingData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.persistent.database.dao.SearchHistoryDao
 import me.him188.ani.app.data.persistent.database.dao.SearchHistoryEntity
@@ -31,9 +32,11 @@ class SubjectSearchHistoryRepository(
         searchHistory.deleteByContent(content)
     }
 
-    fun getHistoryFlow(): Flow<List<String>> {
-        return searchHistory.all().map { list -> list.map { it.content } }
-            .flowOn(defaultDispatcher)
+    fun getHistoryPager(): Flow<PagingData<String>> {
+        return Pager(
+            config = defaultPagingConfig,
+            pagingSourceFactory = { searchHistory.allPager() },
+        ).flow.flowOn(defaultDispatcher)
     }
 
 //    suspend fun addTag(tag: SearchTagEntity) {

@@ -10,9 +10,9 @@
 package me.him188.ani.app.ui.main
 
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableStateOf
 import androidx.paging.cachedIn
 import androidx.paging.map
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -43,23 +43,23 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
 
     private val nsfwSettingFlow = settingsRepository.uiSettings.flow.map { it.searchSettings.nsfwMode }
 
-    private val queryState = mutableStateOf("")
+    private val queryFlow = MutableStateFlow("")
 
     val searchPageState: SearchPageState = SearchPageState(
-        searchHistoryState = searchHistoryRepository.getHistoryFlow().produceState(emptyList()),
-        suggestionsState = searchHistoryRepository.getHistoryFlow()
-            .produceState(emptyList()),// todo: suggestions
+        searchHistoryPager = searchHistoryRepository.getHistoryPager(),
+        suggestionsPager = searchHistoryRepository.getHistoryPager(),// todo: suggestions
+        queryFlow = queryFlow,
+        setQuery = { queryFlow.value = it },
         onRequestPlay = { info ->
             episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(info.subjectId).first().firstOrNull()?.let {
                 SearchPageState.EpisodeTarget(info.subjectId, it.episodeInfo.episodeId)
             }
         },
-        queryState = queryState,
         searchState = PagingSearchState(
             createPager = {
                 // 搜索总是会包含 NSFW
                 subjectSearchRepository.searchSubjects(
-                    SubjectSearchQuery(keyword = queryState.value),
+                    SubjectSearchQuery(keyword = queryFlow.value),
                     useNewApi = {
                         settingsRepository.uiSettings.flow.map { it.searchSettings.enableNewSearchSubjectApi }.first()
                     },

@@ -9,12 +9,10 @@
 
 package me.him188.ani.app.ui.exploration.search
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
@@ -28,55 +26,84 @@ import androidx.compose.material3.SearchBarDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.adaptive.AdaptiveSearchBar
 import me.him188.ani.app.ui.foundation.interaction.onEnterKeyEvent
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
-import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.search.SearchState
 
 @Stable
 class SuggestionSearchBarState<T : Any>(
-    historyState: State<List<String>>, // must be distinct
-    suggestionsState: State<List<String>>, // must be distinct
+    historyPager: Flow<PagingData<String>>, // must be distinct
+    suggestionsPager: Flow<PagingData<String>>, // must be distinct
     private val searchState: SearchState<T>,
     private val onRemoveHistory: suspend (text: String) -> Unit,
-    queryState: MutableState<String> = mutableStateOf(""),
+    queryFlow: Flow<String>,
+    private val setQueryValue: (String) -> Unit,
     private val onStartSearch: (query: String) -> Unit = {},
     backgroundScope: CoroutineScope,
 ) {
-    var query by queryState
+    // 不能直接采用 presentation.query, 因为编辑框内容需要在 UI 线程即使处理用户输入, 不能切换到后台运行, 否则 PC 上IME 输入可能有问题
+    var editingQuery: String by mutableStateOf("")
+        private set
+
+    val historyPager = historyPager.cachedIn(backgroundScope)
+    val suggestionsPager = suggestionsPager.cachedIn(backgroundScope)
+
+    data class Presentation(
+        val query: String,
+        val previewType: SuggestionSearchPreviewType =
+            if (query.isEmpty()) SuggestionSearchPreviewType.HISTORY else SuggestionSearchPreviewType.SUGGESTIONS,
+        val isPlaceholder: Boolean = false,
+    )
+
+    val presentationFlow = queryFlow.map {
+        Presentation(it)
+    }.stateIn(
+        backgroundScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = Presentation(
+            "",
+            isPlaceholder = true,
+        ),
+    )
+
     var expanded by mutableStateOf(false)
 
-    val previewType by derivedStateOf {
-        if (query.isEmpty()) SuggestionSearchPreviewType.HISTORY else SuggestionSearchPreviewType.SUGGESTIONS
-    }
-
-    val history by historyState
-    val suggestions by suggestionsState
-
     fun clear() {
-        query = ""
+        setQuery("")
         expanded = false
         searchState.clear()
+    }
+
+    fun setQuery(value: String) {
+        editingQuery = value
+        setQueryValue(value)
     }
 
     fun startSearch() {
         searchState.startSearch()
         expanded = false
-        onStartSearch(query)
+        onStartSearch(presentationFlow.value.query)
     }
 
     private val removeHistoryTasker = MonoTasker(backgroundScope)
@@ -111,11 +138,13 @@ fun <T : Any> SuggestionSearchBar(
     BackHandler(state.expanded) {
         state.expanded = false
     }
+    val presentation by state.presentationFlow.collectAsStateWithLifecycle()
+
     AdaptiveSearchBar(
         inputField = {
             SearchBarDefaults.InputField(
-                query = state.query,
-                onQueryChange = { state.query = it.trim('\n') },
+                query = state.editingQuery,
+                onQueryChange = { state.setQuery(it.trim('\n')) },
                 onSearch = {
                     state.expanded = false
                     state.startSearch()
@@ -129,7 +158,7 @@ fun <T : Any> SuggestionSearchBar(
                 placeholder = placeholder,
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon =
-                    if (state.query.isNotEmpty() || state.expanded) {
+                    if (presentation.query.isNotEmpty() || state.expanded) {
                         {
                             IconButton({ state.clear() }) {
                                 Icon(Icons.Default.Close, contentDescription = null)
@@ -143,37 +172,37 @@ fun <T : Any> SuggestionSearchBar(
         modifier,
         windowInsets = windowInsets,
     ) {
-        val valuesState = when (state.previewType) {
-            SuggestionSearchPreviewType.HISTORY -> state.history
-            SuggestionSearchPreviewType.SUGGESTIONS -> state.suggestions
-        }
-        AnimatedContent(
-            valuesState,
-            transitionSpec = AniThemeDefaults.standardAnimatedContentTransition,
-        ) { values ->
-            LazyColumn {
-                items(values, key = { it }, contentType = { 1 }) { text ->
-                    ListItem(
-                        leadingContent = if (state.previewType == SuggestionSearchPreviewType.HISTORY) {
-                            { Icon(Icons.Default.History, contentDescription = null) }
-                        } else {
-                            null
-                        },
-                        headlineContent = { Text(text) },
-                        modifier = Modifier.animateItem().clickable {
-                            state.query = text
-                            state.startSearch()
-                        },
-                        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                        trailingContent = if (state.previewType == SuggestionSearchPreviewType.HISTORY) {
-                            {
-                                IconButton({ state.removeHistory(text) }, enabled = state.removingHistory != text) {
-                                    Icon(Icons.Default.Close, contentDescription = "删除 $text")
-                                }
+        val values = when (presentation.previewType) {
+            SuggestionSearchPreviewType.HISTORY -> state.historyPager
+            SuggestionSearchPreviewType.SUGGESTIONS -> state.suggestionsPager
+        }.collectAsLazyPagingItemsWithLifecycle()
+        LazyColumn {
+            items(
+                values.itemCount,
+                key = values.itemKey { it },
+                contentType = values.itemContentType { 1 },
+            ) { index ->
+                val text = values[index] ?: return@items
+                ListItem(
+                    leadingContent = if (presentation.previewType == SuggestionSearchPreviewType.HISTORY) {
+                        { Icon(Icons.Default.History, contentDescription = null) }
+                    } else {
+                        null
+                    },
+                    headlineContent = { Text(text) },
+                    modifier = Modifier.animateItem().clickable {
+                        state.setQuery(text)
+                        state.startSearch()
+                    },
+                    colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                    trailingContent = if (presentation.previewType == SuggestionSearchPreviewType.HISTORY) {
+                        {
+                            IconButton({ state.removeHistory(text) }, enabled = state.removingHistory != text) {
+                                Icon(Icons.Default.Close, contentDescription = "删除 $text")
                             }
-                        } else null,
-                    )
-                }
+                        }
+                    } else null,
+                )
             }
         }
     }
