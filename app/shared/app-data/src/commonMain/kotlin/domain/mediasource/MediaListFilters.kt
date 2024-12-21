@@ -24,8 +24,13 @@ import me.him188.ani.utils.platform.trimSB
 object MediaListFilters {
     val ContainsSubjectName = BasicMediaListFilter { media ->
         subjectNamesWithoutSpecial.any { subjectName ->
-            removeSpecials(media.originalTitle, removeWhitespace = true, replaceNumbers = true)
+            val originalTitle = removeSpecials(media.originalTitle, removeWhitespace = true, replaceNumbers = true)
+            fun exactlyContains() = originalTitle
                 .contains(subjectName, ignoreCase = true)
+
+            fun fuzzyMatches() = StringMatcher.calculateMatchRate(originalTitle, subjectName) >= 0.8
+
+            exactlyContains() || fuzzyMatches()
         }
     }
 
