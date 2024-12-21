@@ -176,7 +176,7 @@ class DirectoryMediaCacheStorageTest {
         subjectId = "1",
         episodeId = "1",
         subjectNameCN = "1",
-        subjectNames = emptySet(),
+        subjectNames = emptyList(),
         episodeSort = EpisodeSort("02"),
         episodeEp = EpisodeSort("02"),
         episodeName = "测试剧集",

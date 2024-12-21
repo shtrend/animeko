@@ -211,6 +211,8 @@ class SelectorMediaSource(
     }
 
     override suspend fun fetch(query: MediaFetchRequest): SizedSource<MediaMatch> {
+        val allSubjectNames = query.subjectNames.toSet()
+
         return query.subjectNames
             .map { name ->
                 SinglePagePagedSource {
@@ -219,7 +221,7 @@ class SelectorMediaSource(
                         SelectorSearchQuery(
                             subjectName = name,
                             episodeSort = query.episodeSort,
-                            allSubjectNames = query.subjectNames,
+                            allSubjectNames = allSubjectNames,
                             episodeEp = query.episodeEp,
                             episodeName = query.episodeName,
                         ),

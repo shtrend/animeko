@@ -97,7 +97,7 @@ class RssTestPaneState(
             val query = RssSearchQuery(
                 subjectName = testData.keyword,
                 episodeSort = EpisodeSort(sort),
-                allSubjectNames = setOf(testData.keyword),
+                allSubjectNames = listOf(testData.keyword),
                 episodeName = null,
                 episodeEp = null,
             )

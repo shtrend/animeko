@@ -116,7 +116,7 @@ fun MediaFetchRequest.Companion.create(
         subjectId = subject.subjectId.toString(),
         episodeId = episode.episodeId.toString(),
         subjectNameCN = subject.nameCnOrName,
-        subjectNames = subject.allNames.toSet(),
+        subjectNames = subject.allNames,
         episodeSort = episode.sort,
         episodeName = episode.displayName,
         episodeEp = episode.ep,

@@ -49,7 +49,7 @@ class MediaFetcherTest {
     private val request1 = MediaFetchRequest(
         subjectId = "123123",
         episodeId = "1231231",
-        subjectNames = setOf("夜晚的水母不会游泳"),
+        subjectNames = listOf("夜晚的水母不会游泳"),
         episodeSort = EpisodeSort("03"),
         episodeName = "测试剧集2",
     )

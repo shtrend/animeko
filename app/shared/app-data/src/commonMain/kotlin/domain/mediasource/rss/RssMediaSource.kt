@@ -178,14 +178,14 @@ class RssMediaSource(
 
 data class RssSearchQuery(
     val subjectName: String,
-    val allSubjectNames: Set<String>,
+    val allSubjectNames: List<String>,
     val episodeSort: EpisodeSort,
     val episodeEp: EpisodeSort?,
     val episodeName: String?,
 )
 
 fun RssSearchQuery.toFilterContext() = MediaListFilterContext(
-    subjectNames = allSubjectNames,
+    subjectNames = allSubjectNames.toSet(),
     episodeSort = episodeSort,
     episodeEp = episodeSort,
     episodeName = episodeName,

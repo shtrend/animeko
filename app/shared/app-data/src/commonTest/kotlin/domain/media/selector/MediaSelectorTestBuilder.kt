@@ -120,7 +120,7 @@ class MediaSelectorTestBuilder() {
         MediaFetchRequest(
             subjectId = "1",
             episodeId = "1",
-            subjectNames = setOf("孤独摇滚"),
+            subjectNames = listOf("孤独摇滚"),
             episodeSort = EpisodeSort(1),
             episodeName = "test",
         ),

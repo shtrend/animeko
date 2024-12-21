@@ -96,7 +96,7 @@ data class SubjectInfo(
             fun addIfNotBlank(name2: String) {
                 if (name2.isNotBlank()) add(name2)
             }
-            addIfNotBlank(nameCn)
+            addIfNotBlank(nameCn) // name cn 需要是第一个, SelectorMediaSource 依赖这个性质
             addIfNotBlank(name)
             aliases.forEach { addIfNotBlank(it) }
         }

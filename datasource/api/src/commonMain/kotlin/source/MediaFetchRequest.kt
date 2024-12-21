@@ -43,7 +43,7 @@ data class MediaFetchRequest(
      *
      * E.g. "关于我转生变成史莱姆这档事 第三季"
      */
-    val subjectNames: Set<String>,
+    val subjectNames: List<String>,
     /**
      * 在系列中的集数, 例如第二季的第一集为 26.
      *
