@@ -48,8 +48,8 @@ sealed class MaybeExcludedMedia {
         override val result: Media,
     ) : MaybeExcludedMedia() {
         @UnsafeOriginalMediaAccess
-        override inline val original: Media get() = result
-        override inline val exclusionReason: Nothing? get() = null
+        override val original: Media get() = result
+        override val exclusionReason: Nothing? get() = null
     }
 
     /**
@@ -60,7 +60,7 @@ sealed class MaybeExcludedMedia {
         override val original: Media,
         override val exclusionReason: MediaExclusionReason
     ) : MaybeExcludedMedia() {
-        override inline val result: Nothing? get() = null
+        override val result: Nothing? get() = null
     }
 }
 
