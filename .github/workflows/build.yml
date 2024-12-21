@@ -25,6 +25,7 @@ jobs:
           - 'macos-aarch64'
         include:
           - arch: 'x64'
+            buildAllAndroidAbis: false
             buildAnitorrent: true
             buildAnitorrentSeparately: false
             buildIosFramework: false
@@ -45,6 +46,7 @@ jobs:
             uploadApk: false
             uploadDesktopInstallers: false
           - arch: 'x64'
+            buildAllAndroidAbis: false
             buildAnitorrent: true
             buildAnitorrentSeparately: false
             buildIosFramework: false
@@ -63,6 +65,7 @@ jobs:
             uploadApk: false
             uploadDesktopInstallers: true
           - arch: 'x64'
+            buildAllAndroidAbis: true
             buildAnitorrent: false
             buildAnitorrentSeparately: false
             buildIosFramework: false
@@ -80,6 +83,7 @@ jobs:
             uploadApk: false
             uploadDesktopInstallers: false
           - arch: 'x64'
+            buildAllAndroidAbis: true
             buildAnitorrent: true
             buildAnitorrentSeparately: true
             buildIosFramework: false
@@ -97,6 +101,7 @@ jobs:
             uploadApk: true
             uploadDesktopInstallers: true
           - arch: 'aarch64'
+            buildAllAndroidAbis: false
             buildAnitorrent: true
             buildAnitorrentSeparately: true
             buildIosFramework: false
@@ -276,7 +281,7 @@ jobs:
           name: 'ani-android-universal-debug'
           path: 'app/android/build/outputs/apk/debug/android-universal-debug.apk'
           overwrite: 'true'
-        if: '${{ matrix.uploadApk }}'
+        if: '${{ (matrix.uploadApk) && (matrix.buildAllAndroidAbis) }}'
       - id: 'step-23'
         name: 'Build Android Release APKs'
         env:
@@ -317,7 +322,7 @@ jobs:
           name: 'ani-android-universal-release'
           path: 'app/android/build/outputs/apk/release/android-universal-release.apk'
           overwrite: 'true'
-        if: '${{ matrix.uploadApk }}'
+        if: '${{ (matrix.uploadApk) && (matrix.buildAllAndroidAbis) }}'
       - id: 'step-28'
         name: 'Check'
         uses: 'nick-fields/retry@v2'

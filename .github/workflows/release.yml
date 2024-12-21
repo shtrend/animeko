@@ -70,6 +70,7 @@ jobs:
           - 'macos-aarch64'
         include:
           - arch: 'x64'
+            buildAllAndroidAbis: false
             buildAnitorrent: true
             buildAnitorrentSeparately: false
             buildIosFramework: false
@@ -90,6 +91,7 @@ jobs:
             uploadApk: false
             uploadDesktopInstallers: false
           - arch: 'x64'
+            buildAllAndroidAbis: false
             buildAnitorrent: true
             buildAnitorrentSeparately: false
             buildIosFramework: false
@@ -108,6 +110,7 @@ jobs:
             uploadApk: false
             uploadDesktopInstallers: true
           - arch: 'x64'
+            buildAllAndroidAbis: true
             buildAnitorrent: true
             buildAnitorrentSeparately: true
             buildIosFramework: false
@@ -125,6 +128,7 @@ jobs:
             uploadApk: true
             uploadDesktopInstallers: true
           - arch: 'aarch64'
+            buildAllAndroidAbis: false
             buildAnitorrent: true
             buildAnitorrentSeparately: true
             buildIosFramework: false
@@ -318,7 +322,7 @@ jobs:
           name: 'ani-android-universal-debug'
           path: 'app/android/build/outputs/apk/debug/android-universal-debug.apk'
           overwrite: 'true'
-        if: '${{ matrix.uploadApk }}'
+        if: '${{ (matrix.uploadApk) && (matrix.buildAllAndroidAbis) }}'
       - id: 'step-25'
         name: 'Build Android Release APKs'
         env:
@@ -359,7 +363,7 @@ jobs:
           name: 'ani-android-universal-release'
           path: 'app/android/build/outputs/apk/release/android-universal-release.apk'
           overwrite: 'true'
-        if: '${{ matrix.uploadApk }}'
+        if: '${{ (matrix.uploadApk) && (matrix.buildAllAndroidAbis) }}'
       - id: 'step-30'
         name: 'Upload Android APK for Release'
         env:
@@ -381,14 +385,14 @@ jobs:
         with:
           text: 'https://github.com/Him188/ani/releases/download/${{ steps.step-1.outputs.tag }}/ani-${{ steps.step-2.outputs.substring }}-universal.apk'
           path: 'apk-qrcode-github.png'
-        if: '${{ matrix.uploadApk }}'
+        if: '${{ (matrix.uploadApk) && (matrix.buildAllAndroidAbis) }}'
       - id: 'step-32'
         name: 'Generate QR code for APK (Cloudflare)'
         uses: 'snow-actions/qrcode@v1.0.0'
         with:
           text: 'https://d.myani.org/${{ steps.step-1.outputs.tag }}/ani-${{ steps.step-2.outputs.substring }}-universal.apk'
           path: 'apk-qrcode-cloudflare.png'
-        if: '${{ matrix.uploadApk }}'
+        if: '${{ (matrix.uploadApk) && (matrix.buildAllAndroidAbis) }}'
       - id: 'step-33'
         name: 'Upload QR code'
         env:
@@ -403,7 +407,7 @@ jobs:
           AWS_REGION: '${{ secrets.AWS_REGION }}'
           AWS_BUCKET: '${{ secrets.AWS_BUCKET }}'
         run: './gradlew :ci-helper:uploadAndroidApkQR ${{ matrix.gradleArgs }}'
-        if: '${{ matrix.uploadApk }}'
+        if: '${{ (matrix.uploadApk) && (matrix.buildAllAndroidAbis) }}'
       - id: 'step-34'
         name: 'Upload Desktop Installers'
         env:

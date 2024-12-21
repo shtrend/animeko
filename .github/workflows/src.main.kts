@@ -45,9 +45,6 @@ import Secrets.SIGNING_RELEASE_KEYALIAS
 import Secrets.SIGNING_RELEASE_KEYPASSWORD
 import Secrets.SIGNING_RELEASE_STOREFILE
 import Secrets.SIGNING_RELEASE_STOREPASSWORD
-import Src_main.Arch
-import Src_main.MatrixContext
-import Src_main.OS
 import io.github.typesafegithub.workflows.actions.actions.Checkout
 import io.github.typesafegithub.workflows.actions.actions.GithubScript
 import io.github.typesafegithub.workflows.actions.actions.UploadArtifact
@@ -171,6 +168,7 @@ class MatrixInstance(
      */
     val installNativeDeps: Boolean = !selfHosted,
     val buildIosFramework: Boolean = false,
+    val buildAllAndroidAbis: Boolean = true,
 
     // Gradle command line args
     gradleHeap: String = "4g",
@@ -224,9 +222,17 @@ class MatrixInstance(
     init {
         require(os in listOf(OS.WINDOWS, OS.UBUNTU, OS.MACOS)) { "Unsupported OS: $os" }
         require(arch in listOf(Arch.X64, Arch.AARCH64)) { "Unsupported arch: $arch" }
+
+        if (buildAllAndroidAbis) {
+            require(!gradleArgs.contains(ANI_ANDROID_ABIS)) { "You must not set `-P${ANI_ANDROID_ABIS}` when you want to build all Android ABIs" }
+        } else {
+            require(gradleArgs.contains(ANI_ANDROID_ABIS)) { "You must set `-P${ANI_ANDROID_ABIS}` when you don't want to build all Android ABIs" }
+        }
     }
 }
 
+@Suppress("PropertyName")
+val ANI_ANDROID_ABIS = "ani.android.abis"
 
 val matrixInstances = listOf(
     MatrixInstance(
@@ -245,8 +251,9 @@ val matrixInstances = listOf(
         gradleParallel = true,
         uploadDesktopInstallers = false, // 只有 win server 2019 构建的包才能正常使用 anitorrent
         extraGradleArgs = listOf(
-            "-Pani.android.abis=x86_64",
+            "-P$ANI_ANDROID_ABIS=x86_64",
         ),
+        buildAllAndroidAbis = false,
     ),
     MatrixInstance(
         id = "windows-2019",
@@ -263,8 +270,9 @@ val matrixInstances = listOf(
         kotlinCompilerHeap = "4g",
         gradleParallel = true,
         extraGradleArgs = listOf(
-            "-Pani.android.abis=x86_64",
+            "-P$ANI_ANDROID_ABIS=x86_64",
         ),
+        buildAllAndroidAbis = false,
     ),
     MatrixInstance(
         id = "ubuntu-x64",
@@ -282,6 +290,7 @@ val matrixInstances = listOf(
         extraGradleArgs = listOf(),
         gradleHeap = "4g",
         kotlinCompilerHeap = "4g",
+        buildAllAndroidAbis = true,
     ),
     MatrixInstance(
         id = "macos-x64",
@@ -298,7 +307,7 @@ val matrixInstances = listOf(
         gradleHeap = "4g",
         kotlinCompilerHeap = "4g",
         extraGradleArgs = listOf(),
-        // build all android ABI
+        buildAllAndroidAbis = true,
     ),
     MatrixInstance(
         id = "macos-aarch64",
@@ -312,12 +321,13 @@ val matrixInstances = listOf(
         buildAnitorrentSeparately = true,
         composeResourceTriple = "macos-arm64",
         extraGradleArgs = listOf(
-            "-Pani.android.abis=arm64-v8a",
+            "-P$ANI_ANDROID_ABIS=arm64-v8a",
         ),
         buildIosFramework = false,
         gradleHeap = "6g",
         kotlinCompilerHeap = "4g",
         gradleParallel = true,
+        buildAllAndroidAbis = false,
     ),
 )
 
@@ -747,7 +757,11 @@ fun JobBuilder<*>.buildAndroidApk(prepareSigningKey: ActionStep<Base64ToFile_Unt
     for (arch in AndroidArch.entriesWithUniversal) {
         uses(
             name = "Upload Android Debug APK $arch",
-            `if` = expr { matrix.uploadApk },
+            `if` = if (arch == AndroidArch.UNIVERSAL) {
+                expr { matrix.uploadApk and matrix.buildAllAndroidAbis }
+            } else {
+                expr { matrix.uploadApk }
+            },
             action = UploadArtifact(
                 name = "ani-android-${arch}-debug",
                 path_Untyped = "app/android/build/outputs/apk/debug/android-${arch}-debug.apk",
@@ -773,7 +787,11 @@ fun JobBuilder<*>.buildAndroidApk(prepareSigningKey: ActionStep<Base64ToFile_Unt
     for (arch in AndroidArch.entriesWithUniversal) {
         uses(
             name = "Upload Android Release APK $arch",
-            `if` = expr { matrix.uploadApk },
+            `if` = if (arch == AndroidArch.UNIVERSAL) {
+                expr { matrix.uploadApk and matrix.buildAllAndroidAbis }
+            } else {
+                expr { matrix.uploadApk }
+            },
             action = UploadArtifact(
                 name = "ani-android-${arch}-release",
                 path_Untyped = "app/android/build/outputs/apk/release/android-${arch}-release.apk",
@@ -893,9 +911,10 @@ class CIHelper(
     }
 
     fun JobBuilder<*>.generateQRCodeAndUpload() {
+        val condition = expr { matrix.uploadApk and matrix.buildAllAndroidAbis }
         uses(
             name = "Generate QR code for APK (GitHub)",
-            `if` = expr { matrix.uploadApk },
+            `if` = condition,
             action = Qrcode_Untyped(
                 text_Untyped = """https://github.com/Him188/ani/releases/download/${expr { gitTag.tagExpr }}/ani-${expr { gitTag.tagVersionExpr }}-universal.apk""",
                 path_Untyped = "apk-qrcode-github.png",
@@ -903,7 +922,7 @@ class CIHelper(
         )
         uses(
             name = "Generate QR code for APK (Cloudflare)",
-            `if` = expr { matrix.uploadApk },
+            `if` = condition,
             action = Qrcode_Untyped(
                 text_Untyped = """https://d.myani.org/${expr { gitTag.tagExpr }}/ani-${expr { gitTag.tagVersionExpr }}-universal.apk""",
                 path_Untyped = "apk-qrcode-cloudflare.png",
@@ -911,7 +930,7 @@ class CIHelper(
         )
         runGradle(
             name = "Upload QR code",
-            `if` = expr { matrix.uploadApk },
+            `if` = condition,
             tasks = [":ci-helper:uploadAndroidApkQR"],
             env = ciHelperSecrets,
         )
@@ -953,6 +972,7 @@ object MatrixContext : ExpressionContext("matrix") {
     val composeResourceTriple by propertyToExprPath
     val runTests by propertyToExprPath
     val uploadDesktopInstallers by propertyToExprPath
+    val buildAllAndroidAbis by propertyToExprPath
     val gradleArgs by propertyToExprPath
 
     init {
