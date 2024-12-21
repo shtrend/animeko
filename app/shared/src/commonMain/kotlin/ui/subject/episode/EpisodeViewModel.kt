@@ -339,6 +339,7 @@ private class EpisodeViewModelImpl(
                 launchInBackground {
                     // 快速自动选择数据源. 当按数据源顺序排序, 当最高排序的数据源查询完成后立即自动选择. #1322
                     mediaFetchSession.collectLatest { session ->
+                        awaitSwitchEpisodeCompleted()
                         val mediaSelectorSettings = mediaSelectorSettingsFlow.first()
                         if (!mediaSelectorSettings.fastSelectWebKind) {
                             return@collectLatest
