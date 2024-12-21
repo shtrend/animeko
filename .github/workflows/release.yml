@@ -361,7 +361,7 @@ jobs:
           overwrite: 'true'
         if: '${{ matrix.uploadApk }}'
       - id: 'step-30'
-        name: 'π'
+        name: 'Upload Android APK for Release'
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           GITHUB_REPOSITORY: '${{ secrets.GITHUB_REPOSITORY }}'
