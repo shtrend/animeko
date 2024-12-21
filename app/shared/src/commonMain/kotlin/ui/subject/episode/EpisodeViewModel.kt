@@ -850,10 +850,15 @@ private class EpisodeViewModelImpl(
                     if (!enabled) return@collectLatest
 
                     playerState.state.collect { playback ->
-                        if (playback != PlaybackState.FINISHED) return@collect
-                        launchInMain {// state changes must be in main thread
+                        if (playback == PlaybackState.FINISHED
+                            && playerState.videoProperties.value.let { prop ->
+                                prop != null && prop.durationMillis > 0L && prop.durationMillis - playerState.currentPositionMillis.value < 5000
+                            }
+                        ) {
                             logger.info("播放完毕，切换下一集")
-                            episodeSelectorState.takeIf { it.hasNextEpisode }?.selectNext()
+                            launchInMain {// state changes must be in main thread
+                                episodeSelectorState.takeIf { it.hasNextEpisode }?.selectNext()
+                            }
                         }
                     }
                 }
