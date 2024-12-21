@@ -53,6 +53,7 @@ sourceSets {
 compose.desktop {
     application {
         jvmArgs(
+            "-XX:+UseZGC",
             "-Dorg.slf4j.simpleLogger.defaultLogLevel=TRACE",
             "-Dsun.java2d.metal=true",
             "-Djogamp.debug.JNILibLoader=true", // JCEF 加载 native 库的日志, 方便 debug
