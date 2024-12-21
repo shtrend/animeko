@@ -214,6 +214,7 @@ class SelectorMediaSource(
         val allSubjectNames = query.subjectNames.toSet()
 
         return query.subjectNames
+            .take(1) // 只采用第一个主名称就够了
             .map { name ->
                 SinglePagePagedSource {
                     engine.search(
