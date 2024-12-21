@@ -12,7 +12,13 @@ package me.him188.ani.app.domain.mediasource.web
 
 import io.ktor.client.request.get
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flattenConcat
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
@@ -31,7 +37,6 @@ import me.him188.ani.datasources.api.matcher.WebViewConfig
 import me.him188.ani.datasources.api.paging.SinglePagePagedSource
 import me.him188.ani.datasources.api.paging.SizedSource
 import me.him188.ani.datasources.api.paging.map
-import me.him188.ani.datasources.api.paging.merge
 import me.him188.ani.datasources.api.source.ConnectionStatus
 import me.him188.ani.datasources.api.source.FactoryId
 import me.him188.ani.datasources.api.source.HttpMediaSource
@@ -46,6 +51,7 @@ import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.source.MediaSourceLocation
 import me.him188.ani.datasources.api.source.deserializeArgumentsOrNull
 import me.him188.ani.datasources.api.source.useHttpClient
+import kotlin.time.Duration
 
 @Suppress("unused") // bug
 private typealias ArgumentType = SelectorMediaSourceArguments
@@ -222,7 +228,7 @@ class SelectorMediaSource(
                 }.map {
                     MediaMatch(it, MatchKind.FUZZY)
                 }
-            }.merge()
+            }.flattenConcat(searchConfig.requestInterval)
     }
 
     override val matcher: WebVideoMatcher by lazy(LazyThreadSafetyMode.PUBLICATION) {
@@ -238,6 +244,36 @@ class SelectorMediaSource(
                     cookies = myCookies.lines().filter { it.isNotBlank() },
                 )
             }
+        }
+    }
+}
+
+/**
+ * Concat multiple [SizedSource]s into one.
+ *
+ * [Results][SizedSource.results] are be concated in the [Flow.flattenConcat] flavor.
+ */
+private fun <T> Iterable<SizedSource<T>>.flattenConcat(delayInBetween: Duration): SizedSource<T> {
+    return object : SizedSource<T> {
+        override val results: Flow<T> = flow {
+            val flows = this@flattenConcat.map { it.results }
+            flows.forEachIndexed { index, flow ->
+                emitAll(flow)
+                if (index != flows.lastIndex) {
+                    delay(delayInBetween)
+                }
+            }
+        }
+        override val finished: Flow<Boolean> = combine(this@flattenConcat.map { it.finished }) { values ->
+            values.all { it }
+        }
+
+        override val totalSize: Flow<Int?> = combine(this@flattenConcat.map { it.totalSize }) { values ->
+            if (values.any { it == null }) {
+                return@combine null
+            }
+            @Suppress("UNCHECKED_CAST")
+            (values as Array<Int>).sum()
         }
     }
 }

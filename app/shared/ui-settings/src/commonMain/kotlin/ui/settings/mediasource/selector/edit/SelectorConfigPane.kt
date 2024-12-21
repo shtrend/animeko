@@ -39,6 +39,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,6 +63,7 @@ import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.theme.EasingDurations
 import me.him188.ani.app.ui.settings.mediasource.rss.edit.MediaSourceHeadline
 import me.him188.ani.datasources.api.topic.Resolution
+import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 internal fun SelectorConfigurationPane(
@@ -162,6 +164,29 @@ internal fun SelectorConfigurationPane(
                         )
                     },
                     isError = state.searchUrlIsError,
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                    shape = textFieldShape,
+                    enabled = state.enableEdit,
+                )
+                var requestIntervalString by remember(state.requestInterval) {
+                    mutableStateOf(state.requestInterval.inWholeMilliseconds.toString())
+                }
+                OutlinedTextField(
+                    requestIntervalString,
+                    {
+                        requestIntervalString = it
+                        state.requestInterval = it.toLongOrNull()?.milliseconds ?: state.requestInterval
+                    },
+                    Modifier
+                        .padding(top = (verticalSpacing - 8.dp).coerceAtLeast(0.dp))
+                        .fillMaxWidth().moveFocusOnEnter(),
+                    label = { Text("搜索请求间隔时间 (毫秒)") },
+                    supportingText = {
+                        Text(
+                            """每次查询将会使用所有别名分别发送请求。这个选项控制每发送一个请求后等待多久后再发送下一个请求""".trimIndent(),
+                        )
+                    },
+                    isError = requestIntervalString.toLongOrNull() == null,
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
                     enabled = state.enableEdit,

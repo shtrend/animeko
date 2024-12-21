@@ -29,6 +29,7 @@ import me.him188.ani.utils.jsonpath.JsonPath
 import me.him188.ani.utils.jsonpath.compileOrNull
 import me.him188.ani.utils.xml.QueryParser
 import me.him188.ani.utils.xml.parseSelectorOrNull
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * 编辑配置
@@ -87,6 +88,12 @@ class SelectorConfigState(
             null
         }
     }
+
+    var requestInterval by argumentsStorage.prop(
+        { it.searchConfig.requestInterval },
+        { copy(searchConfig = searchConfig.copy(requestInterval = it.coerceAtLeast(0.milliseconds))) },
+        SelectorMediaSourceArguments.Default.searchConfig.requestInterval,
+    )
 
     // region SubjectFormat
 

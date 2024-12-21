@@ -12,7 +12,12 @@ package me.him188.ani.app.domain.mediasource.web
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import io.ktor.http.URLBuilder
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
 import me.him188.ani.app.domain.mediasource.web.format.SelectorChannelFormat
 import me.him188.ani.app.domain.mediasource.web.format.SelectorChannelFormatIndexGrouped
 import me.him188.ani.app.domain.mediasource.web.format.SelectorChannelFormatNoChannel
@@ -26,6 +31,9 @@ import me.him188.ani.app.domain.mediasource.web.format.parseOrNull
 import me.him188.ani.datasources.api.MediaProperties
 import me.him188.ani.datasources.api.topic.Resolution
 import org.intellij.lang.annotations.Language
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 @Immutable
 @Serializable
@@ -35,6 +43,11 @@ data class SelectorSearchConfig(
     val searchUseOnlyFirstWord: Boolean = true,
     val searchRemoveSpecial: Boolean = true,
     val rawBaseUrl: String = "", // if empty, guess
+    /**
+     * 两个搜索请求之间的间隔时间
+     * @since 4.2
+     */
+    val requestInterval: @Serializable(DurationAsMillisSerializer::class) Duration = 3.seconds,
     // Phase 2, for search result, select subjects
     val subjectFormatId: SelectorFormatId = SelectorSubjectFormatA.id,
     val selectorSubjectFormatA: SelectorSubjectFormatA.Config = SelectorSubjectFormatA.Config(),
@@ -165,4 +178,14 @@ fun <C : SelectorFormatConfig> SelectorSearchConfig.getFormatConfig(format: Sele
         SelectorChannelFormatIndexGrouped -> selectorChannelFormatFlattened as C
         SelectorChannelFormatNoChannel -> selectorChannelFormatNoChannel as C
     }
+}
+
+
+private object DurationAsMillisSerializer : KSerializer<Duration> {
+    override val descriptor = PrimitiveSerialDescriptor("Duration", PrimitiveKind.LONG)
+    override fun serialize(encoder: kotlinx.serialization.encoding.Encoder, value: Duration) {
+        Long.serializer().serialize(encoder, value.inWholeMilliseconds)
+    }
+
+    override fun deserialize(decoder: Decoder): Duration = Long.serializer().deserialize(decoder).milliseconds
 }
