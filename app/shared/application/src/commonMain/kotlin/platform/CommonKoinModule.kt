@@ -60,6 +60,7 @@ import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepositoryImpl
 import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepository
 import me.him188.ani.app.data.repository.player.EpisodeScreenshotRepository
 import me.him188.ani.app.data.repository.player.WhatslinkEpisodeScreenshotRepository
+import me.him188.ani.app.data.repository.subject.BangumiSubjectSearchCompletionRepository
 import me.him188.ani.app.data.repository.subject.DefaultSubjectRelationsRepository
 import me.him188.ani.app.data.repository.subject.FollowedSubjectsRepository
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
@@ -200,6 +201,12 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
         SubjectSearchRepository(
             bangumiSubjectSearchService = get(),
             subjectService = get(),
+        )
+    }
+    single<BangumiSubjectSearchCompletionRepository> {
+        BangumiSubjectSearchCompletionRepository(
+            bangumiSubjectSearchService = get(),
+            settingsRepository = get(),
         )
     }
     single<SubjectSearchHistoryRepository> {

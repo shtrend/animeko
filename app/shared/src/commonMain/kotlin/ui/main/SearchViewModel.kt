@@ -14,10 +14,13 @@ import androidx.paging.cachedIn
 import androidx.paging.map
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
+import me.him188.ani.app.data.repository.subject.BangumiSubjectSearchCompletionRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchHistoryRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchRepository
 import me.him188.ani.app.data.repository.user.SettingsRepository
@@ -31,10 +34,12 @@ import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateFactory
 import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateLoader
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @Stable
 class SearchViewModel : AbstractViewModel(), KoinComponent {
     private val searchHistoryRepository: SubjectSearchHistoryRepository by inject()
+    private val bangumiSubjectSearchCompletionRepository: BangumiSubjectSearchCompletionRepository by inject()
 
     private val episodeCollectionRepository: EpisodeCollectionRepository by inject()
     private val subjectSearchRepository: SubjectSearchRepository by inject()
@@ -47,7 +52,9 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
 
     val searchPageState: SearchPageState = SearchPageState(
         searchHistoryPager = searchHistoryRepository.getHistoryPager(),
-        suggestionsPager = searchHistoryRepository.getHistoryPager(),// todo: suggestions
+        suggestionsPager = queryFlow.debounce(200.milliseconds).flatMapLatest {
+            bangumiSubjectSearchCompletionRepository.completionsFlow(it)
+        },
         queryFlow = queryFlow,
         setQuery = { queryFlow.value = it },
         onRequestPlay = { info ->
