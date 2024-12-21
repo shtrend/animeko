@@ -35,7 +35,7 @@ class BangumiSubjectSearchService(
         offset: Int? = null,
         limit: Int? = null,
     ): IntList = withContext(ioDispatcher) {
-        searchImpl(keyword, useNewApi, offset, limit).fold(
+        searchImpl(sanitizeKeyword(keyword), useNewApi, offset, limit).fold(
             left = { list ->
                 list.orEmpty().mapToIntList {
                     it.id
@@ -47,6 +47,10 @@ class BangumiSubjectSearchService(
                 }
             },
         )
+    }
+
+    private fun sanitizeKeyword(keyword: String): String {
+        return keyword.replace(Regex("[！!]")) { " " }.trim()
     }
 
     suspend fun searchSubjectNames(
