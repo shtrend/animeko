@@ -42,6 +42,7 @@ kotlin {
         api(projects.datasource.datasourceApi)
         api(libs.kotlinx.datetime)
         api(libs.kotlinx.coroutines.core)
+        api(libs.androidx.collection)
 
         implementation(projects.utils.serialization)
         implementation(libs.ktor.client.logging)

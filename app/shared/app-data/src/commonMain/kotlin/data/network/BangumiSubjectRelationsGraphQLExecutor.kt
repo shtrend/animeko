@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.data.network
 
+import androidx.collection.IntList
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import me.him188.ani.app.data.repository.Repository
@@ -108,7 +109,7 @@ query MyQuery(${'$'}id: Int!) {
         }
     }
 
-    suspend fun execute(client: BangumiClient, ids: IntArray): BangumiGraphQLResponse {
+    suspend fun execute(client: BangumiClient, ids: IntList): BangumiGraphQLResponse {
         val actionName = "BangumiSubjectRelationsGraphQLExecutor.executeQuerySubjectDetails"
         // 尽量使用 variables
         val resp = when (ids.size) {
@@ -143,7 +144,7 @@ query MyQuery(${'$'}id: Int!) {
                     ) {
                         appendLine(FRAGMENTS)
                         appendLine("query MyQuery {")
-                        for (id in ids) {
+                        ids.forEach { id ->
                             append('s')
                             append(id)
                             append(":subject(id: ").append(id).append("){...SF}")

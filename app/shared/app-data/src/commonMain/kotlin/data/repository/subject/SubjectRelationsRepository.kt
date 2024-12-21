@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.data.repository.subject
 
+import androidx.collection.intListOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -175,7 +176,7 @@ class DefaultSubjectRelationsRepository(
     }
 
     private suspend fun fetchAndSaveSubjectRelations(subjectId: Int) {
-        val (batch) = bangumiSubjectService.batchGetSubjectRelations(intArrayOf(subjectId), withCharacterActors = true)
+        val (batch) = bangumiSubjectService.batchGetSubjectRelations(intListOf(subjectId), withCharacterActors = true)
         subjectRelationsDao.upsertPersons(batch.allPersons.map { it.toEntity() }.toList())
         subjectRelationsDao.upsertCharacters(batch.relatedCharacterInfoList.map { it.character.toEntity() })
         subjectRelationsDao.upsertCharacterActors(batch.characterActorRelations().toList())

@@ -16,27 +16,22 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import me.him188.ani.app.data.network.BangumiSubjectSearchService
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
-import me.him188.ani.app.data.repository.RepositoryRateLimitedException
 import me.him188.ani.app.domain.search.SubjectSearchQuery
 import me.him188.ani.app.domain.search.SubjectType
-import me.him188.ani.datasources.bangumi.BangumiRateLimitedException
-import me.him188.ani.datasources.bangumi.client.BangumiSearchApi
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectType
-import me.him188.ani.datasources.bangumi.models.subjects.BangumiSubjectImageSize
 import me.him188.ani.utils.logging.logger
-import me.him188.ani.utils.platform.collections.mapToIntArray
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
 class SubjectSearchRepository(
-    private val searchApi: Flow<BangumiSearchApi>,
+    private val bangumiSubjectSearchService: BangumiSubjectSearchService,
     private val subjectService: BangumiSubjectService,
     defaultDispatcher: CoroutineContext = Dispatchers.Default,
 ) : Repository(defaultDispatcher) {
@@ -70,29 +65,12 @@ class SubjectSearchRepository(
             val offset = params.key
                 ?: return@withContext LoadResult.Error(IllegalArgumentException("Key is null"))
             return@withContext try {
-                val api = searchApi.first()
-                val res = if (useNewApi()) {
-                    api.searchSubjectByKeywords(
-                        searchQuery.keyword,
-                        offset = offset,
-                        limit = params.loadSize,
-                        types = listOf(BangumiSubjectType.Anime),
-                    )
-                } else {
-                    try {
-                        api.searchSubjectsByKeywordsWithOldApi(
-                            searchQuery.keyword,
-                            type = searchQuery.type.toBangumiSubjectType(),
-                            responseGroup = BangumiSubjectImageSize.SMALL,
-                            start = offset,
-                            maxResults = params.loadSize,
-                        ).page.mapToIntArray {
-                            it.id
-                        }
-                    } catch (e: BangumiRateLimitedException) {
-                        throw RepositoryRateLimitedException(cause = e)
-                    }
-                }
+                val res = bangumiSubjectSearchService.searchSubjectIds(
+                    searchQuery.keyword,
+                    useNewApi = useNewApi(),
+                    offset = offset,
+                    limit = params.loadSize,
+                )
 
                 val subjectInfos = subjectService.batchGetSubjectDetails(res)
 

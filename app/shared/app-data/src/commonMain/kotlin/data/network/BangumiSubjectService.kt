@@ -9,8 +9,10 @@
 
 package me.him188.ani.app.data.network
 
+import androidx.collection.IntList
 import androidx.collection.IntObjectMap
 import androidx.collection.IntSet
+import androidx.collection.intListOf
 import androidx.collection.mutableIntObjectMapOf
 import androidx.collection.mutableIntSetOf
 import io.ktor.client.plugins.ClientRequestException
@@ -59,7 +61,8 @@ import me.him188.ani.datasources.bangumi.processing.toCollectionType
 import me.him188.ani.datasources.bangumi.processing.toSubjectCollectionType
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.logger
-import me.him188.ani.utils.platform.collections.mapToIntArray
+import me.him188.ani.utils.platform.collections.associateWithTo
+import me.him188.ani.utils.platform.collections.mapToIntList
 import org.koin.core.component.KoinComponent
 import kotlin.coroutines.CoroutineContext
 
@@ -79,12 +82,12 @@ interface BangumiSubjectService {
     suspend fun getSubjectCollection(subjectId: Int): BatchSubjectCollection
 
     suspend fun batchGetSubjectDetails(
-        ids: IntArray,
+        ids: IntList,
         withCharacterActors: Boolean = true,
     ): List<BatchSubjectDetails>
 
     suspend fun batchGetSubjectRelations(
-        ids: IntArray,
+        ids: IntList,
         withCharacterActors: Boolean,
     ): List<BatchSubjectRelations>
 
@@ -159,7 +162,7 @@ class RemoteBangumiSubjectService(
             }
         }
 
-        val list = batchGetSubjectDetails(collections.mapToIntArray { it.subjectId })
+        val list = batchGetSubjectDetails(collections.mapToIntList { it.subjectId })
 
         list.map {
             val subjectId = it.subjectInfo.subjectId
@@ -175,13 +178,13 @@ class RemoteBangumiSubjectService(
     override suspend fun getSubjectCollection(subjectId: Int): BatchSubjectCollection {
         val collection = subjectCollectionById(subjectId).first()
         return BatchSubjectCollection(
-            batchGetSubjectDetails(intArrayOf(subjectId)).first(),
+            batchGetSubjectDetails(intListOf(subjectId)).first(),
             collection,
         )
     }
 
     override suspend fun batchGetSubjectDetails(
-        ids: IntArray,
+        ids: IntList,
         withCharacterActors: Boolean
     ): List<BatchSubjectDetails> {
         if (ids.isEmpty()) {
@@ -240,7 +243,7 @@ class RemoteBangumiSubjectService(
     }
 
     override suspend fun batchGetSubjectRelations(
-        ids: IntArray,
+        ids: IntList,
         withCharacterActors: Boolean
     ): List<BatchSubjectRelations> {
         if (ids.isEmpty()) {

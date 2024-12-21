@@ -32,6 +32,7 @@ import me.him188.ani.app.data.network.BangumiEpisodeService
 import me.him188.ani.app.data.network.BangumiEpisodeServiceImpl
 import me.him188.ani.app.data.network.BangumiProfileService
 import me.him188.ani.app.data.network.BangumiRelatedPeopleService
+import me.him188.ani.app.data.network.BangumiSubjectSearchService
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.RemoteBangumiSubjectService
 import me.him188.ani.app.data.network.TrendsRepository
@@ -190,9 +191,14 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
             settingsRepository = get(),
         )
     }
+    single<BangumiSubjectSearchService> {
+        BangumiSubjectSearchService(
+            searchApi = suspend { client.getSearchApi() }.asFlow(),
+        )
+    }
     single<SubjectSearchRepository> {
         SubjectSearchRepository(
-            searchApi = suspend { client.getSearchApi() }.asFlow(),
+            bangumiSubjectSearchService = get(),
             subjectService = get(),
         )
     }
