@@ -51,7 +51,7 @@ class BangumiSubjectSearchCompletionRepository(
                     )
 
                     LoadResult.Page(
-                        data = completions,
+                        data = completions.distinct(),
                         prevKey = null,
                         nextKey = null,
                     )
