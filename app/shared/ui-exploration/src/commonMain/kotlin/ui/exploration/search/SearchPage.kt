@@ -129,6 +129,7 @@ fun SearchPage(
                         }
                     }
                 }, // collect only once
+                state = state.gridState,
             )
         },
         detailContent = {
