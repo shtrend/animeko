@@ -91,7 +91,7 @@ object MediaListFilters {
      * 这些词在标题中将保证被原封不动保留
      */
     private val keepWords = listOf("Re：").mapIndexed { index, s ->
-        KeepWords(s, "\uE001$index") // \uE001 是一个不常用的字符
+        KeepWords(s, "\uE001$index\uE002") // \uE001 是一个不常用的字符
     }
 
 
