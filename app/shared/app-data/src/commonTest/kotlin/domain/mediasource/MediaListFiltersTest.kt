@@ -30,7 +30,7 @@ class MediaListFiltersTest {
             assertEquals("超元气三姐妹", removeSpecials("超元气三姐妹"))
         }
         add("中二病也要谈恋爱") {
-            assertEquals("中二病也要谈恋爱！", removeSpecials("中二病也要谈恋爱！"))
+            assertEquals("中二病也要谈恋爱", removeSpecials("中二病也要谈恋爱！"))
         }
     }
 
