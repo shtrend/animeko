@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.domain.mediasource
 
+import me.him188.ani.app.domain.mediasource.MediaListFilters.removeSpecials
 import me.him188.ani.test.TestFactory
 import me.him188.ani.test.runDynamicTests
 import kotlin.test.Test
@@ -85,6 +86,16 @@ class StringMatcherTest {
 
         // 此方法无法识别这种区别
         "别当欧尼酱了" matches "别当哥哥了" at 50
+
+        "地狱少女第一季" matches "地。 ―关于地球的运动―" at 8
+        "地狱少女第一季" matches "地。" at 14
+        val chiRemoved = removeSpecials(
+            "地。 ―关于地球的运动―",
+            removeWhitespace = true,
+            replaceNumbers = true,
+        )
+        "地狱少女第一季" matches chiRemoved at 12
+        "地狱少女" matches "地。" at 25
     }
 
     @Test

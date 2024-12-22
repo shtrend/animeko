@@ -28,8 +28,19 @@ object MediaListFilters {
             fun exactlyContains() = originalTitle
                 .contains(subjectName, ignoreCase = true)
 
-            fun fuzzyMatches() = StringMatcher.calculateMatchRate(originalTitle, subjectName) >= 0.8
+            fun fuzzyMatches() = StringMatcher.calculateMatchRate(originalTitle, subjectName) >= 80
 
+//            println(
+//                when {
+//                    exactlyContains() -> "'$originalTitle' included because exactlyContains()"
+//                    fuzzyMatches() -> "'$originalTitle' included because fuzzyMatches() at " + StringMatcher.calculateMatchRate(
+//                        originalTitle,
+//                        subjectName,
+//                    )
+//
+//                    else -> {}
+//                },
+//            )
             exactlyContains() || fuzzyMatches()
         }
     }
@@ -77,7 +88,7 @@ object MediaListFilters {
         put("一", "1")
     }
     private val allNumbersRegex = numberMappings.keys.joinToString("|").toRegex()
-    private val specialCharRegex = Regex("""[~!@#$%^&*()_+{}\[\]\\|;':",.<>/?【】：～「」！]""")
+    private val toDelete = Regex("""[~!@#$%^&*()_+{}\[\]\\|;':",.<>/?【】：～「」！―]""")
     private val replaceWithWhitespace = Regex("""[。、，]""")
     private val whitespaceRegex = Regex("""[ 	\s+]""")
 
@@ -118,7 +129,7 @@ object MediaListFilters {
             deleteInfix("剧场版")
             deletePrefix("OVA")
             deleteInfix("OVA")
-            deleteMatches(specialCharRegex)
+            deleteMatches(toDelete)
             if (replaceNumbers) {
                 replaceMatches(allNumbersRegex) { numberMappings.getValue(it.value) }
             }

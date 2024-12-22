@@ -9,6 +9,8 @@
 
 package me.him188.ani.app.domain.mediasource
 
+import me.him188.ani.datasources.api.EpisodeSort
+import me.him188.ani.datasources.api.topic.EpisodeRange
 import me.him188.ani.test.TestFactory
 import me.him188.ani.test.runDynamicTests
 import kotlin.test.assertEquals
@@ -91,6 +93,47 @@ class MediaListFiltersTest {
         add("second season") {
             assertEquals("测试 第二季", removeSpecials("测试 第二季"))
         }
+    }
+
+    @TestFactory
+    fun `test ContainsSubjectName`() = runDynamicTests {
+        fun case(title: String, subjectName: String, expected: Boolean) {
+            add("$title matches $subjectName") {
+                val context = MediaListFilterContext(
+                    subjectNames = setOf(subjectName),
+                    episodeSort = EpisodeSort(1),
+                    null, null,
+                )
+                context.run {
+                    assertEquals(
+                        expected,
+                        MediaListFilters.ContainsSubjectName.applyOn(
+                            object : MediaListFilter.Candidate {
+                                override val originalTitle: String get() = title
+                                override val episodeRange: EpisodeRange? get() = null
+                            },
+                        ),
+                    )
+                }
+            }
+        }
+
+        // subject matches title
+        infix fun String.matches(title: String) {
+            case(title, this, true)
+        }
+
+        // subject matches title
+        infix fun String.mismatches(title: String) {
+            case(title, this, false)
+        }
+
+        "哥特萝莉侦探事件簿" matches "哥特萝莉侦探事件簿"
+        "哥特萝莉侦探事件薄" matches "哥特萝莉侦探事件簿"
+        "败犬女主太多了" matches "败犬女主太多啦"
+
+        "地狱少女第一季" mismatches "地。 ―关于地球的运动―"
+        "地狱少女" mismatches "地。"
     }
 
     private fun removeSpecials(
