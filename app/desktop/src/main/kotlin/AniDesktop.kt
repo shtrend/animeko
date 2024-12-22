@@ -133,6 +133,10 @@ object AniDesktop {
 //        System.setProperty("compose.interop.blending", "true")
 //    }
 
+    init {
+        System.setProperty("native.encoding", "UTF-8")
+    }
+
 
     private fun calculateWindowSize(
         desiredWidth: Dp,
