@@ -89,7 +89,7 @@ object MediaListFilters {
     }
     private val allNumbersRegex = numberMappings.keys.joinToString("|").toRegex()
     private val toDelete = Regex("""[~!@#$%^&*()_+{}\[\]\\|;':",.<>/?【】：～「」！―]""")
-    private val replaceWithWhitespace = Regex("""[。、，]""")
+    private val replaceWithWhitespace = Regex("""[。、，·]""")
     private val whitespaceRegex = Regex("""[ 	\s+]""")
 
 

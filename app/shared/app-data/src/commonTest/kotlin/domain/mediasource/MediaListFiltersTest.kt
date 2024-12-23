@@ -96,6 +96,31 @@ class MediaListFiltersTest {
     }
 
     @TestFactory
+    fun `removeSpecials cases`() = runDynamicTests {
+        fun case(
+            expected: String,
+            originalTitle: String,
+            removeWhitespace: Boolean = false,
+            replaceNumbers: Boolean = false,
+        ) {
+            add("$originalTitle -> $expected") {
+                assertEquals(expected, removeSpecials(originalTitle, removeWhitespace, replaceNumbers))
+            }
+        }
+
+        case(
+            "香格里拉 弗陇提亚屎作猎人向神作发起挑战 第二季",
+            "香格里拉·弗陇提亚～屎作猎人向神作发起挑战～ 第二季",
+            removeWhitespace = false,
+        )
+        case(
+            "香格里拉弗陇提亚屎作猎人向神作发起挑战第二季",
+            "香格里拉·弗陇提亚～屎作猎人向神作发起挑战～ 第二季",
+            removeWhitespace = true,
+        )
+    }
+
+    @TestFactory
     fun `test ContainsSubjectName`() = runDynamicTests {
         fun case(title: String, subjectName: String, expected: Boolean) {
             add("$title matches $subjectName") {
