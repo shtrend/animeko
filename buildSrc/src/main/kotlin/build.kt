@@ -46,10 +46,16 @@ fun Project.sharedAndroidProguardRules(): Array<File> {
     val dir = project(":app:shared").projectDir
     return listOf(
         dir.resolve("proguard-rules.pro"),
+        dir.resolve("kotlinx-coroutines.pro"),
+        dir.resolve("kotlinx-serialization.pro"),
         dir.resolve("proguard-rules-keep-names.pro"),
     ).filter {
         it.exists()
-    }.toTypedArray()
+    }.toTypedArray().also {
+        check(it.isNotEmpty()) {
+            "No proguard rules found in $dir"
+        }
+    }
 }
 
 val testOptInAnnotations = arrayOf(

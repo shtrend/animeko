@@ -134,14 +134,16 @@ compose.desktop {
             packageVersion = properties["package.version"].toString()
         }
 
-        buildTypes.release.proguard {
-            isEnabled.set(false)
+        if (getLocalProperty("ani.desktop.proguard")?.toBooleanStrict() != false) {
+            buildTypes.release.proguard {
+                isEnabled.set(true)
+                version = "7.6.1"
+                optimize.set(true)
+                obfuscate.set(false)
+                this.configurationFiles.from(project(":app:shared").sharedAndroidProguardRules())
+                this.configurationFiles.from(file("proguard-desktop.pro"))
+            }
         }
-        // TODO: Uncomment this to enable proguard for desktop, need some tweaks
-//        buildTypes.release.proguard {
-//            this.configurationFiles.from(project(":app:shared").file("proguard-rules.pro"))
-//            this.configurationFiles.from(file("proguard-desktop.pro"))
-//        }
     }
 }
 
