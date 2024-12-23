@@ -9,20 +9,26 @@
 
 package me.him188.ani.app.torrent.anitorrent
 
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import me.him188.ani.app.torrent.api.TorrentLibraryLoader
-import me.him188.ani.utils.logging.info
-import me.him188.ani.utils.logging.logger
-import me.him188.ani.utils.platform.NativeLibraryLoader
+import me.him188.ani.utils.logging.*
+import me.him188.ani.utils.platform.Platform
 import me.him188.ani.utils.platform.currentPlatform
 import me.him188.ani.utils.platform.isAndroid
-import java.io.File
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.concurrent.Volatile
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.deleteRecursively
+import kotlin.io.path.outputStream
+import kotlin.math.absoluteValue
+import kotlin.random.Random
 
 object AnitorrentLibraryLoader : TorrentLibraryLoader {
     private val logger = logger<AnitorrentLibraryLoader>()
+    private val platform = currentPlatform()
 
     @Volatile
     private var libraryLoaded = false
@@ -38,37 +44,78 @@ object AnitorrentLibraryLoader : TorrentLibraryLoader {
 //    anitorrent.install_signal_handlers()
     }
 
-    // appResources/macos-arm64/anitorrent
-    private fun getAnitorrentResourceDir(): File = NativeLibraryLoader.getResourceDir("anitorrent")
-
-    @Suppress("UnsafeDynamicallyLoadedCode") // This code only runs on desktop
-    private fun loadLibrary(libraryFilename: String) {
-        val dir = getAnitorrentResourceDir().resolve("lib")
-        dir.resolve(libraryFilename).let {
-            if (!it.exists()) {
-                throw UnsatisfiedLinkError("Anitorrent library not found: $it")
-            }
-            System.load(it.absolutePath)
-        }
-    }
-
+    @kotlin.jvm.Throws(IOException::class)
     private fun loadDependencies() {
-        if (currentPlatform().isAndroid()) {
+        if (platform.isAndroid()) {
             System.loadLibrary("anitorrent")
             return
         }
+        logger.info { "Loading anitorrent library" }
+        try {
+            System.loadLibrary("anitorrent")
+            logger.info { "Loading anitorrent library: success (from java.library.path)" }
+        } catch (e: UnsatisfiedLinkError) {
+            // 可能是调试状态, 从 resources 加载
+            logger.info { "Failed to load anitorrent directly from java.library.path, trying resources instead" }
+            val temp = getTempDirForPlatform()
+            logger.info { "Temp dir: ${temp.absolutePathString()}" }
+            if (platform is Platform.Windows) {
+                extractLibraryFromResources("libssl-3-x64", temp)
+                extractLibraryFromResources("libcrypto-3-x64", temp)
+                loadLibraryFromResources("torrent-rasterbar", temp)
+            }
+            loadLibraryFromResources("anitorrent", temp)
+            logger.info { "Loading anitorrent library: success (from resources)" }
+        }
+    }
 
-        val dir = getAnitorrentResourceDir()
-        val map = Json.decodeFromString(
-            JsonObject.serializer(),
-            dir.resolve("anitorrent.deps.json").readText(),
-        ).map {
-            it.key to it.value.jsonPrimitive.content
+    @OptIn(ExperimentalPathApi::class)
+    private fun getTempDirForPlatform(): Path {
+        return if (platform is Platform.Windows) {
+            Paths.get(System.getProperty("user.dir"))
+        } else {
+            Files.createTempDirectory("libanitorrent${Random.nextInt().absoluteValue}").apply {
+                Runtime.getRuntime().addShutdownHook(
+                    Thread {
+                        try {
+                            deleteRecursively()
+                        } catch (e: IOException) {
+                            logger.error(e) { "Failed to delete temp directory $this" }
+                        }
+                    },
+                )
+            }
         }
-        for ((name, library) in map) {
-            logger.info { "Loading library $name from: $library" }
-            loadLibrary(library)
+    }
+
+    @Suppress("UnsafeDynamicallyLoadedCode")
+    private fun extractLibraryFromResources(
+        name: String,
+        tempDir: Path
+    ): Path? {
+        val filename = when (platform as Platform.Desktop) {
+            is Platform.Linux -> "lib$name.so"
+            is Platform.Windows -> "$name.dll"
+            is Platform.MacOS -> "lib$name.dylib"
         }
+        this::class.java.classLoader?.getResourceAsStream(filename)?.use {
+            val tempFile = tempDir.resolve(filename)
+            tempFile.outputStream().use { output ->
+                it.copyTo(output)
+            }
+            return tempFile
+        }
+        return null
+    }
+
+    @Suppress("UnsafeDynamicallyLoadedCode")
+    private fun loadLibraryFromResources(
+        name: String,
+        tempDir: Path
+    ) {
+        extractLibraryFromResources(name, tempDir)?.let {
+            System.load(it.absolutePathString())
+        } ?: throw UnsatisfiedLinkError("Failed to extract library $name from resources (possibly no such resource)")
     }
 
     @Synchronized
