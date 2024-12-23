@@ -15,4 +15,27 @@ import io.ktor.http.appendPathSegments
 object MediaSourceEngineHelpers {
     fun encodeUrlSegment(value: String) =
         URLBuilder().appendPathSegments(value).encodedPathSegments.first()
+
+    fun getSearchKeyword(subjectName: String, removeSpecial: Boolean, useOnlyFirstWord: Boolean): String {
+        val finalName = if (removeSpecial) {
+            MediaListFilters.removeSpecials(
+                subjectName,
+                removeWhitespace = false,
+                replaceNumbers = false,
+            ) // keep whitespace for getFirstWord
+        } else {
+            subjectName
+        }
+
+        return if (useOnlyFirstWord) {
+            getFirstWord(finalName)
+        } else {
+            finalName
+        }
+    }
+
+    private fun getFirstWord(string: String): String {
+        if (!(string.contains(' '))) return string
+        return string.substringBefore(' ').ifBlank { string }
+    }
 }

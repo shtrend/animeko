@@ -113,17 +113,8 @@ abstract class SelectorMediaSourceEngine {
         useOnlyFirstWord: Boolean,
         removeSpecial: Boolean,
     ): SearchSubjectResult {
-        val finalName = if (removeSpecial) {
-            MediaListFilters.removeSpecials(
-                subjectName,
-                removeWhitespace = false,
-                replaceNumbers = false,
-            ) // keep whitespace for getFirstWord
-        } else {
-            subjectName
-        }
         val encodedUrl = MediaSourceEngineHelpers.encodeUrlSegment(
-            if (useOnlyFirstWord) getFirstWord(finalName) else finalName,
+            MediaSourceEngineHelpers.getSearchKeyword(subjectName, removeSpecial, useOnlyFirstWord),
         )
 
         val finalUrl = Url(
@@ -131,11 +122,6 @@ abstract class SelectorMediaSourceEngine {
         )
 
         return searchImpl(finalUrl)
-    }
-
-    private fun getFirstWord(string: String): String {
-        if (!(string.contains(' '))) return string
-        return string.substringBefore(' ').ifBlank { string }
     }
 
     @Throws(RepositoryException::class, CancellationException::class)
