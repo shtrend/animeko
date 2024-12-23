@@ -77,7 +77,7 @@ class AnimeScheduleService(
     /**
      * @return `null` if not found.
      */
-    suspend fun batchGetSSubjectRecurrences(subjectIds: List<Int>): List<SubjectRecurrence?> {
+    suspend fun batchGetSubjectRecurrences(subjectIds: List<Int>): List<SubjectRecurrence?> {
         if (subjectIds.isEmpty()) {
             return emptyList()
         }

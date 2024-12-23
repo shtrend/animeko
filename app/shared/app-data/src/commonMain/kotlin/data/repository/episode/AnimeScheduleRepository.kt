@@ -66,7 +66,7 @@ class AnimeScheduleRepository(
     }
 
     suspend fun batchGetSubjectRecurrence(subjectIds: List<Int>): List<SubjectRecurrence?> {
-        return animeScheduleService.batchGetSSubjectRecurrences(subjectIds)
+        return animeScheduleService.batchGetSubjectRecurrences(subjectIds)
     }
 
 //    /**
