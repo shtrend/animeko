@@ -83,7 +83,7 @@ kotlin {
         api(libs.compose.lifecycle.runtime.compose)
         api(libs.compose.navigation.compose)
         api(libs.compose.navigation.runtime)
-        api(compose.material3AdaptiveNavigationSuite)
+        api(libs.compose.material3.adaptive.navigation.suite)
         implementation(compose.components.resources)
         implementation(projects.app.shared.reorderable)
 

@@ -35,7 +35,7 @@ kotlin {
         api(libs.compose.material3.adaptive.navigation0.get().toString()) {
             exclude("androidx.window.core", "window-core")
         }
-        api(compose.material3AdaptiveNavigationSuite)
+        api(libs.compose.material3.adaptive.navigation.suite)
 
         api(libs.koin.core)
     }
