@@ -163,7 +163,7 @@ object AniDesktop {
         if (AniBuildConfigDesktop.isDebug) {
             logger.info { "Debug mode enabled" }
         }
-        logger.info { "Ani platform: ${currentPlatform().name}, version: ${currentAniBuildConfig.versionName}" }
+        logger.info { "Ani platform: ${currentPlatform()}, version: ${currentAniBuildConfig.versionName}" }
 
         logger.info { "dataDir: file://${projectDirectories.dataDir.replace(" ", "%20")}" }
         logger.info { "cacheDir: file://${projectDirectories.cacheDir.replace(" ", "%20")}" }
