@@ -296,8 +296,6 @@ object AniDesktop {
             logger.error(it) { "Failed to delete installed files" }
         }
 
-        println("fuck")
-
         val navigator = AniNavigator()
 
         coroutineScope.launch {
