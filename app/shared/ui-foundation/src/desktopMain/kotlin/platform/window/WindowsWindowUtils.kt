@@ -54,7 +54,8 @@ class WindowsWindowUtils : AwtWindowUtils() {
         val r = (argb shr 16) and 0xFF
         val g = (argb shr 8) and 0xFF
         val b = argb and 0xFF
-        return (r shl 16) or (g shl 8) or b
+        // Windows COLORREF = 0x00BBGGRR
+        return (b shl 16) or (g shl 8) or r
     }
 
     private fun setTitleBarColor(hwnd: HWND, color: Int): Boolean {
