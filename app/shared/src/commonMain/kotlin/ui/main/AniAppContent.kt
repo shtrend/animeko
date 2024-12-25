@@ -412,10 +412,18 @@ private fun AniAppContentImpl(
                 exitTransition = exitTransition,
                 popEnterTransition = popEnterTransition,
                 popExitTransition = popExitTransition,
-            ) {
+            ) { backStackEntry ->
+                val route = backStackEntry.toRoute<NavRoutes.TorrentPeerSettings>()
                 val viewModel = viewModel { PeerFilterSettingsViewModel() }
                 PeerFilterSettingsPage(
                     viewModel.state,
+                    navigationIcon = {
+                        BackNavigationIconButton(
+                            {
+                                aniNavigator.popBackStack(route, inclusive = true)
+                            },
+                        )
+                    },
                 )
             }
         }
