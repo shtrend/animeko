@@ -118,6 +118,21 @@ class MediaListFiltersTest {
             "香格里拉·弗陇提亚～屎作猎人向神作发起挑战～ 第二季",
             removeWhitespace = true,
         )
+        case(
+            "五等分的新娘∬",
+            "五等分的新娘∬",
+            removeWhitespace = true,
+        )
+        case(
+            "newgame",
+            "new game!!",
+            removeWhitespace = true,
+        )
+        case(
+            "理科生坠入情网故尝试证明r=1-sinθ♡",
+            "理科生坠入情网故尝试证明[r=1-sinθ]♡",
+            removeWhitespace = true,
+        )
     }
 
     @TestFactory
