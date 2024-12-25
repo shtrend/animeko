@@ -10,6 +10,7 @@
 package me.him188.ani.app.desktop
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -85,7 +86,7 @@ import me.him188.ani.app.platform.getCommonKoinModule
 import me.him188.ani.app.platform.notification.NoopNotifManager
 import me.him188.ani.app.platform.notification.NotifManager
 import me.him188.ani.app.platform.startCommonKoinModule
-import me.him188.ani.app.platform.window.setTitleBarColor
+import me.him188.ani.app.platform.window.setTitleBar
 import me.him188.ani.app.tools.update.DesktopUpdateInstaller
 import me.him188.ani.app.tools.update.UpdateInstaller
 import me.him188.ani.app.torrent.anitorrent.AnitorrentLibraryLoader
@@ -435,7 +436,7 @@ private fun FrameWindowScope.MainWindowContent(
             }
         }
 
-        window.setTitleBarColor(AniThemeDefaults.navigationContainerColor)
+        window.setTitleBar(AniThemeDefaults.navigationContainerColor, isSystemInDarkTheme())
 
         Box(
             Modifier

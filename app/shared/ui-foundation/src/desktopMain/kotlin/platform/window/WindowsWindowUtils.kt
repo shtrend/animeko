@@ -40,6 +40,7 @@ import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WS_EX_STATICED
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WS_EX_WINDOWEDGE
 import kotlin.math.roundToInt
 
+
 class WindowsWindowUtils : AwtWindowUtils() {
     private val dwmAPi: Dwmapi = Native.load("dwmapi", Dwmapi::class.java, W32APIOptions.DEFAULT_OPTIONS)
     private val extendedUser32: ExtendedUser32 =
@@ -48,6 +49,10 @@ class WindowsWindowUtils : AwtWindowUtils() {
 
     override fun setTitleBarColor(hwnd: Long, color: Color): Boolean {
         return setTitleBarColor(HWND(Pointer.createConstant(hwnd)), argbToRgb(color.toArgb()))
+    }
+
+    override fun setDarkTitleBar(hwnd: Long, dark: Boolean): Boolean {
+        return setDarkTitleBar(HWND(Pointer.createConstant(hwnd)), dark)
     }
 
     private fun argbToRgb(argb: Int): Int {
@@ -63,6 +68,15 @@ class WindowsWindowUtils : AwtWindowUtils() {
             val colorRef = IntByReference(color)
             W32Errors.SUCCEEDED(
                 dwmAPi.DwmSetWindowAttribute(hwnd, Dwmapi.DWMWA_CAPTION_COLOR, colorRef.pointer, DWORD.SIZE),
+            )
+        }.getOrElse { false }
+    }
+
+    private fun setDarkTitleBar(hwnd: HWND, dark: Boolean): Boolean {
+        return kotlin.runCatching {
+            val isDarkRef = IntByReference(if (dark) 1 else 0)
+            W32Errors.SUCCEEDED(
+                dwmAPi.DwmSetWindowAttribute(hwnd, Dwmapi.DWMWA_USE_IMMERSIVE_DARK_MODE, isDarkRef.pointer, DWORD.SIZE),
             )
         }.getOrElse { false }
     }
@@ -201,6 +215,9 @@ internal interface Dwmapi : StdCallLibrary {
     fun DwmSetWindowAttribute(hwnd: HWND, dwAttribute: Int, pvAttribute: Pointer, cbAttribute: Int): Int
 
     companion object {
+        // Windows 10 attribute constant for enabling Immersive Dark Mode
+        // Note that this constant is not in official headers for all versions,
+        // and might be considered undocumented for some builds.
         const val DWMWA_USE_IMMERSIVE_DARK_MODE: Int = 20
         const val DWMWA_CAPTION_COLOR: Int = 35
     }
