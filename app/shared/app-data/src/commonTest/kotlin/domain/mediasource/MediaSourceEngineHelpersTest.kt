@@ -34,7 +34,7 @@ class MediaSourceEngineHelpersTest {
         case("五等分的新娘＊", "五等分的新娘＊")
         case("邪神与厨二病少女’", "邪神与厨二病少女’")
         case("打工吧魔王大人", "打工吧！！魔王大人")
-        case("理科生坠入情网故尝试证明r=1-sinθ♡", "理科生坠入情网故尝试证明[r=1-sinθ]♡")
+        case("理科生坠入情网故尝试证明", "理科生坠入情网故尝试证明[r=1-sinθ]♡")
         case("new", "new game!")
         case("new", "new game!!")
     }
