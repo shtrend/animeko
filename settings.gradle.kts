@@ -25,7 +25,7 @@ dependencyResolutionManagement {
     }
     versionCatalogs {
         create("anitorrentLibs") {
-            from("org.openani.anitorrent:catalog:0.0.9")
+            from("org.openani.anitorrent:catalog:0.1.0")
         }
     }
 }
