@@ -122,6 +122,7 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
 import java.io.File
+import kotlin.system.exitProcess
 import kotlin.time.measureTime
 
 
@@ -154,6 +155,16 @@ object AniDesktop {
 
     @JvmStatic
     fun main(args: Array<String>) {
+        val originalExceptionHandler = Thread.currentThread().uncaughtExceptionHandler
+        Thread.currentThread().uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { t, e ->
+            logger.error(e) { "!!!ANI FATAL EXCEPTION!!!" }
+            e.printStackTrace()
+            Thread.sleep(1000) // wait for logging to finish
+            originalExceptionHandler.uncaughtException(t, e)
+            Thread.sleep(5000)
+            exitProcess(1)
+        }
+
         val logsDir = File(projectDirectories.dataDir).resolve("logs").apply { mkdirs() }
 
         Log4j2Config.configureLogging(logsDir)
