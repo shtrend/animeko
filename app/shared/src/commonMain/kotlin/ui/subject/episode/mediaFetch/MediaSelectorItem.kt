@@ -21,9 +21,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
@@ -179,14 +179,14 @@ fun MediaSelectorItemLayout(
     publishedTime: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ElevatedCard(
+    Card(
         onClick = onClick,
         modifier = modifier.width(IntrinsicSize.Min),
-        colors = CardDefaults.elevatedCardColors(
+        colors = CardDefaults.cardColors(
             containerColor = if (selected) {
                 MaterialTheme.colorScheme.secondaryContainer
             } else {
-                MaterialTheme.colorScheme.surface
+                MaterialTheme.colorScheme.surfaceContainerHighest
             },
         ),
     ) {
