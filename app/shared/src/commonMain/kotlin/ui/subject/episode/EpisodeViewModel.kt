@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.ui.subject.episode
 
-import androidx.annotation.UiThread
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -23,7 +22,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
@@ -108,7 +106,6 @@ import me.him188.ani.app.ui.subject.episode.video.DelegateDanmakuStatistics
 import me.him188.ani.app.ui.subject.episode.video.LoadDanmakuRequest
 import me.him188.ani.app.ui.subject.episode.video.PlayerLauncher
 import me.him188.ani.app.ui.subject.episode.video.PlayerSkipOpEdState
-import me.him188.ani.app.ui.subject.episode.video.VideoDanmakuState
 import me.him188.ani.app.ui.subject.episode.video.VideoDanmakuStateImpl
 import me.him188.ani.app.ui.subject.episode.video.sidesheet.EpisodeSelectorState
 import me.him188.ani.app.videoplayer.ui.ControllerVisibility
@@ -139,118 +136,21 @@ import kotlin.time.Duration.Companion.seconds
 
 
 @Stable
-abstract class EpisodeViewModel : AbstractViewModel(), HasBackgroundScope {
-    abstract val videoSourceResolver: VideoSourceResolver
-
-    abstract val subjectId: Int
-    abstract val episodeId: StateFlow<Int>
-
-    abstract val subjectPresentation: SubjectPresentation // by state
-    abstract val episodePresentation: EpisodePresentation // by state
-
-    abstract val authState: AuthState
-
-    abstract val episodeDetailsState: EpisodeDetailsState
-
-    /**
-     * 剧集列表
-     */
-    abstract val episodeCarouselState: EpisodeCarouselState
-
-    abstract val editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState
-
-    abstract var isFullscreen: Boolean
-
-    abstract var sidebarVisible: Boolean
-
-    abstract val commentLazyListState: LazyListState
-
-    /**
-     * 播放器内切换剧集
-     */
-    abstract val episodeSelectorState: EpisodeSelectorState
-
-    // Media Fetching
-
-    /**
-     * "数据源" bottom sheet 内容
-     */
-    abstract val mediaSelectorState: MediaSelectorState
-
-    /**
-     * "数据源" bottom sheet 中的每个数据源的结果
-     */
-    abstract val mediaSourceResultsPresentation: MediaSourceResultsPresentation
-
-    /**
-     * "视频统计" bottom sheet 显示内容
-     */
-    abstract val videoStatistics: VideoStatistics
-
-    // Media Selection
-
-    /**
-     * 是否显示数据源选择器
-     */
-    abstract var mediaSelectorVisible: Boolean
-
-    abstract val mediaSourceInfoProvider: MediaSourceInfoProvider
-
-    // Video
-    abstract val videoControllerState: VideoControllerState
-    abstract val videoScaffoldConfig: VideoScaffoldConfig
-
-    // DanmakuRegexFilterState
-    abstract val danmakuRegexFilterState: DanmakuRegexFilterState
-
-
-    /**
-     * Play controller for video view. This can be saved even when window configuration changes (i.e. everything recomposes).
-     */
-    abstract val playerState: PlayerState
-
-    // Danmaku
-
-    abstract val danmaku: VideoDanmakuState
-
-    abstract val danmakuStatistics: DanmakuStatistics
-
-    abstract val episodeCommentState: CommentState
-
-    abstract val commentEditorState: CommentEditorState
-
-    abstract val playerSkipOpEdState: PlayerSkipOpEdState
-
-    abstract fun refreshFetch()
-
-    @UiThread
-    abstract fun stopPlaying()
-}
-
-fun EpisodeViewModel(
-    initialSubjectId: Int,
+class EpisodeViewModel(
+    val subjectId: Int,
     initialEpisodeId: Int,
     initialIsFullscreen: Boolean = false,
     context: Context,
-): EpisodeViewModel = EpisodeViewModelImpl(initialSubjectId, initialEpisodeId, initialIsFullscreen, context)
-
-
-@Stable
-private class EpisodeViewModelImpl(
-    override val subjectId: Int,
-    initialDanmakuId: Int,
-    initialIsFullscreen: Boolean = false,
-    context: Context,
     val getCurrentDate: () -> PackedDate = { PackedDate.now() },
-) : KoinComponent, EpisodeViewModel() {
-    override val episodeId: MutableStateFlow<Int> = MutableStateFlow(initialDanmakuId)
+) : KoinComponent, AbstractViewModel(), HasBackgroundScope {
+    private val episodeId: MutableStateFlow<Int> = MutableStateFlow(initialEpisodeId)
     private val playerStateFactory: PlayerStateFactory by inject()
     private val subjectCollectionRepository: SubjectCollectionRepository by inject()
     private val episodeCollectionRepository: EpisodeCollectionRepository by inject()
     private val animeScheduleRepository: AnimeScheduleRepository by inject()
     private val mediaCacheManager: MediaCacheManager by inject()
     private val danmakuManager: DanmakuManager by inject()
-    override val videoSourceResolver: VideoSourceResolver by inject()
+    val videoSourceResolver: VideoSourceResolver by inject()
     private val settingsRepository: SettingsRepository by inject()
     private val danmakuRegexFilterRepository: DanmakuRegexFilterRepository by inject()
     private val mediaSourceManager: MediaSourceManager by inject()
@@ -285,7 +185,7 @@ private class EpisodeViewModelImpl(
         )
     }.shareInBackground(started = SharingStarted.Lazily)
 
-    override val videoControllerState = VideoControllerState(ControllerVisibility.Invisible)
+    val videoControllerState = VideoControllerState(ControllerVisibility.Invisible)
 
     /**
      * 更换 EP 是否已经完成了.
@@ -416,14 +316,21 @@ private class EpisodeViewModelImpl(
             }
         }
 
-    override val mediaSourceInfoProvider: MediaSourceInfoProvider = MediaSourceInfoProvider(
+    val mediaSourceInfoProvider: MediaSourceInfoProvider = MediaSourceInfoProvider(
         getSourceInfoFlow = { mediaSourceManager.infoFlowByMediaSourceId(it) },
     )
 
-    override val mediaSelectorState: MediaSelectorState =
+    /**
+     * "数据源" bottom sheet 内容
+     */
+    val mediaSelectorState: MediaSelectorState =
         MediaSelectorPresentation(mediaSelector, mediaSourceInfoProvider, backgroundScope)
 
-    override val mediaSourceResultsPresentation: MediaSourceResultsPresentation =
+
+    /**
+     * "数据源" bottom sheet 中的每个数据源的结果
+     */
+    val mediaSourceResultsPresentation: MediaSourceResultsPresentation =
         MediaSourceResultsPresentation(
             FilteredMediaSourceResults(
                 results = mediaFetchSession.mapLatest { it.mediaSourceResults },
@@ -432,7 +339,10 @@ private class EpisodeViewModelImpl(
             backgroundScope.coroutineContext,
         )
 
-    override val playerState: PlayerState =
+    /**
+     * Play controller for video view. This can be saved even when window configuration changes (i.e. everything recomposes).
+     */
+    val playerState: PlayerState =
         playerStateFactory.create(context, backgroundScope.coroutineContext)
 
     /**
@@ -512,13 +422,21 @@ private class EpisodeViewModelImpl(
         }
     }
 
-    override val videoStatistics: VideoStatistics get() = playerLauncher.videoStatistics
 
-    override var mediaSelectorVisible: Boolean by mutableStateOf(false)
-    override val videoScaffoldConfig: VideoScaffoldConfig by settingsRepository.videoScaffoldConfig
+    /**
+     * "视频统计" bottom sheet 显示内容
+     */
+    val videoStatistics: VideoStatistics get() = playerLauncher.videoStatistics
+
+
+    /**
+     * 是否显示数据源选择器
+     */
+    var mediaSelectorVisible: Boolean by mutableStateOf(false)
+    val videoScaffoldConfig: VideoScaffoldConfig by settingsRepository.videoScaffoldConfig
         .flow.produceState(VideoScaffoldConfig.Default)
 
-    override val danmakuRegexFilterState = DanmakuRegexFilterState(
+    val danmakuRegexFilterState = DanmakuRegexFilterState(
         list = danmakuRegexFilterRepository.flow.produceState(emptyList()),
         add = {
             launchInBackground { danmakuRegexFilterRepository.add(it) }
@@ -538,7 +456,7 @@ private class EpisodeViewModelImpl(
         },
     )
 
-    override val subjectPresentation: SubjectPresentation by subjectInfo
+    val subjectPresentation: SubjectPresentation by subjectInfo
         .map {
             SubjectPresentation(title = it.displayName, info = it)
         }
@@ -553,14 +471,14 @@ private class EpisodeViewModelImpl(
             }
             .shareInBackground(SharingStarted.Eagerly)
 
-    override val episodePresentation: EpisodePresentation by episodePresentationFlow
+    val episodePresentation: EpisodePresentation by episodePresentationFlow
         .produceState(EpisodePresentation.Placeholder)
-    override val authState: AuthState = AuthState()
+    val authState: AuthState = AuthState()
 
     private val episodeCollectionsFlow = episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId)
         .shareInBackground()
 
-    override val episodeDetailsState: EpisodeDetailsState = kotlin.run {
+    val episodeDetailsState: EpisodeDetailsState = kotlin.run {
         EpisodeDetailsState(
             episodePresentation = episodePresentationFlow.filterNotNull().produceState(EpisodePresentation.Placeholder),
             subjectInfo = subjectInfo.produceState(SubjectInfo.Empty),
@@ -575,7 +493,10 @@ private class EpisodeViewModelImpl(
         )
     }
 
-    override val episodeCarouselState: EpisodeCarouselState = kotlin.run {
+    /**
+     * 剧集列表
+     */
+    val episodeCarouselState: EpisodeCarouselState = kotlin.run {
         val episodeCacheStatusListState by episodeCollectionsFlow.flatMapLatest { list ->
             if (list.isEmpty()) {
                 return@flatMapLatest flowOfEmptyList()
@@ -623,7 +544,7 @@ private class EpisodeViewModelImpl(
         )
     }
 
-    override val editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState =
+    val editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState =
         EditableSubjectCollectionTypeState(
             selfCollectionTypeFlow = subjectCollection
                 .map { it.collectionType },
@@ -639,9 +560,9 @@ private class EpisodeViewModelImpl(
             backgroundScope,
         )
 
-    override var isFullscreen: Boolean by mutableStateOf(initialIsFullscreen)
-    override var sidebarVisible: Boolean by mutableStateOf(true)
-    override val commentLazyListState: LazyListState = LazyListState()
+    var isFullscreen: Boolean by mutableStateOf(initialIsFullscreen)
+    var sidebarVisible: Boolean by mutableStateOf(true)
+    val commentLazyListState: LazyListState = LazyListState()
 
     fun switchEpisode(episodeId: Int) {
         savePlayProgress()
@@ -652,7 +573,10 @@ private class EpisodeViewModelImpl(
         this.episodeId.value = episodeId // ep 要在取消选择 media 之后才能变, 否则会导致使用旧的 media
     }
 
-    override val episodeSelectorState: EpisodeSelectorState = EpisodeSelectorState(
+    /**
+     * 播放器内切换剧集
+     */
+    val episodeSelectorState: EpisodeSelectorState = EpisodeSelectorState(
         itemsFlow = episodeCollectionsFlow.combine(subjectCollection) { list, subject ->
             list.map {
                 it.toPresentation(subject.recurrence)
@@ -692,11 +616,11 @@ private class EpisodeViewModelImpl(
         backgroundScope.coroutineContext,
     )
 
-    override val danmakuStatistics: DanmakuStatistics = DelegateDanmakuStatistics(
+    val danmakuStatistics: DanmakuStatistics = DelegateDanmakuStatistics(
         danmakuLoader.state.produceState(),
     )
 
-    override val danmaku = VideoDanmakuStateImpl(
+    val danmaku = VideoDanmakuStateImpl(
         danmakuEnabled = settingsRepository.danmakuEnabled.flow.produceState(false),
         danmakuConfig = settingsRepository.danmakuConfig.flow.produceState(DanmakuConfig.Default),
         onSend = { info ->
@@ -711,7 +635,7 @@ private class EpisodeViewModelImpl(
         backgroundScope,
     )
 
-    override val episodeCommentState: CommentState = CommentState(
+    val episodeCommentState: CommentState = CommentState(
         list = episodeId.flatMapLatest { episodeId ->
             bangumiCommentRepository.subjectEpisodeCommentsPager(episodeId)
                 .map { page ->
@@ -723,7 +647,7 @@ private class EpisodeViewModelImpl(
         backgroundScope = backgroundScope,
     )
 
-    override val commentEditorState: CommentEditorState = CommentEditorState(
+    val commentEditorState: CommentEditorState = CommentEditorState(
         showExpandEditCommentButton = true,
         initialEditExpanded = false,
         panelTitle = subjectInfo
@@ -750,7 +674,7 @@ private class EpisodeViewModelImpl(
         backgroundScope = backgroundScope,
     )
 
-    override val playerSkipOpEdState: PlayerSkipOpEdState = PlayerSkipOpEdState(
+    val playerSkipOpEdState: PlayerSkipOpEdState = PlayerSkipOpEdState(
         chapters = playerState.chapters.produceState(),
         onSkip = {
             playerState.seekTo(it)
@@ -759,11 +683,11 @@ private class EpisodeViewModelImpl(
             .produceState(0.milliseconds),
     )
 
-    override fun refreshFetch() {
+    fun refreshFetch() {
         mediaFetchSession.replayCache.firstOrNull()?.restartAll()
     }
 
-    override fun stopPlaying() {
+    fun stopPlaying() {
         // 退出播放页前保存播放进度
         savePlayProgress()
         playerState.stop()

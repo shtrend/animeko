@@ -12,7 +12,6 @@ package me.him188.ani.app.ui.subject.episode
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,7 +76,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.window.core.layout.WindowHeightSizeClass
 import androidx.window.core.layout.WindowWidthSizeClass
 import kotlinx.coroutines.CoroutineScope
@@ -97,7 +95,6 @@ import me.him188.ani.app.ui.foundation.ImageViewer
 import me.him188.ani.app.ui.foundation.LocalImageViewerHandler
 import me.him188.ani.app.ui.foundation.LocalIsPreviewing
 import me.him188.ani.app.ui.foundation.LocalPlatform
-import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.effects.DarkStatusBarAppearance
 import me.him188.ani.app.ui.foundation.effects.OnLifecycleEvent
 import me.him188.ani.app.ui.foundation.effects.ScreenOnEffect
@@ -805,22 +802,5 @@ private fun AutoPauseEffect(viewModel: EpisodeViewModel) {
             }
             pausedVideo = false
         }
-    }
-}
-
-@Preview
-@Composable
-private fun PreviewEpisodePageDesktop() {
-    ProvideCompositionLocalsForPreview {
-        val context = LocalContext.current
-        val vm = viewModel<EpisodeViewModel> {
-            EpisodeViewModel(
-                initialSubjectId = 0,
-                initialEpisodeId = 0,
-                initialIsFullscreen = false,
-                context,
-            )
-        }
-        EpisodeScene(vm)
     }
 }
