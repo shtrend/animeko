@@ -501,6 +501,10 @@ fun getVerifyJobBody(
             name = "anitorrent-load-test",
             step = "Check that Anitorrent can be loaded",
         ),
+        VerifyTask(
+            name = "full-startup",
+            step = "Check that the app can start up",
+        ),
     )
 
     when (runner.os to runner.arch) {
