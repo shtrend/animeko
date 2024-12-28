@@ -493,6 +493,7 @@ fun getVerifyJobBody(
     class VerifyTask(
         val name: String,
         val step: String,
+        val timeoutMinutes: Int = 5,
     )
 
     val tasksToExecute = listOf(
@@ -533,6 +534,7 @@ fun getVerifyJobBody(
                 run(
                     name = task.step,
                     command = shell($$""""$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg $${task.name}"""),
+                    timeoutMinutes = task.timeoutMinutes,
                 )
             }
         }
