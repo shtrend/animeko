@@ -128,8 +128,8 @@ internal fun MediaSelectorItem(
                         labelColor = MaterialTheme.colorScheme.error,
                     ),
                     border = InputChipDefaults.inputChipBorder(
-                        selected = true,
-                        enabled = false,
+                        enabled = true,
+                        selected = false,
                         borderColor = MaterialTheme.colorScheme.error,
                     ),
                 )
