@@ -315,6 +315,7 @@ private fun EpisodeSceneTabletVeryWide(
                                         navigator.navigateEpisodeDetails(vm.subjectId, episodeId)
                                     }
                                 },
+                                onRefreshMediaSources = { vm.refreshFetch() },
                             )
                         }
 
@@ -436,6 +437,7 @@ private fun EpisodeSceneContentPhone(
                         navigator.navigateEpisodeDetails(vm.subjectId, episodeId)
                     }
                 },
+                onRefreshMediaSources = { vm.refreshFetch() },
                 Modifier.fillMaxSize(),
             )
         },
@@ -694,6 +696,7 @@ private fun EpisodeVideo(
         },
         progressSliderState = progressSliderState,
         mediaSelectorState = vm.mediaSelectorState,
+        onRefreshMediaSources = { vm.refreshFetch() },
         mediaSourceResultsPresentation = vm.mediaSourceResultsPresentation,
         episodeSelectorState = vm.episodeSelectorState,
         mediaSourceInfoProvider = vm.mediaSourceInfoProvider,

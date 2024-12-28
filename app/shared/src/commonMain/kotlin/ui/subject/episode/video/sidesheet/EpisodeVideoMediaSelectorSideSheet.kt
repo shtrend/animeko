@@ -36,6 +36,7 @@ fun EpisodeVideoMediaSelectorSideSheet(
     mediaSourceResultsPresentation: MediaSourceResultsPresentation,
     mediaSourceInfoProvider: MediaSourceInfoProvider,
     onDismissRequest: () -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     EpisodeVideoSettingsSideSheet(
@@ -51,7 +52,7 @@ fun EpisodeVideoMediaSelectorSideSheet(
         MediaSelectorView(
             mediaSelectorState,
             sourceResults = {
-                MediaSourceResultsView(mediaSourceResultsPresentation, mediaSelectorState)
+                MediaSourceResultsView(mediaSourceResultsPresentation, mediaSelectorState, onRefresh)
             },
             modifier.padding(horizontal = 16.dp)
                 .fillMaxWidth()

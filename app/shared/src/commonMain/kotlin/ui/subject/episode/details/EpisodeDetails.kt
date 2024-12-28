@@ -131,6 +131,7 @@ fun EpisodeDetails(
     mediaSourceResultsPresentation: MediaSourceResultsPresentation,
     authState: AuthState,
     onSwitchEpisode: (episodeId: Int) -> Unit,
+    onRefreshMediaSources: () -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
 ) {
@@ -293,6 +294,7 @@ fun EpisodeDetails(
                                         mediaSelectorState,
                                         mediaSourceResultsPresentation,
                                         onDismissRequest = { showMediaSelector = false },
+                                        onRefresh = onRefreshMediaSources,
                                         onSelected = { showMediaSelector = false },
                                         stickyHeaderBackgroundColor = BottomSheetDefaults.ContainerColor,
                                     )

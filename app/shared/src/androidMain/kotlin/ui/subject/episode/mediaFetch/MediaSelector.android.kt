@@ -54,6 +54,7 @@ private fun PreviewMediaSelector() {
                     MediaSourceResultsView(
                         rememberTestMediaSourceResults(),
                         mediaSelector,
+                        onRefresh = {},
                     )
                 },
             )

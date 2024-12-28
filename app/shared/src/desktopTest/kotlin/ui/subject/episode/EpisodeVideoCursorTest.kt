@@ -119,6 +119,7 @@ class EpisodeVideoCursorTest {
                     onToggleSidebar = {},
                     progressSliderState = progressSliderState,
                     mediaSelectorState = rememberTestMediaSelectorPresentation(),
+                    onRefreshMediaSources = {},
                     mediaSourceResultsPresentation = rememberTestMediaSourceResults(),
                     episodeSelectorState = rememberTestEpisodeSelectorState(),
                     mediaSourceInfoProvider = rememberTestMediaSourceInfoProvider(),

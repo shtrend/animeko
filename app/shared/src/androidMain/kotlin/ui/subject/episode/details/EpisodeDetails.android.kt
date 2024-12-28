@@ -231,6 +231,7 @@ private fun PreviewEpisodeDetailsImpl(
             mediaSourceResultsPresentation = rememberTestMediaSourceResults(),
             authState = authState,
             onSwitchEpisode = {},
+            onRefreshMediaSources = {},
             Modifier
                 .padding(bottom = 16.dp, top = 8.dp)
                 .padding(it)

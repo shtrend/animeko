@@ -133,15 +133,16 @@ private fun PreviewVideoScaffoldImpl(
         onToggleSidebar = {},
         progressSliderState = progressSliderState,
         mediaSelectorState = rememberTestMediaSelectorPresentation(),
+        onRefreshMediaSources = {},
         mediaSourceResultsPresentation = rememberTestMediaSourceResults(),
         episodeSelectorState = rememberTestEpisodeSelectorState(),
         mediaSourceInfoProvider = rememberTestMediaSourceInfoProvider(),
+        audioController = NoOpLevelController,
+        brightnessController = NoOpLevelController,
         leftBottomTips = {
             PlayerControllerDefaults.LeftBottomTips(onClick = {})
         },
         danmakuRegexFilterState = createTestDanmakuRegexFilterState(),
-        audioController = NoOpLevelController,
-        brightnessController = NoOpLevelController,
     )
 
 //    VideoScaffold(

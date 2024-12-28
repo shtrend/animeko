@@ -221,6 +221,8 @@ abstract class EpisodeViewModel : AbstractViewModel(), HasBackgroundScope {
 
     abstract val playerSkipOpEdState: PlayerSkipOpEdState
 
+    abstract fun refreshFetch()
+
     @UiThread
     abstract fun stopPlaying()
 }
@@ -756,6 +758,10 @@ private class EpisodeViewModelImpl(
         videoLength = playerState.videoProperties.mapNotNull { it?.durationMillis?.milliseconds }
             .produceState(0.milliseconds),
     )
+
+    override fun refreshFetch() {
+        mediaFetchSession.replayCache.firstOrNull()?.restartAll()
+    }
 
     override fun stopPlaying() {
         // 退出播放页前保存播放进度

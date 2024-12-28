@@ -152,6 +152,7 @@ internal fun EpisodeVideoImpl(
     onToggleSidebar: (isCollapsed: Boolean) -> Unit,
     progressSliderState: MediaProgressSliderState,
     mediaSelectorState: MediaSelectorState,
+    onRefreshMediaSources: () -> Unit,
     mediaSourceResultsPresentation: MediaSourceResultsPresentation,
     episodeSelectorState: EpisodeSelectorState,
     mediaSourceInfoProvider: MediaSourceInfoProvider,
@@ -506,6 +507,7 @@ internal fun EpisodeVideoImpl(
                     mediaSourceResultsPresentation,
                     mediaSourceInfoProvider,
                     onDismissRequest = { isMediaSelectorVisible = false },
+                    onRefresh = onRefreshMediaSources,
                 )
             }
             if (isEpisodeSelectorVisible) {
