@@ -9,8 +9,8 @@
 
 package me.him188.ani.app.desktop
 
-import io.ktor.client.plugins.*
-import kotlinx.coroutines.*
+import io.ktor.client.plugins.HttpTimeout
+import kotlinx.coroutines.runBlocking
 import me.him188.ani.app.platform.DesktopContext
 import me.him188.ani.app.tools.update.DefaultFileDownloader
 import me.him188.ani.app.tools.update.InstallationResult
@@ -27,13 +27,10 @@ import me.him188.ani.utils.platform.currentPlatformDesktop
 import org.koin.mp.KoinPlatform
 import java.io.File
 import kotlin.system.exitProcess
-import kotlin.time.Duration.Companion.seconds
 
 object TestTasks {
     private val logger = logger<TestTasks>()
-
-    @OptIn(DelicateCoroutinesApi::class)
-    fun handleTestTask(taskName: String, args: List<String>, context: DesktopContext) {
+    fun handleTestTask(taskName: String, args: List<String>, context: DesktopContext): Nothing {
         when (taskName) {
             "anitorrent-load-test" -> {
                 AnitorrentLibraryLoader.loadLibraries()
@@ -42,14 +39,6 @@ object TestTasks {
 
             "download-update-and-install" -> {
                 downloadUpdateAndInstall(args, context)
-            }
-
-            "full-startup" -> {
-                // Let other jos run and even show UI for 10s. Ensure no crash.
-                GlobalScope.launch {
-                    delay(10.seconds)
-                    exitProcess(0)
-                }
             }
 
             else -> {
