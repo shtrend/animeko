@@ -245,7 +245,7 @@ internal fun EpisodeVideoImpl(
                 enableSwipeToSeek = enableSwipeToSeek,
                 audioController = audioController,
                 brightnessController = brightnessController,
-                Modifier.padding(top = 100.dp),
+                Modifier,
                 onTogglePauseResume = {
                     if (playerState.state.value.isPlaying) {
                         indicatorTasker.launch {
