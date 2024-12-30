@@ -100,9 +100,6 @@ import me.him188.ani.app.domain.torrent.TorrentManager
 import me.him188.ani.app.domain.update.UpdateManager
 import me.him188.ani.app.ui.subject.details.state.DefaultSubjectDetailsStateFactory
 import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateFactory
-import me.him188.ani.app.ui.subject.episode.video.TorrentMediaCacheProgressState
-import me.him188.ani.app.videoplayer.torrent.TorrentVideoData
-import me.him188.ani.app.videoplayer.ui.state.CacheProgressStateFactoryManager
 import me.him188.ani.datasources.bangumi.BangumiClient
 import me.him188.ani.datasources.bangumi.DelegateBangumiClient
 import me.him188.ani.datasources.bangumi.createBangumiClient
@@ -408,10 +405,6 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
 
     single<MediaAutoCacheService> {
         DefaultMediaAutoCacheService.createWithKoin()
-    }
-
-    CacheProgressStateFactoryManager.register(TorrentVideoData::class) { videoData, state ->
-        TorrentMediaCacheProgressState(videoData.pieces) { state.value }
     }
 
     single<MeteredNetworkDetector> { createMeteredNetworkDetector(getContext()) }
