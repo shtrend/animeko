@@ -102,10 +102,10 @@ import me.him188.ani.app.videoplayer.ui.guesture.GestureIndicatorState.State.VOL
 import me.him188.ani.app.videoplayer.ui.guesture.SwipeSeekerState.Companion.swipeToSeek
 import me.him188.ani.app.videoplayer.ui.progress.PlayerProgressSliderState
 import me.him188.ani.app.videoplayer.ui.rememberAlwaysOnRequester
+import me.him188.ani.app.videoplayer.ui.state.PlayerState
+import me.him188.ani.app.videoplayer.ui.state.SupportsAudio
 import me.him188.ani.app.videoplayer.ui.top.needWorkaroundForFocusManager
 import me.him188.ani.utils.platform.Platform
-import org.openani.mediamp.MediampPlayer
-import org.openani.mediamp.features.AudioLevelController
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.seconds
 
@@ -430,7 +430,7 @@ fun PlayerGestureHost(
     progressSliderState: PlayerProgressSliderState,
     indicatorState: GestureIndicatorState,
     fastSkipState: FastSkipState,
-    playerState: MediampPlayer, // TODO: remove playerState from VideoGestureHost
+    playerState: PlayerState, // TODO: remove playerState from VideoGestureHost
     enableSwipeToSeek: Boolean,
     audioController: LevelController,
     brightnessController: LevelController,
@@ -464,7 +464,6 @@ fun PlayerGestureHost(
             val manager = LocalFocusManager.current
             val keyboardFocus = remember { FocusRequester() } // focus 了才能用键盘快捷键
 
-            val audioLevelController = playerState.features[AudioLevelController]
             Box(
                 modifier
                     .focusRequester(keyboardFocus)
@@ -481,37 +480,39 @@ fun PlayerGestureHost(
                             },
                         )
                     }
-                    .ifThen(family.keyboardUpDownForVolume && audioLevelController != null) {
-                        if (audioLevelController == null) return@ifThen this
+                    .ifThen(family.keyboardUpDownForVolume && playerState is SupportsAudio) {
+                        if (playerState !is SupportsAudio) {
+                            return@ifThen this
+                        }
                         onKeyEvent {
                             if (it.type == KeyEventType.KeyUp) return@onKeyEvent false
                             val consumed = when {
                                 it.isShiftPressed && it.key == ComposeKey.DirectionUp -> {
-                                    audioLevelController.volumeUp(0.01f)
+                                    playerState.volumeUp(0.01f)
                                     true
                                 }
 
                                 it.isShiftPressed && it.key == ComposeKey.DirectionDown -> {
-                                    audioLevelController.volumeDown(0.01f)
+                                    playerState.volumeDown(0.01f)
                                     true
                                 }
 
                                 it.key == ComposeKey.DirectionUp -> {
-                                    audioLevelController.volumeUp()
+                                    playerState.volumeUp()
                                     true
                                 }
 
                                 it.key == ComposeKey.DirectionDown -> {
-                                    audioLevelController.volumeDown()
+                                    playerState.volumeDown()
                                     true
                                 }
 
                                 else -> false
                             }
                             if (consumed) {
-                                audioLevelController.setMute(false)
+                                playerState.toggleMute(false)
                                 indicatorTasker.launch {
-                                    indicatorState.showVolumeRange(audioLevelController.volume.value / audioLevelController.maxVolume)
+                                    indicatorState.showVolumeRange(playerState.volume.value / playerState.maxValue)
                                 }
                             }
                             consumed
@@ -555,16 +556,18 @@ fun PlayerGestureHost(
                             }
                             onExitFullscreen()
                         }
-                    }.ifThen(family.scrollForVolume && audioLevelController != null) {
-                        if (audioLevelController == null) return@ifThen this
+                    }.ifThen(family.scrollForVolume && playerState is SupportsAudio) {
+                        if (playerState !is SupportsAudio) {
+                            return@ifThen this
+                        }
                         onPointerEventMultiplatform(PointerEventType.Scroll) { event ->
                             event.changes.firstOrNull()?.scrollDelta?.y?.run {
-                                audioLevelController.setMute(false)
-                                if (this < 0) audioLevelController.volumeUp()
-                                else if (this > 0) audioLevelController.volumeDown()
+                                playerState.toggleMute(false)
+                                if (this < 0) playerState.volumeUp()
+                                else if (this > 0) playerState.volumeDown()
 
                                 indicatorTasker.launch {
-                                    indicatorState.showVolumeRange(audioLevelController.volume.value / audioLevelController.maxVolume)
+                                    indicatorState.showVolumeRange(playerState.volume.value / playerState.maxValue)
                                 }
                             }
                         }

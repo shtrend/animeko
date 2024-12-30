@@ -28,6 +28,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import me.him188.ani.app.domain.media.resolver.WebViewVideoExtractor.Instruction
 import me.him188.ani.app.platform.LocalContext
+import me.him188.ani.app.videoplayer.HttpStreamingVideoSource
+import me.him188.ani.app.videoplayer.data.VideoSource
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.matcher.MediaSourceWebVideoMatcherLoader
 import me.him188.ani.datasources.api.matcher.WebVideoMatcher
@@ -37,7 +39,6 @@ import me.him188.ani.datasources.api.matcher.videoOrNull
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
-import org.openani.mediamp.source.MediaSource
 import java.io.ByteArrayInputStream
 import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.time.Duration.Companion.seconds
@@ -75,7 +76,7 @@ class AndroidWebVideoSourceResolver(
         }
     }
 
-    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*> {
+    override suspend fun resolve(media: Media, episode: EpisodeMetadata): VideoSource<*> {
         if (!supports(media)) throw UnsupportedMediaException(media)
 
         val matchersFromMediaSource = matcherLoader.loadMatchers(media.mediaSourceId)
@@ -112,12 +113,7 @@ class AndroidWebVideoSourceResolver(
                 matcher.match(resource.url, context).videoOrNull
             }
         } ?: throw VideoSourceResolutionException(ResolutionFailures.NO_MATCHING_RESOURCE)
-        return HttpStreamingMediaSource(
-            webVideo.m3u8Url,
-            media.originalTitle,
-            webVideo.headers,
-            media.extraFiles.toMediampMediaExtraFiles(),
-        )
+        return HttpStreamingVideoSource(webVideo.m3u8Url, media.originalTitle, webVideo = webVideo, media.extraFiles)
     }
 }
 

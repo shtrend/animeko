@@ -18,17 +18,19 @@ import me.him188.ani.app.domain.torrent.TorrentEngine
 import me.him188.ani.app.torrent.api.FetchTorrentTimeoutException
 import me.him188.ani.app.torrent.api.files.EncodedTorrentInfo
 import me.him188.ani.app.torrent.api.files.FilePriority
+import me.him188.ani.app.videoplayer.data.OpenFailures
+import me.him188.ani.app.videoplayer.data.VideoSource
+import me.him188.ani.app.videoplayer.data.VideoSourceOpenException
 import me.him188.ani.app.videoplayer.torrent.TorrentVideoData
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.Media
+import me.him188.ani.datasources.api.MediaExtraFiles
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.datasources.api.topic.contains
 import me.him188.ani.datasources.api.topic.titles.RawTitleParser
 import me.him188.ani.datasources.api.topic.titles.parse
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
-import org.openani.mediamp.source.MediaSource
-import org.openani.mediamp.source.MediaSourceOpenException
 import kotlin.coroutines.cancellation.CancellationException
 
 class TorrentVideoSourceResolver(
@@ -40,7 +42,7 @@ class TorrentVideoSourceResolver(
     }
 
     @Throws(VideoSourceResolutionException::class, CancellationException::class)
-    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*> {
+    override suspend fun resolve(media: Media, episode: EpisodeMetadata): VideoSource<*> {
         val downloader = try {
             engine.getDownloader()
         } catch (e: CancellationException) {
@@ -58,7 +60,7 @@ class TorrentVideoSourceResolver(
                         engine,
                         encodedTorrentInfo = downloader.fetchTorrent(location.uri),
                         episodeMetadata = episode,
-                        extraFiles = media.extraFiles.toMediampMediaExtraFiles(),
+                        extraFiles = media.extraFiles,
                     )
                 } catch (e: FetchTorrentTimeoutException) {
                     throw VideoSourceResolutionException(ResolutionFailures.FETCH_TIMEOUT)
@@ -175,14 +177,14 @@ class TorrentVideoSource(
     private val engine: TorrentEngine,
     private val encodedTorrentInfo: EncodedTorrentInfo,
     private val episodeMetadata: EpisodeMetadata,
-    override val extraFiles: org.openani.mediamp.source.MediaExtraFiles,
-) : MediaSource<TorrentVideoData> {
+    override val extraFiles: MediaExtraFiles,
+) : VideoSource<TorrentVideoData> {
     @OptIn(ExperimentalStdlibApi::class)
     override val uri: String by lazy {
         "torrent://${encodedTorrentInfo.data.toHexString().take(32) + "..."}"
     }
 
-    @Throws(MediaSourceOpenException::class, CancellationException::class)
+    @Throws(VideoSourceOpenException::class, CancellationException::class)
     override suspend fun open(): TorrentVideoData {
         // 注意, 这个函数须支持 cancellation. 它会在任意时刻被取消.
 
@@ -210,7 +212,7 @@ class TorrentVideoSource(
                     }
                 }?.createHandle()?.also {
                     it.resume(FilePriority.HIGH)
-                } ?: throw AniMediaSourceOpenException(
+                } ?: throw VideoSourceOpenException(
                     OpenFailures.NO_MATCHING_FILE,
                     """
                     Torrent files: ${files.joinToString { it.pathInTorrent }}

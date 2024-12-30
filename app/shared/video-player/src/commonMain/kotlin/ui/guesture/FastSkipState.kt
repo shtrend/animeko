@@ -22,11 +22,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.openani.mediamp.features.PlaybackSpeed
+import me.him188.ani.app.videoplayer.ui.state.PlayerState
 
 @Composable
 fun rememberPlayerFastSkipState(
-    playerState: PlaybackSpeed,
+    playerState: PlayerState,
     gestureIndicatorState: GestureIndicatorState,
 ): FastSkipState {
     return remember(playerState) {
@@ -35,15 +35,15 @@ fun rememberPlayerFastSkipState(
 }
 
 class PlayerFastSkipState(
-    private val playbackSpeed: PlaybackSpeed,
+    private val playerState: PlayerState,
     private val gestureIndicatorState: GestureIndicatorState,
 ) {
     private var originalSpeed = 0f
     private var gestureIndicatorTicket = 0
     val fastSkipState: FastSkipState = FastSkipState(
         onStart = { skipDirection ->
-            originalSpeed = playbackSpeed.value
-            playbackSpeed.set(
+            originalSpeed = playerState.playbackSpeed.value
+            playerState.setPlaybackSpeed(
                 when (skipDirection) {
                     SkipDirection.FORWARD -> 3f
                     SkipDirection.BACKWARD -> error("Backward skipping is not supported")
@@ -52,7 +52,7 @@ class PlayerFastSkipState(
             gestureIndicatorTicket = gestureIndicatorState.startFastForward()
         },
         onStop = {
-            playbackSpeed.set(originalSpeed)
+            playerState.setPlaybackSpeed(originalSpeed)
             gestureIndicatorState.stopFastForward(gestureIndicatorTicket)
         },
     )

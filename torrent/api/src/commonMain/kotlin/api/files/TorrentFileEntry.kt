@@ -27,6 +27,7 @@ import kotlinx.io.IOException
 import me.him188.ani.app.torrent.api.TorrentSession
 import me.him188.ani.app.torrent.api.pieces.Piece
 import me.him188.ani.app.torrent.api.pieces.PieceList
+import me.him188.ani.utils.io.SeekableInput
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.isRegularFile
@@ -34,7 +35,6 @@ import me.him188.ani.utils.io.length
 import me.him188.ani.utils.io.resolve
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.thisLogger
-import org.openani.mediamp.io.SeekableInput
 import kotlin.concurrent.Volatile
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext

@@ -38,8 +38,7 @@ import me.him188.ani.app.ui.foundation.theme.slightlyWeaken
 import me.him188.ani.app.videoplayer.ui.ControllerVisibility
 import me.him188.ani.app.videoplayer.ui.PlayerControllerState
 import me.him188.ani.app.videoplayer.ui.progress.PlayerProgressSliderState
-import org.openani.mediamp.MediampPlayer
-import org.openani.mediamp.features.PlaybackSpeed
+import me.him188.ani.app.videoplayer.ui.state.PlayerState
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -135,7 +134,7 @@ fun LockableVideoGestureHost(
     controllerState: PlayerControllerState,
     seekerState: SwipeSeekerState,
     progressSliderState: PlayerProgressSliderState,
-    playerState: MediampPlayer,
+    playerState: PlayerState,
     locked: Boolean,
     enableSwipeToSeek: Boolean,
     audioController: LevelController,
@@ -146,10 +145,7 @@ fun LockableVideoGestureHost(
     onExitFullscreen: () -> Unit = {},
     family: GestureFamily = LocalPlatform.current.mouseFamily,
     gestureIndicatorState: GestureIndicatorState = rememberGestureIndicatorState(),
-    fastSkipState: FastSkipState = rememberPlayerFastSkipState(
-        playerState = playerState.features.getOrFail(PlaybackSpeed),
-        gestureIndicatorState,
-    ),
+    fastSkipState: FastSkipState = rememberPlayerFastSkipState(playerState = playerState, gestureIndicatorState),
 ) {
     if (locked) {
         LockedScreenGestureHost(

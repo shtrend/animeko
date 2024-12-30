@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DisplaySettings
 import androidx.compose.material.icons.rounded.Settings
@@ -71,25 +72,21 @@ import me.him188.ani.app.videoplayer.ui.guesture.rememberSwipeSeekerState
 import me.him188.ani.app.videoplayer.ui.hasPageAsState
 import me.him188.ani.app.videoplayer.ui.progress.AudioSwitcher
 import me.him188.ani.app.videoplayer.ui.progress.MediaProgressIndicatorText
+import me.him188.ani.app.videoplayer.ui.progress.PlayerProgressSliderState
 import me.him188.ani.app.videoplayer.ui.progress.PlayerControllerBar
 import me.him188.ani.app.videoplayer.ui.progress.PlayerControllerDefaults
 import me.him188.ani.app.videoplayer.ui.progress.PlayerControllerDefaults.SpeedSwitcher
-import me.him188.ani.app.videoplayer.ui.progress.PlayerProgressSliderState
 import me.him188.ani.app.videoplayer.ui.progress.SubtitleSwitcher
 import me.him188.ani.app.videoplayer.ui.rememberAlwaysOnRequester
 import me.him188.ani.app.videoplayer.ui.rememberVideoSideSheetsController
-import me.him188.ani.app.videoplayer.ui.state.ChunkState
-import me.him188.ani.app.videoplayer.ui.state.staticMediaCacheProgressState
+import me.him188.ani.app.videoplayer.ui.state.PlayerState
+import me.him188.ani.app.videoplayer.ui.state.SupportsAudio
+import me.him188.ani.app.videoplayer.ui.state.togglePause
 import me.him188.ani.app.videoplayer.ui.top.PlayerTopBar
 import me.him188.ani.danmaku.ui.DanmakuHost
 import me.him188.ani.danmaku.ui.DanmakuHostState
 import me.him188.ani.utils.platform.annotations.TestOnly
 import me.him188.ani.utils.platform.isDesktop
-import org.openani.mediamp.MediampPlayer
-import org.openani.mediamp.features.AudioLevelController
-import org.openani.mediamp.features.PlaybackSpeed
-import org.openani.mediamp.features.toggleMute
-import org.openani.mediamp.togglePause
 
 internal const val TAG_EPISODE_VIDEO_TOP_BAR = "EpisodeVideoTopBar"
 
@@ -107,7 +104,7 @@ internal const val TAG_EPISODE_SELECTOR_SHEET = "EpisodeSelectorSheet"
  */
 @Composable
 internal fun EpisodeVideoImpl(
-    playerState: MediampPlayer,
+    playerState: PlayerState,
     expanded: Boolean,
     hasNextEpisode: Boolean,
     onClickNextEpisode: () -> Unit,
@@ -250,7 +247,7 @@ internal fun EpisodeVideoImpl(
                 brightnessController = brightnessController,
                 Modifier,
                 onTogglePauseResume = {
-                    if (playerState.playbackState.value.isPlaying) {
+                    if (playerState.state.value.isPlaying) {
                         indicatorTasker.launch {
                             indicatorState.showPausedLong()
                         }
@@ -303,7 +300,7 @@ internal fun EpisodeVideoImpl(
         bottomBar = {
             PlayerControllerBar(
                 startActions = {
-                    val isPlaying by remember(playerState) { playerState.playbackState.map { it.isPlaying } }
+                    val isPlaying by remember(playerState) { playerState.state.map { it.isPlaying } }
                         .collectAsStateWithLifecycle(false)
                     PlayerControllerDefaults.PlaybackIcon(
                         isPlaying = { isPlaying },
@@ -319,19 +316,18 @@ internal fun EpisodeVideoImpl(
                         danmakuEnabled,
                         onClick = { onToggleDanmaku() },
                     )
-                    val audioLevelController = playerState.features[AudioLevelController]
-                    if (expanded && audioLevelController != null) {
-                        val volumeState by audioLevelController.volume.collectAsStateWithLifecycle()
-                        val volumeMute by audioLevelController.isMute.collectAsStateWithLifecycle()
+                    if (expanded && playerState is SupportsAudio) {
+                        val volumeState by playerState.volume.collectAsStateWithLifecycle()
+                        val volumeMute by playerState.isMute.collectAsStateWithLifecycle()
                         PlayerControllerDefaults.AudioIcon(
                             volumeState,
                             isMute = volumeMute,
-                            maxValue = audioLevelController.maxVolume,
+                            maxValue = playerState.maxValue,
                             onClick = {
-                                audioLevelController.toggleMute()
+                                playerState.toggleMute()
                             },
                             onchange = {
-                                audioLevelController.setVolume(it)
+                                playerState.setVolume(it)
                             },
                             controllerState = playerControllerState,
                         )
@@ -341,10 +337,9 @@ internal fun EpisodeVideoImpl(
                     MediaProgressIndicatorText(progressSliderState)
                 },
                 progressSlider = {
-                    // TODO: 2024/12/30 [mediamp]  MediaProgressSlider
                     PlayerControllerDefaults.MediaProgressSlider(
                         progressSliderState,
-                        cacheProgressState = staticMediaCacheProgressState(ChunkState.NONE),
+                        cacheProgressState = playerState.cacheProgress,
                         showPreviewTimeTextOnThumb = expanded,
                     )
                 },
@@ -361,12 +356,11 @@ internal fun EpisodeVideoImpl(
 
                         PlayerControllerDefaults.SubtitleSwitcher(playerState.subtitleTracks)
 
-                        val playbackSpeed = playerState.features.getOrFail(PlaybackSpeed)
-                        val speed by playbackSpeed.valueFlow.collectAsStateWithLifecycle(1f)
+                        val speed by playerState.playbackSpeed.collectAsStateWithLifecycle()
                         val alwaysOnRequester = rememberAlwaysOnRequester(playerControllerState, "speedSwitcher")
                         SpeedSwitcher(
                             speed,
-                            { playbackSpeed.set(it) },
+                            { playerState.setPlaybackSpeed(it) },
                             onExpandedChanged = {
                                 if (it) {
                                     alwaysOnRequester.request()

@@ -9,31 +9,24 @@
 
 package me.him188.ani.app.domain.media.resolver
 
+import me.him188.ani.app.videoplayer.data.VideoSource
+import me.him188.ani.app.videoplayer.HttpStreamingVideoSource
 import me.him188.ani.datasources.api.Media
+import me.him188.ani.datasources.api.matcher.WebVideo
 import me.him188.ani.datasources.api.topic.ResourceLocation
-import org.openani.mediamp.source.MediaExtraFiles
-import org.openani.mediamp.source.MediaSource
-import org.openani.mediamp.source.UriMediaSource
 
 class HttpStreamingVideoSourceResolver : VideoSourceResolver {
     override suspend fun supports(media: Media): Boolean {
         return media.download is ResourceLocation.HttpStreamingFile
     }
 
-    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*> {
+    override suspend fun resolve(media: Media, episode: EpisodeMetadata): VideoSource<*> {
         if (!supports(media)) throw UnsupportedMediaException(media)
-        return HttpStreamingMediaSource(
+        return HttpStreamingVideoSource(
             media.download.uri,
             media.originalTitle,
-            emptyMap(),
-            media.extraFiles.toMediampMediaExtraFiles(),
+            WebVideo(media.download.uri, emptyMap()),
+            media.extraFiles,
         )
     }
 }
-
-class HttpStreamingMediaSource(
-    uri: String,
-    val originalTitle: String,
-    headers: Map<String, String> = emptyMap(),
-    extraFiles: MediaExtraFiles,
-) : UriMediaSource(uri, headers, extraFiles)

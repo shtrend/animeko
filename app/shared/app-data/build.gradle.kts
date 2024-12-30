@@ -29,7 +29,6 @@ kotlin {
         implementation(projects.utils.intellijAnnotations)
         api(projects.app.shared.videoPlayer.videoPlayerApi)
         api(projects.app.shared.videoPlayer.torrentSource)
-        api(mediampLibs.mediamp.source.kotlinx.io)
         implementation(libs.kotlinx.serialization.json.io)
         api(libs.kotlinx.coroutines.core)
         api(libs.kotlinx.serialization.core)
