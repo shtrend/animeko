@@ -10,6 +10,7 @@
 package me.him188.ani.app.ui.exploration
 
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
@@ -31,13 +32,17 @@ import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.paging.PagingData
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.data.models.subject.FollowedSubjectInfo
 import me.him188.ani.app.data.models.subject.subjectInfo
@@ -48,23 +53,35 @@ import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.navigation.SubjectDetailPlaceholder
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
+import me.him188.ani.app.ui.adaptive.HorizontalScrollControlScaffoldOnDesktop
 import me.him188.ani.app.ui.adaptive.NavTitleHeader
+import me.him188.ani.app.ui.exploration.followed.FollowedSubjectsDefaults
 import me.him188.ani.app.ui.exploration.followed.FollowedSubjectsLazyRow
 import me.him188.ani.app.ui.exploration.trends.TrendingSubjectsCarousel
+import me.him188.ani.app.ui.foundation.HorizontalScrollControlState
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
+import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
+import me.him188.ani.app.ui.foundation.rememberHorizontalScrollControlState
 import me.him188.ani.app.ui.foundation.session.SelfAvatar
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
+import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.search.isLoadingFirstPageOrRefreshing
 
+/**
+ * @param horizontalScrollTipFlow 探索界面有横向滚动的列表, 是否显示点击辅助滚动按钮后的提示.
+ * @param onSetDisableHorizontalScrollTip 探索界面有横向滚动的列表, 在第一次点击列表左右测的辅助滚动按钮后调用.
+ */
 @Stable
 class ExplorationPageState(
     val authState: AuthState,
     selfInfoState: State<UserInfo?>,
     val trendingSubjectInfoPager: LazyPagingItems<TrendingSubjectInfo>,
     val followedSubjectsPager: Flow<PagingData<FollowedSubjectInfo>>,
+    val horizontalScrollTipFlow: Flow<Boolean>,
+    private val onSetDisableHorizontalScrollTip: () -> Unit,
 ) {
     val selfInfo by selfInfoState
 
@@ -81,6 +98,10 @@ class ExplorationPageState(
 
 
     val pageScrollState = ScrollState(0)
+
+    fun setDisableHorizontalScrollTip() {
+        onSetDisableHorizontalScrollTip()
+    }
 }
 
 @Composable
@@ -132,52 +153,103 @@ fun ExplorationPage(
             PaddingValues(horizontal = horizontalPadding)
 
         val navigator = LocalNavigator.current
+        val density = LocalDensity.current
+        val showHorizontalNavigateTip by state.horizontalScrollTipFlow.collectAsState(false)
+        val toaster = LocalToaster.current
+        val scope = rememberCoroutineScope()
+        
         Column(Modifier.padding(topBarPadding).verticalScroll(state.pageScrollState)) {
             NavTitleHeader(
                 title = { Text("最高热度") },
                 contentPadding = horizontalContentPadding,
             )
 
-            TrendingSubjectsCarousel(
-                state.trendingSubjectInfoPager,
-                onClick = {
-                    navigator.navigateSubjectDetails(
-                        subjectId = it.bangumiId,
-                        placeholder = SubjectDetailPlaceholder(
-                            id = it.bangumiId,
-                            name = it.nameCn,
-                            coverUrl = it.imageLarge,
-                        ),
-                    )
-                },
-                contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 8.dp),
-                carouselState = state.trendingSubjectsCarouselState,
-            )
+            val carouselItemSize = CarouselItemDefaults.itemSize()
+            HorizontalScrollControlScaffoldOnDesktop(
+                rememberHorizontalScrollControlState(
+                    state.trendingSubjectsCarouselState,
+                    onClickScroll = { direction ->
+                        scope.launch {
+                            state.trendingSubjectsCarouselState.animateScrollBy(
+                                with(density) { (carouselItemSize.preferredWidth * 2).toPx() } *
+                                        if (direction == HorizontalScrollControlState.Direction.BACKWARD) -1 else 1,
+                            )
+                        }
+                        if (showHorizontalNavigateTip) {
+                            toaster.toast(getHorizontalScrollNavigatorTipText())
+                            state.setDisableHorizontalScrollTip()
+                        }
+                    },
+                ),
+            ) {
+                TrendingSubjectsCarousel(
+                    state.trendingSubjectInfoPager,
+                    onClick = {
+                        navigator.navigateSubjectDetails(
+                            subjectId = it.bangumiId,
+                            placeholder = SubjectDetailPlaceholder(
+                                id = it.bangumiId,
+                                name = it.nameCn,
+                                coverUrl = it.imageLarge,
+                            ),
+                        )
+                    },
+                    contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 8.dp),
+                    carouselState = state.trendingSubjectsCarouselState,
+                )
+            }
 
             NavTitleHeader(
                 title = { Text("继续观看") },
                 contentPadding = horizontalContentPadding,
             )
+
             val followedSubjectsPager = state.followedSubjectsPager.collectAsLazyPagingItemsWithLifecycle()
-            FollowedSubjectsLazyRow(
-                followedSubjectsPager,
-                onClick = {
-                    navigator.navigateSubjectDetails(
-                        subjectId = it.subjectInfo.subjectId,
-                        placeholder = it.subjectInfo.toNavPlaceholder(),
-                    )
-                },
-                onPlay = {
-                    it.subjectProgressInfo.nextEpisodeIdToPlay?.let { it1 ->
-                        navigator.navigateEpisodeDetails(
-                            it.subjectInfo.subjectId,
-                            it1,
+            val followedSubjectsLayoutParameters =
+                FollowedSubjectsDefaults.layoutParameters(currentWindowAdaptiveInfo1())
+
+            HorizontalScrollControlScaffoldOnDesktop(
+                rememberHorizontalScrollControlState(
+                    state.followedSubjectsLazyRowState,
+                    onClickScroll = { direction ->
+                        scope.launch {
+                            state.followedSubjectsLazyRowState.animateScrollBy(
+                                with(density) { (followedSubjectsLayoutParameters.imageSize.height * 2).toPx() } *
+                                        if (direction == HorizontalScrollControlState.Direction.BACKWARD) -1 else 1,
+                            )
+                        }
+                        if (showHorizontalNavigateTip) {
+                            toaster.toast(getHorizontalScrollNavigatorTipText())
+                            state.setDisableHorizontalScrollTip()
+                        }
+                    },
+                ),
+            ) {
+                FollowedSubjectsLazyRow(
+                    followedSubjectsPager,
+                    onClick = {
+                        navigator.navigateSubjectDetails(
+                            subjectId = it.subjectInfo.subjectId,
+                            placeholder = it.subjectInfo.toNavPlaceholder(),
                         )
-                    }
-                },
-                contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 8.dp),
-                lazyListState = state.followedSubjectsLazyRowState,
-            )
+                    },
+                    onPlay = {
+                        it.subjectProgressInfo.nextEpisodeIdToPlay?.let { it1 ->
+                            navigator.navigateEpisodeDetails(
+                                it.subjectInfo.subjectId,
+                                it1,
+                            )
+                        }
+                    },
+                    layoutParameters = followedSubjectsLayoutParameters,
+                    contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 8.dp),
+                    lazyListState = state.followedSubjectsLazyRowState,
+                )
+            }
         }
     }
+}
+
+private fun getHorizontalScrollNavigatorTipText(): String {
+    return "按住 Shift + 鼠标滚轮 同样可以水平滚动"
 }
