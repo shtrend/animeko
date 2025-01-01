@@ -128,7 +128,9 @@ class AniApplication : Application() {
         }.startCommonKoinModule(scope)
 
         val koin = getKoin()
-        koin.get<TorrentManager>() // start sharing, connect to DHT now
+        scope.launch(CoroutineName("TorrentManager initializer")) {
+            koin.get<TorrentManager>() // start sharing, connect to DHT now
+        }
         scope.launch(CoroutineName("MediaCacheNotificationTask")) {
             MediaCacheNotificationTask(koin.get(), koin.get()).run()
         }
