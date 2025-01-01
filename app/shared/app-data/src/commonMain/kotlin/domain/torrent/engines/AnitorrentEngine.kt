@@ -25,8 +25,8 @@ import me.him188.ani.app.domain.torrent.AbstractTorrentEngine
 import me.him188.ani.app.domain.torrent.TorrentEngineType
 import me.him188.ani.app.domain.torrent.peer.PeerFilterSettings
 import me.him188.ani.app.platform.currentAniBuildConfig
+import me.him188.ani.app.platform.fourDigitVersionCode
 import me.him188.ani.app.platform.getAniUserAgent
-import me.him188.ani.app.platform.versionCode
 import me.him188.ani.app.torrent.anitorrent.AnitorrentDownloaderFactory
 import me.him188.ani.app.torrent.anitorrent.AnitorrentTorrentDownloader
 import me.him188.ani.app.torrent.api.HttpFileDownloader
@@ -115,6 +115,7 @@ class AnitorrentEngine(
         TorrentDownloaderConfig(
             peerFingerprint = computeTorrentFingerprint(),
             userAgent = computeTorrentUserAgent(),
+            handshakeClientVersion = "Anitorrent ${currentAniBuildConfig.fourDigitVersionCode}",
             downloadRateLimitBytes = downloadRateLimit.toLibtorrentRate(),
             uploadRateLimitBytes = uploadRateLimit.toLibtorrentRate(),
             shareRatioLimit = shareRatioLimit.toLibtorrentShareRatio(),
@@ -133,11 +134,11 @@ private fun Float.toLibtorrentShareRatio(): Int {
 }
 
 private fun computeTorrentFingerprint(
-    versionCode: String = currentAniBuildConfig.versionCode,
-): String = "-aniLT${versionCode}-"
+    versionCode: String = currentAniBuildConfig.fourDigitVersionCode,
+): String = "-AL${versionCode}-"
 
 private fun computeTorrentUserAgent(
-    versionCode: String = currentAniBuildConfig.versionCode,
+    versionCode: String = currentAniBuildConfig.fourDigitVersionCode,
 ): String = "ani_libtorrent/${versionCode}"
 
 private fun HttpClient.asHttpFileDownloader(): HttpFileDownloader = object : HttpFileDownloader {
