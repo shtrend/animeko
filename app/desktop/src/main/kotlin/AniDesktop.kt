@@ -170,11 +170,6 @@ object AniDesktop {
         val logsDir = File(projectDirectories.dataDir).resolve("logs").apply { mkdirs() }
 
         Log4j2Config.configureLogging(logsDir)
-        kotlin.runCatching {
-            JvmLogHelper.deleteOldLogs(logsDir.toPath())
-        }.onFailure {
-            logger.error(it) { "Failed to delete old logs" }
-        }
 
         if (AniBuildConfigDesktop.isDebug) {
             logger.info { "Debug mode enabled" }
@@ -184,6 +179,15 @@ object AniDesktop {
         logger.info { "dataDir: file://${projectDirectories.dataDir.replace(" ", "%20")}" }
         logger.info { "cacheDir: file://${projectDirectories.cacheDir.replace(" ", "%20")}" }
         logger.info { "logsDir: file://${logsDir.absolutePath.replace(" ", "%20")}" }
+        val coroutineScope = createAppRootCoroutineScope()
+
+        coroutineScope.launch(Dispatchers.IO) {
+            kotlin.runCatching {
+                JvmLogHelper.deleteOldLogs(logsDir.toPath())
+            }.onFailure {
+                logger.error(it) { "Failed to delete old logs" }
+            }
+        }
 
 
         val defaultSize = DpSize(1301.dp, 855.dp)
@@ -210,8 +214,6 @@ object AniDesktop {
             SingleInstanceChecker.instance.ensureSingleInstance()
         }
         logger.info { "Single instance check took $time" }
-
-        val coroutineScope = createAppRootCoroutineScope()
 
         coroutineScope.launch(Dispatchers.IO) {
             // since 3.4.0, anitorrent 增加后不兼容 QB 数据
@@ -309,17 +311,19 @@ object AniDesktop {
             }
         }
 
-        kotlin.runCatching {
-            val desktopUpdateInstaller = koin.koin.get<UpdateInstaller>() as DesktopUpdateInstaller
-            desktopUpdateInstaller.deleteOldUpdater()
-        }.onFailure {
-            logger.error(it) { "Failed to delete update installer" }
-        }
+        coroutineScope.launch {
+            kotlin.runCatching {
+                val desktopUpdateInstaller = koin.koin.get<UpdateInstaller>() as DesktopUpdateInstaller
+                desktopUpdateInstaller.deleteOldUpdater()
+            }.onFailure {
+                logger.error(it) { "Failed to delete update installer" }
+            }
 
-        kotlin.runCatching {
-            koin.koin.get<UpdateManager>().deleteInstalledFiles()
-        }.onFailure {
-            logger.error(it) { "Failed to delete installed files" }
+            kotlin.runCatching {
+                koin.koin.get<UpdateManager>().deleteInstalledFiles()
+            }.onFailure {
+                logger.error(it) { "Failed to delete installed files" }
+            }
         }
 
         val navigator = AniNavigator()
