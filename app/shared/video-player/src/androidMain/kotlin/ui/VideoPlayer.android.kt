@@ -22,7 +22,7 @@ import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView.ControllerVisibilityListener
 import org.openani.mediamp.MediampPlayer
 import org.openani.mediamp.backend.exoplayer.ExoPlayerMediampPlayer
-import org.openani.mediamp.backend.exoplayer.ExoPlayerSurface
+import org.openani.mediamp.backend.exoplayer.compose.ExoPlayerMediampPlayerSurface
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
@@ -35,7 +35,7 @@ actual fun VideoPlayer(
     if (isPreviewing) {
         Box(modifier)
     } else {
-        ExoPlayerSurface(player as ExoPlayerMediampPlayer, modifier) {
+        ExoPlayerMediampPlayerSurface(player as ExoPlayerMediampPlayer, modifier) {
             controllerAutoShow = false
             useController = false
             controllerHideOnTouch = false

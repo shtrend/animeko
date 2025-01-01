@@ -123,6 +123,8 @@ import org.openani.mediamp.MediampPlayerFactory
 import org.openani.mediamp.MediampPlayerFactoryLoader
 import org.openani.mediamp.backend.vlc.VlcMediampPlayer
 import org.openani.mediamp.backend.vlc.VlcMediampPlayerFactory
+import org.openani.mediamp.backend.vlc.compose.VlcMediampPlayerSurfaceProvider
+import org.openani.mediamp.compose.MediampPlayerSurfaceProviderLoader
 import java.io.File
 import kotlin.system.exitProcess
 import kotlin.time.measureTime
@@ -249,6 +251,7 @@ object AniDesktop {
                     }
                     single<MediampPlayerFactory<*>> {
                         MediampPlayerFactoryLoader.register(VlcMediampPlayerFactory())
+                        MediampPlayerSurfaceProviderLoader.register(VlcMediampPlayerSurfaceProvider())
                         MediampPlayerFactoryLoader.first()
                     }
                     single<BrowserNavigator> { DesktopBrowserNavigator() }

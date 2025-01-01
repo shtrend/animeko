@@ -63,6 +63,8 @@ import org.koin.dsl.module
 import org.openani.mediamp.MediampPlayerFactory
 import org.openani.mediamp.MediampPlayerFactoryLoader
 import org.openani.mediamp.backend.exoplayer.ExoPlayerMediampPlayerFactory
+import org.openani.mediamp.backend.exoplayer.compose.ExoPlayerMediampPlayerSurfaceProvider
+import org.openani.mediamp.compose.MediampPlayerSurfaceProviderLoader
 import java.io.File
 import kotlin.concurrent.thread
 import kotlin.coroutines.CoroutineContext
@@ -203,6 +205,7 @@ fun getAndroidModules(
     }
     single<MediampPlayerFactory<*>> {
         MediampPlayerFactoryLoader.register(ExoPlayerMediampPlayerFactory())
+        MediampPlayerSurfaceProviderLoader.register(ExoPlayerMediampPlayerSurfaceProvider())
         MediampPlayerFactoryLoader.first()
     }
 

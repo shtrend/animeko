@@ -41,7 +41,8 @@ kotlin {
         implementation(libs.androidx.media3.exoplayer)
         implementation(libs.androidx.media3.exoplayer.dash)
         implementation(libs.androidx.media3.exoplayer.hls)
-        api(mediampLibs.mediamp.backend.exoplayer)
+        api(mediampLibs.mediamp.exoplayer)
+        api(mediampLibs.mediamp.exoplayer.compose)
     }
     sourceSets.desktopMain.dependencies {
         api(compose.desktop.currentOs) {
@@ -50,7 +51,8 @@ kotlin {
      
         api(libs.kotlinx.coroutines.swing)
         implementation(libs.vlcj)
-        api(mediampLibs.mediamp.backend.vlc)
+        api(mediampLibs.mediamp.vlc)
+        api(mediampLibs.mediamp.vlc.compose)
     }
 }
 

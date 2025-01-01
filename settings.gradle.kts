@@ -40,7 +40,7 @@ dependencyResolutionManagement {
         }
 
         create("mediampLibs") {
-            from("org.openani.mediamp:catalog:0.0.6")
+            from("org.openani.mediamp:catalog:0.0.10")
         }
     }
 }
@@ -159,10 +159,16 @@ findLocalProperty("ani.build.mediamp.path")?.let { mediampPath ->
                 .using(project(":mediamp-api"))
             substitute(module("org.openani.mediamp:mediamp-compose"))
                 .using(project(":mediamp-compose"))
-            substitute(module("org.openani.mediamp:mediamp-backend-exoplayer"))
-                .using(project(":mediamp-backend-exoplayer"))
-            substitute(module("org.openani.mediamp:mediamp-backend-vlc"))
-                .using(project(":mediamp-backend-vlc"))
+            substitute(module("org.openani.mediamp:mediamp-exoplayer"))
+                .using(project(":mediamp-exoplayer"))
+            substitute(module("org.openani.mediamp:mediamp-exoplayer-compose"))
+                .using(project(":mediamp-exoplayer-compose"))
+            substitute(module("org.openani.mediamp:mediamp-vlc"))
+                .using(project(":mediamp-vlc"))
+            substitute(module("org.openani.mediamp:mediamp-vlc-compose"))
+                .using(project(":mediamp-vlc-compose"))
+            substitute(module("org.openani.mediamp:mediamp-source-ktxio"))
+                .using(project(":mediamp-source-ktxio"))
         }
     }
 }
