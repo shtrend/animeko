@@ -32,8 +32,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -188,6 +188,24 @@ private fun EpisodeSceneContent(
         ScreenOnEffect()
     }
 
+    var showEditCommentSheet by rememberSaveable { mutableStateOf(false) }
+    var didSetPaused by rememberSaveable { mutableStateOf(false) }
+
+    val pauseOnPlaying: () -> Unit = {
+        if (vm.playerState.playbackState.value.isPlaying) {
+            didSetPaused = true
+            vm.playerState.pause()
+        } else {
+            didSetPaused = false
+        }
+    }
+    val tryUnpause: () -> Unit = {
+        if (didSetPaused) {
+            didSetPaused = false
+            vm.playerState.resume()
+        }
+    }
+
     AutoPauseEffect(vm)
 
     VideoNotifEffect(vm)
@@ -219,12 +237,44 @@ private fun EpisodeSceneContent(
         CompositionLocalProvider(LocalImageViewerHandler provides imageViewer) {
             when {
                 showExpandedUI || isSystemInFullscreen() ->
-                    EpisodeSceneTabletVeryWide(vm, Modifier.fillMaxSize(), windowInsets)
+                    EpisodeSceneTabletVeryWide(
+                        vm,
+                        Modifier.fillMaxSize(),
+                        pauseOnPlaying = pauseOnPlaying,
+                        tryUnpause = tryUnpause,
+                        setShowEditCommentSheet = { showEditCommentSheet = it },
+                        windowInsets,
+                    )
 
-                else -> EpisodeSceneContentPhone(vm, Modifier.fillMaxSize(), windowInsets)
+                else -> EpisodeSceneContentPhone(
+                    vm,
+                    Modifier.fillMaxSize(),
+                    pauseOnPlaying = pauseOnPlaying,
+                    tryUnpause = tryUnpause,
+                    setShowEditCommentSheet = { showEditCommentSheet = it },
+                    windowInsets,
+                )
             }
         }
         ImageViewer(imageViewer) { imageViewer.clear() }
+    }
+
+    if (showEditCommentSheet) {
+        EpisodeEditCommentSheet(
+            state = vm.commentEditorState,
+            turnstileState = vm.turnstileState,
+            onDismiss = {
+                showEditCommentSheet = false
+                vm.turnstileState.cancel()
+                vm.commentEditorState.cancelSend()
+                tryUnpause()
+            },
+            onSendComplete = { succeeded ->
+                if (succeeded) scope.launch {
+                    vm.commentLazyStaggeredGirdState.scrollToItem(0)
+                }
+            },
+        )
     }
 
     vm.videoSourceResolver.ComposeContent()
@@ -234,6 +284,9 @@ private fun EpisodeSceneContent(
 private fun EpisodeSceneTabletVeryWide(
     vm: EpisodeViewModel,
     modifier: Modifier = Modifier,
+    pauseOnPlaying: () -> Unit,
+    tryUnpause: () -> Unit,
+    setShowEditCommentSheet: (Boolean) -> Unit,
     windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
 ) {
     var showEditCommentSheet by rememberSaveable { mutableStateOf(false) }
@@ -331,23 +384,14 @@ private fun EpisodeSceneTabletVeryWide(
                             commentEditorState = vm.commentEditorState,
                             subjectId = vm.subjectId,
                             episodeId = vm.episodePresentation.episodeId,
-                            setShowEditCommentSheet = { showEditCommentSheet = it },
+                            setShowEditCommentSheet = setShowEditCommentSheet,
                             pauseOnPlaying = pauseOnPlaying,
-                            lazyListState = vm.commentLazyListState,
+                            lazyStaggeredGridState = vm.commentLazyStaggeredGirdState,
                         )
                     }
                 }
             }
         }
-    }
-    if (showEditCommentSheet) {
-        EpisodeEditCommentSheet(
-            state = vm.commentEditorState,
-            onDismiss = {
-                showEditCommentSheet = false
-                tryUnpause()
-            },
-        )
     }
 }
 
@@ -401,26 +445,12 @@ private fun TabRow(
 private fun EpisodeSceneContentPhone(
     vm: EpisodeViewModel,
     modifier: Modifier = Modifier,
+    pauseOnPlaying: () -> Unit,
+    tryUnpause: () -> Unit,
+    setShowEditCommentSheet: (Boolean) -> Unit,
     windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
 ) {
     var showDanmakuEditor by rememberSaveable { mutableStateOf(false) }
-    var showEditCommentSheet by rememberSaveable { mutableStateOf(false) }
-    var didSetPaused by rememberSaveable { mutableStateOf(false) }
-
-    val pauseOnPlaying: () -> Unit = {
-        if (vm.videoScaffoldConfig.pauseVideoOnEditDanmaku && vm.playerState.playbackState.value.isPlaying) {
-            didSetPaused = true
-            vm.playerState.pause()
-        } else {
-            didSetPaused = false
-        }
-    }
-    val tryUnpause: () -> Unit = {
-        if (didSetPaused) {
-            didSetPaused = false
-            vm.playerState.resume()
-        }
-    }
 
     EpisodeSceneContentPhoneScaffold(
         videoOnly = vm.isFullscreen,
@@ -454,8 +484,9 @@ private fun EpisodeSceneContentPhone(
                 commentEditorState = vm.commentEditorState,
                 subjectId = vm.subjectId,
                 episodeId = vm.episodePresentation.episodeId,
-                setShowEditCommentSheet = { showEditCommentSheet = it },
+                setShowEditCommentSheet = setShowEditCommentSheet,
                 pauseOnPlaying = pauseOnPlaying,
+                lazyStaggeredGridState = vm.commentLazyStaggeredGirdState,
             )
         },
         modifier.then(if (vm.isFullscreen) Modifier.fillMaxSize() else Modifier.navigationBarsPadding()),
@@ -504,16 +535,6 @@ private fun EpisodeSceneContentPhone(
                 focusRequester.requestFocus()
             }
         }
-    }
-
-    if (showEditCommentSheet) {
-        EpisodeEditCommentSheet(
-            vm.commentEditorState,
-            onDismiss = {
-                showEditCommentSheet = false
-                tryUnpause()
-            },
-        )
     }
 }
 
@@ -789,7 +810,7 @@ private fun EpisodeCommentColumn(
     setShowEditCommentSheet: (Boolean) -> Unit,
     pauseOnPlaying: () -> Unit,
     modifier: Modifier = Modifier,
-    lazyListState: LazyListState = rememberLazyListState(),
+    lazyStaggeredGridState: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
 ) {
     val toaster = LocalToaster.current
     val browserNavigator = LocalUriHandler.current
@@ -799,7 +820,7 @@ private fun EpisodeCommentColumn(
         editCommentStubText = commentEditorState.content,
         onClickReply = {
             setShowEditCommentSheet(true)
-            commentEditorState.startEdit(CommentContext.Reply(it.toInt()))
+            commentEditorState.startEdit(CommentContext.EpisodeReply(subjectId, episodeId, it.toInt()))
             pauseOnPlaying()
 
         },
@@ -820,7 +841,7 @@ private fun EpisodeCommentColumn(
             RichTextDefaults.checkSanityAndOpen(it, browserNavigator, toaster)
         },
         modifier = modifier.fillMaxSize(),
-        lazyListState = lazyListState,
+        lazyStaggeredGridState = lazyStaggeredGridState,
     )
 }
 

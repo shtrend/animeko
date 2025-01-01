@@ -15,9 +15,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemScope
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -46,9 +46,9 @@ fun CommentColumn(
     state: CommentState,
     modifier: Modifier = Modifier,
     hasDividerLine: Boolean = true,
-    listState: LazyListState = rememberLazyListState(),
     contentPadding: PaddingValues = PaddingValues(0.dp),
     connectedScrollState: ConnectedScrollState? = null,
+    lazyStaggeredGridState: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
     commentItem: @Composable LazyStaggeredGridItemScope.(index: Int, item: UIComment) -> Unit
 ) {
     val items = state.list.collectAsLazyPagingItemsWithLifecycle()
@@ -73,9 +73,10 @@ fun CommentColumn(
                 .thenNotNull(
                     connectedScrollState?.let {
                         Modifier.nestedScroll(connectedScrollState.nestedScrollConnection)
-                            .nestedScrollWorkaround(listState, connectedScrollState)
+                            .nestedScrollWorkaround(lazyStaggeredGridState, connectedScrollState)
                     },
                 ),
+            lazyStaggeredGridState = lazyStaggeredGridState,
             contentPadding = contentPadding,
             progressIndicator = null,
         ) {
@@ -105,49 +106,5 @@ fun CommentColumn(
                 }
             }
         }
-//        LazyColumn(
-//            modifier = Modifier
-//                .thenNotNull(
-//                    connectedScrollState?.let {
-//                        Modifier.nestedScroll(connectedScrollState.nestedScrollConnection)
-//                            .nestedScrollWorkaround(listState, connectedScrollState)
-//                    },
-//                )
-//                .fillMaxSize(),
-//            state = listState,
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            contentPadding = contentPadding,
-//        ) {
-//            item("spacer header") { Spacer(Modifier.height(1.dp)) }
-//
-//            items(
-//                items.itemCount,
-//                key = items.itemKey { it.id },
-//                contentType = items.itemContentType(),
-//            ) { index ->
-//                val item = items[index] ?: return@items
-//                commentItem(index, item)
-//
-//                if (hasDividerLine && index != items.itemCount - 1) {
-//                    HorizontalDivider(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        color = DividerDefaults.color.stronglyWeaken(),
-//                    )
-//                }
-//            }
-//
-//            item("dummy loader") {
-//                if (state.hasMore) { // 刚开始的时候, hasMore 为 false
-//                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-//                        CircularProgressIndicator()
-//                    }
-//                } else {
-//                    Spacer(Modifier.height(1.dp)) // 可能 lazy column bug, 如果有一个空的 item, 会导致滚动很卡
-//                }
-//
-//                // 总是请求, 是为了在刚刚进入时请求一下. 因为是 lazy 的, 不请求列表就一直是空的
-//                LaunchedEffect(true) { state.loadMore() }
-//            }
-//        }
     }
 }
