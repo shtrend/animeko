@@ -85,7 +85,9 @@ class PlayerLauncher(
         mediaSelector.selected.flatMapLatest {
             mediaSourceInfoProvider.getSourceInfoFlow(it?.mediaSourceId ?: return@flatMapLatest emptyFlow())
         },
-        playerState.mediaData.map { it?.filenameOrNull },
+        mediaSelector.selected.combine(playerState.mediaData.map { it?.filenameOrNull }) { selectedMedia, filename ->
+            filename ?: selectedMedia?.originalTitle
+        },
         mediaSourceLoading,
         _videoLoadingStateFlow,
         ::VideoStatistics,
