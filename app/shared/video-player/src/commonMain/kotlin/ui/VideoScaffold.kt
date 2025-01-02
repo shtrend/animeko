@@ -350,8 +350,8 @@ private fun ControllerVisibility.withGestureLocked(gestureLocked: Boolean): Cont
 @Stable
 private fun ControllerVisibility.withExpanded(isExpanded: Boolean): ControllerVisibility {
     return if (isExpanded) {
-        this
-    } else {
         copy(floatingBottomEnd = false)
+    } else {
+        this
     }
 }

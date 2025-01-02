@@ -285,6 +285,16 @@ internal fun EpisodeVideoImpl(
                                 playerControllerState.getAlwaysOnRequesters().joinToString("\n"),
                         style = MaterialTheme.typography.labelLarge,
                     )
+
+                    TextWithBorder(
+                        "ControllerVisibility: \n" + playerControllerState.visibility,
+                        style = MaterialTheme.typography.labelLarge,
+                    )
+
+                    TextWithBorder(
+                        "expanded: $expanded",
+                        style = MaterialTheme.typography.labelLarge,
+                    )
                 }
             }
         },
