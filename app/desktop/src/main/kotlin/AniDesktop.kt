@@ -121,9 +121,9 @@ import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
 import org.openani.mediamp.MediampPlayerFactory
 import org.openani.mediamp.MediampPlayerFactoryLoader
-import org.openani.mediamp.backend.vlc.VlcMediampPlayer
-import org.openani.mediamp.backend.vlc.VlcMediampPlayerFactory
-import org.openani.mediamp.backend.vlc.compose.VlcMediampPlayerSurfaceProvider
+import org.openani.mediamp.vlc.VlcMediampPlayer
+import org.openani.mediamp.vlc.VlcMediampPlayerFactory
+import org.openani.mediamp.vlc.compose.VlcMediampPlayerSurfaceProvider
 import org.openani.mediamp.compose.MediampPlayerSurfaceProviderLoader
 import java.io.File
 import kotlin.system.exitProcess

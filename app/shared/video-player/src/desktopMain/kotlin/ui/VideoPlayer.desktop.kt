@@ -12,8 +12,8 @@ package me.him188.ani.app.videoplayer.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import org.openani.mediamp.MediampPlayer
-import org.openani.mediamp.backend.vlc.VlcMediampPlayer
-import org.openani.mediamp.backend.vlc.compose.VlcMediaPlayerSurface
+import org.openani.mediamp.vlc.VlcMediampPlayer
+import org.openani.mediamp.vlc.compose.VlcMediampPlayerSurface
 
 @Composable
 actual fun VideoPlayer(
@@ -22,5 +22,5 @@ actual fun VideoPlayer(
 ) {
     check(player is VlcMediampPlayer)
 
-    VlcMediaPlayerSurface(player, modifier = modifier)
+    VlcMediampPlayerSurface(player, modifier = modifier)
 }

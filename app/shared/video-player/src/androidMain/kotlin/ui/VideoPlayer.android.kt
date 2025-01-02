@@ -21,8 +21,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.CaptionStyleCompat
 import androidx.media3.ui.PlayerView.ControllerVisibilityListener
 import org.openani.mediamp.MediampPlayer
-import org.openani.mediamp.backend.exoplayer.ExoPlayerMediampPlayer
-import org.openani.mediamp.backend.exoplayer.compose.ExoPlayerMediampPlayerSurface
+import org.openani.mediamp.exoplayer.ExoPlayerMediampPlayer
+import org.openani.mediamp.exoplayer.compose.ExoPlayerMediampPlayerSurface
 
 @androidx.annotation.OptIn(UnstableApi::class)
 @Composable
