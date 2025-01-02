@@ -9,10 +9,12 @@
 
 package me.him188.ani.app.domain.media.resolver
 
+import me.him188.ani.app.videoplayer.torrent.MediaDataWithFileName
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import org.openani.mediamp.source.MediaExtraFiles
 import org.openani.mediamp.source.MediaSource
+import org.openani.mediamp.source.UriMediaData
 import org.openani.mediamp.source.UriMediaSource
 
 class HttpStreamingVideoSourceResolver : VideoSourceResolver {
@@ -36,4 +38,13 @@ class HttpStreamingMediaSource(
     val originalTitle: String,
     headers: Map<String, String> = emptyMap(),
     extraFiles: MediaExtraFiles,
-) : UriMediaSource(uri, headers, extraFiles)
+) : UriMediaSource(uri, headers, extraFiles) {
+    override suspend fun open(): UriMediaData {
+        return UriMediaDataWithFilename(uri, originalTitle)
+    }
+}
+
+class UriMediaDataWithFilename(
+    url: String,
+    override val filename: String
+) : UriMediaData(url), MediaDataWithFileName 
