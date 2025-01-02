@@ -10,6 +10,7 @@
 package me.him188.ani.app.ui.subject.details.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -39,13 +40,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.AsyncImage
+import me.him188.ani.app.ui.foundation.interaction.onRightClickIfSupported
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
+import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 
 const val COVER_WIDTH_TO_HEIGHT_RATIO = 849 / 1200f
 
@@ -62,10 +67,26 @@ internal fun SubjectDetailsHeader(
     rating: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val clipboardManager = LocalClipboardManager.current
+    val toaster = LocalToaster.current
+    val copy = { string: String ->
+        clipboardManager.setText(AnnotatedString(string))
+        toaster.toast("已复制")
+    }
+
     if (currentWindowAdaptiveInfo1().isWidthAtLeastMedium) {
         SubjectDetailsHeaderWide(
             subjectId = subjectId,
             coverImageUrl = coverImageUrl,
+            onLongClickTitle = { isSubtitle ->
+                copy(
+                    if (isSubtitle) {
+                        info?.name ?: ""
+                    } else {
+                        info?.displayName ?: ""
+                    },
+                )
+            },
             title = {
                 Text(
                     info?.displayName ?: "",
@@ -81,7 +102,7 @@ internal fun SubjectDetailsHeader(
                 Text(info?.name ?: "")
             },
             seasonTags = {
-                seasonTags() 
+                seasonTags()
             },
             collectionData = collectionData,
             collectionAction = collectionAction,
@@ -194,6 +215,7 @@ fun SubjectDetailsHeaderCompact(
 fun SubjectDetailsHeaderWide(
     subjectId: Int,
     coverImageUrl: String?,
+    onLongClickTitle: (isSubtitle: Boolean) -> Unit,
     title: @Composable () -> Unit,
     subtitle: @Composable () -> Unit,
     seasonTags: @Composable RowScope.() -> Unit,
@@ -231,9 +253,17 @@ fun SubjectDetailsHeaderWide(
                     Modifier.weight(1f, fill = true),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-
                     var showSubtitle by remember { mutableStateOf(false) }
-                    SelectionContainer(Modifier.clickable { showSubtitle = !showSubtitle }) {
+                    SelectionContainer(
+                        Modifier
+                            .onRightClickIfSupported {
+                                onLongClickTitle(showSubtitle)
+                            }
+                            .combinedClickable(
+                                onLongClickLabel = "复制标题",
+                                onLongClick = { onLongClickTitle(showSubtitle) },
+                            ) { showSubtitle = !showSubtitle },
+                    ) {
                         ProvideTextStyle(MaterialTheme.typography.titleLarge) {
                             if (showSubtitle) {
                                 subtitle()
