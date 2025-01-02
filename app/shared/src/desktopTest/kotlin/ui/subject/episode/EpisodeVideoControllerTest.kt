@@ -34,6 +34,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import me.him188.ani.app.data.models.preference.FullscreenSwitchMode
 import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
+import me.him188.ani.app.domain.media.player.ChunkState
+import me.him188.ani.app.domain.media.player.staticMediaCacheProgressState
 import me.him188.ani.app.ui.doesNotExist
 import me.him188.ani.app.ui.exists
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
@@ -71,8 +73,6 @@ import me.him188.ani.app.videoplayer.ui.progress.TAG_PROGRESS_SLIDER_PREVIEW_POP
 import me.him188.ani.app.videoplayer.ui.progress.TAG_SELECT_EPISODE_ICON_BUTTON
 import me.him188.ani.app.videoplayer.ui.progress.TAG_SPEED_SWITCHER_DROPDOWN_MENU
 import me.him188.ani.app.videoplayer.ui.progress.TAG_SPEED_SWITCHER_TEXT_BUTTON
-import me.him188.ani.app.domain.media.player.ChunkState
-import me.him188.ani.app.domain.media.player.staticMediaCacheProgressState
 import me.him188.ani.app.videoplayer.ui.top.PlayerTopBar
 import me.him188.ani.danmaku.api.Danmaku
 import me.him188.ani.danmaku.api.DanmakuLocation
@@ -96,6 +96,16 @@ class EpisodeVideoControllerTest {
             bottomBar = false,
             floatingBottomEnd = true,
             rhsBar = false,
+            gestureLock = false,
+            detachedSlider = false,
+        )
+
+        private val LOCKED_VISIBLE = ControllerVisibility(
+            topBar = false,
+            bottomBar = false,
+            floatingBottomEnd = true,
+            rhsBar = false,
+            gestureLock = true,
             detachedSlider = false,
         )
 
@@ -104,6 +114,7 @@ class EpisodeVideoControllerTest {
             bottomBar = true,
             floatingBottomEnd = false,
             rhsBar = true,
+            gestureLock = true,
             detachedSlider = false,
         )
 
@@ -112,6 +123,7 @@ class EpisodeVideoControllerTest {
             bottomBar = false,
             floatingBottomEnd = false,
             rhsBar = false,
+            gestureLock = false,
             detachedSlider = true,
         )
     }

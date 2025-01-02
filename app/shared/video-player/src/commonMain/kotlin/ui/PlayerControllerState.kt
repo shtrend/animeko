@@ -42,6 +42,7 @@ data class ControllerVisibility(
     val bottomBar: Boolean,
     val floatingBottomEnd: Boolean,
     val rhsBar: Boolean,
+    val gestureLock: Boolean,
     val detachedSlider: Boolean
 ) {
     companion object {
@@ -51,6 +52,7 @@ data class ControllerVisibility(
             bottomBar = true,
             floatingBottomEnd = false,
             rhsBar = true,
+            gestureLock = true,
             detachedSlider = false,
         )
 
@@ -60,6 +62,7 @@ data class ControllerVisibility(
             bottomBar = false,
             floatingBottomEnd = true,
             rhsBar = false,
+            gestureLock = false,
             detachedSlider = false,
         )
 
@@ -69,6 +72,7 @@ data class ControllerVisibility(
             bottomBar = false,
             floatingBottomEnd = false,
             rhsBar = false,
+            gestureLock = false,
             detachedSlider = true,
         )
     }

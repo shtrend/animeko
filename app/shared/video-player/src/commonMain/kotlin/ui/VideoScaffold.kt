@@ -289,7 +289,7 @@ fun VideoScaffold(
 
                         // Separate from controllers, to fix position when controllers are/aren't hidden
                         AnimatedVisibility(
-                            visible = controllerVisibility.rhsBar,
+                            visible = controllerVisibility.gestureLock,
                             enter = fadeIn(),
                             exit = fadeOut(),
                         ) {

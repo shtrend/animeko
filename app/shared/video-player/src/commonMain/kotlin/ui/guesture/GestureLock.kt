@@ -42,6 +42,8 @@ import org.openani.mediamp.MediampPlayer
 import org.openani.mediamp.features.PlaybackSpeed
 import kotlin.time.Duration.Companion.seconds
 
+const val TAG_GESTURE_LOCK = "GestureLock"
+
 @Composable
 fun GestureLock(
     isLocked: Boolean,
@@ -63,7 +65,7 @@ fun GestureLock(
 //        }
 //    }
     Surface(
-        modifier,
+        modifier.testTag(TAG_GESTURE_LOCK),
         shape = RoundedCornerShape(16.dp),
         color = aniDarkColorTheme().background.copy(0.05f),
         border = BorderStroke(0.5.dp, aniLightColorTheme().outline.slightlyWeaken()),
