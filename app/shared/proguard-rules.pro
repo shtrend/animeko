@@ -42,3 +42,4 @@
 -keepattributes LineNumberTable,SourceFile
 -renamesourcefileattribute SourceFile
 -keepnames class me.him188.ani.** { *; }
+-keepnames class ** { *; } # Keep all names as this only increases pacakge size by a few MBs, but significantly helps with debugging.
