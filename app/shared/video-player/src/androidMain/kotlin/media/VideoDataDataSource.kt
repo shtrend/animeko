@@ -22,7 +22,7 @@ import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
 import org.openani.mediamp.io.SeekableInput
-import org.openani.mediamp.source.MediaData
+import org.openani.mediamp.source.SeekableInputMediaData
 import java.io.IOException
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.measureTimedValue
@@ -34,7 +34,7 @@ import kotlin.time.measureTimedValue
  */
 @androidx.annotation.OptIn(UnstableApi::class)
 class VideoDataDataSource(
-    private val videoData: MediaData,
+    private val videoData: SeekableInputMediaData,
     private val file: SeekableInput,
 ) : BaseDataSource(true) {
     private companion object {
@@ -97,7 +97,7 @@ class VideoDataDataSource(
         } else {
             if (dataSpec.position != -1L && dataSpec.position != 0L) {
                 if (ENABLE_TRACE_LOG) logger.info { "Seeking to ${dataSpec.position}" }
-                runBlocking { file.seek(dataSpec.position) }
+                runBlocking { file.seekTo(dataSpec.position) }
             }
 
             if (ENABLE_TRACE_LOG) logger.info { "Open done, bytesRemaining = ${file.bytesRemaining}" }

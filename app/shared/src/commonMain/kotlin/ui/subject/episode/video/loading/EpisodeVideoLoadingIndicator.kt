@@ -25,7 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
+import me.him188.ani.app.domain.media.player.data.DownloadingMediaData
 import me.him188.ani.app.ui.foundation.TextWithBorder
 import me.him188.ani.app.ui.subject.episode.statistics.VideoLoadingState
 import me.him188.ani.app.videoplayer.ui.VideoLoadingIndicator
@@ -49,9 +49,13 @@ fun EpisodeVideoLoadingIndicator(
 
     val speed by remember(playerState) {
         playerState.mediaData.filterNotNull().flatMapLatest { video ->
-            video.networkStats.map { it.downloadSpeed }
+            if (video is DownloadingMediaData) {
+                video.networkStats
+            } else {
+                flowOf(null)
+            }
         }
-    }.collectAsStateWithLifecycle(-1L)
+    }.collectAsStateWithLifecycle(null)
 
     if (isBuffering ||
         state == PlaybackState.PAUSED_BUFFERING || // 如果不加这个, 就会有一段时间资源名字还没显示出来, 也没显示缓冲中
@@ -61,11 +65,7 @@ fun EpisodeVideoLoadingIndicator(
         EpisodeVideoLoadingIndicator(
             videoLoadingState,
             speedProvider = {
-                if (speed == -1L) {
-                    FileSize.Unspecified
-                } else {
-                    speed.bytes
-                }
+                speed?.downloadSpeed?.bytes ?: FileSize.Unspecified
             },
             optimizeForFullscreen = optimizeForFullscreen,
             playerError = state == PlaybackState.ERROR,

@@ -9,12 +9,10 @@
 
 package me.him188.ani.app.domain.media.resolver
 
-import org.openani.mediamp.source.MediaSource
-import org.openani.mediamp.source.MediaSourceOpenException
-
+import me.him188.ani.app.domain.media.player.data.MediaDataProvider
 
 /**
- * @see MediaSource.open
+ * @see MediaDataProvider.open
  * @see MediaSourceOpenException
  */
 enum class OpenFailures {
@@ -31,14 +29,14 @@ enum class OpenFailures {
     /**
      * TorrentEngine 等被关闭.
      *
-     * 这个错误实际上不太会发生, 因为当引擎关闭时会跳过使用该引擎的 `VideoSourceResolver`, 也就不会产生依赖该引擎的 [MediaSource].
-     * 只有在得到 [MediaSource] 后引擎关闭 (用户去设置中关闭) 才会发生.
+     * 这个错误实际上不太会发生, 因为当引擎关闭时会跳过使用该引擎的 `VideoSourceResolver`, 也就不会产生依赖该引擎的 [MediaDataProvider].
+     * 只有在得到 [MediaDataProvider] 后引擎关闭 (用户去设置中关闭) 才会发生.
      */
     ENGINE_DISABLED,
 }
 
-class AniMediaSourceOpenException(
+class MediaSourceOpenException(
     val reason: OpenFailures,
     extraMessage: String = "",
     override val cause: Throwable? = null,
-) : MediaSourceOpenException(message = "Failed to open video due to $reason. $extraMessage", cause = cause)
+) : Exception("Failed to open video due to $reason. $extraMessage", cause)

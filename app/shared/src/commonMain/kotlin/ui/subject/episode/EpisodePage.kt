@@ -277,7 +277,7 @@ private fun EpisodeSceneContent(
         )
     }
 
-    vm.videoSourceResolver.ComposeContent()
+    vm.mediaResolver.ComposeContent()
 }
 
 @Composable

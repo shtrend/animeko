@@ -10,20 +10,20 @@
 package me.him188.ani.app.domain.media.resolver
 
 import kotlinx.io.files.Path
+import me.him188.ani.app.domain.media.player.data.MediaDataProvider
+import me.him188.ani.app.domain.media.player.data.SystemFileMediaDataProvider
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.topic.ResourceLocation
-import org.openani.mediamp.source.MediaSource
-import org.openani.mediamp.source.SystemFileMediaSource
 
-class LocalFileVideoSourceResolver : VideoSourceResolver {
+class LocalFileMediaResolver : MediaResolver {
     override suspend fun supports(media: Media): Boolean {
         return media.download is ResourceLocation.LocalFile
     }
 
-    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*> {
+    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*> {
         when (val download = media.download) {
             is ResourceLocation.LocalFile -> {
-                return SystemFileMediaSource(
+                return SystemFileMediaDataProvider(
                     Path(download.filePath),
                     media.extraFiles.toMediampMediaExtraFiles(),
                 )

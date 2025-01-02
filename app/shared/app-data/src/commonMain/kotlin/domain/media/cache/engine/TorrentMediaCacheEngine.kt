@@ -32,7 +32,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.files.Path
 import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.MediaCacheState
-import me.him188.ani.app.domain.media.resolver.TorrentVideoSourceResolver
+import me.him188.ani.app.domain.media.resolver.TorrentMediaResolver
 import me.him188.ani.app.domain.torrent.TorrentEngine
 import me.him188.ani.app.tools.toProgress
 import me.him188.ani.app.torrent.api.TorrentSession
@@ -287,7 +287,7 @@ class TorrentMediaCacheEngine(
                 onDownloadStarted(session)
 
                 val files = session.getFiles()
-                val selectedFile = TorrentVideoSourceResolver.selectVideoFileEntry(
+                val selectedFile = TorrentMediaResolver.selectVideoFileEntry(
                     files,
                     { pathInTorrent },
                     listOf(metadata.episodeName),

@@ -24,6 +24,7 @@ import me.him188.ani.app.data.models.preference.ProxyConfig
 import me.him188.ani.app.data.models.preference.VideoResolverSettings
 import me.him188.ani.app.data.models.preference.configIfEnabledOrNull
 import me.him188.ani.app.data.repository.user.SettingsRepository
+import me.him188.ani.app.domain.media.player.data.MediaDataProvider
 import me.him188.ani.app.domain.media.resolver.WebViewVideoExtractor.Instruction
 import me.him188.ani.app.platform.AniCefApp
 import me.him188.ani.app.platform.Context
@@ -50,19 +51,18 @@ import org.cef.network.CefCookieManager
 import org.cef.network.CefRequest
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.openani.mediamp.source.MediaSource
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration.Companion.seconds
 
 /**
  * 用 WebView 加载网站, 拦截 WebView 加载资源, 用各数据源提供的 [WebVideoMatcher]
  */
-class DesktopWebVideoSourceResolver(
+class DesktopWebMediaResolver(
     private val context: DesktopContext,
     private val matcherLoader: MediaSourceWebVideoMatcherLoader
-) : VideoSourceResolver, KoinComponent {
+) : MediaResolver, KoinComponent {
     private companion object {
-        private val logger = logger<DesktopWebVideoSourceResolver>()
+        private val logger = logger<DesktopWebMediaResolver>()
     }
 
     private val matchersFromClasspath by lazy {
@@ -72,7 +72,7 @@ class DesktopWebVideoSourceResolver(
 
     override suspend fun supports(media: Media): Boolean = media.download is ResourceLocation.WebVideo
 
-    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*> {
+    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*> {
         return withContext(Dispatchers.Default) {
             if (!supports(media)) throw UnsupportedMediaException(media)
 
@@ -99,7 +99,7 @@ class DesktopWebVideoSourceResolver(
 
             val webVideo = CefVideoExtractor(config.configIfEnabledOrNull, resolverSettings)
                 .getVideoResourceUrl(
-                    this@DesktopWebVideoSourceResolver.context,
+                    this@DesktopWebMediaResolver.context,
                     media.download.uri,
                     webViewConfig,
                     resourceMatcher = {
@@ -113,7 +113,7 @@ class DesktopWebVideoSourceResolver(
                 )?.let {
                     (match(it.url) as? WebVideoMatcher.MatchResult.Matched)?.video
                 } ?: throw VideoSourceResolutionException(ResolutionFailures.NO_MATCHING_RESOURCE)
-            return@withContext HttpStreamingMediaSource(
+            return@withContext HttpStreamingMediaDataProvider(
                 webVideo.m3u8Url,
                 media.originalTitle,
                 webVideo.headers,

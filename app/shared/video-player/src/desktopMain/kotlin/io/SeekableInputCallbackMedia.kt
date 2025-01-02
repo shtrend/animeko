@@ -40,7 +40,7 @@ class SeekableInputCallbackMedia(
 
     override fun onSeek(offset: Long): Boolean {
         if (ENABLE_LOGS) logger.debug { "seeking to $offset" }
-        input.seek(offset)
+        input.seekTo(offset)
         if (ENABLE_LOGS) logger.debug { "seeking to $offset: ok" }
         return true
     }

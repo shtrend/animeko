@@ -26,7 +26,7 @@ class SelectVideoFileAnitorrentEntryTest {
 
     @Test
     fun `can select single`() {
-        val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+        val selected = TorrentMediaResolver.selectVideoFileEntry(
             listOf("[Nekomoe kissaten&LoliHouse] Shuumatsu Train Doko e Iku - 04 [WebRip 1080p HEVC-10bit AAC ASSx2].mkv"),
             { this },
             episodeTitles = listOf("终末列车去往何方?"),
@@ -38,7 +38,7 @@ class SelectVideoFileAnitorrentEntryTest {
 
     @Test
     fun `case from issue 813`() {
-        val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+        val selected = TorrentMediaResolver.selectVideoFileEntry(
             listOf("[MingY] Senpai wa Otokonoko [06][1080p][CHS&JPN].mp4"),
             { this },
             episodeTitles = """
@@ -57,7 +57,7 @@ class SelectVideoFileAnitorrentEntryTest {
 
     @Test
     fun `can select from multiple by episodeSort`() {
-        val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+        val selected = TorrentMediaResolver.selectVideoFileEntry(
             json.decodeFromString(
                 ListSerializer(String.serializer()),
                 """
@@ -82,7 +82,7 @@ class SelectVideoFileAnitorrentEntryTest {
 
     @Test
     fun `can select from multiple by episodeEp`() {
-        val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+        val selected = TorrentMediaResolver.selectVideoFileEntry(
             json.decodeFromString(
                 ListSerializer(String.serializer()),
                 """
@@ -107,7 +107,7 @@ class SelectVideoFileAnitorrentEntryTest {
 
     @Test
     fun `select by sort than by ep`() {
-        val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+        val selected = TorrentMediaResolver.selectVideoFileEntry(
             json.decodeFromString(
                 ListSerializer(String.serializer()),
                 """
@@ -132,7 +132,7 @@ class SelectVideoFileAnitorrentEntryTest {
 
     @Test
     fun `can select from multiple by single title match`() {
-        val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+        val selected = TorrentMediaResolver.selectVideoFileEntry(
             json.decodeFromString(
                 ListSerializer(String.serializer()),
                 """
@@ -163,7 +163,7 @@ class SelectVideoFileAnitorrentEntryTest {
             "[DBD-Raws][未来日记] PV01 [1080P][BDRip][HEVC-10bit][FLAC].mkv",
         ).permuted().mapIndexed { index, list ->
             dynamicTest(index.toString()) {
-                val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+                val selected = TorrentMediaResolver.selectVideoFileEntry(
                     list,
                     { this },
                     episodeTitles = listOf("未来日记"),
@@ -188,7 +188,7 @@ class SelectVideoFileAnitorrentEntryTest {
             "[DBD-Raws][未来日记][NCOP1][1080P][BDRip][HEVC-10bit][FLAC].mkv",
         ).permuted().mapIndexed { index, list ->
             dynamicTest(index.toString()) {
-                val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+                val selected = TorrentMediaResolver.selectVideoFileEntry(
                     list,
                     { this },
                     episodeTitles = listOf("未来日记"),
@@ -213,7 +213,7 @@ class SelectVideoFileAnitorrentEntryTest {
             "[DBD-Raws][未来日记][NCOP1][1080P][BDRip][HEVC-10bit][FLAC].mkv",
         ).permuted().mapIndexed { index, list ->
             dynamicTest(index.toString()) {
-                val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+                val selected = TorrentMediaResolver.selectVideoFileEntry(
                     list,
                     { this },
                     episodeTitles = listOf("未来日记"),
@@ -238,7 +238,7 @@ class SelectVideoFileAnitorrentEntryTest {
             "[DBD-Raws][未来日记][NCOP1][1080P][BDRip][HEVC-10bit][FLAC].mkv",
         ).permuted().mapIndexed { index, list ->
             dynamicTest(index.toString()) {
-                val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+                val selected = TorrentMediaResolver.selectVideoFileEntry(
                     list,
                     { this },
                     episodeTitles = listOf("未来日记"),
@@ -263,7 +263,7 @@ class SelectVideoFileAnitorrentEntryTest {
             "[DBD-Raws][未来日记][NCOP1][1080P][BDRip][HEVC-10bit][FLAC].mkv",
         ).permuted().mapIndexed { index, list ->
             dynamicTest(index.toString()) {
-                val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+                val selected = TorrentMediaResolver.selectVideoFileEntry(
                     list,
                     { this },
                     episodeTitles = listOf("未来日记"),
@@ -288,7 +288,7 @@ class SelectVideoFileAnitorrentEntryTest {
             "[DBD-Raws][未来日记][NCOP1][1080P][BDRip][HEVC-10bit][FLAC].mkv",
         ).permuted().mapIndexed { index, list ->
             dynamicTest(index.toString()) {
-                val selected = TorrentVideoSourceResolver.selectVideoFileEntry(
+                val selected = TorrentMediaResolver.selectVideoFileEntry(
                     list,
                     { this },
                     episodeTitles = listOf("未来日记"),

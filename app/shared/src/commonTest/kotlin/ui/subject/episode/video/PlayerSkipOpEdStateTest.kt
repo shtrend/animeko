@@ -10,11 +10,13 @@
 package me.him188.ani.app.ui.subject.episode.video
 
 import me.him188.ani.app.ui.foundation.stateOf
+import org.openani.mediamp.InternalMediampApi
 import org.openani.mediamp.metadata.Chapter
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.minutes
 
+@OptIn(InternalMediampApi::class)
 class PlayerSkipOpEdStateTest {
     class `OP chapter on start` {
         private val opChapterOnStart = listOf(

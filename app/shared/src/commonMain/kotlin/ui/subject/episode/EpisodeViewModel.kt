@@ -69,7 +69,7 @@ import me.him188.ani.app.domain.media.fetch.MediaFetchSession
 import me.him188.ani.app.domain.media.fetch.MediaSourceManager
 import me.him188.ani.app.domain.media.fetch.create
 import me.him188.ani.app.domain.media.fetch.createFetchFetchSessionFlow
-import me.him188.ani.app.domain.media.resolver.VideoSourceResolver
+import me.him188.ani.app.domain.media.resolver.MediaResolver
 import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.domain.media.selector.MediaSelectorAutoSelect
 import me.him188.ani.app.domain.media.selector.MediaSelectorFactory
@@ -138,6 +138,7 @@ import org.koin.core.component.inject
 import org.openani.mediamp.MediampPlayer
 import org.openani.mediamp.MediampPlayerFactory
 import org.openani.mediamp.PlaybackState
+import org.openani.mediamp.source.SeekableInputMediaData
 import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -159,7 +160,7 @@ class EpisodeViewModel(
     private val animeScheduleRepository: AnimeScheduleRepository by inject()
     private val mediaCacheManager: MediaCacheManager by inject()
     private val danmakuManager: DanmakuManager by inject()
-    val videoSourceResolver: VideoSourceResolver by inject()
+    val mediaResolver: MediaResolver by inject()
     private val settingsRepository: SettingsRepository by inject()
     private val danmakuRegexFilterRepository: DanmakuRegexFilterRepository by inject()
     private val mediaSourceManager: MediaSourceManager by inject()
@@ -377,7 +378,7 @@ class EpisodeViewModel(
     }
 
     private val playerLauncher: PlayerLauncher = PlayerLauncher(
-        mediaSelector, videoSourceResolver, playerState, mediaSourceInfoProvider,
+        mediaSelector, mediaResolver, playerState, mediaSourceInfoProvider,
         episodeInfo,
         mediaFetchSession.flatMapLatest { it.hasCompleted }.map { !it.allCompleted() },
         backgroundScope.coroutineContext,
@@ -612,7 +613,15 @@ class EpisodeViewModel(
                         episodeInfo.filterNotNull().first(),
                         episodeId.value,
                         null,
-                        withContext(Dispatchers.IO_) { it.fileLength() },
+                        withContext(Dispatchers.IO_) {
+                            when (it) {
+                                is SeekableInputMediaData -> {
+                                    it.fileLength()
+                                }
+
+                                else -> null
+                            }
+                        },
                     )
                 },
             )
@@ -644,7 +653,7 @@ class EpisodeViewModel(
         },
         backgroundScope,
     )
-    
+
     private val commentStateRestarter = FlowRestarter()
     val episodeCommentState: CommentState = CommentState(
         list = episodeId

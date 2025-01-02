@@ -9,16 +9,21 @@
 
 package me.him188.ani.app.domain.media.resolver
 
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
+import me.him188.ani.app.domain.media.player.data.MediaDataProvider
+import me.him188.ani.app.domain.media.player.data.TorrentMediaData
 import me.him188.ani.app.domain.torrent.TorrentEngine
 import me.him188.ani.app.torrent.api.FetchTorrentTimeoutException
 import me.him188.ani.app.torrent.api.files.EncodedTorrentInfo
 import me.him188.ani.app.torrent.api.files.FilePriority
-import me.him188.ani.app.videoplayer.torrent.TorrentVideoData
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.topic.ResourceLocation
@@ -27,20 +32,18 @@ import me.him188.ani.datasources.api.topic.titles.RawTitleParser
 import me.him188.ani.datasources.api.topic.titles.parse
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
-import org.openani.mediamp.source.MediaSource
-import org.openani.mediamp.source.MediaSourceOpenException
 import kotlin.coroutines.cancellation.CancellationException
 
-class TorrentVideoSourceResolver(
+class TorrentMediaResolver(
     private val engine: TorrentEngine,
-) : VideoSourceResolver {
+) : MediaResolver {
     override suspend fun supports(media: Media): Boolean {
         if (!engine.isSupported.first()) return false
         return media.download is ResourceLocation.HttpTorrentFile || media.download is ResourceLocation.MagnetLink
     }
 
     @Throws(VideoSourceResolutionException::class, CancellationException::class)
-    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*> {
+    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*> {
         val downloader = try {
             engine.getDownloader()
         } catch (e: CancellationException) {
@@ -54,7 +57,7 @@ class TorrentVideoSourceResolver(
             is ResourceLocation.MagnetLink
                 -> {
                 try {
-                    TorrentVideoSource(
+                    TorrentMediaDataProvider(
                         engine,
                         encodedTorrentInfo = downloader.fetchTorrent(location.uri),
                         episodeMetadata = episode,
@@ -171,52 +174,61 @@ class TorrentVideoSourceResolver(
     }
 }
 
-class TorrentVideoSource(
+class TorrentMediaDataProvider(
     private val engine: TorrentEngine,
     private val encodedTorrentInfo: EncodedTorrentInfo,
     private val episodeMetadata: EpisodeMetadata,
     override val extraFiles: org.openani.mediamp.source.MediaExtraFiles,
-) : MediaSource<TorrentVideoData> {
+) : MediaDataProvider<TorrentMediaData> {
     @OptIn(ExperimentalStdlibApi::class)
-    override val uri: String by lazy {
+    val uri: String by lazy {
         "torrent://${encodedTorrentInfo.data.toHexString().take(32) + "..."}"
     }
 
     @Throws(MediaSourceOpenException::class, CancellationException::class)
-    override suspend fun open(): TorrentVideoData {
+    override suspend fun open(scopeForCleanup: CoroutineScope): TorrentMediaData {
         // 注意, 这个函数须支持 cancellation. 它会在任意时刻被取消.
 
         logger.info {
             "TorrentVideoSource '${episodeMetadata.title}' opening a VideoData"
         }
         val downloader = engine.getDownloader()
-        return TorrentVideoData(
-            withContext(Dispatchers.IO) {
-                logger.info {
-                    "TorrentVideoSource '${episodeMetadata.title}' waiting for files"
-                }
-                val files = downloader.startDownload(encodedTorrentInfo)
-                    .getFiles()
+        val handle = withContext(Dispatchers.IO) {
+            logger.info {
+                "TorrentVideoSource '${episodeMetadata.title}' waiting for files"
+            }
+            val files = downloader.startDownload(encodedTorrentInfo)
+                .getFiles()
 
-                TorrentVideoSourceResolver.selectVideoFileEntry(
-                    files,
-                    { pathInTorrent },
-                    listOf(episodeMetadata.title),
-                    episodeSort = episodeMetadata.sort,
-                    episodeEp = episodeMetadata.ep,
-                )?.also {
-                    logger.info {
-                        "TorrentVideoSource selected file: ${it.pathInTorrent}"
-                    }
-                }?.createHandle()?.also {
-                    it.resume(FilePriority.HIGH)
-                } ?: throw AniMediaSourceOpenException(
-                    OpenFailures.NO_MATCHING_FILE,
-                    """
-                    Torrent files: ${files.joinToString { it.pathInTorrent }}
-                    Episode metadata: $episodeMetadata
-                """.trimIndent(),
-                )
+            TorrentMediaResolver.selectVideoFileEntry(
+                files,
+                { pathInTorrent },
+                listOf(episodeMetadata.title),
+                episodeSort = episodeMetadata.sort,
+                episodeEp = episodeMetadata.ep,
+            )?.also {
+                logger.info {
+                    "TorrentVideoSource selected file: ${it.pathInTorrent}"
+                }
+            }?.createHandle()?.also {
+                it.resume(FilePriority.HIGH)
+            } ?: throw MediaSourceOpenException(
+                OpenFailures.NO_MATCHING_FILE,
+                """
+                                Torrent files: ${files.joinToString { it.pathInTorrent }}
+                                Episode metadata: $episodeMetadata
+                            """.trimIndent(),
+            )
+        }
+        return TorrentMediaData(
+            handle,
+            onClose = {
+                logger.info {
+                    "TorrentVideoSource '${episodeMetadata.title}' closing"
+                }
+                scopeForCleanup.launch(NonCancellable + CoroutineName("TorrentMediaDataProvider.close")) {
+                    handle.close()
+                }
             },
         )
     }
@@ -224,6 +236,6 @@ class TorrentVideoSource(
     override fun toString(): String = "TorrentVideoSource(uri=$uri, episodeMetadata=${episodeMetadata})"
 
     companion object {
-        private val logger = logger<TorrentVideoSource>()
+        private val logger = logger<TorrentMediaDataProvider>()
     }
 }

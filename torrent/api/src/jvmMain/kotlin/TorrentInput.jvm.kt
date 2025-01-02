@@ -69,7 +69,7 @@ class TorrentInput(
      */
     private val pieces: PieceList, // must support random access
     /**
-     * 逻辑上的偏移量, 也就是当 [seek] `k` 时, 实际上是在 `logicalStartOffset + k` 处.
+     * 逻辑上的偏移量, 也就是当 [seekTo] `k` 时, 实际上是在 `logicalStartOffset + k` 处.
      *
      * 这里的 "逻辑上" 的第一个 piece 指的是包含文件的第一个 byte 的 piece.
      */
@@ -82,7 +82,7 @@ class TorrentInput(
      * 因此 [bufferSize] 指定的是最大大小. 不会因为过大的 [bufferSize] 而导致等待更多 piece 完成.
      */
     private val bufferSize: Int = DEFAULT_BUFFER_PER_DIRECTION,
-    override val size: Long = file.length(),
+    override val size: Long,
     /**
      * 当 [SeekableInput] 需要等待 piece 完成时, 会[切换][withContext]到的 [CoroutineContext].
      */

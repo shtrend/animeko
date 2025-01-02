@@ -26,6 +26,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import me.him188.ani.app.domain.media.player.data.MediaDataProvider
 import me.him188.ani.app.domain.media.resolver.WebViewVideoExtractor.Instruction
 import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.datasources.api.Media
@@ -37,7 +38,6 @@ import me.him188.ani.datasources.api.matcher.videoOrNull
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
-import org.openani.mediamp.source.MediaSource
 import java.io.ByteArrayInputStream
 import java.util.concurrent.ConcurrentSkipListSet
 import kotlin.time.Duration.Companion.seconds
@@ -46,11 +46,11 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * 用 WebView 加载网站, 拦截 WebView 加载资源, 用各数据源提供的 [WebVideoMatcher]
  */
-class AndroidWebVideoSourceResolver(
+class AndroidWebMediaResolver(
     private val matcherLoader: MediaSourceWebVideoMatcherLoader,
-) : VideoSourceResolver {
+) : MediaResolver {
     private companion object {
-        private val logger = logger<AndroidWebVideoSourceResolver>()
+        private val logger = logger<AndroidWebMediaResolver>()
     }
 
     private val matchersFromClasspath by lazy {
@@ -75,7 +75,7 @@ class AndroidWebVideoSourceResolver(
         }
     }
 
-    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*> {
+    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*> {
         if (!supports(media)) throw UnsupportedMediaException(media)
 
         val matchersFromMediaSource = matcherLoader.loadMatchers(media.mediaSourceId)
@@ -112,7 +112,7 @@ class AndroidWebVideoSourceResolver(
                 matcher.match(resource.url, context).videoOrNull
             }
         } ?: throw VideoSourceResolutionException(ResolutionFailures.NO_MATCHING_RESOURCE)
-        return HttpStreamingMediaSource(
+        return HttpStreamingMediaDataProvider(
             webVideo.m3u8Url,
             media.originalTitle,
             webVideo.headers,

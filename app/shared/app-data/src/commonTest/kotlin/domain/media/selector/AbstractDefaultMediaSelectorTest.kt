@@ -131,7 +131,7 @@ sealed class AbstractDefaultMediaSelectorTest {
         kind: MediaSourceKind = MediaSourceKind.BitTorrent,
         episodeRange: EpisodeRange = EpisodeRange.single(EpisodeSort(1)),
         subtitleKind: SubtitleKind? = null,
-        extraFiles: MediaExtraFiles = MediaExtraFiles.Empty,
+        extraFiles: MediaExtraFiles = MediaExtraFiles.EMPTY,
         id: Int = mediaId++,
         originalTitle: String = "[字幕组] 孤独摇滚 $id",
         subjectName: String? = null,

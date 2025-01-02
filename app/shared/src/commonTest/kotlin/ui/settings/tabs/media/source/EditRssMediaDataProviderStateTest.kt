@@ -22,7 +22,7 @@ import me.him188.ani.utils.platform.Uuid
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class EditRssMediaSourceStateTest {
+class EditRssMediaDataProviderStateTest {
 
     private fun TestScope.createState(
         arguments: RssMediaSourceArguments = RssMediaSourceArguments.Default,

@@ -54,11 +54,11 @@ import me.him188.ani.app.data.repository.WindowStateRepository
 import me.him188.ani.app.data.repository.WindowStateRepositoryImpl
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.media.fetch.MediaSourceManager
-import me.him188.ani.app.domain.media.resolver.DesktopWebVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.HttpStreamingVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.LocalFileVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.TorrentVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.VideoSourceResolver
+import me.him188.ani.app.domain.media.resolver.DesktopWebMediaResolver
+import me.him188.ani.app.domain.media.resolver.HttpStreamingMediaResolver
+import me.him188.ani.app.domain.media.resolver.LocalFileMediaResolver
+import me.him188.ani.app.domain.media.resolver.MediaResolver
+import me.him188.ani.app.domain.media.resolver.TorrentMediaResolver
 import me.him188.ani.app.domain.session.SessionManager
 import me.him188.ani.app.domain.torrent.DefaultTorrentManager
 import me.him188.ani.app.domain.torrent.TorrentManager
@@ -121,10 +121,10 @@ import org.koin.dsl.module
 import org.koin.mp.KoinPlatform
 import org.openani.mediamp.MediampPlayerFactory
 import org.openani.mediamp.MediampPlayerFactoryLoader
+import org.openani.mediamp.compose.MediampPlayerSurfaceProviderLoader
 import org.openani.mediamp.vlc.VlcMediampPlayer
 import org.openani.mediamp.vlc.VlcMediampPlayerFactory
 import org.openani.mediamp.vlc.compose.VlcMediampPlayerSurfaceProvider
-import org.openani.mediamp.compose.MediampPlayerSurfaceProviderLoader
 import java.io.File
 import kotlin.system.exitProcess
 import kotlin.time.measureTime
@@ -255,14 +255,14 @@ object AniDesktop {
                         MediampPlayerFactoryLoader.first()
                     }
                     single<BrowserNavigator> { DesktopBrowserNavigator() }
-                    factory<VideoSourceResolver> {
-                        VideoSourceResolver.from(
+                    factory<MediaResolver> {
+                        MediaResolver.from(
                             get<TorrentManager>().engines
-                                .map { TorrentVideoSourceResolver(it) }
-                                .plus(LocalFileVideoSourceResolver())
-                                .plus(HttpStreamingVideoSourceResolver())
+                                .map { TorrentMediaResolver(it) }
+                                .plus(LocalFileMediaResolver())
+                                .plus(HttpStreamingMediaResolver())
                                 .plus(
-                                    DesktopWebVideoSourceResolver(
+                                    DesktopWebMediaResolver(
                                         context,
                                         get<MediaSourceManager>().webVideoMatcherLoader,
                                     ),

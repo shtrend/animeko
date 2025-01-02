@@ -28,10 +28,10 @@ import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepository
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepositoryImpl
 import me.him188.ani.app.data.repository.user.PreferencesRepositoryImpl
 import me.him188.ani.app.data.repository.user.SettingsRepository
-import me.him188.ani.app.domain.media.resolver.HttpStreamingVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.LocalFileVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.TorrentVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.VideoSourceResolver
+import me.him188.ani.app.domain.media.resolver.HttpStreamingMediaResolver
+import me.him188.ani.app.domain.media.resolver.LocalFileMediaResolver
+import me.him188.ani.app.domain.media.resolver.MediaResolver
+import me.him188.ani.app.domain.media.resolver.TorrentMediaResolver
 import me.him188.ani.app.domain.session.PreviewSessionManager
 import me.him188.ani.app.domain.session.SessionManager
 import me.him188.ani.app.domain.torrent.DefaultTorrentManager
@@ -76,12 +76,12 @@ fun ProvideCompositionLocalsForPreview(
                         DummyMediampPlayer.Factory
                     }
                     single<SessionManager> { PreviewSessionManager }
-                    factory<VideoSourceResolver> {
-                        VideoSourceResolver.from(
+                    factory<MediaResolver> {
+                        MediaResolver.from(
                             get<TorrentManager>().engines
-                                .map { TorrentVideoSourceResolver(it) }
-                                .plus(LocalFileVideoSourceResolver())
-                                .plus(HttpStreamingVideoSourceResolver()),
+                                .map { TorrentMediaResolver(it) }
+                                .plus(LocalFileMediaResolver())
+                                .plus(HttpStreamingMediaResolver()),
                         )
                     }
                     single<TorrentManager> {

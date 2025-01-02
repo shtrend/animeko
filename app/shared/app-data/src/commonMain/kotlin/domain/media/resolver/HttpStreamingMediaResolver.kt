@@ -9,20 +9,21 @@
 
 package me.him188.ani.app.domain.media.resolver
 
+import kotlinx.coroutines.CoroutineScope
+import me.him188.ani.app.domain.media.player.data.MediaDataProvider
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import org.openani.mediamp.source.MediaExtraFiles
-import org.openani.mediamp.source.MediaSource
-import org.openani.mediamp.source.UriMediaSource
+import org.openani.mediamp.source.UriMediaData
 
-class HttpStreamingVideoSourceResolver : VideoSourceResolver {
+class HttpStreamingMediaResolver : MediaResolver {
     override suspend fun supports(media: Media): Boolean {
         return media.download is ResourceLocation.HttpStreamingFile
     }
 
-    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*> {
+    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*> {
         if (!supports(media)) throw UnsupportedMediaException(media)
-        return HttpStreamingMediaSource(
+        return HttpStreamingMediaDataProvider(
             media.download.uri,
             media.originalTitle,
             emptyMap(),
@@ -31,9 +32,13 @@ class HttpStreamingVideoSourceResolver : VideoSourceResolver {
     }
 }
 
-class HttpStreamingMediaSource(
-    uri: String,
+class HttpStreamingMediaDataProvider(
+    val uri: String,
     val originalTitle: String,
-    headers: Map<String, String> = emptyMap(),
-    extraFiles: MediaExtraFiles,
-) : UriMediaSource(uri, headers, extraFiles)
+    private val headers: Map<String, String> = emptyMap(),
+    override val extraFiles: MediaExtraFiles = MediaExtraFiles.EMPTY,
+) : MediaDataProvider<UriMediaData> {
+    override suspend fun open(scopeForCleanup: CoroutineScope): UriMediaData = UriMediaData(uri, headers, extraFiles)
+    override fun toString(): String = "HttpStreamingVideoSource(uri='$uri')"
+}
+

@@ -19,7 +19,7 @@ class MediaExtraFiles(
     val subtitles: List<Subtitle> = emptyList(),
 ) {
     companion object {
-        val Empty = MediaExtraFiles()
+        val EMPTY = MediaExtraFiles()
     }
 }
 

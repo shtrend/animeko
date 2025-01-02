@@ -24,11 +24,11 @@ import me.him188.ani.app.data.models.preference.AnitorrentConfig
 import me.him188.ani.app.data.models.preference.ProxySettings
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.media.fetch.MediaSourceManager
-import me.him188.ani.app.domain.media.resolver.AndroidWebVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.HttpStreamingVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.LocalFileVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.TorrentVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.VideoSourceResolver
+import me.him188.ani.app.domain.media.resolver.AndroidWebMediaResolver
+import me.him188.ani.app.domain.media.resolver.HttpStreamingMediaResolver
+import me.him188.ani.app.domain.media.resolver.LocalFileMediaResolver
+import me.him188.ani.app.domain.media.resolver.MediaResolver
+import me.him188.ani.app.domain.media.resolver.TorrentMediaResolver
 import me.him188.ani.app.domain.torrent.DefaultTorrentManager
 import me.him188.ani.app.domain.torrent.LocalAnitorrentEngineFactory
 import me.him188.ani.app.domain.torrent.TorrentEngine
@@ -62,9 +62,9 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import org.openani.mediamp.MediampPlayerFactory
 import org.openani.mediamp.MediampPlayerFactoryLoader
+import org.openani.mediamp.compose.MediampPlayerSurfaceProviderLoader
 import org.openani.mediamp.exoplayer.ExoPlayerMediampPlayerFactory
 import org.openani.mediamp.exoplayer.compose.ExoPlayerMediampPlayerSurfaceProvider
-import org.openani.mediamp.compose.MediampPlayerSurfaceProviderLoader
 import java.io.File
 import kotlin.concurrent.thread
 import kotlin.coroutines.CoroutineContext
@@ -209,13 +209,13 @@ fun getAndroidModules(
         MediampPlayerFactoryLoader.first()
     }
 
-    factory<VideoSourceResolver> {
-        VideoSourceResolver.from(
+    factory<MediaResolver> {
+        MediaResolver.from(
             get<TorrentManager>().engines
-                .map { TorrentVideoSourceResolver(it) }
-                .plus(LocalFileVideoSourceResolver())
-                .plus(HttpStreamingVideoSourceResolver())
-                .plus(AndroidWebVideoSourceResolver(get<MediaSourceManager>().webVideoMatcherLoader)),
+                .map { TorrentMediaResolver(it) }
+                .plus(LocalFileMediaResolver())
+                .plus(HttpStreamingMediaResolver())
+                .plus(AndroidWebMediaResolver(get<MediaSourceManager>().webVideoMatcherLoader)),
         )
     }
     single<UpdateInstaller> { AndroidUpdateInstaller() }

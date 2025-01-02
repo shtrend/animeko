@@ -35,7 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import me.him188.ani.app.domain.media.resolver.VideoSourceResolver
+import me.him188.ani.app.domain.media.resolver.MediaResolver
 import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.text.ProvideContentColor
@@ -76,7 +76,7 @@ sealed interface VideoLoadingState {
     data object Cancelled : Failed()
 
     /**
-     * 不支持的媒体, 或者说是未启用支持该媒体的 [VideoSourceResolver]
+     * 不支持的媒体, 或者说是未启用支持该媒体的 [MediaResolver]
      */
     data object UnsupportedMedia : Failed()
     data object NoMatchingFile : Failed()

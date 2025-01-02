@@ -33,10 +33,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.models.preference.configIfEnabledOrNull
 import me.him188.ani.app.data.repository.user.SettingsRepository
-import me.him188.ani.app.domain.media.resolver.HttpStreamingVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.LocalFileVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.TorrentVideoSourceResolver
-import me.him188.ani.app.domain.media.resolver.VideoSourceResolver
+import me.him188.ani.app.domain.media.resolver.HttpStreamingMediaResolver
+import me.him188.ani.app.domain.media.resolver.LocalFileMediaResolver
+import me.him188.ani.app.domain.media.resolver.MediaResolver
+import me.him188.ani.app.domain.media.resolver.TorrentMediaResolver
 import me.him188.ani.app.domain.torrent.DefaultTorrentManager
 import me.him188.ani.app.domain.torrent.TorrentManager
 import me.him188.ani.app.navigation.AniNavigator
@@ -198,12 +198,12 @@ fun getIosModules(
     }
 
 
-    factory<VideoSourceResolver> {
-        VideoSourceResolver.from(
+    factory<MediaResolver> {
+        MediaResolver.from(
             get<TorrentManager>().engines
-                .map { TorrentVideoSourceResolver(it) }
-                .plus(LocalFileVideoSourceResolver())
-                .plus(HttpStreamingVideoSourceResolver()),
+                .map { TorrentMediaResolver(it) }
+                .plus(LocalFileMediaResolver())
+                .plus(HttpStreamingMediaResolver()),
         )
     }
     single<UpdateInstaller> { IosUpdateInstaller }

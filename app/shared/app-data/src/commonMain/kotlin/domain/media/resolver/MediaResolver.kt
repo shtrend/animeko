@@ -10,20 +10,21 @@
 package me.him188.ani.app.domain.media.resolver
 
 import androidx.compose.runtime.Composable
+import me.him188.ani.app.domain.media.player.data.MediaDataProvider
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.Media
-import org.openani.mediamp.source.MediaSource
+import org.openani.mediamp.source.MediaData
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * 根据 [EpisodeMetadata] 中的集数信息和 [Media.location] 中的下载方式,
- * 解析一个 [Media] 为可以播放的 [MediaSource].
+ * 解析一个 [Media] 为可以播放的 [MediaData].
  *
  * 实际操作可涉及创建种子下载任务, 寻找文件等.
  *
  * 由于 [Media] 可能包含多个剧集视频, 在[解析][resolve]时需要提供所需剧集的信息 [EpisodeMetadata].
  */
-interface VideoSourceResolver {
+interface MediaResolver {
     /**
      * 判断是否支持解析这个 [Media] 的 [Media.download].
      *
@@ -40,7 +41,7 @@ interface VideoSourceResolver {
 
     /**
      * 根据 [EpisodeMetadata] 中的集数信息和 [Media.location] 中的下载方式,
-     * 解析一个 [Media] 为可以播放的 [VideoSource].
+     * 解析一个 [Media] 为 [MediaDataProvider].
      *
      * @param episode Target episode to resolve, because a media can have multiple episodes.
      *
@@ -51,21 +52,21 @@ interface VideoSourceResolver {
      * @throws Exception 所有抛出的其他异常都属于 bug
      */
     @Throws(VideoSourceResolutionException::class, CancellationException::class)
-    suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*>
+    suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*>
 
     companion object {
-        fun from(vararg resolvers: VideoSourceResolver): VideoSourceResolver {
-            return ChainedVideoSourceResolver(resolvers.toList())
+        fun from(vararg resolvers: MediaResolver): MediaResolver {
+            return ChainedMediaResolver(resolvers.toList())
         }
 
-        fun from(resolvers: Iterable<VideoSourceResolver>): VideoSourceResolver {
-            return ChainedVideoSourceResolver(resolvers.toList())
+        fun from(resolvers: Iterable<MediaResolver>): MediaResolver {
+            return ChainedMediaResolver(resolvers.toList())
         }
     }
 }
 
 /**
- * @see VideoSourceResolver.resolve
+ * @see MediaResolver.resolve
  */
 data class EpisodeMetadata(
     val title: String,
@@ -102,7 +103,7 @@ enum class ResolutionFailures {
 
 /**
  * 解析资源失败时抛出的异常.
- * @see VideoSourceResolver.resolve
+ * @see MediaResolver.resolve
  */
 class VideoSourceResolutionException(
     val reason: ResolutionFailures,
@@ -111,11 +112,11 @@ class VideoSourceResolutionException(
 
 
 /**
- * 用于将多个 [VideoSourceResolver] 链接在一起的 [VideoSourceResolver].
+ * 用于将多个 [MediaResolver] 链接在一起的 [MediaResolver].
  */
-private class ChainedVideoSourceResolver(
-    private val resolvers: List<VideoSourceResolver>
-) : VideoSourceResolver {
+private class ChainedMediaResolver(
+    private val resolvers: List<MediaResolver>
+) : MediaResolver {
     override suspend fun supports(media: Media): Boolean {
         return resolvers.any { it.supports(media) }
     }
@@ -127,7 +128,7 @@ private class ChainedVideoSourceResolver(
         }
     }
 
-    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaSource<*> {
+    override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*> {
         return resolvers.firstOrNull { it.supports(media) }?.resolve(media, episode)
             ?: throw UnsupportedMediaException(media)
     }

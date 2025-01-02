@@ -32,22 +32,22 @@ import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.domain.media.player.MediaCacheProgressInfo
 import me.him188.ani.app.domain.media.player.TorrentMediaCacheProgressProvider
-import me.him188.ani.app.domain.media.resolver.AniMediaSourceOpenException
+import me.him188.ani.app.domain.media.player.data.TorrentMediaData
+import me.him188.ani.app.domain.media.player.data.filenameOrNull
 import me.him188.ani.app.domain.media.resolver.EpisodeMetadata
+import me.him188.ani.app.domain.media.resolver.MediaResolver
+import me.him188.ani.app.domain.media.resolver.MediaSourceOpenException
 import me.him188.ani.app.domain.media.resolver.OpenFailures
 import me.him188.ani.app.domain.media.resolver.ResolutionFailures
-import me.him188.ani.app.domain.media.resolver.TorrentVideoSource
+import me.him188.ani.app.domain.media.resolver.TorrentMediaDataProvider
 import me.him188.ani.app.domain.media.resolver.UnsupportedMediaException
 import me.him188.ani.app.domain.media.resolver.VideoSourceResolutionException
-import me.him188.ani.app.domain.media.resolver.VideoSourceResolver
 import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.ui.foundation.BackgroundScope
 import me.him188.ani.app.ui.foundation.HasBackgroundScope
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceInfoProvider
 import me.him188.ani.app.ui.subject.episode.statistics.VideoLoadingState
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics
-import me.him188.ani.app.videoplayer.torrent.TorrentVideoData
-import me.him188.ani.app.videoplayer.torrent.filenameOrNull
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
@@ -56,16 +56,16 @@ import org.openani.mediamp.MediampPlayer
 import kotlin.coroutines.CoroutineContext
 
 /**
- * 将 [MediaSelector] 和 [videoSourceResolver] 结合, 为 [playerState] 提供视频源.
+ * 将 [MediaSelector] 和 [mediaResolver] 结合, 为 [playerState] 提供视频源.
  * 还会提供 [videoStatisticsFlow], 可以获取当前的加载状态.
  *
  * 这实际上就是启动了一个一直运行的协程:
- * 当 [MediaSelector] 选择到资源的时候, 使用 [videoSourceResolver] 解析出 [VideoSource],
+ * 当 [MediaSelector] 选择到资源的时候, 使用 [mediaResolver] 解析出 [VideoSource],
  * 然后把它设置给 [playerState] (通过 [MediampPlayer.setVideoSource]).
  */
 class PlayerLauncher(
     mediaSelector: MediaSelector,
-    private val videoSourceResolver: VideoSourceResolver,
+    private val mediaResolver: MediaResolver,
     private val playerState: MediampPlayer,
     private val mediaSourceInfoProvider: MediaSourceInfoProvider,
     episodeInfo: Flow<EpisodeInfo?>,
@@ -100,7 +100,7 @@ class PlayerLauncher(
     val cacheProgressProvider = playerState.mediaData
         .flatMapLatest { data ->
             when (data) {
-                is TorrentVideoData -> TorrentMediaCacheProgressProvider(data.pieces).flow
+                is TorrentMediaData -> TorrentMediaCacheProgressProvider(data.pieces).flow
                 else -> flowOf(MediaCacheProgressInfo.Empty)
             }
         }.shareIn(
@@ -120,7 +120,7 @@ class PlayerLauncher(
             try {
                 val info = episodeInfo.filterNotNull().first()
                 _videoLoadingStateFlow.value = VideoLoadingState.ResolvingSource
-                val source = videoSourceResolver.resolve(
+                val source = mediaResolver.resolve(
                     media,
                     EpisodeMetadata(
                         title = info.displayName,
@@ -132,14 +132,15 @@ class PlayerLauncher(
                     VideoLoadingState.ResolvingSource,
                     VideoLoadingState.DecodingData(isBt = media.kind == MediaSourceKind.BitTorrent),
                 )
-                playerState.setVideoSource(source)
+                val data = source.open(scopeForCleanup = backgroundScope) // may throw MediaSourceOpenException
+                playerState.setVideoSource(data)
                 logger.info { "playerState.applySourceToPlayer with source = $source" }
-                _videoLoadingStateFlow.value = VideoLoadingState.Succeed(isBt = source is TorrentVideoSource)
+                _videoLoadingStateFlow.value = VideoLoadingState.Succeed(isBt = source is TorrentMediaDataProvider)
             } catch (e: UnsupportedMediaException) {
                 logger.error { IllegalStateException("Failed to resolve video source, unsupported media", e) }
                 _videoLoadingStateFlow.value = VideoLoadingState.UnsupportedMedia
                 stopPlayer()
-            } catch (e: AniMediaSourceOpenException) { // during playerState.setVideoSource
+            } catch (e: MediaSourceOpenException) { // during playerState.setVideoSource
                 logger.error {
                     IllegalStateException(
                         "Failed to resolve video source due to VideoSourceOpenException",

@@ -148,7 +148,7 @@ constructor(
     override val publishedTime: Long,
     override val properties: MediaProperties,
     override val episodeRange: EpisodeRange? = null,
-    override val extraFiles: MediaExtraFiles = MediaExtraFiles.Empty,
+    override val extraFiles: MediaExtraFiles = MediaExtraFiles.EMPTY,
     override val location: MediaSourceLocation = MediaSourceLocation.Online,
     override val kind: MediaSourceKind = MediaSourceKind.BitTorrent,
     @Transient private val _primaryConstructorMarker: Unit = Unit,
@@ -163,7 +163,7 @@ constructor(
         publishedTime: Long,
         properties: MediaProperties,
         episodeRange: EpisodeRange?,
-        extraFiles: MediaExtraFiles = MediaExtraFiles.Empty,
+        extraFiles: MediaExtraFiles = MediaExtraFiles.EMPTY,
         location: MediaSourceLocation,
         kind: MediaSourceKind,
     ) : this(

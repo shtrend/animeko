@@ -43,7 +43,7 @@ fun createTestDefaultMedia(
     publishedTime: Long,
     properties: MediaProperties,
     episodeRange: EpisodeRange?,
-    extraFiles: MediaExtraFiles = MediaExtraFiles.Empty,
+    extraFiles: MediaExtraFiles = MediaExtraFiles.EMPTY,
     location: MediaSourceLocation,
     kind: MediaSourceKind,
 //    mediaSourceInstanceId: String = mediaSourceId,

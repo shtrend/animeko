@@ -62,6 +62,7 @@ internal class OffsetTorrentInputTest {
             logicalPieces,
             logicalStartOffset = 1008, // 跳过 8 垃圾
             bufferSize = bufferSize,
+            size = tempFile.length(),
         )
     }
 
@@ -101,14 +102,14 @@ internal class OffsetTorrentInputTest {
     @Test
     fun seekFirstNoSuspend() = runTest {
         logicalPieces.first().state = (PieceState.FINISHED)
-        input.seek(1)
+        input.seekTo(1)
         assertEquals(1L, input.position)
     }
 
     @Test
     fun seekReadSecondPiece() = runTest {
         logicalPieces.getByPieceIndex(1).state = (PieceState.FINISHED) // logically 16..<32 is finished
-        input.seek(16)
+        input.seekTo(16)
         assertEquals(16L, input.position) // logically 24
         input.readBytes().run {
             assertEquals(8, size)
@@ -120,7 +121,7 @@ internal class OffsetTorrentInputTest {
     @Test
     fun seekReadSecondPieceMiddle() = runTest {
         logicalPieces.getByPieceIndex(1).state = (PieceState.FINISHED)
-        input.seek(17)
+        input.seekTo(17)
         assertEquals(17L, input.position)
         input.readBytes().run {
             assertEquals(8L..<24L, input.bufferedOffsetRange)
@@ -132,7 +133,7 @@ internal class OffsetTorrentInputTest {
     fun `seek buffer both direction`() = runTest {
         logicalPieces.getByPieceIndex(0).state = (PieceState.FINISHED)
         logicalPieces.getByPieceIndex(1).state = (PieceState.FINISHED)
-        input.seek(17) // 17 18 19 20 21 22 23
+        input.seekTo(17) // 17 18 19 20 21 22 23
         assertEquals(17L, input.position)
         input.readBytes().run {
             assertEquals(0L..<24L, input.bufferedOffsetRange)
@@ -144,13 +145,13 @@ internal class OffsetTorrentInputTest {
     fun `seek buffer both direction then seek back`() = runTest {
         logicalPieces.getByPieceIndex(0).state = (PieceState.FINISHED)
         logicalPieces.getByPieceIndex(1).state = (PieceState.FINISHED)
-        input.seek(17)
+        input.seekTo(17)
         assertEquals(17L, input.position)
         input.readBytes().run {
             assertEquals(0L..<24L, input.bufferedOffsetRange)
             assertEquals("mply du", String(this))
         }
-        input.seek(0)
+        input.seekTo(0)
         input.readBytes().run {
             assertEquals(0L..<24L, input.bufferedOffsetRange)
             assertEquals("Lorem Ipsum is simply du", String(this))
@@ -239,7 +240,7 @@ internal class OffsetTorrentInputTest {
             logicalPiece.state = PieceState.FINISHED
         }
 
-        input.seek(30)
+        input.seekTo(30)
         assertEquals(0, input.read(ByteArray(0)))
         assertEquals(-1L..-1, input.bufferedOffsetRange)
     }
@@ -257,12 +258,12 @@ internal class OffsetTorrentInputTest {
 
         // buffer size is 20
 
-        input.seek(30)
+        input.seekTo(30)
         assertEquals(1, input.read(ByteArray(1))) // fill buffer
         assertEquals(30 - bufferSize..<30L + bufferSize, input.bufferedOffsetRange)
         // 10..<50
 
-        input.seek(0) // 超出 buffer 范围
+        input.seekTo(0) // 超出 buffer 范围
         input.prepareBuffer()
         input.prepareBuffer()
         assertEquals(0L..<bufferSize, input.bufferedOffsetRange)
@@ -279,12 +280,12 @@ internal class OffsetTorrentInputTest {
 
         // buffer size is 20
 
-        input.seek(30)
+        input.seekTo(30)
         assertEquals(1, input.read(ByteArray(1))) // fill buffer
         assertEquals(30 - bufferSize..<30L + bufferSize, input.bufferedOffsetRange)
         // 10..<50
 
-        input.seek(0) // 超出 buffer 范围
+        input.seekTo(0) // 超出 buffer 范围
         input.prepareBuffer()
         assertEquals(0L..<bufferSize, input.bufferedOffsetRange)
         // 0..<20, last 10 was reused from previous buffer
@@ -300,11 +301,11 @@ internal class OffsetTorrentInputTest {
 
         // buffer size is 20
 
-        input.seek(0)
+        input.seekTo(0)
         input.prepareBuffer()
         assertEquals(0L..<bufferSize, input.bufferedOffsetRange)
 
-        input.seek(bufferSize.toLong()) // 超出 buffer 范围
+        input.seekTo(bufferSize.toLong()) // 超出 buffer 范围
         input.prepareBuffer()
         assertEquals(0L..<bufferSize * 2, input.bufferedOffsetRange)
         // 0..<20, last 10 was reused from previous buffer
@@ -322,11 +323,11 @@ internal class OffsetTorrentInputTest {
 
         // buffer size is 20
 
-        input.seek(sampleText.lastIndex.toLong()) // 576
+        input.seekTo(sampleText.lastIndex.toLong()) // 576
         input.prepareBuffer()
         assertEquals(sampleText.lastIndex.toLong() - bufferSize..<sampleText.length, input.bufferedOffsetRange)
 
-        input.seek(sampleText.lastIndex.toLong() - bufferSize - 1) // 超出 buffer 范围
+        input.seekTo(sampleText.lastIndex.toLong() - bufferSize - 1) // 超出 buffer 范围
         assertEquals(
             sampleText.substring(sampleText.lastIndex - bufferSize - 1),
             input.readAllBytes().decodeToString(),
@@ -344,12 +345,12 @@ internal class OffsetTorrentInputTest {
 
             // buffer size is 20
 
-            input.seek(30)
+            input.seekTo(30)
             assertEquals(1, input.read(ByteArray(1))) // fill buffer
             assertEquals(30 - bufferSize..<30L + bufferSize, input.bufferedOffsetRange)
             // 10..<50
 
-            input.seek(index)
+            input.seekTo(index)
             input.prepareBuffer()
             assertEquals(index - bufferSize..<index + bufferSize, input.bufferedOffsetRange)
             // 40..<80, first 10 was reused from previous buffer
@@ -357,7 +358,7 @@ internal class OffsetTorrentInputTest {
             assertEquals(sampleText.substring(index.toInt()).take(10), input.readExactBytes(10).decodeToString())
             assertEquals(sampleText.substring(index.toInt() + 10), input.readAllBytes().decodeToString())
 
-            input.seek(0)
+            input.seekTo(0)
             assertEquals(sampleText, input.readAllBytes().decodeToString())
         }
     }
@@ -371,14 +372,14 @@ internal class OffsetTorrentInputTest {
 
         // buffer size is 20
 
-        input.seek(23) // logically 23+8=31, piece index 1
+        input.seekTo(23) // logically 23+8=31, piece index 1
         input.prepareBuffer()
         assertEquals(3..<24L, input.bufferedOffsetRange) // piece 2 (logically 32..<48) is not ready, so we cap at 24
         // logically buffered ..<32 which is end of piece 1
 
         logicalPieces.getByPieceIndex(2).state = PieceState.FINISHED // 现在 2 号 piece 好了
 
-        input.seek(32) // logically 32+8=40, piece index 2
+        input.seekTo(32) // logically 32+8=40, piece index 2
         input.prepareBuffer()
         assertEquals(32L - bufferSize..<32L + bufferSize, input.bufferedOffsetRange)
 
@@ -393,12 +394,12 @@ internal class OffsetTorrentInputTest {
 
         // buffer size is 20
 
-        input.seek(30)
+        input.seekTo(30)
         assertEquals(1, input.read(ByteArray(1))) // fill buffer
         assertEquals(30 - bufferSize..<30L + bufferSize, input.bufferedOffsetRange)
         // 10..<50
 
-        input.seek(100) // 远超出 buffer 范围
+        input.seekTo(100) // 远超出 buffer 范围
         input.prepareBuffer()
         assertEquals(100L - bufferSize..<100L + bufferSize, input.bufferedOffsetRange)
         // 40..<80, first 10 was reused from previous buffer
@@ -415,7 +416,7 @@ internal class OffsetTorrentInputTest {
         val random = Random(2352151)
         repeat(1000) {
             val pos = random.nextLong(0L..<sampleText.length).absoluteValue
-            input.seek(pos)
+            input.seekTo(pos)
 //                val length = Random.nextInt()
             assertEquals(sampleText.substring(pos.toInt()), input.readAllBytes().decodeToString())
         }
@@ -428,7 +429,7 @@ internal class OffsetTorrentInputTest {
     @Test
     fun `seek negative offset`() = runTest {
         assertFailsWith<IllegalArgumentException> {
-            input.seek(-1)
+            input.seekTo(-1)
         }
     }
 
@@ -448,7 +449,7 @@ internal class OffsetTorrentInputTest {
 
     @Test
     fun `seek over size then read`() = runTest {
-        input.seek(Long.MAX_VALUE)
+        input.seekTo(Long.MAX_VALUE)
         assertEquals(-1, input.read(ByteArray(10)))
     }
 
@@ -464,7 +465,7 @@ internal class OffsetTorrentInputTest {
     fun `seek closed`() = runTest {
         input.close()
         assertFailsWith<IllegalStateException> {
-            input.seek(10)
+            input.seekTo(10)
         }
     }
 
