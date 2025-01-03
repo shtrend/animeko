@@ -21,6 +21,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import me.him188.ani.app.domain.foundation.LoadError
 
 /**
  * @see LoadErrorCardRole.from

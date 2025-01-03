@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.search
+package me.him188.ani.app.domain.foundation
 
 import androidx.paging.CombinedLoadStates
 import me.him188.ani.app.data.repository.RepositoryAuthorizationException

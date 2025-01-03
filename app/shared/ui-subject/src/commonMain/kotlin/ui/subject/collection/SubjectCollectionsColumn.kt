@@ -55,12 +55,12 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import androidx.window.core.layout.WindowWidthSizeClass
 import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
+import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
-import me.him188.ani.app.ui.search.LoadError
 import me.him188.ani.app.ui.search.LoadErrorCard
 import me.him188.ani.app.ui.search.isLoadingNextPage
 import me.him188.ani.app.ui.subject.AiringLabel

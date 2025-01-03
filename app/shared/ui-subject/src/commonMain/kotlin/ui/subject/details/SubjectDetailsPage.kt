@@ -74,6 +74,7 @@ import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.subject.SubjectCollectionStats
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.external.placeholder.placeholder
 import me.him188.ani.app.ui.foundation.ImageViewer
@@ -97,7 +98,6 @@ import me.him188.ani.app.ui.foundation.rememberImageViewerHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.richtext.RichTextDefaults
-import me.him188.ani.app.ui.search.LoadError
 import me.him188.ani.app.ui.search.LoadErrorCard
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeButton
 import me.him188.ani.app.ui.subject.details.components.CollectionData

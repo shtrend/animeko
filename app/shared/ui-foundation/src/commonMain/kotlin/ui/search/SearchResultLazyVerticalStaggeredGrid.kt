@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.ui.foundation.widgets.FastLinearProgressIndicator
 
 /**

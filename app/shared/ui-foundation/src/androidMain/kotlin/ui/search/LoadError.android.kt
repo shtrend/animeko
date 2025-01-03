@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 
 internal class LoadErrorProblemProvider : PreviewParameterProvider<LoadError?> {

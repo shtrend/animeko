@@ -20,8 +20,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.tools.MonoTasker
-import me.him188.ani.app.ui.search.LoadError
 import me.him188.ani.utils.platform.annotations.TestOnly
 import kotlin.coroutines.cancellation.CancellationException
 
