@@ -146,13 +146,14 @@ class MediaSourceMediaFetcher(
     private val flowContext: CoroutineContext = Dispatchers.Default,
 ) : MediaFetcher {
     private inner class MediaSourceResultImpl(
+        override val instanceId: String,
         override val mediaSourceId: String,
         override val sourceInfo: MediaSourceInfo,
         override val kind: MediaSourceKind,
         private val config: MediaFetcherConfig,
         val disabled: Boolean,
         pagedSources: Flow<SizedSource<MediaMatch>>,
-        flowContext: CoroutineContext,
+        flowContext: CoroutineContext, 
     ) : MediaSourceFetchResult, SynchronizedObject() {
         /**
          * 为了确保线程安全, 对 [state] 的写入必须谨慎.
@@ -329,6 +330,7 @@ class MediaSourceMediaFetcher(
 
         override val mediaSourceResults: List<MediaSourceFetchResult> = mediaSources.map { instance ->
             MediaSourceResultImpl(
+                instanceId = instance.instanceId,
                 mediaSourceId = instance.source.mediaSourceId,
                 sourceInfo = instance.source.info,
                 kind = instance.source.kind,

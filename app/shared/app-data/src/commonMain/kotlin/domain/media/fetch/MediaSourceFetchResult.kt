@@ -25,6 +25,7 @@ import me.him188.ani.utils.coroutines.cancellableCoroutineScope
  * 表示一个数据源 [MediaSource] 的线程安全的查询结果.
  */
 interface MediaSourceFetchResult {
+    val instanceId: String
     val mediaSourceId: String
     val sourceInfo: MediaSourceInfo
     val kind: MediaSourceKind

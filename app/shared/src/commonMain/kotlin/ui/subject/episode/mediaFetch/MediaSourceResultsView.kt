@@ -235,7 +235,7 @@ private fun MediaSourceResultsRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = modifier,
             ) {
-                items(list, key = { it.mediaSourceId }) { item ->
+                items(list, key = { it.instanceId }) { item ->
                     MediaSourceResultCard(
                         sourceSelected(item.mediaSourceId),
                         expanded = false,

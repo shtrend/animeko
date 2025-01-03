@@ -59,6 +59,7 @@ class MediaSourceResultPresentation(
     private val delegate: MediaSourceFetchResult,
     parentCoroutineContext: CoroutineContext,
 ) : AutoCloseable, HasBackgroundScope by BackgroundScope(parentCoroutineContext) {
+    val instanceId get() = delegate.instanceId
     val mediaSourceId get() = delegate.mediaSourceId
     val state: MediaSourceFetchState by delegate.state.produceState()
     val isWorking by derivedStateOf { state.isWorking }
@@ -212,6 +213,7 @@ private class TestMediaSourceResult(
     override val kind: MediaSourceKind,
     initialState: MediaSourceFetchState,
     results: List<Media>,
+    override val instanceId: String = mediaSourceId,
 ) : MediaSourceFetchResult {
     override val state: MutableStateFlow<MediaSourceFetchState> = MutableStateFlow(initialState)
     override val results: SharedFlow<List<Media>> = MutableStateFlow(results)
