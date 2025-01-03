@@ -134,7 +134,7 @@ class EpisodeVideoControllerTest {
     private val progressSliderState: PlayerProgressSliderState = PlayerProgressSliderState(
         { currentPositionMillis },
         { 100_000 },
-        stateOf(persistentListOf()),
+        { persistentListOf() },
         onPreview = {},
         onPreviewFinished = { currentPositionMillis = it },
     )

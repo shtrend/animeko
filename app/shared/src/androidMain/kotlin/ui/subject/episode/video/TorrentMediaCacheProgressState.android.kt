@@ -73,7 +73,7 @@ fun PreviewMediaProgressSliderInteractive() = ProvideCompositionLocalsForPreview
                     PlayerProgressSliderState(
                         currentPositionMillis = { currentPositionMillis },
                         totalDurationMillis = { totalDurationMillis },
-                        chapters = stateOf(persistentListOf()),
+                        chapters = { persistentListOf() },
                         onPreview = {},
                         onPreviewFinished = { currentPositionMillis = it },
                     )
@@ -112,7 +112,7 @@ fun PreviewMediaProgressSliderNonConsecutiveCacheImpl(
                     PlayerProgressSliderState(
                         currentPositionMillis = { 2000 },
                         totalDurationMillis = { 30_000 },
-                        chapters = stateOf(persistentListOf()),
+                        chapters = {persistentListOf()},
                         onPreview = {},
                         onPreviewFinished = { },
                     )

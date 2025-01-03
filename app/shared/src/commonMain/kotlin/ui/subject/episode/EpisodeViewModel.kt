@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.subject.episode
 
+import androidx.annotation.MainThread
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -135,6 +136,7 @@ import org.koin.core.component.inject
 import org.openani.mediamp.MediampPlayer
 import org.openani.mediamp.MediampPlayerFactory
 import org.openani.mediamp.PlaybackState
+import org.openani.mediamp.features.chapters
 import org.openani.mediamp.source.SeekableInputMediaData
 import kotlin.math.max
 import kotlin.time.Duration
@@ -355,11 +357,12 @@ class EpisodeViewModel(
      * 因为 切换数据源 是依赖 PlayerLauncher collect mediaSelector.selected 实现的，
      * 它会在 mediaSelector.unselect() 任意时间后发现 selected 已经改变，导致 episodeId 可能已经改变，从而将当前集的播放进度保存到新的剧集中
      */
+    @MainThread
     private fun savePlayProgress() {
-        if (playerState.playbackState.value == PlaybackState.FINISHED) return
-        val positionMillis = playerState.currentPositionMillis.value
+        if (playerState.getCurrentPlaybackState() == PlaybackState.FINISHED) return
+        val positionMillis = playerState.getCurrentPositionMillis()
         val epId = episodeId.value
-        val durationMillis = playerState.videoProperties.value?.durationMillis.let {
+        val durationMillis = playerState.getCurrentMediaProperties()?.durationMillis.let {
             if (it == null) return@let 0L
             return@let max(0, it - 1000) // 最后一秒不会保存进度
         }
@@ -569,6 +572,7 @@ class EpisodeViewModel(
     var sidebarVisible: Boolean by mutableStateOf(true)
     val commentLazyStaggeredGirdState: LazyStaggeredGridState = LazyStaggeredGridState()
 
+    @MainThread
     fun switchEpisode(episodeId: Int) {
         savePlayProgress()
         episodeDetailsState.showEpisodes = false // 选择后关闭弹窗
@@ -710,11 +714,11 @@ class EpisodeViewModel(
     )
 
     val playerSkipOpEdState: PlayerSkipOpEdState = PlayerSkipOpEdState(
-        chapters = playerState.chapters.produceState(),
+        chapters = (playerState.chapters ?: flowOf(emptyList())).produceState(emptyList()),
         onSkip = {
             playerState.seekTo(it)
         },
-        videoLength = playerState.videoProperties.mapNotNull { it?.durationMillis?.milliseconds }
+        videoLength = playerState.mediaProperties.mapNotNull { it?.durationMillis?.milliseconds }
             .produceState(0.milliseconds),
     )
 
@@ -722,6 +726,7 @@ class EpisodeViewModel(
         mediaFetchSession.replayCache.firstOrNull()?.restartAll()
     }
 
+    @MainThread
     fun stopPlaying() {
         // 退出播放页前保存播放进度
         savePlayProgress()
@@ -780,7 +785,7 @@ class EpisodeViewModel(
                         cancellableCoroutineScope {
                             combine(
                                 playerState.currentPositionMillis.sampleWithInitial(5000),
-                                playerState.videoProperties.map { it?.durationMillis }.debounce(5000),
+                                playerState.mediaProperties.map { it?.durationMillis }.debounce(5000),
                                 playerState.playbackState,
                             ) { pos, max, playback ->
                                 if (max == null || !playback.isPlaying) return@combine
@@ -813,7 +818,7 @@ class EpisodeViewModel(
 
                     playerState.playbackState.collect { playback ->
                         if (playback == PlaybackState.FINISHED
-                            && playerState.videoProperties.value.let { prop ->
+                            && playerState.mediaProperties.value.let { prop ->
                                 prop != null && prop.durationMillis > 0L && prop.durationMillis - playerState.currentPositionMillis.value < 5000
                             }
                         ) {
@@ -851,7 +856,9 @@ class EpisodeViewModel(
         launchInBackground {
             mediaSelector.events.onBeforeSelect.collect {
                 // 切换 数据源 前保存播放进度
-                savePlayProgress()
+                withContext(Dispatchers.Main) {
+                    savePlayProgress()
+                }
             }
         }
         launchInBackground {
@@ -865,7 +872,7 @@ class EpisodeViewModel(
                             logger.info { "Did not find saved position" }
                         } else {
                             logger.info { "Loaded saved position: $positionMillis, waiting for video properties" }
-                            playerState.videoProperties.filter { it != null && it.durationMillis > 0L }.firstOrNull()
+                            playerState.mediaProperties.filter { it != null && it.durationMillis > 0L }.firstOrNull()
                             logger.info { "Loaded saved position: $positionMillis, video properties ready, seeking" }
                             withContext(Dispatchers.Main) { // android must call in main thread
                                 playerState.seekTo(positionMillis)
@@ -876,7 +883,7 @@ class EpisodeViewModel(
                     PlaybackState.PAUSED -> savePlayProgress()
 
                     PlaybackState.FINISHED -> {
-                        if (playerState.videoProperties.value.let { it != null && it.durationMillis > 0L }) {
+                        if (playerState.mediaProperties.value.let { it != null && it.durationMillis > 0L }) {
                             // 视频长度有效, 说明正常播放中
                             episodePlayHistoryRepository.remove(episodeId.value)
                         } else {

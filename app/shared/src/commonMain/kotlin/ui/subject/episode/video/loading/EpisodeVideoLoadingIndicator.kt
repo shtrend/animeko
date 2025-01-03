@@ -31,11 +31,13 @@ import me.him188.ani.app.ui.subject.episode.statistics.VideoLoadingState
 import me.him188.ani.app.videoplayer.ui.VideoLoadingIndicator
 import me.him188.ani.datasources.api.topic.FileSize
 import me.him188.ani.datasources.api.topic.FileSize.Companion.bytes
+import org.openani.mediamp.ExperimentalMediampApi
 import org.openani.mediamp.MediampPlayer
 import org.openani.mediamp.PlaybackState
 import org.openani.mediamp.features.Buffering
 import kotlin.time.Duration.Companion.seconds
 
+@OptIn(ExperimentalMediampApi::class)
 @Composable // see preview
 fun EpisodeVideoLoadingIndicator(
     playerState: MediampPlayer,

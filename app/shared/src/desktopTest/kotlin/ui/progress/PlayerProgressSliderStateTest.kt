@@ -31,7 +31,7 @@ class PlayerProgressSliderStateTest {
         val state = PlayerProgressSliderState(
             currentPositionMillis = { positionState },
             totalDurationMillis = { 100_000L },
-            chapters = mutableStateOf(chapters),
+            chapters = { chapters },
             onPreview = {},
             onPreviewFinished = {
                 positionState = it
@@ -55,7 +55,7 @@ class PlayerProgressSliderStateTest {
         val state = PlayerProgressSliderState(
             currentPositionMillis = { positionState },
             totalDurationMillis = { 100_000L },
-            chapters = mutableStateOf(chapters),
+            chapters = { chapters },
             onPreview = {},
             onPreviewFinished = {
                 positionState = it

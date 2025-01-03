@@ -56,7 +56,7 @@ fun PlayerControllerDefaults.AudioSwitcher(
     onSelect: (AudioTrack?) -> Unit = { playerState.select(it) },
 ) {
     val state = remember(playerState) {
-        AudioTrackState(playerState.current, playerState.candidates)
+        AudioTrackState(playerState.selected, playerState.candidates)
     }
     AudioSwitcher(state, onSelect, modifier)
 }

@@ -82,11 +82,14 @@ import me.him188.ani.app.videoplayer.ui.rememberVideoSideSheetsController
 import me.him188.ani.app.videoplayer.ui.top.PlayerTopBar
 import me.him188.ani.danmaku.ui.DanmakuHost
 import me.him188.ani.danmaku.ui.DanmakuHostState
+import me.him188.ani.datasources.api.MediaProperties
 import me.him188.ani.utils.platform.annotations.TestOnly
 import me.him188.ani.utils.platform.isDesktop
 import org.openani.mediamp.MediampPlayer
 import org.openani.mediamp.features.AudioLevelController
 import org.openani.mediamp.features.PlaybackSpeed
+import org.openani.mediamp.features.audioTracks
+import org.openani.mediamp.features.subtitleTracks
 import org.openani.mediamp.features.toggleMute
 import org.openani.mediamp.togglePause
 
@@ -230,10 +233,10 @@ internal fun EpisodeVideoImpl(
             val swipeSeekerState = rememberSwipeSeekerState(constraints.maxWidth) {
                 playerState.skip(it * 1000L)
             }
-            val videoPropertiesState by playerState.videoProperties.collectAsState()
+            val videoPropertiesState by playerState.mediaProperties.collectAsState(null)
             val enableSwipeToSeek by remember {
                 derivedStateOf {
-                    videoPropertiesState?.let { it.durationMillis != 0L } ?: false
+                    videoPropertiesState?.let { it.durationMillis != 0L } == true
                 }
             }
 
@@ -365,10 +368,14 @@ internal fun EpisodeVideoImpl(
                         )
 
                         if (LocalPlatform.current.isDesktop()) {
-                            PlayerControllerDefaults.AudioSwitcher(playerState.audioTracks)
+                            playerState.audioTracks?.let {
+                                PlayerControllerDefaults.AudioSwitcher(it)
+                            }
                         }
 
-                        PlayerControllerDefaults.SubtitleSwitcher(playerState.subtitleTracks)
+                        playerState.subtitleTracks?.let {
+                            PlayerControllerDefaults.SubtitleSwitcher(it)
+                        }
 
                         val playbackSpeed = playerState.features.getOrFail(PlaybackSpeed)
                         val speed by playbackSpeed.valueFlow.collectAsStateWithLifecycle(1f)

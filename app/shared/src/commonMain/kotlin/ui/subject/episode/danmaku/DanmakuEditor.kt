@@ -80,7 +80,7 @@ fun EpisodeVideoDefaults.DanmakuEditor(
                 scope.launch {
                     playerDanmakuState.send(
                         DanmakuInfo(
-                            playerState.getExactCurrentPositionMillis(),
+                            playerState.getCurrentPositionMillis(),
                             text = text,
                             color = Color.White.toArgb(),
                             location = DanmakuLocation.NORMAL,

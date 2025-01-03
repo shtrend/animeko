@@ -519,7 +519,7 @@ private fun EpisodeSceneContentPhone(
                     scope.launch {
                         vm.danmaku.send(
                             DanmakuInfo(
-                                vm.playerState.getExactCurrentPositionMillis(),
+                                vm.playerState.getCurrentPositionMillis(),
                                 text = text,
                                 color = Color.White.toArgb(),
                                 location = DanmakuLocation.NORMAL,
@@ -704,7 +704,7 @@ private fun EpisodeVideo(
             )
         },
         onClickScreenshot = {
-            val currentPositionMillis = vm.playerState.currentPositionMillis.value
+            val currentPositionMillis = vm.playerState.getCurrentPositionMillis()
             val min = currentPositionMillis / 60000
             val sec = (currentPositionMillis - (min * 60000)) / 1000
             val ms = currentPositionMillis - (min * 60000) - (sec * 1000)
