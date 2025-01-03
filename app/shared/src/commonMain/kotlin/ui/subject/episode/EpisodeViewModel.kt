@@ -51,12 +51,9 @@ import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
-import me.him188.ani.app.data.network.BangumiCommentService
-import me.him188.ani.app.data.repository.episode.AnimeScheduleRepository
 import me.him188.ani.app.data.repository.episode.BangumiCommentRepository
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.media.EpisodePreferencesRepository
-import me.him188.ani.app.data.repository.media.SelectorMediaSourceEpisodeCacheRepository
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepository
 import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepository
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
@@ -157,7 +154,6 @@ class EpisodeViewModel(
     private val playerStateFactory: MediampPlayerFactory<*> by inject()
     private val subjectCollectionRepository: SubjectCollectionRepository by inject()
     private val episodeCollectionRepository: EpisodeCollectionRepository by inject()
-    private val animeScheduleRepository: AnimeScheduleRepository by inject()
     private val mediaCacheManager: MediaCacheManager by inject()
     private val danmakuManager: DanmakuManager by inject()
     val mediaResolver: MediaResolver by inject()
@@ -165,10 +161,8 @@ class EpisodeViewModel(
     private val danmakuRegexFilterRepository: DanmakuRegexFilterRepository by inject()
     private val mediaSourceManager: MediaSourceManager by inject()
     private val episodePreferencesRepository: EpisodePreferencesRepository by inject()
-    private val bangumiCommentService: BangumiCommentService by inject()
     private val bangumiCommentRepository: BangumiCommentRepository by inject()
     private val episodePlayHistoryRepository: EpisodePlayHistoryRepository by inject()
-    private val selectorMediaSourceEpisodeCacheRepository: SelectorMediaSourceEpisodeCacheRepository by inject()
 
     private val subjectCollection = subjectCollectionRepository.subjectCollectionFlow(subjectId)
     private val subjectInfo = subjectCollection.map { it.subjectInfo }
