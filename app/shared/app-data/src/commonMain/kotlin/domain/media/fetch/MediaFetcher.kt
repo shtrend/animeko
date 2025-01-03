@@ -325,6 +325,9 @@ class MediaSourceMediaFetcher(
     ) : MediaFetchSession {
         override val request: Flow<MediaFetchRequest> =
             request.take(1) // 只采用第一个, as per described in [fetch]
+                .onEach {
+                    logger.info { "MediaFetchSessionImpl pagedSources creating, request: \n${it.toStringMultiline()}" }
+                }
                 .shareIn(CoroutineScope(flowContext), started = SharingStarted.Lazily, replay = 1) // only 
                 .take(1) // 只采用 replayCache, 让后面 flow 能完结
 
@@ -337,9 +340,6 @@ class MediaSourceMediaFetcher(
                 config = config,
                 disabled = !instance.isEnabled,
                 pagedSources = this.request
-                    .onEach {
-                        logger.info { "MediaFetchSessionImpl pagedSources creating, request: \n${it.toStringMultiline()}" }
-                    }
                     .map {
                         instance.source.fetch(it)
                     },
