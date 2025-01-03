@@ -388,7 +388,7 @@ val buildMatrixInstances = listOf(
     ),
     MatrixInstance(
         runner = Runner.SelfHostedMacOS15,
-        uploadApk = true, // upload arm64-v8a once finished
+        uploadApk = false, // upload arm64-v8a once finished
         composeResourceTriple = "macos-arm64",
         uploadDesktopInstallers = true,
         extraGradleArgs = listOf(
