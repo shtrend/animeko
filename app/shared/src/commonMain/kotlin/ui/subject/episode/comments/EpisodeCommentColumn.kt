@@ -31,9 +31,10 @@ import me.him188.ani.app.ui.comment.EditCommentBottomStubPanel
 import me.him188.ani.app.ui.comment.UIComment
 import me.him188.ani.app.ui.foundation.LocalImageViewerHandler
 import me.him188.ani.app.ui.foundation.LocalIsPreviewing
-import me.him188.ani.app.ui.foundation.isInDebugMode
+import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.layout.ConnectedScrollState
 import me.him188.ani.app.ui.richtext.RichText
+import me.him188.ani.utils.platform.isAndroid
 
 @Composable
 fun EpisodeCommentColumn(
@@ -68,7 +69,7 @@ fun EpisodeCommentColumn(
                 onClickUrl = onClickUrl,
             )
         }
-        if (isInDebugMode() || LocalIsPreviewing.current) {
+        if (LocalPlatform.current.isAndroid() || LocalIsPreviewing.current) {
             HorizontalDivider()
             EditCommentBottomStubPanel(
                 text = editCommentStubText,
