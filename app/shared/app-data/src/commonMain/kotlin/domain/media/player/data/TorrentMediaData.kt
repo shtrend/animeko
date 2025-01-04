@@ -24,7 +24,7 @@ class TorrentMediaData(
     private val handle: TorrentFileHandle,
     private val onClose: () -> Unit,
     override val extraFiles: MediaExtraFiles = MediaExtraFiles.EMPTY,
-) : SeekableInputMediaData, DownloadingMediaData {
+) : SeekableInputMediaData, DownloadingMediaData, FileMediaData {
     private inline val entry get() = handle.entry
     override val filename: String get() = entry.pathInTorrent
     override val uri: String get() = "torrent://dummy/${entry.pathInTorrent}"

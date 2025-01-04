@@ -17,8 +17,6 @@ import org.openani.mediamp.source.MediaData
  * A media data that is currently being downloaded. So there is [networkStats] to be displayed.
  */
 sealed interface DownloadingMediaData {
-    val filename: String? get() = null
-
     /**
      * Subscribe to network stats updates of this video data, if known.
      */
@@ -27,7 +25,11 @@ sealed interface DownloadingMediaData {
     val isCacheFinished: Flow<Boolean> get() = flowOf(false)
 }
 
-val MediaData.filenameOrNull: String? get() = (this as? DownloadingMediaData)?.filename
+sealed interface FileMediaData {
+    val filename: String?
+}
+
+val MediaData.filenameOrNull: String? get() = (this as? FileMediaData)?.filename
 
 class NetStats(
     /**

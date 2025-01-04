@@ -11,15 +11,24 @@ package me.him188.ani.app.domain.media.player.data
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.io.files.Path
+import org.openani.mediamp.ExperimentalMediampApi
 import org.openani.mediamp.source.MediaExtraFiles
+import org.openani.mediamp.source.SeekableInputMediaData
 import org.openani.mediamp.source.SystemFileMediaData
 
 class SystemFileMediaDataProvider internal constructor(
     val path: Path,
     override val extraFiles: MediaExtraFiles,
-) : MediaDataProvider<SystemFileMediaData> {
-    override suspend fun open(scopeForCleanup: CoroutineScope): SystemFileMediaData =
-        SystemFileMediaData(path, extraFiles)
+) : MediaDataProvider<AniSystemFileMediaData> {
+    override suspend fun open(scopeForCleanup: CoroutineScope): AniSystemFileMediaData =
+        AniSystemFileMediaData(SystemFileMediaData(path, extraFiles))
 
     override fun toString(): String = "SystemFileMediaDataProvider(path=$path)"
+}
+
+@OptIn(ExperimentalMediampApi::class)
+class AniSystemFileMediaData(
+    val delegate: SystemFileMediaData,
+) : SeekableInputMediaData by delegate, FileMediaData {
+    override val filename: String get() = delegate.file.name
 }
