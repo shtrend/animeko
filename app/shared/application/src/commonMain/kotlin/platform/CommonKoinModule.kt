@@ -58,8 +58,10 @@ import me.him188.ani.app.data.repository.media.SelectorMediaSourceEpisodeCacheRe
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepository
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepositoryImpl
 import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepository
+import me.him188.ani.app.data.repository.player.EpisodePlayHistoryRepositoryImpl
 import me.him188.ani.app.data.repository.player.EpisodeScreenshotRepository
 import me.him188.ani.app.data.repository.player.WhatslinkEpisodeScreenshotRepository
+import me.him188.ani.app.data.repository.repositoryModules
 import me.him188.ani.app.data.repository.subject.BangumiSubjectSearchCompletionRepository
 import me.him188.ani.app.data.repository.subject.DefaultSubjectRelationsRepository
 import me.him188.ani.app.data.repository.subject.FollowedSubjectsRepository
@@ -98,6 +100,7 @@ import me.him188.ani.app.domain.session.finalState
 import me.him188.ani.app.domain.session.unverifiedAccessToken
 import me.him188.ani.app.domain.torrent.TorrentManager
 import me.him188.ani.app.domain.update.UpdateManager
+import me.him188.ani.app.domain.usecase.useCaseModules
 import me.him188.ani.app.ui.subject.details.state.DefaultSubjectDetailsStateFactory
 import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateFactory
 import me.him188.ani.datasources.bangumi.BangumiClient
@@ -123,7 +126,11 @@ private val Scope.client get() = get<BangumiClient>()
 private val Scope.database get() = get<AniDatabase>()
 private val Scope.settingsRepository get() = get<SettingsRepository>()
 
-fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScope: CoroutineScope) = module {
+
+fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScope: CoroutineScope) =
+    listOf(useCaseModules(), repositoryModules(), otherModules(getContext, coroutineScope))
+
+private fun KoinApplication.otherModules(getContext: () -> Context, coroutineScope: CoroutineScope) = module {
     // Repositories
     single<AniAuthClient> {
         val settings = get<SettingsRepository>()
@@ -272,7 +279,7 @@ fun KoinApplication.getCommonKoinModule(getContext: () -> Context, coroutineScop
         MediaSourceSubscriptionRepository(getContext().dataStores.mediaSourceSubscriptionStore)
     }
     single<EpisodePlayHistoryRepository> {
-        EpisodePlayHistoryRepository(getContext().dataStores.episodeHistoryStore)
+        EpisodePlayHistoryRepositoryImpl(getContext().dataStores.episodeHistoryStore)
     }
     single<AniSubjectRelationIndexService> {
         AniSubjectRelationIndexService(lazy { get<AniAuthClient>().subjectRelationsApi })

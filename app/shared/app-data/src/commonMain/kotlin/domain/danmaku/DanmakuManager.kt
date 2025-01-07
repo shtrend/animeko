@@ -21,8 +21,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withTimeout
+import me.him188.ani.app.data.network.AniDanmakuProvider
+import me.him188.ani.app.data.network.AniDanmakuSender
+import me.him188.ani.app.data.network.AniDanmakuSenderImpl
+import me.him188.ani.app.data.network.SendDanmakuException
+import me.him188.ani.app.data.network.protocol.DanmakuInfo
+import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.user.SettingsRepository
-import me.him188.ani.app.domain.danmaku.protocol.DanmakuInfo
 import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
 import me.him188.ani.app.domain.session.verifiedAccessToken
@@ -166,6 +171,10 @@ class DanmakuManagerImpl(
     }
 
     override suspend fun post(episodeId: Int, danmaku: DanmakuInfo): Danmaku {
-        return sender.first().send(episodeId, danmaku)
+        return try {
+            sender.first().send(episodeId, danmaku)
+        } catch (e: Throwable) {
+            throw RepositoryException.wrapOrThrowCancellation(e)
+        }
     }
 }

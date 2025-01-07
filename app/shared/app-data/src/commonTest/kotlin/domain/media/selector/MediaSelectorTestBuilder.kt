@@ -12,6 +12,7 @@ package me.him188.ani.app.domain.media.selector
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.test.TestScope
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.data.models.subject.SubjectSeriesInfo
@@ -39,9 +40,11 @@ import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.datasources.api.topic.Resolution
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.datasources.api.topic.SubtitleLanguage
-import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.ContinuationInterceptor
 
-class MediaSelectorTestBuilder() {
+class MediaSelectorTestBuilder(
+    private val testScope: TestScope,
+) {
     val savedUserPreference = MutableStateFlow(DEFAULT_PREFERENCE)
     val savedDefaultPreference = MutableStateFlow(DEFAULT_PREFERENCE)
     val mediaSelectorSettings = MutableStateFlow(MediaSelectorSettings.Companion.Default)
@@ -88,7 +91,8 @@ class MediaSelectorTestBuilder() {
 
     fun createMedia(
         mediaSourceId: String,
-        kind: MediaSourceKind = MediaSourceKind.WEB
+        kind: MediaSourceKind = MediaSourceKind.WEB,
+        alliance: String = "XX字幕组",
     ): DefaultMedia = createTestDefaultMedia(
         mediaId = "$mediaSourceId.1",
         mediaSourceId = mediaSourceId,
@@ -103,7 +107,7 @@ class MediaSelectorTestBuilder() {
                 SubtitleLanguage.ChineseTraditional,
             ).map { it.id },
             resolution = "1080P",
-            alliance = "XX字幕组",
+            alliance = alliance,
             size = 122.megaBytes,
             subtitleKind = SubtitleKind.CLOSED,
         ),
@@ -114,7 +118,7 @@ class MediaSelectorTestBuilder() {
     fun createMediaFetcher() = MediaSourceMediaFetcher(
         configProvider = { MediaFetcherConfig.Companion.Default },
         mediaSources = mediaSources,
-        flowContext = EmptyCoroutineContext,
+        flowContext = testScope.coroutineContext[ContinuationInterceptor]!!,
     )
 
     fun createMediaFetchSession(fetcher: MediaFetcher) = fetcher.newSession(
@@ -134,6 +138,7 @@ class MediaSelectorTestBuilder() {
         savedDefaultPreference = savedDefaultPreference,
         enableCaching = false,
         mediaSelectorSettings = mediaSelectorSettings,
+        flowCoroutineContext = testScope.coroutineContext[ContinuationInterceptor]!!,
     )
 
     fun create(): Triple<MediaSourceMediaFetcher, MediaFetchSession, DefaultMediaSelector> {

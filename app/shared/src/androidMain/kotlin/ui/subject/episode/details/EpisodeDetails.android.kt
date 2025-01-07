@@ -27,8 +27,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.MutableStateFlow
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.domain.danmaku.DanmakuLoadingState
 import me.him188.ani.app.domain.media.TestMediaList
 import me.him188.ani.app.domain.media.cache.EpisodeCacheStatus
+import me.him188.ani.app.domain.player.VideoLoadingState
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.domain.session.SessionStatus
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
@@ -37,14 +39,11 @@ import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollect
 import me.him188.ani.app.ui.subject.collection.components.rememberTestEditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.createTestAiringLabelState
 import me.him188.ani.app.ui.subject.details.state.createTestSubjectDetailsLoader
-import me.him188.ani.app.ui.subject.episode.EpisodePresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberTestMediaSelectorPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberTestMediaSourceResults
-import me.him188.ani.app.ui.subject.episode.statistics.DanmakuLoadingState
-import me.him188.ani.app.ui.subject.episode.statistics.VideoLoadingState
 import me.him188.ani.app.ui.subject.episode.statistics.testPlayerStatisticsState
-import me.him188.ani.app.ui.subject.episode.video.MutableDanmakuStatistics
+import me.him188.ani.app.ui.subject.episode.video.DanmakuStatistics
 import me.him188.ani.danmaku.api.DanmakuMatchInfo
 import me.him188.ani.danmaku.api.DanmakuMatchMethod
 import me.him188.ani.datasources.api.Media
@@ -116,9 +115,7 @@ fun PreviewEpisodeDetailsDanmakuFailed() = ProvideFoundationCompositionLocalsFor
     PreviewEpisodeDetailsImpl(
         state,
         remember {
-            MutableDanmakuStatistics().apply {
-                danmakuLoadingState = DanmakuLoadingState.Failed(IllegalStateException())
-            }
+            DanmakuStatistics(DanmakuLoadingState.Failed(IllegalStateException()))
         },
     )
 }
@@ -140,9 +137,7 @@ fun PreviewEpisodeDetailsDanmakuLoading() = ProvideFoundationCompositionLocalsFo
     PreviewEpisodeDetailsImpl(
         state,
         remember {
-            MutableDanmakuStatistics().apply {
-                danmakuLoadingState = DanmakuLoadingState.Loading
-            }
+            DanmakuStatistics(DanmakuLoadingState.Loading)
         },
     )
 }
@@ -167,13 +162,6 @@ private fun rememberTestEpisodeDetailsState(
     val scope = rememberCoroutineScope()
     return remember {
         EpisodeDetailsState(
-            episodePresentation = mutableStateOf(
-                EpisodePresentation.Placeholder.copy(
-                    title = "一个剧集",
-                    sort = "01",
-                    isPlaceholder = false,
-                ),
-            ),
             subjectInfo = mutableStateOf(subjectInfo),
             airingLabelState = createTestAiringLabelState(),
             subjectDetailsStateLoader = createTestSubjectDetailsLoader(scope),
@@ -185,9 +173,9 @@ private fun rememberTestEpisodeDetailsState(
 @Composable
 private fun PreviewEpisodeDetailsImpl(
     state: EpisodeDetailsState,
-    danmakuStatistics: MutableDanmakuStatistics = remember {
-        MutableDanmakuStatistics().apply {
-            danmakuLoadingState = DanmakuLoadingState.Success(
+    danmakuStatistics: DanmakuStatistics = remember {
+        DanmakuStatistics(
+            DanmakuLoadingState.Success(
                 listOf(
                     DanmakuMatchInfo(
                         "弹幕源弹幕源弹幕源 A", 100,
@@ -198,8 +186,8 @@ private fun PreviewEpisodeDetailsImpl(
                         DanmakuMatchMethod.ExactId(123456, 222222),
                     ),
                 ),
-            )
-        }
+            ),
+        )
     },
     editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState = rememberTestEditableSubjectCollectionTypeState(),
     mediaSelectorState: MediaSelectorState = rememberTestMediaSelectorPresentation(),
