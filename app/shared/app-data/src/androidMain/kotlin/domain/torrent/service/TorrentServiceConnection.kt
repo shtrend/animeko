@@ -127,8 +127,13 @@ class TorrentServiceConnection(
 
             Lifecycle.Event.ON_STOP -> {
                 shouldRestartServiceImmediately = false
-                // 请求 wake lock, 如果在 app 中息屏可以保证 service 正常跑 10 分钟.
-                context.startService(acquireWakeLockIntent)
+                try {
+                    // 请求 wake lock, 如果在 app 中息屏可以保证 service 正常跑 10 分钟.
+                    context.startService(acquireWakeLockIntent)
+                } catch (ex: IllegalStateException) {
+                    // 大概率是 ServiceStartForegroundException, 服务已经终止了, 不需要再请求 wakelock.
+                    logger.warn(ex) { "Failed to acquire wake lock. Service has already died." }
+                }
             }
 
             Lifecycle.Event.ON_DESTROY -> {
