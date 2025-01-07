@@ -25,12 +25,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.AssistChip
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -65,13 +67,11 @@ import me.him188.ani.app.data.models.subject.nameCn
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.navigation.SubjectDetailPlaceholder
 import me.him188.ani.app.ui.foundation.OutlinedTag
-import me.him188.ani.app.ui.foundation.Tag
 import me.him188.ani.app.ui.foundation.avatar.AvatarImage
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
-import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
 import me.him188.ani.app.ui.subject.AiringLabel
 import me.him188.ani.app.ui.subject.AiringLabelState
 import me.him188.ani.app.ui.subject.renderSubjectSeason
@@ -79,6 +79,9 @@ import me.him188.ani.datasources.api.PackedDate
 
 
 object SubjectDetailsDefaults {
+    val TabWidth = 80.dp
+    val TabRowWidth = 80.dp * 3  // 240.dp, 三个Tab的宽度
+
     @Composable
     fun Title(text: String) {
         Text(
@@ -269,28 +272,31 @@ private fun TagsList(
                 }
             }
             presentTags.forEach { tag ->
-                Tag(
-                    Modifier
-                        .clickable {}
-                        .height(40.dp)
-                        .padding(vertical = 4.dp),
+                Box(
+                    modifier = Modifier.height(40.dp), // 32 (Chip) + 8 (vertical spacing, equal to horizontalArrangement)
+                    // 直接放 AssistChip 会导致垂直间距过大，不得不套一个 Box。可能是 workaround
                 ) {
-                    ProvideTextStyleContentColor(
-                        MaterialTheme.typography.labelMedium,
-                    ) {
-                        Text(
-                            tag.name,
-                            Modifier.align(Alignment.CenterVertically),
-                            maxLines = 1,
-                        )
-
-                        Text(
-                            tag.count.toString(),
-                            Modifier.padding(start = 6.dp).align(Alignment.CenterVertically),
-                            maxLines = 1,
-                            color = MaterialTheme.colorScheme.secondary,
-                        )
-                    }
+                    AssistChip(
+                        onClick = { /* TODO */ },
+                        label = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            ) {
+                                Text(
+                                    text = tag.name,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    modifier = Modifier.wrapContentSize(align = Alignment.Center),
+                                )
+                                Text(
+                                    text = tag.count.toString(),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.wrapContentSize(align = Alignment.Center),
+                                )
+                            }
+                        },
+                    )
                 }
             }
             if (hasMoreTags) {
@@ -313,9 +319,6 @@ private fun TagsList(
                 }
             }
         }
-//        if (hasMoreTags) {
-//            
-//        }
     }
 }
 

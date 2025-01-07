@@ -15,6 +15,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -45,8 +46,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -517,7 +518,6 @@ private fun SubjectDetailsContentPager(
         pageCount = { 3 },
     )
 
-    // Pager with TabRow
     Column(
         Modifier
             .fillMaxHeight()
@@ -528,28 +528,37 @@ private fun SubjectDetailsContentPager(
             if (connectedScrollState.isScrolledTop) stickyTopBarColor else backgroundColor,
             tween(),
         )
-        ScrollableTabRow(
-            selectedTabIndex = pagerState.currentPage,
-            indicator = @Composable { tabPositions ->
-                TabRowDefaults.PrimaryIndicator(
-                    Modifier.pagerTabIndicatorOffset(pagerState, tabPositions),
-                )
-            },
-            containerColor = tabContainerColor,
-            contentColor = TabRowDefaults.secondaryContentColor,
-            divider = {},
-            modifier = Modifier,
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(tabContainerColor),
+            contentAlignment = Alignment.Center,
         ) {
-            SubjectDetailsTab.entries.forEachIndexed { index, tabId ->
-                Tab(
-                    selected = pagerState.currentPage == index,
-                    onClick = {
-                        scope.launch { pagerState.animateScrollToPage(index) }
-                    },
-                    text = {
-                        Text(text = renderSubjectDetailsTab(tabId))
-                    },
-                )
+            TabRow(
+                selectedTabIndex = pagerState.currentPage,
+                modifier = Modifier.widthIn(max = SubjectDetailsDefaults.TabRowWidth),
+                indicator = @Composable { tabPositions ->
+                    TabRowDefaults.PrimaryIndicator(
+                        Modifier.pagerTabIndicatorOffset(pagerState, tabPositions),
+                    )
+                },
+                containerColor = tabContainerColor,
+                contentColor = TabRowDefaults.secondaryContentColor,
+                divider = {},
+            ) {
+                SubjectDetailsTab.entries.forEachIndexed { index, tabId ->
+                    Tab(
+                        selected = pagerState.currentPage == index,
+                        modifier = Modifier.widthIn(max = SubjectDetailsDefaults.TabWidth),
+                        onClick = {
+                            scope.launch { pagerState.animateScrollToPage(index) }
+                        },
+                        text = {
+                            Text(text = renderSubjectDetailsTab(tabId))
+                        },
+                    )
+                }
             }
         }
 
@@ -574,7 +583,7 @@ private fun SubjectDetailsContentPager(
 }
 
 /**
- * 加载展位页
+ * 加载占位页
  */
 @Composable
 private fun PlaceholderSubjectDetailsContentPager(paddingValues: PaddingValues) {
