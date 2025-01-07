@@ -21,7 +21,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,11 +38,8 @@ import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onPlaced
-import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.toSize
 import me.him188.ani.app.ui.foundation.text.ProvideContentColor
-import kotlin.math.pow
 
 /**
  * Provide buttons to navigate horizontally. Effectively works on desktop.
@@ -63,6 +59,7 @@ fun HorizontalScrollControlScaffold(
 ) {
     Box(
         modifier = modifier
+            .onPlaced { state.updateLayoutSize(it) }
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
@@ -83,8 +80,7 @@ fun HorizontalScrollControlScaffold(
         Box(
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(start = HorizontalScrollControlDefaults.ButtonMargin)
-                .onPlaced { state.updateLeftButtonCoordinate(layoutCoordinates = it) },
+                .padding(start = HorizontalScrollControlDefaults.ButtonMargin),
         ) {
             Crossfade(targetState = state.showLeftButton) { show ->
                 if (show) {
@@ -100,8 +96,7 @@ fun HorizontalScrollControlScaffold(
         Box(
             modifier = Modifier
                 .align(Alignment.CenterEnd)
-                .padding(end = HorizontalScrollControlDefaults.ButtonMargin)
-                .onPlaced { state.updateRightButtonCoordinate(layoutCoordinates = it) },
+                .padding(end = HorizontalScrollControlDefaults.ButtonMargin),
         ) {
             Crossfade(targetState = state.showRightButton) { show ->
                 if (show) {
@@ -143,39 +138,25 @@ class HorizontalScrollControlState(
     private val scrollableState: ScrollableState,
     private val onClickScroll: (direction: Direction) -> Unit
 ) {
-    private var isPointerNearLeftButton by mutableStateOf(false)
-    private var isPointerNearRightButton by mutableStateOf(false)
-    private var leftButtonPosition: Offset by mutableStateOf(Offset.Unspecified)
-    private var rightButtonPosition: Offset by mutableStateOf(Offset.Unspecified)
+    private var layoutWidth: Int by mutableStateOf(0)
 
-    val showLeftButton: Boolean by derivedStateOf {
-        scrollableState.canScrollBackward && isPointerNearLeftButton
-    }
-
-    val showRightButton: Boolean by derivedStateOf {
-        scrollableState.canScrollForward && isPointerNearRightButton
-    }
+    var showLeftButton: Boolean by mutableStateOf(false)
+        private set
+    var showRightButton: Boolean by mutableStateOf(false)
+        private set
 
     fun calculateDistance(position: Offset) {
-        if (position.isUnspecified) {
-            isPointerNearLeftButton = false
-            isPointerNearRightButton = false
+        if (position.isUnspecified || layoutWidth <= 0) {
+            showLeftButton = false
+            showRightButton = false
             return
         }
-        isPointerNearLeftButton = isPointerNear(leftButtonPosition, position)
-        isPointerNearRightButton = isPointerNear(rightButtonPosition, position)
+        showLeftButton = scrollableState.canScrollBackward && position.x < layoutWidth / 2f
+        showRightButton = scrollableState.canScrollForward && position.x >= layoutWidth / 2f
     }
 
-    fun updateLeftButtonCoordinate(layoutCoordinates: LayoutCoordinates) {
-        val buttonSize = layoutCoordinates.size.toSize()
-        leftButtonPosition = layoutCoordinates.positionInParent() +
-                Offset(buttonSize.width / 2f, buttonSize.height / 2f)
-    }
-
-    fun updateRightButtonCoordinate(layoutCoordinates: LayoutCoordinates) {
-        val buttonSize = layoutCoordinates.size.toSize()
-        rightButtonPosition = layoutCoordinates.positionInParent() +
-                Offset(buttonSize.width / 2f, buttonSize.height / 2f)
+    fun updateLayoutSize(layoutCoordinates: LayoutCoordinates) {
+        layoutWidth = layoutCoordinates.size.width
     }
 
     fun scrollBackward() {
@@ -184,12 +165,6 @@ class HorizontalScrollControlState(
 
     fun scrollForward() {
         onClickScroll(Direction.FORWARD)
-    }
-
-    private fun isPointerNear(buttonPosition: Offset, pointerPosition: Offset): Boolean {
-        val dist = buttonPosition - pointerPosition
-        val buttonSize = HorizontalScrollControlDefaults.ButtonSize.value
-        return dist.x * dist.x + dist.y * dist.y <= (buttonSize * 1.5).pow(2)
     }
 
     enum class Direction { BACKWARD, FORWARD }
