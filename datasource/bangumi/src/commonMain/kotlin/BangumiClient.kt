@@ -225,6 +225,7 @@ class BangumiClientImpl(
         install(ContentNegotiation) {
             json(json)
         }
+        followRedirects = true
         expectSuccess = true
     }.apply {
         registerLogging(logger)
