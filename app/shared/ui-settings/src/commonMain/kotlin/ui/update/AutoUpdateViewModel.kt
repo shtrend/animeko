@@ -67,6 +67,7 @@ class AutoUpdateViewModel : AbstractViewModel(), KoinComponent {
             install(HttpTimeout) {
                 requestTimeoutMillis = 1_000_000
             }
+            followRedirects = true
         }.apply {
             launchInBackground {
                 settingsRepository.proxySettings.flow.map { it.default }.distinctUntilChanged().collect {
