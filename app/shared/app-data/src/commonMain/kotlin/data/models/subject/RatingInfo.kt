@@ -39,7 +39,7 @@ data class RatingInfo(
 
 @Serializable
 @Immutable
-class RatingCounts(
+data class RatingCounts(
     @SerialName(value = "1") val s1: Int = 0,
     @SerialName(value = "2") val s2: Int = 0,
     @SerialName(value = "3") val s3: Int = 0,
