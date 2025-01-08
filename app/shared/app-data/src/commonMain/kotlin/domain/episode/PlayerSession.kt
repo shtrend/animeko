@@ -33,8 +33,6 @@ import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import org.koin.core.Koin
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import org.openani.mediamp.MediampPlayer
 import kotlin.coroutines.CoroutineContext
 
@@ -51,10 +49,10 @@ class MediaFetchSelectBundle(
  */
 class PlayerSession(
     val player: MediampPlayer,
-    private val koin: Koin,
+    koin: Koin,
     private val mainDispatcher: CoroutineContext = Dispatchers.Main.immediate,
-) : KoinComponent {
-    val mediaResolver: MediaResolver by inject()
+) {
+    val mediaResolver: MediaResolver by koin.inject()
 
     private val _videoLoadingStateFlow: MutableStateFlow<VideoLoadingState> =
         MutableStateFlow(VideoLoadingState.Initial)
@@ -139,8 +137,6 @@ class PlayerSession(
             player.stopPlayback()
         }
     }
-
-    override fun getKoin(): Koin = koin
 
     companion object {
         private val logger = logger<PlayerSession>()
