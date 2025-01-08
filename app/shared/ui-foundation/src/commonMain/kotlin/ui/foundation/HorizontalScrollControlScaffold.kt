@@ -29,15 +29,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.isUnspecified
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.text.ProvideContentColor
 
@@ -59,17 +55,16 @@ fun HorizontalScrollControlScaffold(
 ) {
     Box(
         modifier = modifier
-            .onPlaced { state.updateLayoutSize(it) }
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
                         val event = awaitPointerEvent(PointerEventPass.Initial)
                         if (event.type == PointerEventType.Exit) {
-                            state.calculateDistance(Offset.Unspecified)
+                            state.calculate(false)
                             continue
                         }
                         event.changes.firstOrNull()?.let { pointerInputChange ->
-                            state.calculateDistance(pointerInputChange.position)
+                            state.calculate(true)
                         }
                     }
                 }
@@ -138,25 +133,14 @@ class HorizontalScrollControlState(
     private val scrollableState: ScrollableState,
     private val onClickScroll: (direction: Direction) -> Unit
 ) {
-    private var layoutWidth: Int by mutableStateOf(0)
-
     var showLeftButton: Boolean by mutableStateOf(false)
         private set
     var showRightButton: Boolean by mutableStateOf(false)
         private set
 
-    fun calculateDistance(position: Offset) {
-        if (position.isUnspecified || layoutWidth <= 0) {
-            showLeftButton = false
-            showRightButton = false
-            return
-        }
-        showLeftButton = scrollableState.canScrollBackward && position.x < layoutWidth / 2f
-        showRightButton = scrollableState.canScrollForward && position.x >= layoutWidth / 2f
-    }
-
-    fun updateLayoutSize(layoutCoordinates: LayoutCoordinates) {
-        layoutWidth = layoutCoordinates.size.width
+    fun calculate(hovered: Boolean) {
+        showLeftButton = hovered && scrollableState.canScrollBackward
+        showRightButton = hovered && scrollableState.canScrollForward
     }
 
     fun scrollBackward() {

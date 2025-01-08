@@ -124,7 +124,7 @@ class HorizontalScrollControlScaffoldTest {
         // 目前在最左边, 所以左边按钮应该不可见
         runOnIdle {
             waitUntil { scrollControlLeftButton.doesNotExist() }
-            waitUntil { scrollControlRightButton.doesNotExist() }
+            waitUntil { scrollControlRightButton.exists() }
         }
     }
 
@@ -150,10 +150,9 @@ class HorizontalScrollControlScaffoldTest {
             }
         }
 
-        // 目前列表在最左边, 所以左边按钮应该不可见
         runOnIdle {
             waitUntil { scrollControlLeftButton.exists() }
-            waitUntil { scrollControlRightButton.doesNotExist() }
+            waitUntil { scrollControlRightButton.exists() }
         }
     }
 
@@ -181,7 +180,7 @@ class HorizontalScrollControlScaffoldTest {
 
         // 目前列表在最右边, 所以左边按钮应该不可见
         runOnIdle {
-            waitUntil { scrollControlLeftButton.doesNotExist() }
+            waitUntil { scrollControlLeftButton.exists() }
             waitUntil { scrollControlRightButton.doesNotExist() }
         }
     }
@@ -211,98 +210,7 @@ class HorizontalScrollControlScaffoldTest {
 
         // 目前列表在最右边, 所以左边按钮应该不可见
         runOnIdle {
-            waitUntil { scrollControlLeftButton.doesNotExist() }
-            waitUntil { scrollControlRightButton.exists() }
-        }
-    }
-
-    @Test
-    fun `too many items - both buttons - composite test`() = runAniComposeUiTest {
-        val listState = LazyListState()
-
-        setContent {
-            View(listState, itemCount = 10)
-        }
-
-        // 初始在最左侧；左按钮不可见，右按钮也不可见（鼠标不在两边）
-        runOnIdle {
-            waitUntil { scrollControlLeftButton.doesNotExist() }
-            waitUntil { scrollControlRightButton.doesNotExist() }
-        }
-
-        // 移动鼠标到左边，虽然在最左侧无法再向左滚动，但仍测试一下：左按钮不应出现
-        runOnIdle {
-            lazyList.performMouseInput {
-                moveTo(centerLeft + Offset(10f, 0f))
-            }
-        }
-        runOnIdle {
-            waitUntil { scrollControlLeftButton.doesNotExist() }
-            // 还没滚动过，右边也不出现
-            waitUntil { scrollControlRightButton.doesNotExist() }
-        }
-
-        // 往右滑一点，让列表可以向左滚动
-        runOnIdle {
-            lazyList.performTouchInput {
-                swipeLeft(centerX, centerX - 100) // 往左滑，向右滚动一些
-            }
-        }
-
-        // 鼠标移动到左侧，按钮应出现
-        runOnIdle {
-            lazyList.performMouseInput {
-                moveTo(centerLeft + Offset(10f, 0f))
-            }
-        }
-        runOnIdle {
             waitUntil { scrollControlLeftButton.exists() }
-            // 此时由于鼠标在左侧，右侧按钮不一定出现
-            waitUntil { scrollControlRightButton.doesNotExist() }
-        }
-
-        // 再把鼠标移到右侧，左边按钮应该消失，右侧按钮出现
-        runOnIdle {
-            lazyList.performMouseInput {
-                moveTo(centerRight - Offset(10f, 0f))
-            }
-        }
-        runOnIdle {
-            waitUntil { scrollControlLeftButton.doesNotExist() }
-            // 若还能继续往右滚，就会显示右侧按钮
-            waitUntil { scrollControlRightButton.exists() }
-        }
-
-        // 再滑动到最右边
-        runOnIdle {
-            lazyList.performTouchInput {
-                repeat(10) { swipeLeft() } // 保证滑动到最右边
-            }
-        }
-        runOnIdle {
-            lazyList.performMouseInput {
-                moveTo(centerRight - Offset(10f, 0f))
-            }
-        }
-
-        runOnIdle {
-            waitUntil { scrollControlLeftButton.doesNotExist() }
-            waitUntil { scrollControlLeftButton.doesNotExist() }
-        }
-
-        runOnIdle {
-            lazyList.performTouchInput {
-                swipeRight(centerX, centerX + 100)
-            }
-        }
-        runOnIdle {
-            lazyList.performMouseInput {
-                moveTo(centerRight - Offset(10f, 0f))
-            }
-        }
-
-        runOnIdle {
-            waitUntil { scrollControlLeftButton.doesNotExist() }
             waitUntil { scrollControlRightButton.exists() }
         }
     }
