@@ -166,7 +166,6 @@ class EpisodeViewModel(
     private val episodeCollectionRepository: EpisodeCollectionRepository by inject()
     private val mediaCacheManager: MediaCacheManager by inject()
     private val danmakuManager: DanmakuManager by inject()
-    val mediaResolver: MediaResolver by inject()
     private val settingsRepository: SettingsRepository by inject()
     private val danmakuRegexFilterRepository: DanmakuRegexFilterRepository by inject()
     private val mediaSourceManager: MediaSourceManager by inject()
@@ -201,6 +200,8 @@ class EpisodeViewModel(
         koin,
         sharingStarted = SharingStarted.WhileSubscribed(5_000),
     )
+
+    val mediaResolver: MediaResolver get() = fetchPlayState.playerSession.mediaResolver
 
     // region Subject and episode data info flows
     @UnsafeEpisodeSessionApi

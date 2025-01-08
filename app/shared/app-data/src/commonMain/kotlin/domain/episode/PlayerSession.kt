@@ -54,7 +54,7 @@ class PlayerSession(
     private val koin: Koin,
     private val mainDispatcher: CoroutineContext = Dispatchers.Main.immediate,
 ) : KoinComponent {
-    private val mediaResolver: MediaResolver by inject()
+    val mediaResolver: MediaResolver by inject()
 
     private val _videoLoadingStateFlow: MutableStateFlow<VideoLoadingState> =
         MutableStateFlow(VideoLoadingState.Initial)
