@@ -130,6 +130,7 @@ class EpisodeCacheRequesterImpl(
         override val mediaSelector: MediaSelector by lazy {
             mediaSelectorFactory.create(
                 request.subjectInfo.subjectId,
+                episodeId = request.episodeInfo.episodeId,
                 fetchSession.cumulativeResults,
             )
         }

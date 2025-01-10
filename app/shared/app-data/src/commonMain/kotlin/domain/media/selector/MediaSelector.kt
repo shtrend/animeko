@@ -23,12 +23,18 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
+import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaPreference.Companion.ANY_FILTER
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
+import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.domain.mediasource.MediaListFilter
+import me.him188.ani.app.domain.mediasource.MediaListFilterContext
+import me.him188.ani.app.domain.mediasource.MediaListFilters
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.source.MediaSourceLocation
+import me.him188.ani.datasources.api.topic.EpisodeRange
 import me.him188.ani.datasources.api.topic.hasSeason
 import me.him188.ani.datasources.api.topic.isSingleEpisode
 import kotlin.coroutines.CoroutineContext
@@ -369,6 +375,20 @@ class DefaultMediaSelector(
         context: MediaSelectorContext,
         list: List<Media>
     ): List<MaybeExcludedMedia> {
+        val subjectInfo = context.subjectInfo?.takeIf { info ->
+            info != SubjectInfo.Empty && info.allNames.any { it.isNotBlank() }
+        }
+        val episodeInfo = context.episodeInfo.takeIf { it != EpisodeInfo.Empty }
+
+        val mediaListFilterContext = if (subjectInfo != null && episodeInfo != null) {
+            MediaListFilterContext(
+                subjectNames = subjectInfo.allNames.toSet(),
+                episodeSort = episodeInfo.sort,
+                episodeEp = episodeInfo.ep,
+                episodeName = episodeInfo.name,
+            )
+        } else null
+
         return list.fastMap filter@{ media ->
             // 由下面实现调用, 方便创建 MaybeExcludedMedia
             fun include(): MaybeExcludedMedia = MaybeExcludedMedia.Included(media)
@@ -415,6 +435,25 @@ class DefaultMediaSelector(
                         // 有些条目可能就只差距一个字母, 例如 "天降之物" 和 "天降之物f", 非常容易满足模糊匹配.
                         return@filter exclude(MediaExclusionReason.FromSeriesSeason)
                     }
+                }
+            }
+
+            if (mediaListFilterContext != null) {
+                val allow = with(MediaListFilters.ContainsSubjectName) {
+                    mediaListFilterContext.applyOn(
+                        object : MediaListFilter.Candidate {
+                            override val originalTitle: String get() = media.originalTitle
+                            override val subjectName: String get() = media.properties.subjectName ?: media.originalTitle
+                            override val episodeRange: EpisodeRange? get() = media.episodeRange
+                            override fun toString(): String {
+                                return "Candidate(media=$media)"
+                            }
+                        },
+                    )
+                }
+
+                if (!allow) {
+                    return@filter exclude(MediaExclusionReason.SubjectNameMismatch)
                 }
             }
 

@@ -7,10 +7,9 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-@file:Suppress("NOTHING_TO_INLINE")
-
 package me.him188.ani.app.domain.media.selector
 
+import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.topic.EpisodeRange
 
@@ -101,4 +100,9 @@ sealed class MediaExclusionReason {
      * 该资源是其他季度的资源, 而不是当前季度的
      */
     data object FromSeriesSeason : MediaExclusionReason()
+
+    /**
+     * 资源标题不匹配 (不包含 [SubjectInfo.allNames])
+     */
+    data object SubjectNameMismatch : MediaExclusionReason()
 }

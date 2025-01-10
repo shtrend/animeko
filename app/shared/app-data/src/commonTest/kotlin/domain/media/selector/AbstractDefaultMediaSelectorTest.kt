@@ -10,8 +10,10 @@
 package me.him188.ani.app.domain.media.selector
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
+import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectSeriesInfo
 import me.him188.ani.app.domain.media.createTestDefaultMedia
 import me.him188.ani.app.domain.media.createTestMediaProperties
@@ -97,11 +99,15 @@ sealed class AbstractDefaultMediaSelectorTest {
             mediaSourcePrecedence: List<String> = emptyList(),
             subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
             subjectSequelNames: Set<String> = emptySet(),
+            subjectInfo: SubjectInfo = SubjectInfo.Empty,
+            episodeInfo: EpisodeInfo = EpisodeInfo.Empty,
         ) = createMediaSelectorContextFromEmpty(
             subjectCompleted = subjectCompleted,
             mediaSourcePrecedence = mediaSourcePrecedence,
             subtitleKindFilters = subtitleKindFilters,
             subjectSeriesInfo = SubjectSeriesInfo.Fallback.copy(sequelSubjectNames = subjectSequelNames),
+            subjectInfo = subjectInfo,
+            episodeInfo = episodeInfo,
         )
 
         @Suppress("SameParameterValue")
@@ -110,12 +116,16 @@ sealed class AbstractDefaultMediaSelectorTest {
             mediaSourcePrecedence: List<String> = emptyList(),
             subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
             subjectSeriesInfo: SubjectSeriesInfo = SubjectSeriesInfo.Fallback,
+            subjectInfo: SubjectInfo = SubjectInfo.Empty,
+            episodeInfo: EpisodeInfo = EpisodeInfo.Empty,
         ) =
             MediaSelectorContext(
                 subjectFinished = subjectCompleted,
                 mediaSourcePrecedence = mediaSourcePrecedence,
                 subtitlePreferences = subtitleKindFilters,
                 subjectSeriesInfo = subjectSeriesInfo,
+                subjectInfo = subjectInfo,
+                episodeInfo = episodeInfo,
             )
     }
 

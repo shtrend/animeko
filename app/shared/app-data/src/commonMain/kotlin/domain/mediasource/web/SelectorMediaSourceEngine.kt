@@ -343,8 +343,8 @@ fun WebSearchSubjectInfo.asCandidate(): MediaListFilter.Candidate {
 /**
  * If you change, you also need to change
  */
-internal fun SelectorSearchConfig.createFiltersForSubject() = buildList {
-    if (filterBySubjectName) add(MediaListFilters.ContainsSubjectName)
+internal fun SelectorSearchConfig.createFiltersForSubject(): List<MediaListFilter<MediaListFilterContext>> = buildList {
+//    if (filterBySubjectName) add(MediaListFilters.ContainsSubjectName)
 }
 
 internal fun SelectorSearchConfig.createFiltersForEpisode() = buildList {

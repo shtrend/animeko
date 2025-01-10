@@ -95,6 +95,8 @@ class EpisodeCacheRequesterTest {
             mediaSourcePrecedence = emptyList(),
             subtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
             subjectSeriesInfo = SubjectSeriesInfo.Fallback,
+            subjectInfo = SubjectInfo.Empty,
+            episodeInfo = EpisodeInfo.Empty,
         ),
     )
     private val storage = TestMediaCacheStorage()
@@ -122,6 +124,7 @@ class EpisodeCacheRequesterTest {
             mediaSelectorFactory = object : MediaSelectorFactory {
                 override fun create(
                     subjectId: Int,
+                    episodeId: Int,
                     mediaList: Flow<List<Media>>,
                     flowCoroutineContext: CoroutineContext
                 ): MediaSelector {

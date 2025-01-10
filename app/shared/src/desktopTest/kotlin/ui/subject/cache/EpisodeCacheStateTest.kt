@@ -110,6 +110,7 @@ class EpisodeCacheStateTest {
             mediaSelectorFactory = object : MediaSelectorFactory {
                 override fun create(
                     subjectId: Int,
+                    episodeId: Int,
                     mediaList: Flow<List<Media>>,
                     flowCoroutineContext: CoroutineContext
                 ): MediaSelector =

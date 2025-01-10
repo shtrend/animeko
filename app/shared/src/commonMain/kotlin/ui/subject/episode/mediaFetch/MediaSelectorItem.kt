@@ -84,6 +84,7 @@ internal fun MediaSelectorItem(
                 MediaExclusionReason.UnsupportedByPlatformPlayer -> "不支持播放"
                 MediaExclusionReason.FromSequelSeason -> "季度不匹配"
                 MediaExclusionReason.FromSeriesSeason -> "季度不匹配(2)"
+                MediaExclusionReason.SubjectNameMismatch -> "条目标题不匹配"
             }
         }
     }

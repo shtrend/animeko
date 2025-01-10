@@ -35,6 +35,7 @@ fun interface MediaListFilter<in Ctx : MediaListFilterContext> {
      */
     interface Candidate {
         val originalTitle: String
+        val subjectName: String get() = originalTitle
         val episodeRange: EpisodeRange?
     }
 

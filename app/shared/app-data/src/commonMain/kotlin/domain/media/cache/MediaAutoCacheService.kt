@@ -143,6 +143,7 @@ class DefaultMediaAutoCacheService(
         )
         val selector = mediaSelectorFactory.create(
             subject.subjectId,
+            episodeId = firstUnwatched.episodeInfo.episodeId,
             fetchSession.cumulativeResults,
         )
         val selected = selector.autoSelect.awaitCompletedAndSelectDefault(fetchSession)

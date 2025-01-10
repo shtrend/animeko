@@ -28,9 +28,12 @@ import me.him188.ani.utils.platform.trimSB
  * @see MediaListFilter
  */
 object MediaListFilters {
+    /**
+     * 要求包含条目名称. 支持模糊匹配.
+     */
     val ContainsSubjectName = BasicMediaListFilter { media ->
         subjectNamesWithoutSpecial.any { subjectName ->
-            val originalTitle = removeSpecials(media.originalTitle, removeWhitespace = true, replaceNumbers = true)
+            val originalTitle = removeSpecials(media.subjectName, removeWhitespace = true, replaceNumbers = true)
             fun exactlyContains() = originalTitle
                 .contains(subjectName, ignoreCase = true)
 

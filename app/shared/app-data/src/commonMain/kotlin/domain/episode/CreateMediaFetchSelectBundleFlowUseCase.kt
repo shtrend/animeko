@@ -88,7 +88,9 @@ class CreateMediaFetchSelectBundleFlowUseCaseImpl(
             logger.info { "MediaFetchSession changed. Creating MediaFetchSelectBundle for $fetchRequest" }
             val selector = MediaSelectorFactory.withKoin(getKoin())
                 .create(
-                    fetchRequest.subjectId.toInt(), fetchSession.cumulativeResults,
+                    fetchRequest.subjectId.toInt(),
+                    episodeId = fetchRequest.episodeId.toInt(),
+                    fetchSession.cumulativeResults,
                     flowContext,
                 )
 

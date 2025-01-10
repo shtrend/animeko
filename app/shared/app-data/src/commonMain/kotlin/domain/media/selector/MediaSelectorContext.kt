@@ -10,9 +10,10 @@
 package me.him188.ani.app.domain.media.selector
 
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import me.him188.ani.app.data.models.episode.EpisodeInfo
+import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectSeriesInfo
 import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.RepositoryUnknownException
@@ -39,18 +40,22 @@ data class MediaSelectorContext(
      * 用于针对各个平台的播放器缺陷，调整选择资源的优先级
      */
     val subtitlePreferences: MediaSelectorSubtitlePreferences?,
-    val subjectSeriesInfo: SubjectSeriesInfo?
+    val subjectSeriesInfo: SubjectSeriesInfo?,
+    val subjectInfo: SubjectInfo?,
+    val episodeInfo: EpisodeInfo?,
 ) {
     fun allFieldsLoaded() = subjectFinished != null
             && mediaSourcePrecedence != null
             && subtitlePreferences != null
             && subjectSeriesInfo != null
+            && subjectInfo != null
+            && episodeInfo != null
 
     companion object {
         /**
          * 刚开始查询时的默认值
          */
-        val Initial = MediaSelectorContext(null, null, null, null)
+        val Initial = MediaSelectorContext(null, null, null, null, null, null)
 
         val EmptyForPreview
             get() = MediaSelectorContext(
@@ -58,6 +63,8 @@ data class MediaSelectorContext(
                 emptyList(),
                 MediaSelectorSubtitlePreferences.AllNormal,
                 SubjectSeriesInfo.Fallback,
+                SubjectInfo.Empty,
+                EpisodeInfo.Empty,
             )
 
 
@@ -73,7 +80,9 @@ fun MediaSelectorContext.Companion.createFlow(
     mediaSourcePrecedence: Flow<List<String>>,
     subtitleKindFilters: Flow<MediaSelectorSubtitlePreferences>,
     subjectSeriesInfo: Flow<SubjectSeriesInfo>,
-): Flow<MediaSelectorContext> = combine(
+    subjectInfoFlow: Flow<SubjectInfo>,
+    episodeInfoFlow: Flow<EpisodeInfo>,
+): Flow<MediaSelectorContext> = me.him188.ani.utils.coroutines.flows.combine(
     // 都 emit null, debug 时能知道是谁没 emit
     subjectCompleted.onStart<Boolean?> { emit(null) },
     mediaSourcePrecedence.onStart<List<String>?> { emit(null) },
@@ -88,12 +97,16 @@ fun MediaSelectorContext.Companion.createFlow(
         emit(SubjectSeriesInfo.Fallback)
         true
     }.onStart<SubjectSeriesInfo?> { emit(null) },
-) { completed, instances, filters, seriesInfo ->
+    subjectInfoFlow.onStart<SubjectInfo?> { emit(null) },
+    episodeInfoFlow.onStart<EpisodeInfo?> { emit(null) },
+) { completed, instances, filters, seriesInfo, subjectInfo, episodeInfo ->
     MediaSelectorContext(
         subjectFinished = completed,
         mediaSourcePrecedence = instances,
         subtitlePreferences = filters,
         subjectSeriesInfo = seriesInfo,
+        subjectInfo = subjectInfo,
+        episodeInfo = episodeInfo,
     )
 }.onStart {
     emit(Initial) // 否则如果一直没获取到剧集信息, 就无法选集, #385
@@ -108,6 +121,8 @@ fun MediaSelectorContext.Companion.createFlow(
     mediaSourcePrecedence: Flow<List<MediaSourceInstance>>,
     subtitleKindFilters: Flow<MediaSelectorSubtitlePreferences>,
     subjectSeriesInfo: Flow<SubjectSeriesInfo>,
+    subjectInfo: Flow<SubjectInfo>,
+    episodeInfo: Flow<EpisodeInfo>,
 ): Flow<MediaSelectorContext> = createFlow(
     subjectCompleted,
     mediaSourcePrecedence.map { list ->
@@ -115,4 +130,6 @@ fun MediaSelectorContext.Companion.createFlow(
     },
     subtitleKindFilters,
     subjectSeriesInfo,
+    subjectInfo,
+    episodeInfo,
 )

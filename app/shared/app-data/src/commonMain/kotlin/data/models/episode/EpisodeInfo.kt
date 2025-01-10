@@ -48,6 +48,10 @@ data class EpisodeInfo(
     override fun toString(): String {
         return "EpisodeInfo(episodeId=$episodeId, nameCn='$nameCn', sort=$sort)"
     }
+
+    companion object {
+        val Empty = EpisodeInfo(0, null)
+    }
 }
 
 @Stable

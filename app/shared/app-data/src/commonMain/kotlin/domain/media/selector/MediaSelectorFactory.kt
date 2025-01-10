@@ -12,8 +12,10 @@ package me.him188.ani.app.domain.media.selector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.media.EpisodePreferencesRepository
+import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
 import me.him188.ani.app.data.repository.subject.SubjectRelationsRepository
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.media.fetch.MediaSourceManager
@@ -31,6 +33,7 @@ import kotlin.coroutines.CoroutineContext
 interface MediaSelectorFactory {
     fun create(
         subjectId: Int,
+        episodeId: Int,
         mediaList: Flow<List<Media>>,
         flowCoroutineContext: CoroutineContext = Dispatchers.Default,
     ): MediaSelector // 如果要'挂载'自动保存配置, 可以为这个的返回值操作.
@@ -42,6 +45,7 @@ interface MediaSelectorFactory {
             episodeCollectionRepository = koin.get(),
             mediaSourceManager = koin.get(),
             subjectRelationsRepository = koin.get(),
+            subjectCollectionRepository = koin.get(),
         )
 
         fun withRepositories(
@@ -51,9 +55,11 @@ interface MediaSelectorFactory {
             mediaSourceManager: MediaSourceManager,
             subjectRelationsRepository: SubjectRelationsRepository,
             subtitlePreferences: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.CurrentPlatform,
+            subjectCollectionRepository: SubjectCollectionRepository,
         ): MediaSelectorFactory = object : MediaSelectorFactory {
             override fun create(
                 subjectId: Int,
+                episodeId: Int,
                 mediaList: Flow<List<Media>>,
                 flowCoroutineContext: CoroutineContext
             ): MediaSelector {
@@ -63,6 +69,9 @@ interface MediaSelectorFactory {
                         mediaSourceManager.allInstances,
                         flowOf(subtitlePreferences),
                         subjectRelationsRepository.subjectSeriesInfoFlow(subjectId),
+                        subjectCollectionRepository.subjectCollectionFlow(subjectId).map { it.subjectInfo },
+                        episodeCollectionRepository.episodeCollectionInfoFlow(subjectId, episodeId)
+                            .map { it.episodeInfo },
                     ),
                     mediaList,
                     savedUserPreference = episodePreferencesRepository.mediaPreferenceFlow(subjectId),
