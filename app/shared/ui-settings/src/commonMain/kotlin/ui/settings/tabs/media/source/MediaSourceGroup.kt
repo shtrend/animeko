@@ -151,7 +151,7 @@ internal fun SettingsScope.MediaSourceGroup(
 
     Group(
         title = { Text("数据源列表 (${state.mediaSources.size})") },
-        description = { Text("在播放时，禁用的数据源不会自动查询，但可手动点击临时启用") },
+        description = { Text("在播放时，禁用的数据源不会自动查询，但可手动点击临时启用。注意，排序将优先采用云端顺序，同数据源订阅之内的手动排序可能无效") },
         actions = {
             AnimatedVisibility(
                 visible = sorter.isSorting,
