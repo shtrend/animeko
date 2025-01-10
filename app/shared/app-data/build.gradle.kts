@@ -69,7 +69,7 @@ kotlin {
         implementation(projects.utils.uiTesting)
         implementation(libs.turbine)
     }
-    sourceSets.jvmTest.dependencies {
+    sourceSets.getByName("jvmTest").dependencies {
         implementation(libs.slf4j.simple)
     }
     sourceSets.androidMain.dependencies {
