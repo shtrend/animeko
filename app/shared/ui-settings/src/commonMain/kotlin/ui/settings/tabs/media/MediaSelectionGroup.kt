@@ -190,6 +190,7 @@ internal fun SettingsScope.MediaSelectionGroup(
 
         Group(
             title = { Text("高级设置") },
+            description = { Text("精调数据源自动选择算法。一般不需要修改这些设置") },
             useThinHeader = true,
         ) {
             val mediaSelectorSettings by state.mediaSelectorSettingsState
@@ -243,15 +244,27 @@ internal fun SettingsScope.MediaSelectionGroup(
 
                     DropdownItem(
                         selected = { mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay },
-                        values = { listOf(0.seconds, 3.seconds, 5.seconds, 10.seconds, Duration.INFINITE) },
+                        values = {
+                            listOf(
+                                0.seconds,
+                                3.seconds,
+                                5.seconds,
+                                8.seconds,
+                                10.seconds,
+                                15.seconds,
+                                Duration.INFINITE,
+                            )
+                        },
                         itemText = { duration ->
                             Text(
                                 when (duration) {
-                                    0.seconds -> "立即允许"
+                                    0.seconds -> "不等待"
                                     3.seconds -> "3 秒后"
                                     5.seconds -> "5 秒后"
+                                    8.seconds -> "8 秒后"
                                     10.seconds -> "10 秒后"
-                                    Duration.INFINITE -> "不允许"
+                                    15.seconds -> "15 秒后"
+                                    Duration.INFINITE -> "无限"
                                     else -> duration.toString() // non-reachable
                                 },
                             )
@@ -263,15 +276,15 @@ internal fun SettingsScope.MediaSelectionGroup(
                                 ),
                             )
                         },
-                        title = { Text("允许选择非偏好资源") },
-                        description = { Text("开始查询几秒后允许忽略偏好设置，选择其他数据源的资源。例如偏好简中时允许选择繁中") },
+                        title = { Text("最大等待时间") },
+                        description = { Text("每次查询的最大的等待时间。在此时间结束时，将会从已经查询到的数据源中根据你设置的偏好自动选择数据源。如果等待时间太短，可能会忽略你的偏好设置；如果时间更长，可以更好地满足你的偏好设置，但可能会导致每次开播很慢。建议设置 5-10 秒") },
                         enabled = mediaSelectorSettings.fastSelectWebKind,
                     )
 
                     HorizontalDividerItem()
                 }
             }
-            
+
             SwitchItem(
                 checked = mediaSelectorSettings.showDisabled,
                 onCheckedChange = {
@@ -280,7 +293,7 @@ internal fun SettingsScope.MediaSelectionGroup(
                     )
                 },
                 title = { Text("显示禁用的数据源") },
-                description = { Text("以便在偏好数据源中未找到资源时，可临时启用禁用的数据源") },
+                description = { Text("""播放时，以灰色显示在"数据源管理"设置中禁用的数据源，而不是隐藏。以便在偏好数据源中未找到资源时，可临时启用禁用的数据源""") },
             )
 
             HorizontalDividerItem()
@@ -293,6 +306,7 @@ internal fun SettingsScope.MediaSelectionGroup(
                     )
                 },
                 title = { Text("隐藏无字幕资源") },
+                description = { Text("""可以过滤掉一些生肉资源，但也可能会过滤掉未识别到字幕类型的资源""") },
             )
 
             HorizontalDividerItem()
@@ -318,7 +332,7 @@ internal fun SettingsScope.MediaSelectionGroup(
                     )
                 },
                 title = { Text("BT 资源优先选择季度全集") },
-                description = { Text("季度全集资源通常更快") },
+                description = { Text("季度全集资源通常更快，建议开启") },
             )
 
             HorizontalDividerItem()
@@ -331,6 +345,7 @@ internal fun SettingsScope.MediaSelectionGroup(
                     )
                 },
                 title = { Text("自动启用上次临时启用选择的数据源") },
+                description = { Text("""如果在"数据源管理"设置中禁用了一个数据源，但在观看一个番剧时使用了它，则下次播放此番剧时自动启用这个数据源""") },
             )
         }
     }
