@@ -58,7 +58,7 @@ constructor(
      * 在快速选择在线数据源时, 多少毫秒后允许选择非偏好数据源
      * @since 4.1
      */
-    val fastSelectWebKindAllowNonPreferredDelay: Duration = 3.seconds, // 注意, 这是 'enum'. 查看 UI 代码以确定有哪些值可以选.
+    val fastSelectWebKindAllowNonPreferredDelay: Duration = 5.seconds, // 注意, 这是 'enum'. 查看 UI 代码以确定有哪些值可以选.
     @Suppress("PropertyName") @Transient val _placeholder: Int = 0,
 ) {
     companion object {
