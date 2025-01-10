@@ -94,9 +94,9 @@ fun EpisodeVideoLoadingIndicator(
             when (state) {
                 VideoLoadingState.Initial -> {
                     if (optimizeForFullscreen) {
-                        TextWithBorder("请在右上角选择数据源，或等待自动选择")
+                        TextWithBorder("正在自动选择数据源。若几秒后仍未选择，请在右上角选择数据源")
                     } else {
-                        TextWithBorder("请选择数据源，或等待自动选择")
+                        TextWithBorder("正在自动选择数据源。若几秒后仍未选择，请选择数据源")
                     }
                 }
 
