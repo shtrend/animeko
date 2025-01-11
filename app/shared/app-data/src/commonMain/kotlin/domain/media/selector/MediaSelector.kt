@@ -459,17 +459,24 @@ class DefaultMediaSelector(
             }
 
             if (mediaListFilterContext != null) {
-                val allow = with(MediaListFilters.ContainsSubjectName) {
-                    mediaListFilterContext.applyOn(
-                        object : MediaListFilter.Candidate {
-                            override val originalTitle: String get() = media.originalTitle
-                            override val subjectName: String get() = mediaSubjectName
-                            override val episodeRange: EpisodeRange? get() = media.episodeRange
-                            override fun toString(): String {
-                                return "Candidate(media=$media)"
-                            }
-                        },
-                    )
+                val allow = when (media.kind) {
+                    MediaSourceKind.WEB -> {
+                        with(MediaListFilters.ContainsSubjectName) {
+                            mediaListFilterContext.applyOn(
+                                object : MediaListFilter.Candidate {
+                                    override val originalTitle: String get() = media.originalTitle
+                                    override val subjectName: String get() = mediaSubjectName
+                                    override val episodeRange: EpisodeRange? get() = media.episodeRange
+                                    override fun toString(): String {
+                                        return "Candidate(media=$media)"
+                                    }
+                                },
+                            )
+                        }
+                    }
+
+                    MediaSourceKind.BitTorrent -> true
+                    MediaSourceKind.LocalCache -> true
                 }
 
                 if (!allow) {
