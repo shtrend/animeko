@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.subject.episode.mediaFetch
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +50,7 @@ import me.him188.ani.app.domain.media.selector.MediaExclusionReason
 import me.him188.ani.app.domain.media.selector.UnsafeOriginalMediaAccess
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.tools.formatDateTime
+import me.him188.ani.app.ui.foundation.theme.weaken
 import me.him188.ani.app.ui.media.renderSubtitleLanguage
 import me.him188.ani.app.ui.settings.rendering.MediaSourceIcon
 import me.him188.ani.app.ui.settings.rendering.MediaSourceIcons
@@ -187,9 +189,13 @@ fun MediaSelectorItemLayout(
             containerColor = if (selected) {
                 MaterialTheme.colorScheme.secondaryContainer
             } else {
-                MaterialTheme.colorScheme.surfaceContainerHighest
+                Color.Transparent
             },
         ),
+        border = if (!selected) BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline,
+        ) else null,
     ) {
         val horizontalPadding = 16.dp
 
