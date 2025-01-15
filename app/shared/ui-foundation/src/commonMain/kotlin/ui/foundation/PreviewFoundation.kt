@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -10,7 +10,6 @@
 package me.him188.ani.app.ui.foundation
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
@@ -23,6 +22,8 @@ import androidx.navigation.compose.rememberNavController
 import coil3.ImageLoader
 import coil3.compose.LocalPlatformContext
 import coil3.serviceLoaderEnabled
+import me.him188.ani.app.data.models.preference.DarkMode
+import me.him188.ani.app.data.models.preference.ThemeSettings
 import me.him188.ani.app.navigation.AniNavigator
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.tools.LocalTimeFormatter
@@ -30,8 +31,8 @@ import me.him188.ani.app.tools.TimeFormatter
 import me.him188.ani.app.ui.foundation.navigation.LocalOnBackPressedDispatcherOwner
 import me.him188.ani.app.ui.foundation.navigation.OnBackPressedDispatcher
 import me.him188.ani.app.ui.foundation.navigation.OnBackPressedDispatcherOwner
-import me.him188.ani.app.ui.foundation.theme.aniDarkColorTheme
-import me.him188.ani.app.ui.foundation.theme.aniLightColorTheme
+import me.him188.ani.app.ui.foundation.theme.AniTheme
+import me.him188.ani.app.ui.foundation.theme.LocalThemeSettings
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.foundation.widgets.NoOpToaster
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -46,6 +47,7 @@ import org.jetbrains.compose.resources.imageResource
 @OptIn(TestOnly::class)
 @Composable
 inline fun ProvideFoundationCompositionLocalsForPreview(
+    isDark: Boolean = isSystemInDarkTheme(),
     crossinline content: @Composable () -> Unit,
 ) {
     val aniNavigator = remember { AniNavigator() }
@@ -79,13 +81,16 @@ inline fun ProvideFoundationCompositionLocalsForPreview(
                 override val lifecycle: Lifecycle get() = TestGlobalLifecycle
             }
         },
+        LocalThemeSettings providesDefault ThemeSettings.Default.copy(
+            darkMode = if (isDark) DarkMode.DARK else DarkMode.LIGHT,
+        ),
     ) {
         val navController = rememberNavController()
         SideEffect {
             aniNavigator.setNavController(navController)
         }
         ProvidePlatformCompositionLocalsForPreview {
-            MaterialTheme(colorScheme = if (isSystemInDarkTheme()) aniDarkColorTheme() else aniLightColorTheme()) {
+            AniTheme {
                 content()
             }
         }

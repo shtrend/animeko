@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.ui.foundation
 
-import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
@@ -44,9 +43,9 @@ import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.navigation.NoopBrowserNavigator
 import me.him188.ani.app.platform.GrantedPermissionManager
 import me.him188.ani.app.platform.PermissionManager
+import me.him188.ani.app.ui.foundation.theme.AniTheme
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.foundation.widgets.Toaster
-import me.him188.ani.app.ui.main.AniApp
 import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.koin.core.context.startKoin
@@ -64,10 +63,10 @@ import org.openani.mediamp.MediampPlayerFactory
 @Composable
 fun ProvideCompositionLocalsForPreview(
     module: Module.() -> Unit = {},
-    colorScheme: ColorScheme? = null,
+    isDark: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideFoundationCompositionLocalsForPreview(isDark) {
         val coroutineScope = rememberCoroutineScope()
         runCatching { stopKoin() }
         startKoin {
@@ -133,7 +132,7 @@ fun ProvideCompositionLocalsForPreview(
             }
             NavHost(navController, startDestination = "test") { // provide ViewModelStoreOwner
                 composable("test") {
-                    AniApp(overrideColorTheme = colorScheme) {
+                    AniTheme {
                         content()
                     }
                 }
