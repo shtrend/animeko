@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
@@ -53,6 +54,8 @@ import me.him188.ani.app.ui.cache.CacheManagementViewModel
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPage
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPageViewModel
 import me.him188.ani.app.ui.cache.details.MediaDetailsLazyGrid
+import me.him188.ani.app.ui.exploration.schedule.SchedulePage
+import me.him188.ani.app.ui.exploration.schedule.SchedulePageViewModel
 import me.him188.ani.app.ui.foundation.layout.LocalSharedTransitionScopeProvider
 import me.him188.ani.app.ui.foundation.layout.SharedTransitionScopeProvider
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
@@ -424,6 +427,34 @@ private fun AniAppContentImpl(
                             },
                         )
                     },
+                )
+            }
+            composable<NavRoutes.Schedule>(
+                enterTransition = enterTransition,
+                exitTransition = exitTransition,
+                popEnterTransition = popEnterTransition,
+                popExitTransition = popExitTransition,
+            ) { backStackEntry ->
+                val route = backStackEntry.toRoute<NavRoutes.Schedule>()
+
+                val vm = viewModel { SchedulePageViewModel() }
+                val presentation by vm.presentationFlow.collectAsStateWithLifecycle()
+                SchedulePage(
+                    presentation,
+                    onRetry = { vm.refresh() },
+                    onClickItem = {
+                        aniNavigator.navigateSubjectDetails(it.subjectId)
+                    },
+                    Modifier.fillMaxSize(),
+                    windowInsets = windowInsets,
+                    navigationIcon = {
+                        BackNavigationIconButton(
+                            {
+                                aniNavigator.popBackStack(route, inclusive = true)
+                            },
+                        )
+                    },
+                    state = vm.pageState,
                 )
             }
         }

@@ -98,6 +98,8 @@ value class PackedDate(
     }
 }
 
+val UTC9 = TimeZone.of("UTC+9")
+
 fun PackedDate.toStringExcludingSameYear(): String = when {
     isInvalid -> toString()
     year == PackedDate.now().year -> "$month-$day"
@@ -106,7 +108,11 @@ fun PackedDate.toStringExcludingSameYear(): String = when {
 
 fun PackedDate.toLocalDateOrNull(): LocalDate? {
     if (isInvalid) return null
-    return LocalDate(year, month, day)
+    return try {
+        LocalDate(year, month, day) // May throw IAE
+    } catch (e: IllegalArgumentException) {
+        null
+    }
 }
 
 fun PackedDate?.isNullOrInvalid(): Boolean = this == null || this.isInvalid

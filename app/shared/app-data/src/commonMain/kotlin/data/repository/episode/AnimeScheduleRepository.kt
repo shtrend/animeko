@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -12,6 +12,7 @@ package me.him188.ani.app.data.repository.episode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.mapLatest
 import me.him188.ani.app.data.models.schedule.AnimeScheduleInfo
 import me.him188.ani.app.data.models.schedule.AnimeSeasonId
@@ -27,6 +28,7 @@ import kotlin.time.Duration.Companion.hours
 
 class AnimeScheduleRepository(
     private val animeScheduleService: AnimeScheduleService,
+//    private val subjectCollectionRepository: SubjectCollectionRepository,
     private val updatePeriod: Duration = 1.hours,
     defaultDispatcher: CoroutineContext = Dispatchers.Default,
 ) : Repository(defaultDispatcher) {
@@ -41,15 +43,13 @@ class AnimeScheduleRepository(
      * 获取所有新番季度的 ID
      */
     private fun animeSeasonIdsFlow(): Flow<List<AnimeSeasonId>> =
-        refreshTicker.mapLatest { animeScheduleService.getSeasonIds() }
-            .cachedWithTransparentException()
+        refreshTicker.mapLatest { animeScheduleService.getSeasonIds().sortedDescending() }
 
     /**
      * 获取指定季度的新番时间表
      */
     private fun animeScheduleFlow(seasonId: AnimeSeasonId): Flow<AnimeScheduleInfo?> =
         refreshTicker.mapLatest { animeScheduleService.getScheduleInfo(seasonId) }
-            .cachedWithTransparentException()
 
     suspend fun getSubjectRecurrence(subjectId: Int): SubjectRecurrence? {
         try {
@@ -69,19 +69,27 @@ class AnimeScheduleRepository(
         return animeScheduleService.batchGetSubjectRecurrences(subjectIds)
     }
 
-//    /**
-//     * 获取最近一年的新番时间表
-//     */
-//    fun recentSchedulesFlow(): Flow<List<AnimeScheduleInfo>> =
-//        animeSeasonIdsFlow()
-//            .mapLatest { seasons ->
-//                seasons.take(4)
-//                    .map {
-//                        suspend { animeScheduleService.getScheduleInfo(it) }.asFlow() // emits 1 item
-//                    }
-//                    .merge() // launches 4 coroutines, emits at most 4 items
-//                    .filterNotNull() // should not be null, just defensive programming
-//                    .toList()
+    /**
+     * 获取最近两季度的新番时间表
+     */
+    fun recentSchedulesFlow(): Flow<List<AnimeScheduleInfo>> {
+        return flow {
+            emit(animeScheduleService.getLatestAnimeScheduleInfos())
+        }.flowOn(defaultDispatcher)
+    }
+
+
+//    fun recentScheduleSubjectsFlow(): Flow<List<SubjectCollectionInfo>> =
+//        recentSchedulesFlow()
+//            .mapLatest { schedules ->
+//                schedules.flatMap { it.list }
+//            }.flatMapLatest { list ->
+//                combine(
+//                    list.map {
+//                        subjectCollectionRepository.subjectCollectionFlow(it.bangumiId)
+//                    },
+//                ) {
+//                    it.toList()
+//                }
 //            }
-//            .cachedWithTransparentException()
 }

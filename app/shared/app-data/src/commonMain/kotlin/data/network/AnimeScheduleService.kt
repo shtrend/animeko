@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -29,6 +29,7 @@ import me.him188.ani.client.apis.ScheduleAniApi
 import me.him188.ani.client.models.AniAnimeRecurrence
 import me.him188.ani.client.models.AniAnimeSeason
 import me.him188.ani.client.models.AniAnimeSeasonId
+import me.him188.ani.client.models.AniLatestAnimeSchedules
 import me.him188.ani.client.models.AniOnAirAnimeInfo
 import me.him188.ani.utils.coroutines.IO_
 import kotlin.coroutines.CoroutineContext
@@ -93,6 +94,17 @@ class AnimeScheduleService(
         }
     }
 
+    suspend fun getLatestAnimeScheduleInfos(): List<AnimeScheduleInfo> = withContext(ioDispatcher) {
+        try {
+            val resp = api.getLatestAnimeSeasons()
+            resp.typedBody<AniLatestAnimeSchedules>(typeInfo<AniLatestAnimeSchedules>()).list.map { item ->
+                AnimeScheduleInfo(item.seasonId.toAnimeSeasonId(), item.list.map { it.toAnimeScheduleInfo() })
+            }
+        } catch (e: Exception) {
+            throw RepositoryException.wrapOrThrowCancellation(e)
+        }
+    }
+
     @Serializable
     private data class AniBatchGetSubjectRecurrenceResponse(
         @SerialName(value = "recurrences") @Required val recurrences: List<AniAnimeRecurrence?> // note: nullable
@@ -128,8 +140,8 @@ private fun AniAnimeSeasonId.toAnimeSeasonId(): AnimeSeasonId {
 
 private val AniAnimeSeason.quarterNumber: Int
     get() = when (this) {
-        AniAnimeSeason.SPRING -> 1
-        AniAnimeSeason.SUMMER -> 2
-        AniAnimeSeason.AUTUMN -> 3
-        AniAnimeSeason.WINTER -> 4
+        AniAnimeSeason.WINTER -> 1
+        AniAnimeSeason.SPRING -> 2
+        AniAnimeSeason.SUMMER -> 3
+        AniAnimeSeason.AUTUMN -> 4
     }
