@@ -174,7 +174,7 @@ internal fun EpisodeVideoImpl(
                         },
                         actions = {
                             IconButton({ playerState.skip(85000L) }) {
-                                Icon(AniIcons.Forward85, "跳过 85s")
+                                Icon(AniIcons.Forward85, "快进 85 秒")
                             }
                             if (expanded) {
                                 IconButton(
