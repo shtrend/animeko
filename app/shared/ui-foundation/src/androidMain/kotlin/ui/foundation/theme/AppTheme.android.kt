@@ -15,11 +15,8 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.graphics.Color
@@ -43,47 +40,28 @@ actual fun appColorScheme(
             dynamicLightColorScheme(LocalContext.current)
         }
     } else {
-        if (seedColor == Color.Unspecified) {
-            if (isDark) {
-                darkColorScheme()
-            } else {
-                lightColorScheme()
-            }
-        } else {
-            dynamicColorScheme(
-                primary = seedColor,
-                isDark = isDark,
-                isAmoled = useBlackBackground,
-                style = PaletteStyle.TonalSpot,
-                modifyColorScheme = { colorScheme ->
-                    if (useBlackBackground && isDark) {
-                        colorScheme.copy(
-                            background = Color.Black,
-                            onBackground = Color.White,
+        dynamicColorScheme(
+            primary = seedColor,
+            isDark = isDark,
+            isAmoled = useBlackBackground,
+            style = PaletteStyle.TonalSpot,
+            modifyColorScheme = { colorScheme ->
+                if (useBlackBackground && isDark) {
+                    colorScheme.copy(
+                        background = Color.Black,
+                        onBackground = Color.White,
 
-                            surface = Color.Black,
-                            onSurface = Color.White,
-                            surfaceContainerLowest = Color.Black,
+                        surface = Color.Black,
+                        onSurface = Color.White,
+                        surfaceContainerLowest = Color.Black,
 
-                            surfaceVariant = Color.Black,
-                            onSurfaceVariant = Color.White,
-                        )
-                    } else colorScheme
-                },
-            )
-        }
+                        surfaceVariant = Color.Black,
+                        onSurfaceVariant = Color.White,
+                    )
+                } else colorScheme
+            },
+        )
     }
-}
-
-@Composable
-actual fun AniTheme(
-    isDark: Boolean,
-    content: @Composable () -> Unit,
-) {
-    MaterialTheme(
-        colorScheme = appColorScheme(isDark = isDark),
-        content = content,
-    )
 }
 
 @Composable
@@ -92,7 +70,7 @@ fun SystemBarColorEffect(
         DarkMode.LIGHT -> false
         DarkMode.DARK -> true
         DarkMode.AUTO -> isSystemInDarkTheme()
-    }
+    },
 ) {
     // Set statusBarStyle & navigationBarStyle
     val activity = LocalContext.current.findActivity() as? ComponentActivity
