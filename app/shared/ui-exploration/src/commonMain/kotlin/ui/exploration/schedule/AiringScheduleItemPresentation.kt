@@ -139,12 +139,12 @@ val TestSchedulePageData: List<AiringSchedule>
             )
 
 
-        return listOf(
+        return ScheduleDay.generateForRecentTwoWeeks(LocalDate(2025, 12, 10)).map {
             AiringSchedule(
-                date = LocalDate(2024, 1, 1),
+                date = it.date,
                 SchedulePageDataHelper.toColumnItems(list, addIndicator = true, currentTime),
-            ),
-        )
+            )
+        }
     }
 
 fun EpisodeWithAiringTime.toPresentation(timeZone: TimeZone): AiringScheduleItemPresentation {
@@ -166,7 +166,7 @@ fun EpisodeWithAiringTime.toPresentation(timeZone: TimeZone): AiringScheduleItem
 
 object SchedulePageDataHelper {
     val OFFSET_DAYS_RANGE = GetAnimeScheduleFlowUseCase.OFFSET_DAYS_RANGE
-    
+
     fun toColumnItems(
         list: List<AiringScheduleItemPresentation>,
         addIndicator: Boolean,

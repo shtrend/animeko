@@ -24,6 +24,7 @@ import me.him188.ani.app.domain.usecase.GlobalKoin
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.utils.coroutines.flows.FlowRestarter
 import me.him188.ani.utils.coroutines.flows.catching
+import me.him188.ani.utils.platform.annotations.TestOnly
 import org.koin.core.Koin
 
 class SchedulePageViewModel(
@@ -101,3 +102,10 @@ private fun generatePlaceholderAiringScheduleList(
         )
     }
 }
+
+@TestOnly
+fun createTestSchedulePagePresentation() = SchedulePagePresentation(
+    days = ScheduleDay.generateForRecentTwoWeeks(LocalDate(2025, 12, 10)),
+    airingSchedules = TestSchedulePageData,
+    null,
+)
