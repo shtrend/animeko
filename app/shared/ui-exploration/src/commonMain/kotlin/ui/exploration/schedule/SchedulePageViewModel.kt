@@ -24,32 +24,36 @@ import me.him188.ani.app.domain.usecase.GlobalKoin
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.utils.coroutines.flows.FlowRestarter
 import me.him188.ani.utils.coroutines.flows.catching
-import me.him188.ani.utils.coroutines.flows.restartable
 import org.koin.core.Koin
 
 class SchedulePageViewModel(
     koin: Koin = GlobalKoin,
+    private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
 ) : AbstractViewModel() {
+    private val now = Clock.System.now()
+    private val today = now.toLocalDateTime(timeZone).date
+
     private val getAnimeScheduleFlowUseCase: GetAnimeScheduleFlowUseCase by koin.inject()
 
     private val airingSchedulesFlowRestarter = FlowRestarter()
     private val airingSchedulesFlow =
-        getAnimeScheduleFlowUseCase(currentTime(), timeZone = TimeZone.currentSystemDefault())
-            .restartable(airingSchedulesFlowRestarter)
-            .catching()
+        getAnimeScheduleFlowUseCase(
+            today,
+            timeZone = timeZone,
+        ).catching()
             .shareInBackground(started = SharingStarted.Lazily) // always cached
 
-    val pageState = SchedulePageState(
-        initialSelectedDay = currentTime().toLocalDateTime(TimeZone.currentSystemDefault()).dayOfWeek,
-    )
+    private val days = ScheduleDay.generateForRecentTwoWeeks(today)
+    val pageState = SchedulePageState { days }
 
     fun refresh() {
         airingSchedulesFlowRestarter.restart()
     }
 
     val presentationFlow = airingSchedulesFlow.map { result ->
-        val timeZone = TimeZone.currentSystemDefault()
+        val timeZone = timeZone
         SchedulePagePresentation(
+            days,
             airingSchedules = result.getOrNull()?.map { airingSchedule ->
                 val currentDateTime = currentTime().toLocalDateTime(timeZone)
                 AiringSchedule(
@@ -67,6 +71,7 @@ class SchedulePageViewModel(
         backgroundScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SchedulePagePresentation(
+            days,
             generatePlaceholderAiringScheduleList(),
             error = null,
             isPlaceholder = true,
@@ -77,6 +82,7 @@ class SchedulePageViewModel(
 }
 
 data class SchedulePagePresentation(
+    val days: List<ScheduleDay>,
     val airingSchedules: List<AiringSchedule>,
     val error: LoadError?,
     val isPlaceholder: Boolean = false,

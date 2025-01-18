@@ -10,10 +10,12 @@
 package me.him188.ani.app.ui.exploration.schedule
 
 import androidx.compose.runtime.Immutable
+import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import me.him188.ani.app.data.models.subject.displayName
 import me.him188.ani.app.domain.episode.EpisodeWithAiringTime
@@ -42,6 +44,38 @@ data class AiringSchedule(
     val date: LocalDate,
     val episodes: List<AiringScheduleColumnItem>,
 )
+
+@Immutable
+data class ScheduleDay(
+    val date: LocalDate,
+    val kind: Kind,
+) {
+    val dayOfWeek: DayOfWeek get() = date.dayOfWeek
+
+    enum class Kind {
+        PAST,
+        TODAY,
+        FUTURE,
+    }
+
+    companion object {
+        fun generateForRecentTwoWeeks(
+            today: LocalDate,
+        ): List<ScheduleDay> {
+            // 假设今天是本周三, 返回的是上周三到下周三
+            return (-7..7).map {
+                ScheduleDay(
+                    date = today.plus(DatePeriod(days = it)),
+                    kind = when {
+                        it < 0 -> Kind.PAST
+                        it == 0 -> Kind.TODAY
+                        else -> Kind.FUTURE
+                    },
+                )
+            }
+        }
+    }
+}
 
 @TestOnly
 val TestAiringScheduleItemPresentations
