@@ -110,7 +110,7 @@ class EpisodeDanmakuLoader(
         )
     }.shareIn(flowScope, started = sharingStarted, replay = 1)
 
-    val danmakuLoadingStateFlow: Flow<DanmakuLoadingState> = danmakuLoader.state
+    val danmakuLoadingStateFlow: Flow<DanmakuLoadingState> = danmakuLoader.danmakuLoadingStateFlow
     val danmakuEventFlow: Flow<DanmakuEvent> = danmakuSessionFlow.flatMapLatest { it.events }
 
     suspend fun requestRepopulate() {
