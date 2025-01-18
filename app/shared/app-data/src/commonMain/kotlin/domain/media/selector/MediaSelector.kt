@@ -355,6 +355,28 @@ class DefaultMediaSelector(
                         }
                         0
                     }
+                    // 按符合用户选择类型排序. 缓存 > 用户偏好的 > 不偏好的, #1522
+                    .thenByDescending { maybe ->
+                        when (maybe.original.kind) {
+                            // Show cache on top
+                            MediaSourceKind.LocalCache -> {
+                                2
+                            }
+
+                            MediaSourceKind.WEB,
+                            MediaSourceKind.BitTorrent -> {
+                                if (settings.preferKind == null) {
+                                    0
+                                } else {
+                                    if (maybe.original.kind == settings.preferKind) {
+                                        1
+                                    } else {
+                                        0
+                                    }
+                                }
+                            }
+                        }
+                    }
                     .then(
                         compareBy { it.original.costForDownload },
                     )
