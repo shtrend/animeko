@@ -81,7 +81,6 @@ class EpisodeDanmakuLoader(
                     info.episodeId,
                     filename = mediaData.filenameOrNull ?: selectedMedia?.originalTitle,
                     fileLength = when (mediaData) {
-                        null -> null
                         is SeekableInputMediaData -> mediaData.fileLength()
                         is UriMediaData -> null
                     },
