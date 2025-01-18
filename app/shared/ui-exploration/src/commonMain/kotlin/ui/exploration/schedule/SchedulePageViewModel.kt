@@ -94,7 +94,7 @@ private fun generatePlaceholderAiringScheduleList(
     val episodes = (1..10).map {
         AiringScheduleColumnItem.PlaceholderData(id = it, showTime = true)
     }
-    return (0..6).map { offset ->
+    return SchedulePageDataHelper.OFFSET_DAYS_RANGE.map { offset ->
         AiringSchedule(
             baseDate.plus(DatePeriod(days = offset)),
             episodes = episodes,

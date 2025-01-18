@@ -369,18 +369,44 @@ private fun renderScheduleDay(day: ScheduleDay): String {
     val date = day.date
     return """
         ${date.monthNumber}/${date.dayOfMonth}
-        ${renderDayOfWeek(day.dayOfWeek)}
+        ${renderDayOfWeek(day.dayOfWeek, day.kind)}
     """.trimIndent()
 }
 
 @Stable
-private fun renderDayOfWeek(day: DayOfWeek): String = when (day) {
-    DayOfWeek.MONDAY -> "周一"
-    DayOfWeek.TUESDAY -> "周二"
-    DayOfWeek.WEDNESDAY -> "周三"
-    DayOfWeek.THURSDAY -> "周四"
-    DayOfWeek.FRIDAY -> "周五"
-    DayOfWeek.SATURDAY -> "周六"
-    DayOfWeek.SUNDAY -> "周日"
-    else -> day.toString()
+private fun renderDayOfWeek(day: DayOfWeek, kind: ScheduleDay.Kind): String = when (kind) {
+    // we manually permute them to make them real constants to avoid runtime allocations.
+    ScheduleDay.Kind.LAST_WEEK -> when (day) {
+        DayOfWeek.MONDAY -> "上周一"
+        DayOfWeek.TUESDAY -> "上周二"
+        DayOfWeek.WEDNESDAY -> "上周三"
+        DayOfWeek.THURSDAY -> "上周四"
+        DayOfWeek.FRIDAY -> "上周五"
+        DayOfWeek.SATURDAY -> "上周六"
+        DayOfWeek.SUNDAY -> "上周日"
+        else -> day.toString()
+    }
+
+    ScheduleDay.Kind.THIS_WEEK,
+    ScheduleDay.Kind.TODAY -> when (day) {
+        DayOfWeek.MONDAY -> "周一"
+        DayOfWeek.TUESDAY -> "周二"
+        DayOfWeek.WEDNESDAY -> "周三"
+        DayOfWeek.THURSDAY -> "周四"
+        DayOfWeek.FRIDAY -> "周五"
+        DayOfWeek.SATURDAY -> "周六"
+        DayOfWeek.SUNDAY -> "周日"
+        else -> day.toString()
+    }
+
+    ScheduleDay.Kind.NEXT_WEEK -> when (day) {
+        DayOfWeek.MONDAY -> "下周一"
+        DayOfWeek.TUESDAY -> "下周二"
+        DayOfWeek.WEDNESDAY -> "下周三"
+        DayOfWeek.THURSDAY -> "下周四"
+        DayOfWeek.FRIDAY -> "下周五"
+        DayOfWeek.SATURDAY -> "下周六"
+        DayOfWeek.SUNDAY -> "下周日"
+        else -> day.toString()
+    }
 }
