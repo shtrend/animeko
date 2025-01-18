@@ -180,7 +180,11 @@ private fun DayOfWeekHeadline(
     modifier: Modifier = Modifier
 ) {
     Column(modifier.width(IntrinsicSize.Min)) {
-        Text(renderScheduleDay(day), Modifier.width(IntrinsicSize.Max), softWrap = false, textAlign = TextAlign.Start)
+        Text(
+            renderScheduleDay(day), Modifier.width(IntrinsicSize.Max),
+            softWrap = false, textAlign = TextAlign.Start,
+            color = if (day.kind == ScheduleDay.Kind.TODAY) MaterialTheme.colorScheme.primary else Color.Unspecified,
+        )
 
         // Rounded horizontal divider
         val thickness = 2.dp
@@ -229,7 +233,12 @@ fun SchedulePageContent(
                                 state.animateScrollTo(day)
                             }
                         },
-                        text = { Text(renderScheduleDay(day), softWrap = false, textAlign = TextAlign.Center) },
+                        text = {
+                            Text(
+                                renderScheduleDay(day), softWrap = false, textAlign = TextAlign.Center,
+                                color = if (day.kind == ScheduleDay.Kind.TODAY) MaterialTheme.colorScheme.primary else Color.Unspecified,
+                            )
+                        },
                         selectedContentColor = colors.tabSelectedContentColor,
                         unselectedContentColor = colors.tabUnselectedContentColor,
                     )
