@@ -338,23 +338,22 @@ class DefaultMediaSelector(
             .sortedWith(
                 // stable sort, 保证相同的元素顺序不变
                 compareBy<MaybeExcludedMedia> { 0 } // dummy, to use .then* syntax.
-                    // 按是否能播放以及是否排除排序.
-                    .thenByDescending { maybe ->
+                    // 排除的总是在最后
+                    .thenBy { maybe ->
                         when (maybe) {
-                            is MaybeExcludedMedia.Included -> {
-                                val subtitleKind = maybe.result.properties.subtitleKind
-                                if (context.subtitlePreferences != null && subtitleKind != null) {
-                                    if (context.subtitlePreferences[subtitleKind] == SubtitleKindPreference.LOW_PRIORITY) {
-                                        return@thenByDescending 0
-                                    }
-                                }
-                                1
-                            }
-
-                            is MaybeExcludedMedia.Excluded -> {
-                                return@thenByDescending -1 // 排除的总是在最后
+                            is MaybeExcludedMedia.Included -> 0
+                            is MaybeExcludedMedia.Excluded -> 1
+                        }
+                    }
+                    // 将不能播放的放到后面
+                    .thenBy { maybe ->
+                        val subtitleKind = maybe.original.properties.subtitleKind
+                        if (context.subtitlePreferences != null && subtitleKind != null) {
+                            if (context.subtitlePreferences[subtitleKind] != SubtitleKindPreference.NORMAL) {
+                                return@thenBy 1
                             }
                         }
+                        0
                     }
                     .then(
                         compareBy { it.original.costForDownload },
