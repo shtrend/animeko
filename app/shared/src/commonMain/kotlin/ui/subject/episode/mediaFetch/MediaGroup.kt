@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -79,7 +79,7 @@ object MediaGrouper {
 
     @OptIn(UnsafeOriginalMediaAccess::class)
     fun buildGroups(list: List<MaybeExcludedMedia>): List<MediaGroup> {
-        val groups = HashMap<String, MediaGroup>()
+        val groups = LinkedHashMap<String, MediaGroup>() // keep order
         for (media in list) {
             val groupId = getGroupId(media.original)
             groups.getOrPut(groupId) { MediaGroup(groupId) }
