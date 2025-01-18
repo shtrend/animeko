@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -69,6 +69,22 @@ class TitleParserTest : PatternBasedTitleParserTestSuite() {
     @Test
     fun `movie as 01`() {
         val r = parse("[北宇治字幕组] 蓦然回首 / Look Back [Movie][WebRip][HEVC_AAC×2][简繁日内封]")
+        assertEquals("S?", r.episodeRange.toString())
+        assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
+        assertEquals("null", r.resolution.toString())
+    }
+
+    @Test
+    fun `no subtitle`() {
+        val r = parse("[北宇治字幕组] 蓦然回首 / Look Back [Movie][WebRip][HEVC_AAC×2][无中文字幕]")
+        assertEquals("S?", r.episodeRange.toString())
+        assertEquals("CHS", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
+        assertEquals("null", r.resolution.toString())
+    }
+
+    @Test
+    fun `no subtitle even if matches`() {
+        val r = parse("[北宇治字幕组] 蓦然回首 / Look Back [Movie][WebRip][HEVC_AAC×2][简繁日内封][无中文字幕]")
         assertEquals("S?", r.episodeRange.toString())
         assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
         assertEquals("null", r.resolution.toString())
