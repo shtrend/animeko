@@ -20,8 +20,7 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.transformLatest
 import me.him188.ani.app.data.repository.danmaku.SearchDanmakuRequest
 import me.him188.ani.danmaku.api.DanmakuCollection
-import me.him188.ani.danmaku.api.TimeBasedDanmakuSession
-import me.him188.ani.danmaku.api.emptyDanmakuCollection
+import me.him188.ani.danmaku.api.DanmakuFetchResult
 import org.koin.core.Koin
 
 /**
@@ -29,7 +28,7 @@ import org.koin.core.Koin
  */
 sealed interface DanmakuLoader {
     val danmakuLoadingStateFlow: StateFlow<DanmakuLoadingState>
-    val collectionFlow: Flow<DanmakuCollection>
+    val fetchResultFlow: Flow<List<DanmakuFetchResult>?>
 }
 
 class DanmakuLoaderImpl(
@@ -43,9 +42,9 @@ class DanmakuLoaderImpl(
     override val danmakuLoadingStateFlow: MutableStateFlow<DanmakuLoadingState> =
         MutableStateFlow(DanmakuLoadingState.Idle)
 
-    override val collectionFlow: Flow<DanmakuCollection> =
+    override val fetchResultFlow: Flow<List<DanmakuFetchResult>?> =
         requestFlow.distinctUntilChanged().transformLatest { request ->
-            emit(emptyDanmakuCollection()) // 每次更换 mediaFetchSession 时 (ep 变更), 首先清空历史弹幕
+            emit(null) // 每次更换 mediaFetchSession 时 (ep 变更), 首先清空历史弹幕
 
             if (request == null) {
                 danmakuLoadingStateFlow.value = DanmakuLoadingState.Idle
@@ -55,7 +54,7 @@ class DanmakuLoaderImpl(
             try {
                 val result = searchDanmakuUseCase(request)
                 danmakuLoadingStateFlow.value = DanmakuLoadingState.Success(result.map { it.matchInfo })
-                emit(TimeBasedDanmakuSession.create(result.asSequence().flatMap { it.list }))
+                emit(result)
             } catch (e: CancellationException) {
                 danmakuLoadingStateFlow.value = DanmakuLoadingState.Idle
                 throw e

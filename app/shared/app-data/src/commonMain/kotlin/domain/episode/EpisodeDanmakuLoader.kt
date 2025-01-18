@@ -29,6 +29,8 @@ import me.him188.ani.app.domain.media.player.data.filenameOrNull
 import me.him188.ani.app.domain.settings.GetDanmakuRegexFilterListFlowUseCase
 import me.him188.ani.danmaku.api.DanmakuEvent
 import me.him188.ani.danmaku.api.DanmakuSession
+import me.him188.ani.danmaku.api.TimeBasedDanmakuSession
+import me.him188.ani.danmaku.api.emptyDanmakuCollection
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -103,7 +105,15 @@ class EpisodeDanmakuLoader(
         sharingStarted,
     )
 
-    private val danmakuSessionFlow: Flow<DanmakuSession> = danmakuLoader.collectionFlow.mapLatest { session ->
+    private val danmakuCollectionFlow = danmakuLoader.fetchResultFlow.map {
+        if (it == null) {
+            emptyDanmakuCollection()
+        } else {
+            TimeBasedDanmakuSession.create(it.asSequence().flatMap { it.list })
+        }
+    }
+
+    private val danmakuSessionFlow: Flow<DanmakuSession> = danmakuCollectionFlow.mapLatest { session ->
         session.at(
             progress = player.currentPositionMillis.map { it.milliseconds },
             danmakuRegexFilterList = getDanmakuRegexFilterListFlowUseCase(),
