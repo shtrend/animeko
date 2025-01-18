@@ -326,6 +326,7 @@ class DefaultMediaSelector(
     private val mediaSelectorSettings = mediaSelectorSettings.cached()
     private val mediaSelectorContext = mediaSelectorContextNotCached.cached()
 
+    @OptIn(UnsafeOriginalMediaAccess::class)
     override val filteredCandidates: Flow<List<MaybeExcludedMedia>> = combine(
         mediaListNotCached.cached(), // cache 是必要的, 当 newPreferences 变更的时候不能重新加载 media list (网络)
         savedDefaultPreference, // 只需要使用 default, 因为目前不能覆盖生肉设置
@@ -335,29 +336,30 @@ class DefaultMediaSelector(
     ) { list, pref, settings, context ->
         filterMediaList(pref, settings, context, list)
             .sortedWith(
-                compareByDescending<MaybeExcludedMedia> { maybe ->
-                    when (maybe) {
-                        is MaybeExcludedMedia.Included -> {
-                            val subtitleKind = maybe.result.properties.subtitleKind
-                            if (context.subtitlePreferences != null && subtitleKind != null) {
-                                if (context.subtitlePreferences[subtitleKind] == SubtitleKindPreference.LOW_PRIORITY) {
-                                    return@compareByDescending 0
+                // stable sort, 保证相同的元素顺序不变
+                compareBy<MaybeExcludedMedia> { 0 } // dummy, to use .then* syntax.
+                    // 按是否能播放以及是否排除排序.
+                    .thenByDescending { maybe ->
+                        when (maybe) {
+                            is MaybeExcludedMedia.Included -> {
+                                val subtitleKind = maybe.result.properties.subtitleKind
+                                if (context.subtitlePreferences != null && subtitleKind != null) {
+                                    if (context.subtitlePreferences[subtitleKind] == SubtitleKindPreference.LOW_PRIORITY) {
+                                        return@thenByDescending 0
+                                    }
                                 }
+                                1
                             }
-                            1
-                        }
 
-                        is MaybeExcludedMedia.Excluded -> {
-                            return@compareByDescending -1 // 排除的总是在最后
+                            is MaybeExcludedMedia.Excluded -> {
+                                return@thenByDescending -1 // 排除的总是在最后
+                            }
                         }
                     }
-                } // 在这之后, 它肯定是 Included
                     .then(
-                        @OptIn(UnsafeOriginalMediaAccess::class)
                         compareBy { it.original.costForDownload },
                     )
                     .thenByDescending {
-                        @OptIn(UnsafeOriginalMediaAccess::class)
                         it.original.publishedTime
                     }
                     .thenByDescending {
