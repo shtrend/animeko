@@ -826,10 +826,14 @@ class DefaultMediaSelector(
 
         val selected = run {
             val mergedPreference = newPreferences.first()
+
+            fun bake(candidates: List<Media>): List<Media> {
+                return candidates.filter { it.mediaSourceId in mediaSourceOrder && it.mediaId !in blacklistMediaIds }
+                    .sortedBy { mediaSourceOrder.indexOf(it.mediaSourceId) }
+            }
+
             findUsingPreferenceFromCandidates(
-                preferredCandidatesMedia.first()
-                    .filter { it.mediaSourceId in mediaSourceOrder && it.mediaId !in blacklistMediaIds }
-                    .sortedBy { mediaSourceOrder.indexOf(it.mediaSourceId) },
+                bake(preferredCandidatesMedia.first()),
                 mergedPreference.copy(
                     alliance = ANY_FILTER,
                 ),
@@ -839,9 +843,7 @@ class DefaultMediaSelector(
 
                 // 如果用户偏好里面没有, 并且允许选择非偏好的, 才考虑全部列表
                 findUsingPreferenceFromCandidates(
-                    filteredCandidatesMedia.first()
-                        .filter { it.mediaSourceId in mediaSourceOrder && it.mediaId !in blacklistMediaIds }
-                        .sortedBy { mediaSourceOrder.indexOf(it.mediaSourceId) },
+                    bake(filteredCandidatesMedia.first()),
                     mergedPreference.copy(
                         alliance = ANY_FILTER,
                         resolution = ANY_FILTER,
