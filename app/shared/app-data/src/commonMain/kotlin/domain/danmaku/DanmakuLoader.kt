@@ -53,7 +53,7 @@ class DanmakuLoaderImpl(
             danmakuLoadingStateFlow.value = DanmakuLoadingState.Loading
             try {
                 val result = searchDanmakuUseCase(request)
-                danmakuLoadingStateFlow.value = DanmakuLoadingState.Success(result.map { it.matchInfo })
+                danmakuLoadingStateFlow.value = DanmakuLoadingState.Success
                 emit(result)
             } catch (e: CancellationException) {
                 danmakuLoadingStateFlow.value = DanmakuLoadingState.Idle

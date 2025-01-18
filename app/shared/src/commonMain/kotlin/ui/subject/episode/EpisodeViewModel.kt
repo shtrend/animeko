@@ -525,6 +525,7 @@ class EpisodeViewModel(
             episodeSession.fetchSelectFlow.filterNotNull(),
             combine(
                 danmakuLoader.danmakuLoadingStateFlow,
+                danmakuLoader.fetchResults,
                 settingsRepository.danmakuEnabled.flow,
                 ::DanmakuStatistics,
             ).distinctUntilChanged(),
@@ -645,6 +646,10 @@ class EpisodeViewModel(
     }
 
     override fun getKoin(): Koin = koin
+
+    fun setDanmakuSourceEnabled(providerId: String, enabled: Boolean) {
+        danmakuLoader.setEnabled(providerId, enabled)
+    }
 }
 
 
