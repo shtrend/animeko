@@ -12,6 +12,7 @@ package me.him188.ani.datasources.api
 import me.him188.ani.datasources.api.topic.EpisodeRange
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class EpRangeTest {
@@ -86,5 +87,144 @@ class EpRangeTest {
             combined,
         )
         assertEquals("S1+S2+S3", combined.toString())
+    }
+
+    @Test
+    fun `Combined equals seasons`() {
+        assertEquals(
+            EpisodeRange.Combined(
+                EpisodeRange.Combined(
+                    EpisodeRange.Season(1),
+                    EpisodeRange.Season(2),
+                ),
+                EpisodeRange.Season(3),
+            ),
+            EpisodeRange.combined(
+                EpisodeRange.combined(EpisodeRange.season(1), EpisodeRange.season(2)),
+                EpisodeRange.season(3),
+            ),
+        )
+    }
+
+    @Test
+    fun `Combined equals seasons tree`() {
+        assertEquals(
+            EpisodeRange.Combined(
+                EpisodeRange.Season(1),
+                EpisodeRange.Combined(
+                    EpisodeRange.Season(2),
+                    EpisodeRange.Season(3),
+                ),
+            ),
+            EpisodeRange.combined(
+                EpisodeRange.combined(EpisodeRange.season(1), EpisodeRange.season(2)),
+                EpisodeRange.season(3),
+            ),
+        )
+    }
+
+    @Test
+    fun `Combined equals seasons tree nested`() {
+        assertEquals(
+            EpisodeRange.Combined(
+                EpisodeRange.Season(1),
+                EpisodeRange.Combined(
+                    EpisodeRange.Combined(
+                        EpisodeRange.Season(2),
+                        EpisodeRange.Season(3),
+                    ),
+                    EpisodeRange.Season(4),
+                ),
+            ),
+            EpisodeRange.combined(
+                EpisodeRange.combined(EpisodeRange.season(1), EpisodeRange.season(2)),
+                EpisodeRange.combined(EpisodeRange.season(3), EpisodeRange.season(4)),
+            ),
+        )
+    }
+
+    @Test
+    fun `Combined tree mismatch`() {
+        assertNotEquals(
+            EpisodeRange.Combined(
+                EpisodeRange.Season(1),
+                EpisodeRange.Combined(
+                    EpisodeRange.Combined(
+                        EpisodeRange.Season(2),
+                        EpisodeRange.Season(3),
+                    ),
+                    EpisodeRange.Season(4),
+                ),
+            ),
+            EpisodeRange.combined(
+                EpisodeRange.combined(EpisodeRange.season(1), EpisodeRange.season(2)),
+                EpisodeRange.combined(listOf(EpisodeRange.season(3))),
+            ),
+        )
+    }
+
+    @Test
+    fun `Combined not equals empty`() {
+        assertNotEquals(
+            EpisodeRange.empty(),
+            EpisodeRange.combined(
+                EpisodeRange.combined(EpisodeRange.season(1), EpisodeRange.season(2)),
+                EpisodeRange.season(3),
+            ),
+        )
+    }
+
+    @Test
+    fun `combine single season`() {
+        assertEquals(
+            EpisodeRange.season(3),
+            EpisodeRange.combined(listOf(EpisodeRange.season(3))),
+        )
+    }
+
+    @Test
+    fun `combine single empty`() {
+        assertEquals(
+            EpisodeRange.empty(),
+            EpisodeRange.combined(listOf(EpisodeRange.empty())),
+        )
+    }
+
+    @Test
+    fun `combine two empty`() {
+        assertEquals(
+            EpisodeRange.empty(),
+            EpisodeRange.combined(listOf(EpisodeRange.empty(), EpisodeRange.empty())),
+        )
+    }
+
+    @Test
+    fun `combine empty iterable`() {
+        assertEquals(
+            EpisodeRange.empty(),
+            EpisodeRange.combined(listOf()),
+        )
+    }
+
+    @Test
+    fun `combine same episode`() {
+        assertEquals(
+            EpisodeRange.single("1"),
+            EpisodeRange.combined(
+                EpisodeRange.single("1"),
+                EpisodeRange.single("1"),
+            ),
+        )
+    }
+
+    @Test
+    fun `combine same season`() {
+        assertEquals(
+            EpisodeRange.season(1),
+            EpisodeRange.combined(
+                EpisodeRange.season(1),
+                EpisodeRange.season(1),
+            ),
+        )
     }
 }
