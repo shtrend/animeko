@@ -122,10 +122,10 @@ sealed class EpisodeRange {
                 yieldAll(second.knownSorts)
             }
 
-        override fun toString(): String = when {
-            second is Single -> "$first+${second.value}"
-            first is Single -> "${first.value}+$second"
-            else -> "$first+$second"
+        override fun toString(): String = buildString {
+            if (first is Single) append(first.value) else append(first)
+            append('+')
+            if (second is Single) append(second.value) else append(second)
         }
 
         override fun equals(other: Any?): Boolean {
