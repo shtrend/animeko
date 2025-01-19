@@ -128,10 +128,34 @@ sealed class EpisodeRange {
             if (second is Single) append(second.value) else append(second)
         }
 
+        private fun flatten(): Sequence<EpisodeRange> {
+            return sequence {
+                if (first is Combined) {
+                    yieldAll(first.flatten())
+                } else {
+                    yield(first)
+                }
+                if (second is Combined) {
+                    yieldAll(second.flatten())
+                } else {
+                    yield(second)
+                }
+            }
+        }
+
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (other !is EpisodeRange) return false
-            return knownSorts.toList() == other.knownSorts.toList() // TODO: optimize performance EpisodeRange.Combined.equals
+            return when (other) {
+                is Combined -> {
+                    flatten().sequenceEquals(other.flatten())
+                }
+
+                Empty -> false
+                is Range -> knownSorts.sequenceEquals(other.knownSorts)
+                is Season -> first == second && first == other
+                is Single -> first == other && second == other
+            }
         }
 
         override fun hashCode(): Int {
@@ -279,3 +303,13 @@ data class Alliance(
     val id: String,
     val name: String,
 )
+
+
+private fun <T> Sequence<T>.sequenceEquals(other: Sequence<T>): Boolean {
+    val iterator = iterator()
+    val otherIterator = other.iterator()
+    while (iterator.hasNext() && otherIterator.hasNext()) {
+        if (iterator.next() != otherIterator.next()) return false
+    }
+    return iterator.hasNext() == otherIterator.hasNext()
+}
