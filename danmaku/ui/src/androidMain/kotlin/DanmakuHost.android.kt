@@ -88,7 +88,7 @@ private class DummyDanmakuGeneratorState(
 ) {
     private var emitted = 0
     private var counter = 0
-    
+
     fun generate(
         playTimeMillis: Long = currentTimeMillis() - startTime
     ): Danmaku {
@@ -102,7 +102,7 @@ private class DummyDanmakuGeneratorState(
             Color.Black.value.toInt(),
         )
     }
-    
+
     fun generateSelf(): Danmaku {
         return Danmaku(
             "self${Random.Default.nextLong(100000000L..999999999L)}",
@@ -114,15 +114,15 @@ private class DummyDanmakuGeneratorState(
             0xfe1010,
         )
     }
-    
+
     fun generateRepopulate(
         lastTimeMillis: Long = Random.nextLong(0L..(1000L * 60 * 25))
     ): List<Danmaku> {
         if (lastTimeMillis < 0) return emptyList()
-        
+
         val list = mutableListOf<Danmaku>()
         var current = lastTimeMillis
-        
+
         kotlin.run {
             repeat(Random.nextInt(10..100)) {
                 list.add(generate(current))
@@ -130,10 +130,10 @@ private class DummyDanmakuGeneratorState(
                 if (current < 0) return@run
             }
         }
-        
+
         return list.asReversed()
     }
-    
+
     fun flow() = flow {
         emit(generate())
         emit(generate())
@@ -164,7 +164,7 @@ internal fun PreviewDanmakuHost() {
         )
     }
     val state = remember { DanmakuHostState(config) }
-    
+
     val generator = remember { DummyDanmakuGeneratorState() }
     val scope = rememberCoroutineScope()
     LaunchedEffect(true) {
@@ -177,14 +177,16 @@ internal fun PreviewDanmakuHost() {
     fun Editor(modifier: Modifier) {
         LazyRow(
             modifier,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
-                Button({
-                    scope.launch {
-                        state.send(DanmakuPresentation(generator.generateSelf(), isSelf = true))
-                    }
-                }) {
+                Button(
+                    {
+                        scope.launch {
+                            state.send(DanmakuPresentation(generator.generateSelf(), isSelf = true))
+                        }
+                    },
+                ) {
                     Text("Send self")
                 }
             }
@@ -219,7 +221,7 @@ internal fun PreviewDanmakuHost() {
                             .background(Color.Transparent),
                     )
                 }
-                Editor(Modifier.padding(8.dp),)
+                Editor(Modifier.padding(8.dp))
             }
             VerticalDivider()
             DanmakuConfig(
@@ -247,7 +249,7 @@ internal fun PreviewDanmakuHost() {
                     .fillMaxWidth()
                     .weight(1f),
             )
-            
+
         }
     }
 }
@@ -536,7 +538,7 @@ private fun SliderItem(
         with(this) { drawCircle(color = color, center = offset, radius = SliderDefaults.TickSize.toPx() / 2f) }
     },
 
-) {
+    ) {
     ListItem(
         headlineContent = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -557,7 +559,7 @@ private fun SliderItem(
         supportingContent = {
             Column(
                 modifier = Modifier.padding(top = 6.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 description?.invoke()
 
@@ -589,6 +591,6 @@ private fun SliderItem(
                 )
             }
         },
-        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer)
+        colors = ListItemDefaults.colors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     )
 }
