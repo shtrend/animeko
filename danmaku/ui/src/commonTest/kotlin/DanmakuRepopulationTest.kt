@@ -279,7 +279,7 @@ class DanmakuRepopulatorTest {
     }
 
     @Test
-    fun `repopulate - verifying isSelf does not impact time calculations (only a flag)`() = runTest {
+    fun `repopulate - verifying isSelf does not impact time calculations - only a flag`() = runTest {
         // Arrange
         val longState = mutableLongStateOf(value = 2_000_000_000L) // 2s
         val calls = mutableListOf<Pair<DanmakuPresentation, Long>>()
@@ -444,7 +444,7 @@ class DanmakuRepopulatorTest {
     }
 
     @Test
-    fun `repopulate - currentFrameTimeNanos is negative (unusual case)`() = runTest {
+    fun `repopulate - currentFrameTimeNanos is negative - unusual case`() = runTest {
         // Though unlikely in normal usage, let's see behavior if currentFrameTimeNanos is negative
         val longState = mutableLongStateOf(value = -1_000_000_000L) // -1s in nanos
         val calls = mutableListOf<Pair<DanmakuPresentation, Long>>()
