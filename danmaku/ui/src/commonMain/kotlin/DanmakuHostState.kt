@@ -456,7 +456,7 @@ class DanmakuHostState(
             // Observe dynamic changes in speed.
             launch {
                 snapshotFlow { danmakuConfig.speed }.collect {
-                    currentFloatingTrackSpeed = with(uiContext.density) { danmakuConfig.speed.dp.toPx() }
+                    currentFloatingTrackSpeed = with(uiContext.density) { it.dp.toPx() }
                 }
             }
 
