@@ -66,19 +66,9 @@ fun DanmakuHost(
     }
 
     BoxWithConstraints(modifier) {
-        val screenWidth by rememberUpdatedState(constraints.maxWidth)
-        val screenHeight by rememberUpdatedState(constraints.maxHeight)
-
-        LaunchedEffect(true) {
-            coroutineScope {
-                launch {
-                    snapshotFlow { screenWidth }.collect { state.hostWidth = it }
-                }
-                launch {
-                    snapshotFlow { screenHeight }.collect { state.hostHeight = it }
-                }
-            }
-        }
+        val hostWidth = constraints.maxWidth
+        state.hostWidth = hostWidth
+        state.hostHeight = constraints.maxHeight
 
         // Canvas only subscribes `danmakuUpdateSubscription` and `hostHeight` to re-draw.
         Canvas(
@@ -87,7 +77,6 @@ fun DanmakuHost(
                 .alpha(state.canvasAlpha),
         ) {
             state.danmakuUpdateSubscription // subscribe changes
-            val hostWidth = screenWidth
 
             for (danmaku in state.presentFloatingDanmaku) {
                 // don't draw uninitialized danmaku
