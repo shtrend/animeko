@@ -206,7 +206,7 @@ class MediaGroupState(
 
 @Composable
 @TestOnly
-fun rememberTestMediaSelectorPresentation(): MediaSelectorState {
+fun rememberTestMediaSelectorState(): MediaSelectorState {
     val backgroundScope = rememberBackgroundScope()
     return remember(backgroundScope) { createTestMediaSelectorState(backgroundScope.backgroundScope) }
 }
