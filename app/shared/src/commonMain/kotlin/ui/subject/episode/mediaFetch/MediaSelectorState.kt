@@ -53,6 +53,9 @@ fun rememberMediaSelectorState(
     }
 }
 
+/**
+ * @param backgroundScope only used for flow stateIn (with SharingStarted.WhileSubscribed)
+ */
 @Stable
 class MediaPreferenceItemState<T : Any>(
     @PublishedApi internal val item: MediaPreferenceItem<T>,
