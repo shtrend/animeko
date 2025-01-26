@@ -54,13 +54,10 @@ class RememberPlayProgressExtension(
         backgroundTaskScope.launch("PlaybackStateListener") {
             val player = context.player
             player.playbackState.collect { playbackState ->
-                @OptIn(UnsafeEpisodeSessionApi::class)
-                val episodeId = context.getCurrentEpisodeId()
-
                 when (playbackState) {
                     // 加载播放进度
                     PlaybackState.READY -> {
-                        val positionMillis = playProgressRepository.getPositionMillisByEpisodeId(episodeId)
+                        val positionMillis = playProgressRepository.getPositionMillisByEpisodeId(episodeSession.episodeId)
                         if (positionMillis == null) {
                             logger.info { "Did not find saved position" }
                         } else {
@@ -74,11 +71,11 @@ class RememberPlayProgressExtension(
                     }
 
                     PlaybackState.PAUSED -> {
-                        savePlayProgressOrRemove(episodeId)
+                        savePlayProgressOrRemove(episodeSession.episodeId)
                     }
 
                     PlaybackState.FINISHED -> {
-                        savePlayProgressOrRemove(episodeId)
+                        savePlayProgressOrRemove(episodeSession.episodeId)
                     }
 
                     else -> Unit
