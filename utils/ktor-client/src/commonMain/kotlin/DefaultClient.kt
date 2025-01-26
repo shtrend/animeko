@@ -54,7 +54,7 @@ fun createDefaultHttpClient(
     install(HttpCookies)
     install(HttpTimeout) {
         requestTimeoutMillis = 30_000
-        connectTimeoutMillis = 15_000
+        connectTimeoutMillis = 30_000
     }
     BrowserUserAgent()
     install(ContentNegotiation) {
