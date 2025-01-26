@@ -13,6 +13,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.BrowserUserAgent
+import io.ktor.client.plugins.HttpRedirect
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.HttpTimeout
@@ -69,6 +70,10 @@ fun createDefaultHttpClient(
         register(ContentType.Text.Xml, xmlConverter)
     }
     followRedirects = true
+    install(HttpRedirect) {
+        checkHttpMethod = false
+        allowHttpsDowngrade = true
+    }
     expectSuccess = true // All clients actually expect success by default in clientConfig, so we move them here
     clientConfig()
 }
