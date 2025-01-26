@@ -7,5 +7,8 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.datasources.api.source
+package me.him188.ani.test
 
+import org.junit.jupiter.api.Disabled
+
+actual typealias DisabledOnAndroid = Disabled
