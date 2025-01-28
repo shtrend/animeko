@@ -846,7 +846,7 @@ class WithMatrix(
         `if`: String? = null,
         @Language("shell", prefix = "./gradlew ") vararg tasks: String,
         env: Map<String, String> = emptyMap(),
-        maxAttempts: Int = 1,
+        maxAttempts: Int = 2,
         timeoutMinutes: Int = 120,
     ): ActionStep<Retry_Untyped.Outputs> = uses(
         name = name, 
