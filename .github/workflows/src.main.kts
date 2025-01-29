@@ -29,6 +29,7 @@
 @file:DependsOn("actions:upload-artifact:v4")
 @file:DependsOn("actions:download-artifact:v4")
 @file:DependsOn("reactivecircus:android-emulator-runner:v2")
+@file:DependsOn("jlumbroso:free-disk-space:v1.3.1")
 
 // Release
 @file:DependsOn("dawidd6:action-get-tag:v1")
@@ -57,6 +58,7 @@ import io.github.typesafegithub.workflows.actions.bhowell2.GithubSubstringAction
 import io.github.typesafegithub.workflows.actions.dawidd6.ActionGetTag_Untyped
 import io.github.typesafegithub.workflows.actions.gmitch215.SetupJava_Untyped
 import io.github.typesafegithub.workflows.actions.gradle.ActionsSetupGradle
+import io.github.typesafegithub.workflows.actions.jlumbroso.FreeDiskSpace_Untyped
 import io.github.typesafegithub.workflows.actions.nickfields.Retry_Untyped
 import io.github.typesafegithub.workflows.actions.reactivecircus.AndroidEmulatorRunner
 import io.github.typesafegithub.workflows.actions.snowactions.Qrcode_Untyped
@@ -380,7 +382,7 @@ run {
     val ghUbuntu2404 = MatrixInstance(
         runner = Runner.GithubUbuntu2404,
         uploadApk = false,
-        runAndroidInstrumentedTests = true,
+        runAndroidInstrumentedTests = true, // 这其实有问题, GH 没有足够的空间安装 7GB 模拟器
         composeResourceTriple = "linux-x64",
         runTests = false,
         uploadDesktopInstallers = false,
@@ -421,7 +423,7 @@ run {
     buildMatrixInstances = listOf(
         selfWin10,
         ghWin2019,
-        ghUbuntu2404,
+//        ghUbuntu2404,
         ghMac13,
         selfMac15,
     )
@@ -894,6 +896,18 @@ class WithMatrix(
                 name = "Free space for macOS",
                 command = shell($$"""chmod +x ./ci-helper/free-space-macos.sh && ./ci-helper/free-space-macos.sh"""),
                 continueOnError = true,
+            )
+        }
+        if (matrix.isUbuntu && !matrix.selfHosted) {
+            uses(
+                name = "Free space for Ubuntu",
+                action = FreeDiskSpace_Untyped(
+                    // https://github.com/marketplace/actions/free-disk-space-ubuntu
+                    toolCache_Untyped = "false",
+                    android_Untyped = "false",
+                    largePackages_Untyped = "false",
+                    // others are true
+                )
             )
         }
     }
