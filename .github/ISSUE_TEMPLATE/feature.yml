@@ -1,7 +1,7 @@
 name: 新特性与建议
 description: 请求添加一个新特性或提出一个一般建议
 labels:
-  - "N"
+  - "P2"
 type: Feature
 
 body:

@@ -3,7 +3,7 @@ description: 请求添加一个新数据源的支持
 labels:
   - "t: feature"
   - "s: media/new-source"
-  - "N"
+  - "P2"
 
 body:
   - type: markdown
