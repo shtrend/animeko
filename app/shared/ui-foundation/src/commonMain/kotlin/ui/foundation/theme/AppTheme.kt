@@ -14,7 +14,6 @@ package me.him188.ani.app.ui.foundation.theme
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.CardColors
@@ -144,7 +143,7 @@ object AniThemeDefaults {
         ),
         level = DeprecationLevel.ERROR,
     )
-    val feedItemPlacementSpec: SpringSpec<IntOffset>
+    val feedItemPlacementSpec: FiniteAnimationSpec<IntOffset>
         @Composable
         get() = LocalAniMotionScheme.current.feedItemPlacementSpec
 

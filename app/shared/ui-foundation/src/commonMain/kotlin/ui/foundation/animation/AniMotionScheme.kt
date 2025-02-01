@@ -13,7 +13,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.VisibilityThreshold
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -65,23 +64,15 @@ class AniMotionScheme(
     /**
      * @see LazyItemScope.animateItem
      */
-    val feedItemFadeInSpec: FiniteAnimationSpec<Float> = tween(
-        EasingDurations.standardAccelerate,
-        delayMillis = EasingDurations.standardDecelerate,
-        easing = StandardAccelerateEasing,
-    ),
+    val feedItemFadeInSpec: FiniteAnimationSpec<Float>,
     /**
      * @see LazyItemScope.animateItem
      */
-    val feedItemPlacementSpec: SpringSpec<IntOffset> = spring(
-        stiffness = Spring.StiffnessMediumLow,
-        visibilityThreshold = IntOffset.VisibilityThreshold,
-    ),
+    val feedItemPlacementSpec: FiniteAnimationSpec<IntOffset>,
     /**
      * @see LazyItemScope.animateItem
      */
-    val feedItemFadeOutSpec: FiniteAnimationSpec<Float> =
-        tween(EasingDurations.standardDecelerate, easing = StandardDecelerateEasing),
+    val feedItemFadeOutSpec: FiniteAnimationSpec<Float>,
 
     val standardAnimatedContentTransition: AnimatedContentTransitionScope<*>.() -> ContentTransform = {
         // Follow M3 Clean fades
@@ -99,7 +90,26 @@ class AniMotionScheme(
     },
 ) {
     internal companion object {
-        internal val Default = AniMotionScheme()
+        internal val Default = kotlin.run {
+            val feedItemFadeOutTime = EasingDurations.standardAccelerate
+            val feedItemFadeInTime = EasingDurations.standardDecelerate
+            AniMotionScheme(
+                feedItemFadeInSpec = tween(
+                    durationMillis = feedItemFadeInTime,
+                    delayMillis = feedItemFadeOutTime,
+                    easing = StandardDecelerateEasing,
+                ),
+                feedItemFadeOutSpec = tween(
+                    durationMillis = feedItemFadeOutTime,
+                    delayMillis = 0,
+                    easing = StandardAccelerateEasing,
+                ),
+                feedItemPlacementSpec = spring(
+                    stiffness = Spring.StiffnessMediumLow,
+                    visibilityThreshold = IntOffset.VisibilityThreshold,
+                ),
+            )
+        }
     }
 }
 
