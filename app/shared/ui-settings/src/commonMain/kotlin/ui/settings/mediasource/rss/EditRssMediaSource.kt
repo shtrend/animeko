@@ -145,7 +145,7 @@ class EditRssMediaSourceState(
 }
 
 @Composable
-fun EditRssMediaSourcePage(
+fun EditRssMediaSourceScreen(
     viewModel: EditRssMediaSourceViewModel,
     mediaDetailsColumn: @Composable (Media) -> Unit,
     modifier: Modifier = Modifier,
@@ -153,7 +153,7 @@ fun EditRssMediaSourcePage(
     navigationIcon: @Composable () -> Unit,
 ) {
     viewModel.state.collectAsStateWithLifecycle(null).value?.let {
-        EditRssMediaSourcePage(
+        EditRssMediaSourceScreen(
             it, viewModel.testState, mediaDetailsColumn, modifier, windowInsets = windowInsets,
             navigationIcon = navigationIcon,
         )
@@ -161,7 +161,7 @@ fun EditRssMediaSourcePage(
 }
 
 @Composable
-fun EditRssMediaSourcePage(
+fun EditRssMediaSourceScreen(
     state: EditRssMediaSourceState,
     testState: RssTestPaneState,
     mediaDetailsColumn: @Composable (Media) -> Unit,

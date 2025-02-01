@@ -43,16 +43,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import me.him188.ani.app.navigation.LocalNavigator
-import me.him188.ani.app.navigation.MainScenePage
+import me.him188.ani.app.navigation.MainScreenPage
 import me.him188.ani.app.navigation.getIcon
 import me.him188.ani.app.navigation.getText
 import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.ui.adaptive.navigation.AniNavigationSuite
 import me.him188.ani.app.ui.adaptive.navigation.AniNavigationSuiteDefaults
 import me.him188.ani.app.ui.adaptive.navigation.AniNavigationSuiteLayout
-import me.him188.ani.app.ui.cache.CacheManagementPage
+import me.him188.ani.app.ui.cache.CacheManagementScreen
 import me.him188.ani.app.ui.cache.CacheManagementViewModel
-import me.him188.ani.app.ui.exploration.ExplorationPage
+import me.him188.ani.app.ui.exploration.ExplorationScreen
 import me.him188.ani.app.ui.exploration.search.SearchPage
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
@@ -68,17 +68,17 @@ import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.subject.collection.CollectionPage
 import me.him188.ani.app.ui.subject.collection.UserCollectionsViewModel
-import me.him188.ani.app.ui.subject.details.SubjectDetailsPage
+import me.him188.ani.app.ui.subject.details.SubjectDetailsScreen
 import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateLoader
 import me.him188.ani.app.ui.update.TextButtonUpdateLogo
 import me.him188.ani.utils.platform.isAndroid
 
 
 @Composable
-fun MainScene(
-    page: MainScenePage,
+fun MainScreen(
+    page: MainScreenPage,
     modifier: Modifier = Modifier,
-    onNavigateToPage: (MainScenePage) -> Unit,
+    onNavigateToPage: (MainScreenPage) -> Unit,
     onNavigateToSettings: () -> Unit,
     navigationLayoutType: NavigationSuiteType = AniNavigationSuiteDefaults.calculateLayoutType(
         currentWindowAdaptiveInfo1(),
@@ -92,13 +92,13 @@ fun MainScene(
         }
     }
 
-    MainSceneContent(page, onNavigateToPage, onNavigateToSettings, modifier, navigationLayoutType)
+    MainScreenContent(page, onNavigateToPage, onNavigateToSettings, modifier, navigationLayoutType)
 }
 
 @Composable
-private fun MainSceneContent(
-    page: MainScenePage,
-    onNavigateToPage: (MainScenePage) -> Unit,
+private fun MainScreenContent(
+    page: MainScreenPage,
+    onNavigateToPage: (MainScreenPage) -> Unit,
     onNavigateToSettings: () -> Unit,
     modifier: Modifier = Modifier,
     navigationLayoutType: NavigationSuiteType = AniNavigationSuiteDefaults.calculateLayoutType(
@@ -116,7 +116,7 @@ private fun MainSceneContent(
                 ),
                 navigationRailHeader = {
                     FloatingActionButton(
-                        { onNavigateToPage(MainScenePage.Search) },
+                        { onNavigateToPage(MainScreenPage.Search) },
                         Modifier
                             .desktopTitleBarPadding()
                             .ifThen(currentWindowAdaptiveInfo1().windowSizeClass.isHeightAtLeastMedium) {
@@ -146,7 +146,7 @@ private fun MainSceneContent(
                 },
                 navigationRailItemSpacing = 8.dp,
             ) {
-                for (entry in MainScenePage.visibleEntries) {
+                for (entry in MainScreenPage.visibleEntries) {
                     item(
                         page == entry,
                         onClick = { onNavigateToPage(entry) },
@@ -177,10 +177,10 @@ private fun MainSceneContent(
                 },
             ) { page ->
                 when (page) {
-                    MainScenePage.Exploration -> {
-                        ExplorationPage(
+                    MainScreenPage.Exploration -> {
+                        ExplorationScreen(
                             viewModel { ExplorationPageViewModel() }.explorationPageState,
-                            onSearch = { onNavigateToPage(MainScenePage.Search) },
+                            onSearch = { onNavigateToPage(MainScreenPage.Search) },
                             onClickSettings = { navigator.navigateSettings() },
                             modifier.fillMaxSize(),
                             actions = {
@@ -189,12 +189,12 @@ private fun MainSceneContent(
                         )
                     }
 
-                    MainScenePage.Collection -> {
+                    MainScreenPage.Collection -> {
                         val vm = viewModel<UserCollectionsViewModel> { UserCollectionsViewModel() }
                         CollectionPage(
                             state = vm.state,
                             items = vm.items,
-                            onClickSearch = { onNavigateToPage(MainScenePage.Search) },
+                            onClickSearch = { onNavigateToPage(MainScreenPage.Search) },
                             onClickSettings = { navigator.navigateSettings() },
                             Modifier.fillMaxSize(),
                             enableAnimation = vm.myCollectionsSettings.enableListAnimation1,
@@ -205,16 +205,16 @@ private fun MainSceneContent(
                         )
                     }
 
-                    MainScenePage.CacheManagement -> CacheManagementPage(
+                    MainScreenPage.CacheManagement -> CacheManagementScreen(
                         viewModel { CacheManagementViewModel(navigator) },
                         navigationIcon = { },
                         Modifier.fillMaxSize(),
                     )
 
-                    MainScenePage.Search -> {
+                    MainScreenPage.Search -> {
                         val vm = viewModel { SearchViewModel() }
                         val onBack = {
-                            onNavigateToPage(MainScenePage.Exploration)
+                            onNavigateToPage(MainScreenPage.Exploration)
                         }
                         BackHandler(true, onBack)
                         val listDetailNavigator = rememberListDetailPaneScaffoldNavigator()
@@ -222,7 +222,7 @@ private fun MainSceneContent(
                             vm.searchPageState,
                             detailContent = {
                                 val result by vm.subjectDetailsStateLoader.result
-                                SubjectDetailsPage(
+                                SubjectDetailsScreen(
                                     result,
                                     onPlay = { episodeId ->
                                         val curr = result

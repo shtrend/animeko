@@ -37,7 +37,7 @@ import me.him188.ani.app.data.models.preference.UISettings
 import me.him188.ani.app.data.models.preference.UpdateSettings
 import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
 import me.him188.ani.app.data.network.protocol.ReleaseClass
-import me.him188.ani.app.navigation.MainScenePage
+import me.him188.ani.app.navigation.MainScreenPage
 import me.him188.ani.app.navigation.getIcon
 import me.him188.ani.app.navigation.getText
 import me.him188.ani.app.platform.currentAniBuildConfig
@@ -110,7 +110,7 @@ fun SettingsScope.AppearanceGroup(
 
     DropdownItem(
         selected = { uiSettings.mainSceneInitialPage },
-        values = { MainScenePage.visibleEntries },
+        values = { MainScreenPage.visibleEntries },
         itemText = { Text(it.getText()) },
         onSelect = {
             state.update(uiSettings.copy(mainSceneInitialPage = it))

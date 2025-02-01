@@ -110,7 +110,7 @@ class ExplorationPageState(
 }
 
 @Composable
-fun ExplorationPage(
+fun ExplorationScreen(
     state: ExplorationPageState,
     onSearch: () -> Unit,
     onClickSettings: () -> Unit,

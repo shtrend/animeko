@@ -72,17 +72,17 @@ import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.search.LoadErrorCard
 import me.him188.ani.utils.platform.isDesktop
 
-fun SchedulePageState(
+fun ScheduleScreenState(
     daysProvider: () -> List<ScheduleDay>,
-): SchedulePageState {
-    return SchedulePageState(
+): ScheduleScreenState {
+    return ScheduleScreenState(
         initialSelected = daysProvider().firstOrNull { it.kind == ScheduleDay.Kind.TODAY },
         daysProvider = daysProvider,
     )
 }
 
 @Stable
-class SchedulePageState(
+class ScheduleScreenState(
     initialSelected: ScheduleDay?,
     daysProvider: () -> List<ScheduleDay>,
 ) {
@@ -117,15 +117,15 @@ class SchedulePageState(
 
 
 @Composable
-fun SchedulePage(
+fun ScheduleScreen(
     presentation: SchedulePagePresentation,
     onRetry: () -> Unit,
     onClickItem: (item: AiringScheduleItemPresentation) -> Unit,
     modifier: Modifier = Modifier,
-    layoutParams: SchedulePageLayoutParams = SchedulePageLayoutParams.calculate(),
-    colors: SchedulePageColors = SchedulePageDefaults.colors(),
+    layoutParams: ScheduleScreenLayoutParams = ScheduleScreenLayoutParams.calculate(),
+    colors: ScheduleScreenColors = ScheduleScreenDefaults.colors(),
     navigationIcon: @Composable () -> Unit = {},
-    state: SchedulePageState = remember { SchedulePageState { presentation.days } },
+    state: ScheduleScreenState = remember { ScheduleScreenState { presentation.days } },
     windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
     Scaffold(
@@ -150,7 +150,7 @@ fun SchedulePage(
                     .padding(all = 16.dp),
             )
         } else {
-            SchedulePageContent(
+            ScheduleScreenContent(
                 state = state,
                 modifier = Modifier.padding(paddingValues),
                 layoutParams = layoutParams,
@@ -205,11 +205,11 @@ private fun DayOfWeekHeadline(
 }
 
 @Composable
-fun SchedulePageContent(
-    state: SchedulePageState,
+fun ScheduleScreenContent(
+    state: ScheduleScreenState,
     modifier: Modifier = Modifier,
-    layoutParams: SchedulePageLayoutParams = SchedulePageLayoutParams.calculate(),
-    colors: SchedulePageColors = SchedulePageDefaults.colors(),
+    layoutParams: ScheduleScreenLayoutParams = ScheduleScreenLayoutParams.calculate(),
+    colors: ScheduleScreenColors = ScheduleScreenDefaults.colors(),
     pageContent: @Composable (page: ScheduleDay) -> Unit,
 ) {
     Column(modifier) {
@@ -301,7 +301,7 @@ fun SchedulePageContent(
 
 @Immutable
 @ExposedCopyVisibility
-data class SchedulePageLayoutParams private constructor(
+data class ScheduleScreenLayoutParams private constructor(
     val pageSize: PageSize,
     val pageSpacing: Dp,
     val pageContentPadding: PaddingValues,
@@ -313,7 +313,7 @@ data class SchedulePageLayoutParams private constructor(
     @Stable
     companion object {
         @Stable
-        val Compact = SchedulePageLayoutParams(
+        val Compact = ScheduleScreenLayoutParams(
             pageSize = PageSize.Fill,
             pageSpacing = 8.dp,
             pageContentPadding = PaddingValues(0.dp),
@@ -324,7 +324,7 @@ data class SchedulePageLayoutParams private constructor(
         )
 
         @Stable
-        val Medium = SchedulePageLayoutParams(
+        val Medium = ScheduleScreenLayoutParams(
             pageSize = PageSize.Fixed(360.dp),
             pageSpacing = 16.dp,
             pageContentPadding = PaddingValues(horizontal = 8.dp),
@@ -335,7 +335,7 @@ data class SchedulePageLayoutParams private constructor(
         )
 
         @Composable
-        fun calculate(windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass): SchedulePageLayoutParams {
+        fun calculate(windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass): ScheduleScreenLayoutParams {
             return if (windowSizeClass.isWidthAtLeastMedium) {
                 Medium
             } else {
@@ -346,7 +346,7 @@ data class SchedulePageLayoutParams private constructor(
 }
 
 @Immutable
-data class SchedulePageColors(
+data class ScheduleScreenColors(
     val tabRowContainerColor: Color,
     val tabSelectedContentColor: Color,
     val tabUnselectedContentColor: Color,
@@ -354,7 +354,7 @@ data class SchedulePageColors(
 )
 
 @Stable
-object SchedulePageDefaults {
+object ScheduleScreenDefaults {
     @Composable
     fun colors(
         tabRowColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
@@ -363,7 +363,7 @@ object SchedulePageDefaults {
         itemColors: ListItemColors = ListItemDefaults.colors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         ),
-    ): SchedulePageColors = SchedulePageColors(
+    ): ScheduleScreenColors = ScheduleScreenColors(
         tabRowContainerColor = tabRowColor,
         tabSelectedContentColor = tabSelectedContentColor,
         tabUnselectedContentColor = tabUnselectedContentColor,

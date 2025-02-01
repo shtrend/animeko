@@ -147,7 +147,7 @@ import org.openani.mediamp.features.Screenshots
  * 番剧详情 (播放) 页面
  */
 @Composable
-fun EpisodeScene(
+fun EpisodeScreen(
     viewModel: EpisodeViewModel,
     modifier: Modifier = Modifier,
     windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
@@ -156,7 +156,7 @@ fun EpisodeScene(
         Scaffold(
             contentWindowInsets = WindowInsets(0.dp),
         ) {
-            EpisodeSceneContent(
+            EpisodeScreenContent(
                 viewModel,
                 Modifier,
                 windowInsets = windowInsets,
@@ -166,7 +166,7 @@ fun EpisodeScene(
 }
 
 @Composable
-private fun EpisodeSceneContent(
+private fun EpisodeScreenContent(
     vm: EpisodeViewModel,
     modifier: Modifier = Modifier,
     windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
@@ -267,7 +267,7 @@ private fun EpisodeSceneContent(
                 CompositionLocalProvider(LocalImageViewerHandler provides imageViewer) {
                     when {
                         showExpandedUI || isSystemInFullscreen() ->
-                            EpisodeSceneTabletVeryWide(
+                            EpisodeScreenTabletVeryWide(
                                 vm,
                                 page,
                                 danmakuHostState,
@@ -279,7 +279,7 @@ private fun EpisodeSceneContent(
                                 windowInsets,
                             )
 
-                        else -> EpisodeSceneContentPhone(
+                        else -> EpisodeScreenContentPhone(
                             vm,
                             page,
                             danmakuHostState,
@@ -319,7 +319,7 @@ private fun EpisodeSceneContent(
 }
 
 @Composable
-private fun EpisodeSceneTabletVeryWide(
+private fun EpisodeScreenTabletVeryWide(
     vm: EpisodeViewModel,
     page: EpisodePageState,
     danmakuHostState: DanmakuHostState,
@@ -477,7 +477,7 @@ private fun TabRow(
 }
 
 @Composable
-private fun EpisodeSceneContentPhone(
+private fun EpisodeScreenContentPhone(
     vm: EpisodeViewModel,
     page: EpisodePageState,
     danmakuHostState: DanmakuHostState,
@@ -490,7 +490,7 @@ private fun EpisodeSceneContentPhone(
 ) {
     var showDanmakuEditor by rememberSaveable { mutableStateOf(false) }
 
-    EpisodeSceneContentPhoneScaffold(
+    EpisodeScreenContentPhoneScaffold(
         videoOnly = vm.isFullscreen,
         commentCount = { vm.episodeCommentState.count },
         video = {
@@ -609,7 +609,7 @@ private fun DetachedDanmakuEditorLayout(
 }
 
 @Composable
-fun EpisodeSceneContentPhoneScaffold(
+fun EpisodeScreenContentPhoneScaffold(
     videoOnly: Boolean,
     commentCount: () -> Int?,
     video: @Composable () -> Unit,

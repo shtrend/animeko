@@ -104,7 +104,7 @@ import me.him188.ani.utils.platform.hasScrollingBug
 typealias SettingsTab = me.him188.ani.app.navigation.SettingsTab
 
 @Composable
-fun SettingsPage(
+fun SettingsScreen(
     vm: SettingsViewModel,
     modifier: Modifier = Modifier,
     initialTab: SettingsTab? = null,

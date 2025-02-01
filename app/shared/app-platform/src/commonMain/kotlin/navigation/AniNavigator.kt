@@ -88,7 +88,7 @@ interface AniNavigator {
     }
 
     fun navigateMain(
-        page: MainScenePage,
+        page: MainScreenPage,
         requestFocus: Boolean = false
     ) {
         navigator.popBackStack<NavRoutes.Main>(inclusive = false)

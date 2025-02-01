@@ -118,7 +118,7 @@ import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.utils.platform.isMobile
 
 @Composable
-fun SubjectDetailsPage(
+fun SubjectDetailsScreen(
     vm: SubjectDetailsViewModel,
     onPlay: (episodeId: Int) -> Unit,
     onLoadErrorRetry: () -> Unit,
@@ -128,7 +128,7 @@ fun SubjectDetailsPage(
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     navigationIcon: @Composable () -> Unit = {},
 ) {
-    SubjectDetailsPage(
+    SubjectDetailsScreen(
         vm.result,
         onPlay,
         onLoadErrorRetry,
@@ -141,7 +141,7 @@ fun SubjectDetailsPage(
 }
 
 @Composable
-fun SubjectDetailsPage(
+fun SubjectDetailsScreen(
     state: SubjectDetailsStateLoader.LoadState,
     onPlay: (episodeId: Int) -> Unit,
     onLoadErrorRetry: () -> Unit,
@@ -152,7 +152,7 @@ fun SubjectDetailsPage(
     navigationIcon: @Composable () -> Unit = {},
 ) {
     when (state) {
-        is SubjectDetailsStateLoader.LoadState.Ok -> SubjectDetailsPage(
+        is SubjectDetailsStateLoader.LoadState.Ok -> SubjectDetailsScreen(
             state.value,
             onPlay = onPlay,
             modifier,
@@ -181,7 +181,7 @@ fun SubjectDetailsPage(
 }
 
 @Composable
-private fun SubjectDetailsPage(
+private fun SubjectDetailsScreen(
     state: SubjectDetailsState,
     onPlay: (episodeId: Int) -> Unit,
     modifier: Modifier = Modifier,
@@ -211,7 +211,7 @@ private fun SubjectDetailsPage(
 
     val placeholderModifier = Modifier.placeholder(state.showPlaceholder)
     val presentation by state.presentationFlow.collectAsStateWithLifecycle()
-    SubjectDetailsPageLayout(
+    SubjectDetailsScreenLayout(
         state.subjectId,
         state.info,
         isPlaceholder = state.showPlaceholder,
@@ -334,7 +334,7 @@ private fun ErrorSubjectDetailsPage(
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     navigationIcon: @Composable () -> Unit = {},
 ) {
-    SubjectDetailsPageLayout(
+    SubjectDetailsScreenLayout(
         subjectId = subjectId,
         info = placeholderSubjectInfo,
         isPlaceholder = false,
@@ -376,7 +376,7 @@ enum class SubjectDetailsTab {
  * @param info `null` 表示正在加载中
  */
 @Composable
-fun SubjectDetailsPageLayout(
+fun SubjectDetailsScreenLayout(
     subjectId: Int,
     info: SubjectInfo?,
     isPlaceholder: Boolean,

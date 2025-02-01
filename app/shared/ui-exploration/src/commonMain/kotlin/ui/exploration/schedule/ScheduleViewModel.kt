@@ -27,7 +27,7 @@ import me.him188.ani.utils.coroutines.flows.catching
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.koin.core.Koin
 
-class SchedulePageViewModel(
+class ScheduleViewModel(
     koin: Koin = GlobalKoin,
     private val timeZone: TimeZone = TimeZone.currentSystemDefault(),
 ) : AbstractViewModel() {
@@ -45,7 +45,7 @@ class SchedulePageViewModel(
             .shareInBackground(started = SharingStarted.Lazily) // always cached
 
     private val days = ScheduleDay.generateForRecentTwoWeeks(today)
-    val pageState = SchedulePageState { days }
+    val pageState = ScheduleScreenState { days }
 
     fun refresh() {
         airingSchedulesFlowRestarter.restart()

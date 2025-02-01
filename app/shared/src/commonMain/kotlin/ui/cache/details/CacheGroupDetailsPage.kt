@@ -74,13 +74,13 @@ class MediaCacheDetailsPageViewModel(
 }
 
 @Composable
-fun MediaCacheDetailsPage(
+fun MediaCacheDetailsScreen(
     vm: MediaCacheDetailsPageViewModel,
     navigationIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
 ) {
-    MediaCacheDetailsPage(
+    MediaCacheDetailsScreen(
         media = vm.media,
         sourceInfo = vm.sourceInfo,
         navigationIcon = navigationIcon,
@@ -90,7 +90,7 @@ fun MediaCacheDetailsPage(
 }
 
 @Composable
-fun MediaCacheDetailsPage(
+fun MediaCacheDetailsScreen(
     media: Media?,
     sourceInfo: MediaSourceInfo?,
     navigationIcon: @Composable () -> Unit,
