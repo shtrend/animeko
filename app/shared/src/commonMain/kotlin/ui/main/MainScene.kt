@@ -55,6 +55,7 @@ import me.him188.ani.app.ui.cache.CacheManagementViewModel
 import me.him188.ani.app.ui.exploration.ExplorationPage
 import me.him188.ani.app.ui.exploration.search.SearchPage
 import me.him188.ani.app.ui.foundation.LocalPlatform
+import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
@@ -167,10 +168,13 @@ private fun MainSceneContent(
                 consumeWindowInsets(WindowInsets.desktopTitleBar())
             },
         ) {
+            val aniMotionScheme = LocalAniMotionScheme.current
             AnimatedContent(
                 page,
                 Modifier.fillMaxSize(),
-                transitionSpec = { AniThemeDefaults.topLevelTransition },
+                transitionSpec = {
+                    aniMotionScheme.topLevelTransition
+                },
             ) { page ->
                 when (page) {
                     MainScenePage.Exploration -> {

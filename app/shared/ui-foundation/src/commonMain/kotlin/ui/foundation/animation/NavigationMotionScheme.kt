@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.foundation.theme
+package me.him188.ani.app.ui.foundation.animation
 
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -22,12 +22,14 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.window.core.layout.WindowSizeClass
-import me.him188.ani.app.ui.foundation.animation.EmphasizedAccelerateEasing
-import me.him188.ani.app.ui.foundation.animation.EmphasizedDecelerateEasing
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthCompact
+import me.him188.ani.app.ui.foundation.theme.EasingDurations
 import kotlin.math.roundToInt
 
+/**
+ * @see AniMotionScheme
+ */
 @Stable
 @Immutable
 data class NavigationMotionScheme(

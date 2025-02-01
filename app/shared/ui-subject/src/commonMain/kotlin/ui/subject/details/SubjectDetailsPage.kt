@@ -83,6 +83,7 @@ import me.him188.ani.app.ui.external.placeholder.placeholder
 import me.him188.ani.app.ui.foundation.ImageViewer
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.Tag
+import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.interaction.nestedScrollWorkaround
@@ -270,7 +271,7 @@ private fun SubjectDetailsPage(
             AnimatedVisibility(
                 visible = state.showPlaceholder,
                 enter = EnterTransition.None,
-                exit = fadeOut(AniThemeDefaults.feedItemFadeOutSpec),
+                exit = fadeOut(LocalAniMotionScheme.current.feedItemFadeOutSpec),
             ) {
                 PlaceholderSubjectDetailsContentPager(paddingValues)
             }

@@ -51,6 +51,7 @@ import me.him188.ani.app.domain.mediasource.codec.MediaSourceCodecManager
 import me.him188.ani.app.domain.mediasource.rss.RssMediaSource
 import me.him188.ani.app.domain.mediasource.rss.RssMediaSourceArguments
 import me.him188.ani.app.domain.mediasource.rss.RssSearchConfig
+import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.layout.ListDetailAnimatedPane
 import me.him188.ani.app.ui.foundation.layout.PaddingValuesSides
@@ -184,7 +185,7 @@ fun EditRssMediaSourcePage(
                     title = {
                         AnimatedContent(
                             navigator.currentDestination?.pane,
-                            transitionSpec = AniThemeDefaults.standardAnimatedContentTransition,
+                            transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
                         ) {
                             when (it) {
                                 ListDetailPaneScaffoldRole.List -> Text(state.displayName)

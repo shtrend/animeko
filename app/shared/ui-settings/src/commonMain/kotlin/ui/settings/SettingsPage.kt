@@ -72,6 +72,7 @@ import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.adaptive.ListDetailLayoutParameters
 import me.him188.ani.app.ui.adaptive.PaneScope
 import me.him188.ani.app.ui.foundation.LocalPlatform
+import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
@@ -316,7 +317,7 @@ internal fun SettingsPageLayout(
                 navigator.currentDestination?.contentKey,
                 Modifier
                     .fillMaxSize(),
-                transitionSpec = AniThemeDefaults.standardAnimatedContentTransition,
+                transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
             ) { navigationTab ->
                 val tab = navigationTab.orDefault()
                 Column {

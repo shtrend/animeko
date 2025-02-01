@@ -14,13 +14,8 @@ package me.him188.ani.app.ui.foundation.theme
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.VisibilityThreshold
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.SpringSpec
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
@@ -36,10 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import me.him188.ani.app.data.models.preference.DarkMode
 import me.him188.ani.app.data.models.preference.ThemeSettings
-import me.him188.ani.app.ui.foundation.animation.EmphasizedAccelerateEasing
-import me.him188.ani.app.ui.foundation.animation.EmphasizedDecelerateEasing
-import me.him188.ani.app.ui.foundation.animation.StandardAccelerateEasing
-import me.him188.ani.app.ui.foundation.animation.StandardDecelerateEasing
+import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 
 /**
  * Create a [ColorScheme] based on the current [ThemeSettings].
@@ -128,82 +120,62 @@ object AniThemeDefaults {
     )
 
 
+    // These are kept for PR migration in 4.5.0. Safe to remove in 4.6.0.
+
     @Stable
-    val feedItemFadeInSpec: FiniteAnimationSpec<Float> = tween(
-        EasingDurations.standardAccelerate,
-        delayMillis = EasingDurations.standardDecelerate,
-        easing = StandardAccelerateEasing,
+    @Deprecated(
+        "Use LocalAniMotionScheme instead",
+        ReplaceWith(
+            "LocalAniMotionScheme.current.feedItemFadeInSpec",
+            "me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme",
+        ),
+        level = DeprecationLevel.ERROR,
     )
+    val feedItemFadeInSpec: FiniteAnimationSpec<Float>
+        @Composable
+        get() = LocalAniMotionScheme.current.feedItemFadeInSpec
 
     @Stable
-    val feedItemPlacementSpec = spring(
-        stiffness = Spring.StiffnessMediumLow,
-        visibilityThreshold = IntOffset.VisibilityThreshold,
+    @Deprecated(
+        "Use LocalAniMotionScheme instead",
+        ReplaceWith(
+            "LocalAniMotionScheme.current.feedItemPlacementSpec",
+            "me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme",
+        ),
+        level = DeprecationLevel.ERROR,
     )
+    val feedItemPlacementSpec: SpringSpec<IntOffset>
+        @Composable
+        get() = LocalAniMotionScheme.current.feedItemPlacementSpec
 
     @Stable
-    val feedItemFadeOutSpec: FiniteAnimationSpec<Float> =
-        tween(EasingDurations.standardDecelerate, easing = StandardDecelerateEasing)
-
-    /**
-     * This pattern is used to navigate between top-level destinations of an app, like tapping a destination in a Navigation bar.
-     *
-     * Commonly used with: Navigation bar, navigation rail, and navigation drawer
-     *
-     * [M3 Spec](https://m3.material.io/styles/motion/transitions/transition-patterns#f852afd2-396f-49fd-a265-5f6d96680e16)
-     */
-    @Stable
-    val topLevelTransition = run {
-        val outTime = 50
-        val inTime = 150
-        fadeIn(
-            animationSpec = tween(
-                durationMillis = inTime,
-                delayMillis = outTime,
-                easing = StandardDecelerateEasing,
-            ),
-        ).togetherWith(
-            fadeOut(
-                animationSpec = tween(
-                    durationMillis = outTime,
-                    delayMillis = 0,
-                    easing = StandardAccelerateEasing,
-                ),
-            ),
-        )
-    }
+    @Deprecated(
+        "Use LocalAniMotionScheme instead",
+        ReplaceWith(
+            "LocalAniMotionScheme.current.feedItemFadeOutSpec",
+            "me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme",
+        ),
+        level = DeprecationLevel.ERROR,
+    )
+    val feedItemFadeOutSpec: FiniteAnimationSpec<Float>
+        @Composable
+        get() = LocalAniMotionScheme.current.feedItemFadeOutSpec
 
     /**
      * 适用中小型组件.
      */
     @Stable
-    val standardAnimatedContentTransition: AnimatedContentTransitionScope<*>.() -> ContentTransform = {
-        // Follow M3 Clean fades
-        val fadeIn = fadeIn(
-            tween(
-                EasingDurations.standardAccelerate,
-                delayMillis = EasingDurations.standardDecelerate,
-                easing = StandardAccelerateEasing,
-            ),
-        )
-        val fadeOut = fadeOut(feedItemFadeOutSpec)
-        fadeIn.togetherWith(fadeOut)
-    }
-
-    @Stable
-    val emphasizedAnimatedContentTransition: AnimatedContentTransitionScope<*>.() -> ContentTransform = {
-        // Follow M3 Clean fades
-        val fadeIn = fadeIn(
-            animationSpec = tween(
-                EasingDurations.emphasizedAccelerate,
-                delayMillis = EasingDurations.emphasizedDecelerate,
-                easing = EmphasizedAccelerateEasing,
-            ),
-        )
-        val fadeOut =
-            fadeOut(animationSpec = tween(EasingDurations.emphasizedDecelerate, easing = EmphasizedDecelerateEasing))
-        fadeIn.togetherWith(fadeOut)
-    }
+    @Deprecated(
+        "Use LocalAniMotionScheme instead",
+        ReplaceWith(
+            "LocalAniMotionScheme.current.standardAnimatedContentTransition",
+            "me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme",
+        ),
+        level = DeprecationLevel.ERROR,
+    )
+    val standardAnimatedContentTransition: AnimatedContentTransitionScope<*>.() -> ContentTransform
+        @Composable
+        get() = LocalAniMotionScheme.current.standardAnimatedContentTransition
 }
 
 /**

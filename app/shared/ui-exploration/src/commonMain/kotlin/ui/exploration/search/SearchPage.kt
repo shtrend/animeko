@@ -56,6 +56,7 @@ import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.adaptive.AniListDetailPaneScaffold
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.PaneScope
+import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.interaction.keyboardDirectionToSelectItem
 import me.him188.ani.app.ui.foundation.interaction.keyboardPageToScroll
@@ -65,7 +66,6 @@ import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
-import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.foundation.widgets.NsfwMask
 import me.him188.ani.app.ui.search.LoadErrorCard
@@ -201,9 +201,9 @@ internal fun SearchPageResultColumn(
                 SearchDefaults.SearchSummaryItem(
                     items,
                     Modifier.animateItem(
-                        fadeInSpec = AniThemeDefaults.feedItemFadeInSpec,
-                        placementSpec = AniThemeDefaults.feedItemPlacementSpec,
-                        fadeOutSpec = AniThemeDefaults.feedItemFadeOutSpec,
+                        fadeInSpec = LocalAniMotionScheme.current.feedItemFadeInSpec,
+                        placementSpec = LocalAniMotionScheme.current.feedItemPlacementSpec,
+                        fadeOutSpec = LocalAniMotionScheme.current.feedItemFadeOutSpec,
                     ),
                 )
             }
@@ -244,9 +244,9 @@ internal fun SearchPageResultColumn(
 //                            animatedVisibilityScope,
 //                        )
                             .animateItem(
-                                fadeInSpec = AniThemeDefaults.feedItemFadeInSpec,
-                                placementSpec = AniThemeDefaults.feedItemPlacementSpec,
-                                fadeOutSpec = AniThemeDefaults.feedItemFadeOutSpec,
+                                fadeInSpec = LocalAniMotionScheme.current.feedItemFadeInSpec,
+                                placementSpec = LocalAniMotionScheme.current.feedItemPlacementSpec,
+                                fadeOutSpec = LocalAniMotionScheme.current.feedItemFadeOutSpec,
                             )
                             .fillMaxWidth()
                             .bringIntoViewRequester(requester)
