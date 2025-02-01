@@ -27,7 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import me.him188.ani.app.ui.foundation.animation.StandardAccelerate
+import me.him188.ani.app.ui.foundation.animation.StandardAccelerateEasing
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults.feedItemFadeOutSpec
 import me.him188.ani.app.ui.foundation.theme.EasingDurations
 import me.him188.ani.app.ui.foundation.theme.NavigationMotionScheme
@@ -64,7 +64,7 @@ fun ThreePaneScaffoldPaneScope.ListDetailAnimatedPane(
                         tween(
                             EasingDurations.standardAccelerate,
                             delayMillis = EasingDurations.standardDecelerate,
-                            easing = StandardAccelerate,
+                            easing = StandardAccelerateEasing,
                         ),
                     )
                 }

@@ -38,8 +38,8 @@ import me.him188.ani.app.data.models.preference.DarkMode
 import me.him188.ani.app.data.models.preference.ThemeSettings
 import me.him188.ani.app.ui.foundation.animation.EmphasizedAccelerateEasing
 import me.him188.ani.app.ui.foundation.animation.EmphasizedDecelerateEasing
-import me.him188.ani.app.ui.foundation.animation.StandardAccelerate
-import me.him188.ani.app.ui.foundation.animation.StandardDecelerate
+import me.him188.ani.app.ui.foundation.animation.StandardAccelerateEasing
+import me.him188.ani.app.ui.foundation.animation.StandardDecelerateEasing
 
 /**
  * Create a [ColorScheme] based on the current [ThemeSettings].
@@ -132,7 +132,7 @@ object AniThemeDefaults {
     val feedItemFadeInSpec: FiniteAnimationSpec<Float> = tween(
         EasingDurations.standardAccelerate,
         delayMillis = EasingDurations.standardDecelerate,
-        easing = StandardAccelerate,
+        easing = StandardAccelerateEasing,
     )
 
     @Stable
@@ -143,7 +143,7 @@ object AniThemeDefaults {
 
     @Stable
     val feedItemFadeOutSpec: FiniteAnimationSpec<Float> =
-        tween(EasingDurations.standardDecelerate, easing = StandardDecelerate)
+        tween(EasingDurations.standardDecelerate, easing = StandardDecelerateEasing)
 
     /**
      * 适用中小型组件.
@@ -155,7 +155,7 @@ object AniThemeDefaults {
             tween(
                 EasingDurations.standardAccelerate,
                 delayMillis = EasingDurations.standardDecelerate,
-                easing = StandardAccelerate,
+                easing = StandardAccelerateEasing,
             ),
         )
         val fadeOut = fadeOut(feedItemFadeOutSpec)
