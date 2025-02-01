@@ -16,14 +16,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.compositionLocalOf
-import androidx.window.core.layout.WindowSizeClass
-import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
-import me.him188.ani.app.ui.foundation.layout.isWidthCompact
+import androidx.compose.runtime.staticCompositionLocalOf
 import me.him188.ani.app.ui.foundation.theme.EasingDurations
 import kotlin.math.roundToInt
 
@@ -51,11 +47,7 @@ data class NavigationMotionScheme(
         private val enterEasing = EmphasizedDecelerateEasing
         private val exitEasing = EmphasizedAccelerateEasing
 
-        @OptIn(ExperimentalMaterial3ExpressiveApi::class)
-        @Composable
-        fun calculate(windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass): NavigationMotionScheme {
-            val useSlide = windowSizeClass.isWidthCompact
-
+        fun calculate(useSlide: Boolean): NavigationMotionScheme {
             val slideInMargin = 1f / 16
             val slideOutMargin = 1f / 16
 
@@ -122,6 +114,6 @@ data class NavigationMotionScheme(
 }
 
 @Stable
-val LocalNavigationMotionScheme = compositionLocalOf<NavigationMotionScheme> {
+val LocalNavigationMotionScheme = staticCompositionLocalOf<NavigationMotionScheme> {
     error("No LocalNavigationMotionScheme provided")
 }

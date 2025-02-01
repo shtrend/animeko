@@ -174,7 +174,7 @@ object AniThemeDefaults {
     )
     val standardAnimatedContentTransition: AnimatedContentTransitionScope<*>.() -> ContentTransform
         @Composable
-        get() = LocalAniMotionScheme.current.standardAnimatedContentTransition
+        get() = LocalAniMotionScheme.current.animatedContent.standard
 }
 
 /**

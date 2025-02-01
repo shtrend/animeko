@@ -9,22 +9,45 @@
 
 package me.him188.ani.app.ui.foundation.animation
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.FiniteAnimationSpec
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.lazy.LazyItemScope
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.isWidthCompact
 import me.him188.ani.app.ui.foundation.theme.EasingDurations
 
 /**
@@ -42,25 +65,7 @@ class AniMotionScheme(
      *
      * [M3 Spec](https://m3.material.io/styles/motion/transitions/transition-patterns#f852afd2-396f-49fd-a265-5f6d96680e16)
      */
-    val topLevelTransition: ContentTransform = run {
-        val outTime = 50
-        val inTime = 150
-        fadeIn(
-            animationSpec = tween(
-                durationMillis = inTime,
-                delayMillis = outTime,
-                easing = StandardDecelerateEasing,
-            ),
-        ).togetherWith(
-            fadeOut(
-                animationSpec = tween(
-                    durationMillis = outTime,
-                    delayMillis = 0,
-                    easing = StandardAccelerateEasing,
-                ),
-            ),
-        )
-    },
+    val topLevelTransition: ContentTransform,
     /**
      * @see LazyItemScope.animateItem
      */
@@ -74,26 +79,44 @@ class AniMotionScheme(
      */
     val feedItemFadeOutSpec: FiniteAnimationSpec<Float>,
 
-    val standardAnimatedContentTransition: AnimatedContentTransitionScope<*>.() -> ContentTransform = {
-        // Follow M3 Clean fades
-        val fadeIn = fadeIn(
-            tween(
-                EasingDurations.standardAccelerate,
-                delayMillis = EasingDurations.standardDecelerate,
-                easing = StandardAccelerateEasing,
-            ),
-        )
-        val fadeOut = fadeOut(
-            tween(EasingDurations.standardDecelerate, easing = StandardDecelerateEasing),
-        )
-        fadeIn.togetherWith(fadeOut)
-    },
+    /**
+     * [AnimatedContent] 默认动画:
+     * 1. fade out 旧内容, 同时 animate 到新内容的大小
+     * 2. fade in
+     *
+     * @see AnimatedContent
+     */
+    val animatedContent: AnimatedContentMotionScheme,
+    val animatedVisibility: AnimatedVisibilityMotionScheme,
 ) {
-    internal companion object {
-        internal val Default = kotlin.run {
+    companion object {
+        fun calculate(density: Density): AniMotionScheme {
             val feedItemFadeOutTime = EasingDurations.standardAccelerate
             val feedItemFadeInTime = EasingDurations.standardDecelerate
-            AniMotionScheme(
+
+            val topLevelTransition = run {
+                val outTime = 50
+                val inTime = 150
+                fadeIn(
+                    animationSpec = tween(
+                        durationMillis = inTime,
+                        delayMillis = outTime,
+                        easing = StandardDecelerateEasing,
+                    ),
+                ).togetherWith(
+                    fadeOut(
+                        animationSpec = tween(
+                            durationMillis = outTime,
+                            delayMillis = 0,
+                            easing = StandardAccelerateEasing,
+                        ),
+                    ),
+                )
+            }
+            val animatedVisibility = calculateAnimatedVisibilityMotionScheme(density)
+            val animatedContent = calculateAnimatedContentMotionScheme(topLevelTransition)
+            return AniMotionScheme(
+                topLevelTransition = topLevelTransition,
                 feedItemFadeInSpec = tween(
                     durationMillis = feedItemFadeInTime,
                     delayMillis = feedItemFadeOutTime,
@@ -108,11 +131,153 @@ class AniMotionScheme(
                     stiffness = Spring.StiffnessMediumLow,
                     visibilityThreshold = IntOffset.VisibilityThreshold,
                 ),
+                animatedContent = animatedContent,
+                animatedVisibility = animatedVisibility,
+            )
+        }
+
+        private fun calculateAnimatedContentMotionScheme(topLevelTransition: ContentTransform): AnimatedContentMotionScheme {
+            return AnimatedContentMotionScheme(
+                standard = {
+                    val outTime = EasingDurations.standardAccelerate
+                    val inTime = EasingDurations.standardDecelerate
+
+                    val fadeIn = fadeIn(
+                        tween(
+                            durationMillis = inTime,
+                            delayMillis = outTime,
+                            easing = StandardDecelerateEasing,
+                        ),
+                    )
+                    val fadeOut = fadeOut(
+                        tween(
+                            durationMillis = outTime,
+                            delayMillis = 0,
+                            easing = StandardAccelerateEasing,
+                        ),
+                    )
+                    fadeIn.togetherWith(fadeOut).using(
+                        SizeTransform(clip = true),
+                    )
+                },
+                topLevel = {
+                    topLevelTransition
+                },
+            )
+        }
+
+        private fun calculateAnimatedVisibilityMotionScheme(density: Density): AnimatedVisibilityMotionScheme {
+            val outTime = EasingDurations.standardAccelerate
+            val inTime = EasingDurations.standardDecelerate
+            fun <T> enterTween() = tween<T>(
+                durationMillis = inTime,
+                delayMillis = 0,
+                easing = StandardDecelerateEasing,
+            )
+
+            fun <T> exitTween() = tween<T>(
+                durationMillis = outTime,
+                delayMillis = 0,
+                easing = StandardAccelerateEasing,
+            )
+
+            // For normal, use fade in/out.
+            // For Row/Column, use expand and shrink without fade.
+            val expandShrinkSpring = spring(
+                stiffness = Spring.StiffnessMediumLow,
+                visibilityThreshold = IntSize.VisibilityThreshold,
+            )
+            return AnimatedVisibilityMotionScheme(
+                standardEnter = fadeIn(enterTween()),
+                standardExit = fadeOut(exitTween()),
+                rowEnter = expandHorizontally(expandShrinkSpring, expandFrom = Alignment.Start),
+                rowExit = shrinkHorizontally(expandShrinkSpring, shrinkTowards = Alignment.Start),
+                columnEnter = expandVertically(expandShrinkSpring, expandFrom = Alignment.Top),
+                columnExit = shrinkVertically(expandShrinkSpring, shrinkTowards = Alignment.Top),
+                screenEnter = fadeIn(
+                    tween(
+                        EasingDurations.emphasized,
+                        delayMillis = 0,
+                        easing = EmphasizedEasing,
+                    ),
+                ) + slideInVertically(
+                    tween(EasingDurations.emphasized),
+                    initialOffsetY = { with(density) { 32.dp.toPx() }.coerceAtMost(it.toFloat()).toInt() },
+                ),
+                screenExit = fadeOut(snap()),
             )
         }
     }
 }
 
+class AnimatedContentMotionScheme(
+    /**
+     * [StandardAccelerateEasing] fade out, then [StandardDecelerateEasing] fade in. **同时** animate 到新内容的大小 (spring).
+     * Total duration = 450ms.
+     *
+     * 适合一个页面里的小组件.
+     */
+    val standard: AnimatedContentTransitionScope<*>.() -> ContentTransform,
+    /**
+     * [Top-level transition][AniMotionScheme.topLevelTransition] without size transform.
+     *
+     * 适合 navigation 内容, List-Detail pane.
+     * @see AniMotionScheme.topLevelTransition
+     */
+    val topLevel: AnimatedContentTransitionScope<*>.() -> ContentTransform,
+)
+
+@Immutable
+class AnimatedVisibilityMotionScheme(
+    val standardEnter: EnterTransition,
+    val standardExit: ExitTransition,
+    val rowEnter: EnterTransition,
+    val rowExit: ExitTransition,
+    val columnEnter: EnterTransition,
+    val columnExit: ExitTransition,
+
+    /**
+     * 用来 animate 整个页面初始进入动画.
+     *
+     * 从下往上滑动, 同时 fade in.
+     */
+    val screenEnter: EnterTransition,
+    /**
+     * 用来 animate 整个页面的退出动画.
+     */
+    val screenExit: ExitTransition,
+)
+
 @Stable
 val LocalAniMotionScheme: ProvidableCompositionLocal<AniMotionScheme> =
-    staticCompositionLocalOf { AniMotionScheme.Default }
+    staticCompositionLocalOf { error("No AniMotionScheme provided") }
+
+
+@Composable
+fun ProvideAniMotionCompositionLocals(
+    content: @Composable () -> Unit
+) {
+    val density by rememberUpdatedState(LocalDensity.current)
+    val windowSizeClass by rememberUpdatedState(currentWindowAdaptiveInfo1().windowSizeClass)
+
+    val isWidthCompact by remember {
+        derivedStateOf {
+            windowSizeClass.isWidthCompact // reduce recompositions
+        }
+    }
+    val navigationMotionScheme by remember {
+        derivedStateOf {
+            NavigationMotionScheme.calculate(useSlide = isWidthCompact)
+        }
+    }
+    val aniMotionScheme by remember {
+        derivedStateOf {
+            AniMotionScheme.calculate(density)
+        }
+    }
+    CompositionLocalProvider(
+        LocalNavigationMotionScheme provides navigationMotionScheme,
+        LocalAniMotionScheme provides aniMotionScheme,
+        content = content,
+    )
+}

@@ -137,7 +137,7 @@ internal fun SettingsScope.MediaSourceSubscriptionGroup(
 
             AnimatedContent(
                 state.isUpdateAllInProgress.collectAsStateWithLifecycle().value,
-                transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
+                transitionSpec = LocalAniMotionScheme.current.animatedContent.standard,
                 contentAlignment = Alignment.CenterEnd,
             ) {
                 if (it) {
@@ -169,7 +169,7 @@ internal fun SettingsScope.MediaSourceSubscriptionGroup(
                 confirmButton = {
                     AnimatedContent(
                         isAddInProgressState.value,
-                        transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
+                        transitionSpec = LocalAniMotionScheme.current.animatedContent.standard,
                         contentAlignment = Alignment.BottomEnd,
                     ) {
                         if (it) {

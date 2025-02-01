@@ -185,7 +185,7 @@ fun EditRssMediaSourcePage(
                     title = {
                         AnimatedContent(
                             navigator.currentDestination?.pane,
-                            transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
+                            transitionSpec = LocalAniMotionScheme.current.animatedContent.standard,
                         ) {
                             when (it) {
                                 ListDetailPaneScaffoldRole.List -> Text(state.displayName)

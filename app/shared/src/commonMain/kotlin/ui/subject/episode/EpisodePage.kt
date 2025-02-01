@@ -9,9 +9,6 @@
 
 package me.him188.ani.app.ui.subject.episode
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -98,6 +95,7 @@ import me.him188.ani.app.ui.foundation.ImageViewer
 import me.him188.ani.app.ui.foundation.LocalImageViewerHandler
 import me.him188.ani.app.ui.foundation.LocalIsPreviewing
 import me.him188.ani.app.ui.foundation.LocalPlatform
+import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.foundation.effects.DarkStatusBarAppearance
 import me.him188.ani.app.ui.foundation.effects.OnLifecycleEvent
 import me.him188.ani.app.ui.foundation.effects.ScreenOnEffect
@@ -797,10 +795,8 @@ private fun EpisodeVideo(
             }
         }.value,
         leftBottomTips = {
-            AnimatedVisibility(
+            AniAnimatedVisibility(
                 visible = vm.playerSkipOpEdState.showSkipTips,
-                enter = fadeIn(),
-                exit = fadeOut(),
             ) {
                 PlayerControllerDefaults.LeftBottomTips(
                     onClick = {

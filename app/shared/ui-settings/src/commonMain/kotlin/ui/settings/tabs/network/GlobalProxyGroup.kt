@@ -101,7 +101,7 @@ internal fun SettingsScope.GlobalProxyGroup(
 
         AnimatedContent(
             selectedMode,
-            transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
+            transitionSpec = LocalAniMotionScheme.current.animatedContent.standard,
         ) { mode ->
             Column {
                 when (mode) {

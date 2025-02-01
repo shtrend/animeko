@@ -56,8 +56,8 @@ import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPageViewModel
 import me.him188.ani.app.ui.cache.details.MediaDetailsLazyGrid
 import me.him188.ani.app.ui.exploration.schedule.SchedulePage
 import me.him188.ani.app.ui.exploration.schedule.SchedulePageViewModel
-import me.him188.ani.app.ui.foundation.animation.LocalNavigationMotionScheme
 import me.him188.ani.app.ui.foundation.animation.NavigationMotionScheme
+import me.him188.ani.app.ui.foundation.animation.ProvideAniMotionCompositionLocals
 import me.him188.ani.app.ui.foundation.layout.LocalSharedTransitionScopeProvider
 import me.him188.ani.app.ui.foundation.layout.SharedTransitionScopeProvider
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
@@ -100,9 +100,10 @@ fun AniAppContent(
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         CompositionLocalProvider(
             LocalNavigator provides aniNavigator,
-            LocalNavigationMotionScheme provides NavigationMotionScheme.calculate(),
         ) {
-            AniAppContentImpl(aniNavigator, initialRoute, Modifier.fillMaxSize())
+            ProvideAniMotionCompositionLocals {
+                AniAppContentImpl(aniNavigator, initialRoute, Modifier.fillMaxSize())
+            }
         }
     }
 }

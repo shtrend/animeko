@@ -9,11 +9,9 @@
 
 package me.him188.ani.app.ui.subject.details
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -83,6 +81,7 @@ import me.him188.ani.app.ui.external.placeholder.placeholder
 import me.him188.ani.app.ui.foundation.ImageViewer
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.Tag
+import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
@@ -268,7 +267,7 @@ private fun SubjectDetailsPage(
         navigationIcon = navigationIcon,
     ) { paddingValues ->
         Box {
-            AnimatedVisibility(
+            AniAnimatedVisibility(
                 visible = state.showPlaceholder,
                 enter = EnterTransition.None,
                 exit = fadeOut(LocalAniMotionScheme.current.feedItemFadeOutSpec),
@@ -425,7 +424,7 @@ fun SubjectDetailsPageLayout(
                         )
 
                         // 有背景, 仅在滚动一段距离后使用
-                        AnimatedVisibility(connectedScrollState.isScrolledTop, enter = fadeIn(), exit = fadeOut()) {
+                        AniAnimatedVisibility(connectedScrollState.isScrolledTop) {
                             TopAppBar(
                                 title = {
                                     Text(

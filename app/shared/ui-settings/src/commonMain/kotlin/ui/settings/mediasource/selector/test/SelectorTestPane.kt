@@ -114,7 +114,7 @@ fun SharedTransitionScope.SelectorTestPane(
 
                 AnimatedContent(
                     presentation.subjectSearchResult,
-                    transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
+                    transitionSpec = LocalAniMotionScheme.current.animatedContent.standard,
                 ) { result ->
                     if (result is SelectorTestSearchSubjectResult.Success) {
                         SelectorTestSubjectResultLazyRow(

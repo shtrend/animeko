@@ -267,7 +267,7 @@ internal fun SelectorConfigurationPane(
                     .padding(vertical = 16.dp)
                     .fillMaxWidth()
                     .animateContentSize(tween(EasingDurations.standard, easing = StandardEasing)),
-                transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
+                transitionSpec = LocalAniMotionScheme.current.animatedContent.standard,
             ) { format ->
                 SelectorSubjectConfigurationColumn(
                     format, state,
@@ -297,7 +297,7 @@ internal fun SelectorConfigurationPane(
                     .padding(vertical = 16.dp)
                     .fillMaxWidth()
                     .animateContentSize(tween(EasingDurations.standard, easing = StandardEasing)),
-                transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
+                transitionSpec = LocalAniMotionScheme.current.animatedContent.standard,
             ) { formatId ->
                 SelectorChannelFormatColumn(formatId, state, Modifier.fillMaxWidth())
             }

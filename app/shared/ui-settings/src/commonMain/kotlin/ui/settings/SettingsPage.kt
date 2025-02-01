@@ -317,7 +317,7 @@ internal fun SettingsPageLayout(
                 navigator.currentDestination?.contentKey,
                 Modifier
                     .fillMaxSize(),
-                transitionSpec = LocalAniMotionScheme.current.standardAnimatedContentTransition,
+                transitionSpec = LocalAniMotionScheme.current.animatedContent.topLevel,
             ) { navigationTab ->
                 val tab = navigationTab.orDefault()
                 Column {
