@@ -50,7 +50,7 @@ actual fun runAniComposeUiTest(testBody: AniComposeUiTest.() -> Unit) {
 
     try {
         return runComposeUiTest {
-            AniComposeUiTestImpl(this).run(testBody)
+            testBody()
         }
     } catch (e: InterruptedException) {
         if (timedOut) {
@@ -61,9 +61,4 @@ actual fun runAniComposeUiTest(testBody: AniComposeUiTest.() -> Unit) {
     } finally {
         job.cancel()
     }
-}
-
-internal class AniComposeUiTestImpl(composeUiTest: ComposeUiTest) : AbstractAniComposeUiTest(composeUiTest) {
-    override fun waitUntil(conditionDescription: String?, timeoutMillis: Long, condition: () -> Boolean) =
-        composeUiTest.waitUntil(conditionDescription, timeoutMillis, condition)
 }
