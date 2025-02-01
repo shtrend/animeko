@@ -114,7 +114,7 @@ class AniMotionScheme(
                 )
             }
             val animatedVisibility = calculateAnimatedVisibilityMotionScheme(density)
-            val animatedContent = calculateAnimatedContentMotionScheme(topLevelTransition)
+            val animatedContent = calculateAnimatedContentMotionScheme(density, topLevelTransition)
             return AniMotionScheme(
                 topLevelTransition = topLevelTransition,
                 feedItemFadeInSpec = tween(
@@ -136,7 +136,10 @@ class AniMotionScheme(
             )
         }
 
-        private fun calculateAnimatedContentMotionScheme(topLevelTransition: ContentTransform): AnimatedContentMotionScheme {
+        private fun calculateAnimatedContentMotionScheme(
+            density: Density,
+            topLevelTransition: ContentTransform
+        ): AnimatedContentMotionScheme {
             return AnimatedContentMotionScheme(
                 standard = {
                     val outTime = EasingDurations.standardAccelerate
@@ -162,6 +165,24 @@ class AniMotionScheme(
                 },
                 topLevel = {
                     topLevelTransition
+                },
+                screenEnter = {
+                    fadeIn(
+                        tween(
+                            EasingDurations.emphasizedDecelerate,
+                            delayMillis = EasingDurations.emphasizedAccelerate,
+                            easing = EmphasizedDecelerateEasing,
+                        ),
+                    ) + slideInVertically(
+                        tween(EasingDurations.emphasizedDecelerate),
+                        initialOffsetY = { with(density) { 32.dp.toPx() }.coerceAtMost(it.toFloat()).toInt() },
+                    ) togetherWith fadeOut(
+                        tween(
+                            EasingDurations.emphasizedAccelerate,
+                            delayMillis = 0,
+                            easing = EmphasizedAccelerateEasing,
+                        ),
+                    )
                 },
             )
         }
@@ -225,6 +246,7 @@ class AnimatedContentMotionScheme(
      * @see AniMotionScheme.topLevelTransition
      */
     val topLevel: AnimatedContentTransitionScope<*>.() -> ContentTransform,
+    val screenEnter: AnimatedContentTransitionScope<*>.() -> ContentTransform
 )
 
 @Immutable

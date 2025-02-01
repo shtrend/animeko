@@ -9,10 +9,9 @@
 
 package me.him188.ani.app.ui.subject.details
 
-import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -215,6 +214,7 @@ private fun SubjectDetailsPage(
     SubjectDetailsPageLayout(
         state.subjectId,
         state.info,
+        isPlaceholder = state.showPlaceholder,
         seasonTags = {
             SubjectDetailsDefaults.SeasonTag(
                 airDate = state.info?.airDate ?: PackedDate.Invalid,
@@ -265,17 +265,10 @@ private fun SubjectDetailsPage(
         showBlurredBackground = showBlurredBackground,
         windowInsets = windowInsets,
         navigationIcon = navigationIcon,
-    ) { paddingValues ->
-        Box {
-            AniAnimatedVisibility(
-                visible = state.showPlaceholder,
-                enter = EnterTransition.None,
-                exit = fadeOut(LocalAniMotionScheme.current.feedItemFadeOutSpec),
-            ) {
-                PlaceholderSubjectDetailsContentPager(paddingValues)
-            }
-            if (state.showPlaceholder) return@SubjectDetailsPageLayout
-
+    ) { isPlaceholder, paddingValues ->
+        if (isPlaceholder) {
+            PlaceholderSubjectDetailsContentPager(paddingValues)
+        } else {
             SubjectDetailsContentPager(
                 paddingValues,
                 connectedScrollState,
@@ -344,6 +337,7 @@ private fun ErrorSubjectDetailsPage(
     SubjectDetailsPageLayout(
         subjectId = subjectId,
         info = placeholderSubjectInfo,
+        isPlaceholder = false,
         seasonTags = { },
         collectionData = { },
         collectionActions = { },
@@ -355,7 +349,7 @@ private fun ErrorSubjectDetailsPage(
         showBlurredBackground = false,
         windowInsets,
         navigationIcon,
-    ) { paddingValues ->
+    ) { _, paddingValues ->
         LoadErrorCard(
             problem = error,
             onRetry = onRetry,
@@ -385,6 +379,7 @@ enum class SubjectDetailsTab {
 fun SubjectDetailsPageLayout(
     subjectId: Int,
     info: SubjectInfo?,
+    isPlaceholder: Boolean,
     seasonTags: @Composable () -> Unit,
     collectionData: @Composable () -> Unit,
     collectionActions: @Composable () -> Unit,
@@ -396,7 +391,7 @@ fun SubjectDetailsPageLayout(
     showBlurredBackground: Boolean = true,
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets,
     navigationIcon: @Composable () -> Unit = {},
-    content: @Composable (contentPadding: PaddingValues) -> Unit,
+    content: @Composable (isPlaceholder: Boolean, contentPadding: PaddingValues) -> Unit,
 ) {
     val backgroundColor = AniThemeDefaults.pageContentBackgroundColor
     val stickyTopBarColor = AniThemeDefaults.navigationContainerColor
@@ -499,7 +494,12 @@ fun SubjectDetailsPageLayout(
                     }
                 }
 
-                content(remainingContentPadding)
+                AnimatedContent(
+                    isPlaceholder,
+                    transitionSpec = LocalAniMotionScheme.current.animatedContent.topLevel,
+                ) { targetIsPlaceholder ->
+                    content(targetIsPlaceholder, remainingContentPadding)
+                }
             }
         }
     }
