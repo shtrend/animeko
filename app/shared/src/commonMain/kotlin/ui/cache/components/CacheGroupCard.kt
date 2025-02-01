@@ -237,7 +237,7 @@ fun CacheGroupCard(
                         }
 
                         state.subjectId?.let { subjectId ->
-                            IconButton({ navigator.navigateSubjectDetails(subjectId) }) {
+                            IconButton({ navigator.navigateSubjectDetails(subjectId, placeholder = null) }) {
                                 Icon(Icons.Outlined.ArrowOutward, "查看条目详情")
                             }
                         }

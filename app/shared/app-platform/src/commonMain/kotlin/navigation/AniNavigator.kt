@@ -67,7 +67,7 @@ interface AniNavigator {
 
     fun navigateSubjectDetails(
         subjectId: Int,
-        placeholder: SubjectDetailPlaceholder? = null
+        placeholder: SubjectDetailPlaceholder?,
     ) {
         navigator.navigate(
             NavRoutes.SubjectDetail(subjectId, placeholder),
