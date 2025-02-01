@@ -7,17 +7,6 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui
+package me.him188.ani.app.ui.framework
 
-import androidx.compose.ui.test.SemanticsNodeInteraction
-
-fun SemanticsNodeInteraction.exists(): Boolean {
-    try {
-        assertDoesNotExist()
-    } catch (e: AssertionError) {
-        return true
-    }
-    return false
-}
-
-fun SemanticsNodeInteraction.doesNotExist(): Boolean = !exists()
+internal actual fun Throwable.guessTestFunctionName(): String? = null

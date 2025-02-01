@@ -32,8 +32,23 @@ inline val AniComposeUiTest.composeUiTest get() = this
 
 /**
  * 截图当前的 UI 并与 resources 目录下的图片 [expectedResource] 进行比较.
+ *
+ * 在不支持的平台上, 这个操作会被忽略.
+ *
+ * 传入空字符串可以用来生成截图 (适用于新编写测试用例).
+ *
+ * @param expectedResource 期望的 `commonTest/resources/` 中的图片文件路径, 例如 "screenshot.png".
  */
 expect fun AniComposeUiTest.assertScreenshot(expectedResource: String)
 
+/**
+ * 与 resources 目录下的图片 [expectedResource] 进行比较.
+ *
+ * 在不支持的平台上, 这个操作会被忽略.
+ *
+ * 传入空字符串可以用来生成截图 (适用于新编写测试用例).
+ *
+ * @param expectedResource 期望的 `commonTest/resources/` 中的图片文件路径, 例如 "screenshot.png".
+ */
 expect fun ImageBitmap.assertScreenshot(expectedResource: String)
 

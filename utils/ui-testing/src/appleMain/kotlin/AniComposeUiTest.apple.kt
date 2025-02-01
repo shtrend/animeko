@@ -9,16 +9,13 @@
 
 package me.him188.ani.app.ui.framework
 
-import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.runComposeUiTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.resetMain
 
-/**
- * 相对于 [runComposeUiTest], 有一些修改:
- * - [ComposeUiTest.waitUntil] 的超时时间更长
- */
-actual fun runAniComposeUiTest(testBody: AniComposeUiTest.() -> Unit) {
+actual fun runAniComposeUiTest(
+    testBody: AniComposeUiTest.() -> Unit
+) {
     Dispatchers.resetMain()
 
     runComposeUiTest {
