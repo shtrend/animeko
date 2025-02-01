@@ -26,6 +26,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
@@ -205,6 +206,7 @@ internal fun SearchPageResultColumn(
                         placementSpec = LocalAniMotionScheme.current.feedItemPlacementSpec,
                         fadeOutSpec = LocalAniMotionScheme.current.feedItemFadeOutSpec,
                     ),
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                 )
             }
         }
