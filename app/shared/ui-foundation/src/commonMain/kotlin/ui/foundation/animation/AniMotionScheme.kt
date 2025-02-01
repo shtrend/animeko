@@ -88,6 +88,10 @@ class AniMotionScheme(
      */
     val animatedContent: AnimatedContentMotionScheme,
     val animatedVisibility: AnimatedVisibilityMotionScheme,
+    val carouselAutoAdvanceSpec: FiniteAnimationSpec<Float> = tween(
+        durationMillis = 1000, // spec https://m3.material.io/styles/motion/easing-and-duration/tokens-specs#ee9dbe95-70fa-4804-8347-c4fd58c60fe2
+        easing = EmphasizedEasing,
+    ),
 ) {
     companion object {
         fun calculate(density: Density): AniMotionScheme {
