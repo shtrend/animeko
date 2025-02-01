@@ -231,7 +231,6 @@ class AniMotionScheme(
     }
 }
 
-@Immutable
 class AnimatedContentMotionScheme(
     /**
      * [StandardAccelerateEasing] fade out, then [StandardDecelerateEasing] fade in. **同时** animate 到新内容的大小 (spring).
