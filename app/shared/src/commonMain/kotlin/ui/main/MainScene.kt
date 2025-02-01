@@ -10,10 +10,6 @@
 package me.him188.ani.app.ui.main
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -164,24 +160,18 @@ private fun MainSceneContent(
     ) {
         val coroutineScope = rememberCoroutineScope()
         val navigator by rememberUpdatedState(LocalNavigator.current)
-        AnimatedContent(
-            page,
-            Modifier.fillMaxSize(),
-            transitionSpec = {
-//                val easing = CubicBezierEasing(0f, 0f, 1f, 1f)
-//                val fadeIn = fadeIn(tween(25, easing = easing))
-//                val fadeOut = fadeOut(tween(25, easing = easing))
-//                fadeIn togetherWith fadeOut
-                fadeIn(snap()) togetherWith fadeOut(snap())
+        TabContent(
+            layoutType = navigationLayoutType,
+            Modifier.ifThen(navigationLayoutType != NavigationSuiteType.NavigationBar) {
+                // macos 标题栏只会在 NavigationRail 的区域内, TabContent 区域无需这些 padding.
+                consumeWindowInsets(WindowInsets.desktopTitleBar())
             },
-        ) { page ->
-            TabContent(
-                layoutType = navigationLayoutType,
-                Modifier.ifThen(navigationLayoutType != NavigationSuiteType.NavigationBar) {
-                    // macos 标题栏只会在 NavigationRail 的区域内, TabContent 区域无需这些 padding.
-                    consumeWindowInsets(WindowInsets.desktopTitleBar())
-                },
-            ) {
+        ) {
+            AnimatedContent(
+                page,
+                Modifier.fillMaxSize(),
+                transitionSpec = { AniThemeDefaults.topLevelTransition },
+            ) { page ->
                 when (page) {
                     MainScenePage.Exploration -> {
                         ExplorationPage(

@@ -146,6 +146,34 @@ object AniThemeDefaults {
         tween(EasingDurations.standardDecelerate, easing = StandardDecelerateEasing)
 
     /**
+     * This pattern is used to navigate between top-level destinations of an app, like tapping a destination in a Navigation bar.
+     *
+     * Commonly used with: Navigation bar, navigation rail, and navigation drawer
+     *
+     * [M3 Spec](https://m3.material.io/styles/motion/transitions/transition-patterns#f852afd2-396f-49fd-a265-5f6d96680e16)
+     */
+    @Stable
+    val topLevelTransition = run {
+        val outTime = 50
+        val inTime = 150
+        fadeIn(
+            animationSpec = tween(
+                durationMillis = inTime,
+                delayMillis = outTime,
+                easing = StandardDecelerateEasing,
+            ),
+        ).togetherWith(
+            fadeOut(
+                animationSpec = tween(
+                    durationMillis = outTime,
+                    delayMillis = 0,
+                    easing = StandardAccelerateEasing,
+                ),
+            ),
+        )
+    }
+
+    /**
      * 适用中小型组件.
      */
     @Stable
