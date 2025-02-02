@@ -39,6 +39,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
 
+/**
+ * Test cases for [CarouselAutoAdvanceEffect]
+ */
 class CarouselAutoAdvanceEffectTest {
     private fun createTestLifecycleOwner(initialState: Lifecycle.State): TestLifecycleOwner {
         return TestLifecycleOwner(initialState)
