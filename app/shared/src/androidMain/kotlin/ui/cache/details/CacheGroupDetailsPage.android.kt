@@ -12,7 +12,7 @@ package me.him188.ani.app.ui.cache.details
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import me.him188.ani.app.domain.media.TestMediaList
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.datasources.mikan.MikanMediaSource
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -20,6 +20,6 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @OptIn(TestOnly::class)
 @Composable
 @Preview
-fun PreviewMediaCacheDetailsPage() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewMediaCacheDetailsPage() = ProvideCompositionLocalsForPreview {
     MediaCacheDetailsScreen(TestMediaList[0], MikanMediaSource.INFO, { BackNavigationIconButton({ }) })
 }

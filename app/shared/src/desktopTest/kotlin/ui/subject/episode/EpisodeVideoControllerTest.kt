@@ -39,7 +39,7 @@ import me.him188.ani.app.domain.media.player.ChunkState
 import me.him188.ani.app.domain.media.player.staticMediaCacheProgressState
 import me.him188.ani.app.domain.player.VideoLoadingState
 import me.him188.ani.app.ui.danmaku.PlayerDanmakuEditor
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.framework.AniComposeUiTest
 import me.him188.ani.app.ui.framework.doesNotExist
 import me.him188.ani.app.ui.framework.exists
@@ -152,7 +152,7 @@ class EpisodeVideoControllerTest {
 
     @Composable
     private fun Player(gestureFamily: GestureFamily, playerControllerState: PlayerControllerState = controllerState) {
-        ProvideFoundationCompositionLocalsForPreview(isDark = true) {
+        ProvideCompositionLocalsForPreview(isDark = true) {
             val scope = rememberCoroutineScope()
             val playerState = remember {
                 DummyMediampPlayer(scope.coroutineContext)

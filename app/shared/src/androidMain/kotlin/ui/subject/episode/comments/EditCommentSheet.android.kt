@@ -23,13 +23,13 @@ import me.him188.ani.app.ui.comment.EditCommentBottomStubPanel
 import me.him188.ani.app.ui.comment.EditCommentDefaults
 import me.him188.ani.app.ui.comment.EditCommentSticker
 import me.him188.ani.app.ui.comment.createPreviewTurnstileState
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.rememberBackgroundScope
 
 @Preview
 @Composable
 fun PreviewEditComment() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         val scope = rememberBackgroundScope()
         EditComment(
             state = remember {
@@ -59,7 +59,7 @@ fun PreviewEditComment() {
 @Preview
 @Composable
 fun PreviewEditCommentStickerPanel() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EditCommentDefaults.StickerSelector(
             list = (0..64)
                 .map { EditCommentSticker(it, null) }
@@ -72,7 +72,7 @@ fun PreviewEditCommentStickerPanel() {
 @Preview
 @Composable
 fun PreviewEditCommentBottomStubPanel() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EditCommentBottomStubPanel(
             text = TextFieldValue("发送评论"),
             onClickEditText = { },

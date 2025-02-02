@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.domain.media.TestMediaList
 import me.him188.ani.app.domain.media.TestMediaSourceInfo
 import me.him188.ani.app.domain.player.VideoLoadingState
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.media.renderProperties
 import me.him188.ani.app.ui.subject.episode.statistics.VideoLoadingSummary
 import me.him188.ani.datasources.api.DefaultMedia
@@ -99,19 +99,19 @@ private fun PreviewEpisodeItemImpl(
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeItem() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeItem() = ProvideCompositionLocalsForPreview {
     PreviewEpisodeItemImpl()
 }
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeItemNoFilename() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeItemNoFilename() = ProvideCompositionLocalsForPreview {
     PreviewEpisodeItemImpl(filename = null)
 }
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeItemLongTexts() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeItemLongTexts() = ProvideCompositionLocalsForPreview {
     PreviewEpisodeItemImpl(
         episodeTitle = "超长名称".repeat(20),
         filename = "filename-".repeat(20) + ".mkv",
@@ -120,7 +120,7 @@ fun PreviewPlayingEpisodeItemLongTexts() = ProvideFoundationCompositionLocalsFor
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeNotSelected() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeNotSelected() = ProvideCompositionLocalsForPreview {
     PreviewEpisodeItemImpl(
         media = null,
         filename = null,
@@ -129,7 +129,7 @@ fun PreviewPlayingEpisodeNotSelected() = ProvideFoundationCompositionLocalsForPr
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeItemFailed() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeItemFailed() = ProvideCompositionLocalsForPreview {
     PreviewEpisodeItemImpl(
         videoLoadingState = VideoLoadingState.UnsupportedMedia,
     )

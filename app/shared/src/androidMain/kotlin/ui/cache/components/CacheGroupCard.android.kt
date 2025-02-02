@@ -21,7 +21,7 @@ import me.him188.ani.app.tools.Progress
 import me.him188.ani.app.tools.toProgress
 import me.him188.ani.app.ui.cache.TestCacheGroupSates
 import me.him188.ani.app.ui.cache.createTestCacheEpisode
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.datasources.api.topic.FileSize.Companion.Unspecified
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -29,7 +29,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-fun PreviewCacheGroupCardMissingTotalSize() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewCacheGroupCardMissingTotalSize() = ProvideCompositionLocalsForPreview {
     Box(Modifier.background(Color.DarkGray)) {
         CacheEpisodeItem(
             createTestCacheEpisode(
@@ -45,7 +45,7 @@ fun PreviewCacheGroupCardMissingTotalSize() = ProvideFoundationCompositionLocals
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-fun PreviewCacheGroupCardMissingProgress() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewCacheGroupCardMissingProgress() = ProvideCompositionLocalsForPreview {
     Box(Modifier.background(Color.DarkGray)) {
         CacheEpisodeItem(
             createTestCacheEpisode(
@@ -61,7 +61,7 @@ fun PreviewCacheGroupCardMissingProgress() = ProvideFoundationCompositionLocalsF
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-fun PreviewCacheGroupCardMissingDownloadSpeed() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewCacheGroupCardMissingDownloadSpeed() = ProvideCompositionLocalsForPreview {
     Box(Modifier.background(Color.DarkGray)) {
         CacheEpisodeItem(
             createTestCacheEpisode(
@@ -78,7 +78,7 @@ fun PreviewCacheGroupCardMissingDownloadSpeed() = ProvideFoundationCompositionLo
 @PreviewLightDark
 @PreviewFontScale
 @Composable
-fun PreviewCacheGroupCard() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewCacheGroupCard() = ProvideCompositionLocalsForPreview {
     Box(Modifier.background(Color.DarkGray)) {
         CacheGroupCard(TestCacheGroupSates[0])
     }

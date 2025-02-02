@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.icons.PlayingIcon
 import me.him188.ani.app.ui.foundation.preview.PreviewTabletLightDark
 import me.him188.ani.app.ui.subject.episode.video.components.EpisodeVideoSideSheets
@@ -30,7 +30,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @PreviewLightDark
 @PreviewTabletLightDark
 fun PreviewEpisodeSelectorSideSheet() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoSideSheets.EpisodeSelectorSheet(
             state = rememberTestEpisodeSelectorState(),
             onDismissRequest = {},
@@ -42,7 +42,7 @@ fun PreviewEpisodeSelectorSideSheet() {
 @Preview
 @Composable
 fun PreviewPlayingIcon() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         Box(Modifier.size(64.dp), contentAlignment = Alignment.Center) {
             Box(modifier = Modifier.border(1.dp, color = Color.Magenta)) {
                 PlayingIcon(contentDescription = "正在播放")

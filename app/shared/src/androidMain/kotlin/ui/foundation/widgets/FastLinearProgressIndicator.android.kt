@@ -25,11 +25,11 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 
 @PreviewLightDark
 @Composable
-fun PreviewAnimatedLinearProgressIndicatorIndefiniteLonger() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewAnimatedLinearProgressIndicatorIndefiniteLonger() = ProvideCompositionLocalsForPreview {
     var visible by remember {
         mutableStateOf(false)
     }
@@ -54,7 +54,7 @@ fun PreviewAnimatedLinearProgressIndicatorIndefiniteLonger() = ProvideFoundation
 
 @PreviewLightDark
 @Composable
-fun PreviewAnimatedLinearProgressIndicatorIndefiniteShorter() = ProvideFoundationCompositionLocalsForPreview {
+fun PreviewAnimatedLinearProgressIndicatorIndefiniteShorter() = ProvideCompositionLocalsForPreview {
     var visible by remember {
         mutableStateOf(false)
     }

@@ -13,13 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.domain.session.SessionStatus
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.subject.episode.details.rememberTestAuthState
 
 @Preview
 @Composable
 internal fun PreviewSelfInfo() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         SelfInfo(
             rememberTestAuthState(
                 SessionStatus.Verified(
@@ -42,7 +42,7 @@ internal fun PreviewSelfInfo() {
 @Preview
 @Composable
 private fun PreviewProfilePage() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         ProfilePage(
             onClickSettings = {},
         )

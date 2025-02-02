@@ -47,7 +47,7 @@ import org.jetbrains.compose.resources.imageResource
 // @TestOnly // 这里就不标记了, 名字已经足够明显了
 @OptIn(TestOnly::class)
 @Composable
-inline fun ProvideFoundationCompositionLocalsForPreview(
+inline fun ProvideCompositionLocalsForPreview(
     isDark: Boolean = isSystemInDarkTheme(),
     crossinline content: @Composable () -> Unit,
 ) {
@@ -130,6 +130,19 @@ internal expect inline fun ProvidePlatformCompositionLocalsForPreview(
 )
 
 
+// kept for developer convenience, remove in 4.8.0.
+@Composable
+@Deprecated(
+    "Replaced with ProvideCompositionLocalsForPreview",
+    ReplaceWith("ProvideCompositionLocalsForPreview(isDark, content)"),
+    level = DeprecationLevel.ERROR,
+)
+inline fun ProvideFoundationCompositionLocalsForPreview(
+    isDark: Boolean = isSystemInDarkTheme(),
+    crossinline content: @Composable () -> Unit,
+) = ProvideCompositionLocalsForPreview(isDark, content)
+
+
 /**
  * 用于 UI test. 固定主题颜色.
  */
@@ -139,7 +152,7 @@ fun ProvideFoundationCompositionLocalsForTest(
     isDark: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    ProvideFoundationCompositionLocalsForPreview(
+    ProvideCompositionLocalsForPreview(
         isDark,
     ) {
         content()

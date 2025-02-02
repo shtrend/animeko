@@ -36,7 +36,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.ui.external.placeholder.placeholder
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.avatar.AvatarImage
 
 
@@ -137,7 +137,7 @@ private val sampleUser = UserInfo(
 @Preview
 @Composable
 private fun PreviewUserInfoRow() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         UserInfoRow(
             self = sampleUser,
             onClickEditNickname = {},

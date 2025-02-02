@@ -20,14 +20,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import me.him188.ani.app.ui.comment.UIRichText
 import me.him188.ani.app.ui.comment.generateUiComment
 import me.him188.ani.app.ui.comment.rememberTestCommentState
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.richtext.UIRichElement
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Preview
 @Composable
 private fun PreviewEpisodeComment() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeComment(
             comment = remember {
                 generateUiComment(
@@ -56,7 +56,7 @@ private fun PreviewEpisodeComment() {
 @Preview
 @Composable
 private fun PreviewEpisodeCommentColumn() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeCommentColumn(
             state = rememberTestCommentState(commentList = generateUiComment(4)),
             editCommentStubText = TextFieldValue("this is my new pending comment"),

@@ -12,14 +12,14 @@ package me.him188.ani.app.ui.subject.episode.video.loading
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import me.him188.ani.app.domain.player.VideoLoadingState
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.datasources.api.topic.FileSize.Companion.Unspecified
 import me.him188.ani.datasources.api.topic.FileSize.Companion.bytes
 
 @Preview(name = "Selecting Media")
 @Composable
 private fun PreviewEpisodeVideoLoadingIndicator() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoLoadingIndicator(
             VideoLoadingState.Initial,
             speedProvider = { 0.3.bytes },
@@ -31,7 +31,7 @@ private fun PreviewEpisodeVideoLoadingIndicator() {
 @Preview(name = "Selecting Media")
 @Composable
 private fun PreviewEpisodeVideoLoadingIndicatorFullscreen() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoLoadingIndicator(
             VideoLoadingState.Initial,
             speedProvider = { 0.3.bytes },
@@ -43,7 +43,7 @@ private fun PreviewEpisodeVideoLoadingIndicatorFullscreen() {
 @Preview(name = "ResolvingSource")
 @Composable
 private fun PreviewEpisodeVideoLoadingIndicator2() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoLoadingIndicator(
             VideoLoadingState.ResolvingSource,
             speedProvider = { 0.3.bytes },
@@ -55,7 +55,7 @@ private fun PreviewEpisodeVideoLoadingIndicator2() {
 @Preview(name = "ResolvingSource")
 @Composable
 private fun PreviewEpisodeVideoLoadingIndicator5() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoLoadingIndicator(
             VideoLoadingState.DecodingData(true),
             speedProvider = { 0.3.bytes },
@@ -69,7 +69,7 @@ private fun successState() = VideoLoadingState.Succeed(isBt = true)
 @Preview(name = "Buffering")
 @Composable
 private fun PreviewEpisodeVideoLoadingIndicator3() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoLoadingIndicator(
             successState(),
             speedProvider = { 0.3.bytes },
@@ -81,7 +81,7 @@ private fun PreviewEpisodeVideoLoadingIndicator3() {
 @Preview(name = "Failed")
 @Composable
 private fun PreviewEpisodeVideoLoadingIndicator7() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoLoadingIndicator(
             VideoLoadingState.ResolutionTimedOut,
             speedProvider = { Unspecified },
@@ -93,7 +93,7 @@ private fun PreviewEpisodeVideoLoadingIndicator7() {
 @Preview(name = "Buffering - No Speed")
 @Composable
 private fun PreviewEpisodeVideoLoadingIndicator4() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoLoadingIndicator(
             successState(),
             speedProvider = { Unspecified },

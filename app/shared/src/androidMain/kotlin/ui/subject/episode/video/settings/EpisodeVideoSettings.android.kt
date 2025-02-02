@@ -18,12 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 
 @Preview
 @Composable
 private fun PreviewEpisodeVideoSettings() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoSettings(
             remember { EpisodeVideoSettingsViewModel() },
             { },
@@ -34,7 +34,7 @@ private fun PreviewEpisodeVideoSettings() {
 @Preview(heightDp = 200)
 @Composable
 private fun PreviewEpisodeVideoSettingsSmall() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         EpisodeVideoSettings(
             remember { EpisodeVideoSettingsViewModel() },
             { },
@@ -45,7 +45,7 @@ private fun PreviewEpisodeVideoSettingsSmall() {
 @Preview(device = "spec:width=1280dp,height=800dp,dpi=240")
 @Preview
 @Composable
-private fun PreviewEpisodeVideoSettingsSideSheet() = ProvideFoundationCompositionLocalsForPreview {
+private fun PreviewEpisodeVideoSettingsSideSheet() = ProvideCompositionLocalsForPreview {
     var showSettings by remember { mutableStateOf(true) }
     if (showSettings) {
         SideSheetLayout(

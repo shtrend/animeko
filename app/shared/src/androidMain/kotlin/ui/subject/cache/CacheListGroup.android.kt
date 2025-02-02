@@ -35,7 +35,7 @@ import me.him188.ani.app.domain.media.cache.requester.EpisodeCacheRequester
 import me.him188.ani.app.domain.media.selector.MediaSelectorFactory
 import me.him188.ani.app.tools.Progress
 import me.him188.ani.app.tools.toProgress
-import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.settings.SettingsTab
 import me.him188.ani.datasources.api.EpisodeSort
@@ -46,7 +46,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @Composable
 @Preview
 private fun PreviewEpisodeCacheActionIcon() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         Column(Modifier.width(IntrinsicSize.Min)) {
             Text(text = "isLoadingIndefinitely")
             Box(modifier = Modifier.size(64.dp), contentAlignment = Alignment.Center) {
@@ -113,7 +113,7 @@ private fun PreviewEpisodeCacheActionIcon() {
 @Composable
 @Preview
 private fun PreviewEpisodeCacheActionIconHasActionRunningChange() {
-    ProvideFoundationCompositionLocalsForPreview {
+    ProvideCompositionLocalsForPreview {
         var running by remember {
             mutableStateOf(false)
         }
@@ -139,7 +139,7 @@ private fun PreviewEpisodeCacheActionIconHasActionRunningChange() {
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-private fun PreviewEpisodeItem() = ProvideFoundationCompositionLocalsForPreview {
+private fun PreviewEpisodeItem() = ProvideCompositionLocalsForPreview {
     SettingsTab {
         var id = 0
         listOf(true, false).forEach { hasPublished ->
@@ -166,7 +166,7 @@ private fun PreviewEpisodeItem() = ProvideFoundationCompositionLocalsForPreview 
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-private fun PreviewEpisodeItemVeryLong() = ProvideFoundationCompositionLocalsForPreview {
+private fun PreviewEpisodeItemVeryLong() = ProvideCompositionLocalsForPreview {
     SettingsTab {
         EpisodeCacheItem(
             rememberTestEpisodeCacheState(
