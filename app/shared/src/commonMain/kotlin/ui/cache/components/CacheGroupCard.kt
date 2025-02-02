@@ -218,7 +218,7 @@ fun CacheGroupCard(
                             .weight(1f)
                             .align(Alignment.CenterVertically),
                     ) {
-                        ProvideTextStyle(MaterialTheme.typography.headlineSmall) {
+                        ProvideTextStyle(MaterialTheme.typography.titleLarge) {
                             Crossfade(
                                 state.cardTitle,
                                 Modifier.animateContentSize(),
