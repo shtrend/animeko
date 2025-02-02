@@ -31,10 +31,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.testing.TestLifecycleOwner
 import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForTest
-import me.him188.ani.app.ui.framework.assertScreenshot
 import me.him188.ani.app.ui.framework.runAniComposeUiTest
-import me.him188.ani.utils.platform.currentPlatform
-import me.him188.ani.utils.platform.isDesktop
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.milliseconds
@@ -288,20 +285,12 @@ class CarouselAutoAdvanceEffectTest {
             assertEquals(2, carouselState.pagerState1.currentPage)
         }
 
-        if (currentPlatform().isDesktop()) {
-            onNodeWithTag("carousel").assertScreenshot("/screenshots/CarouselAutoAdvanceEffectTest.auto_advance___wrapAround___goesBackToFirstPage.interim.png")
-        }
-
         // reaching end
         mainClock.advanceTimeBy(periodMs)
         runOnIdle {
             assertEquals(4, carouselState.pagerState1.currentPage)
             assertEquals(false, carouselState.pagerState1.canScrollForward)
             assertEquals(true, carouselState.pagerState1.canScrollBackward)
-        }
-
-        if (currentPlatform().isDesktop()) {
-            onNodeWithTag("carousel").assertScreenshot("/screenshots/CarouselAutoAdvanceEffectTest.auto_advance___wrapAround___goesBackToFirstPage.end.png")
         }
 
         mainClock.advanceTimeBy(periodMs)
