@@ -32,7 +32,6 @@ internal actual fun Throwable.guessTestFunctionName(): String? {
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
      */
-    printStackTrace()
     val runTest = stackTrace.indexOfFirst { it.methodName.contains("runAniComposeUiTest") }
     if (runTest == -1) return null
     val testFunction = stackTrace.getOrNull(runTest - 1) ?: return null
