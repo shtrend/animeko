@@ -39,7 +39,7 @@ fun SkikoComposeUiTest.assertScreenshot(expectedResource: String) {
 /**
  * 截图当前的 UI 并与 resources 目录下的图片 [expectedResource] 进行比较.
  */
-fun SemanticsNodeInteraction.assertScreenshot(expectedResource: String) {
+actual fun SemanticsNodeInteraction.assertScreenshot(expectedResource: String) {
     captureToImage().assertScreenshot(expectedResource)
 }
 

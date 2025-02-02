@@ -14,6 +14,11 @@ import androidx.compose.ui.test.SkikoComposeUiTest
 /**
  * 截图当前的 UI 并与 resources 目录下的图片 [expectedResource] 进行比较.
  */
+@Deprecated(
+    "This function may be affected by different window sizes. Use assertScreenshot on node instead.",
+    ReplaceWith("onNodeWithTag(\"YOUR_TAG\").assertScreenshot(expectedResource)"),
+    level = DeprecationLevel.ERROR,
+)
 actual fun AniComposeUiTest.assertScreenshot(expectedResource: String) {
     return (this.composeUiTest as SkikoComposeUiTest).assertScreenshot(expectedResource)
 }

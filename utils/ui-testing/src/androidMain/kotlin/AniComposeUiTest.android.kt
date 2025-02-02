@@ -11,6 +11,7 @@ package me.him188.ani.app.ui.framework
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.ComposeUiTest
+import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.runComposeUiTest
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -21,13 +22,19 @@ import kotlinx.coroutines.test.resetMain
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.minutes
 
-/**
- * 截图当前的 UI 并与 resources 目录下的图片 [expectedResource] 进行比较.
- */
+
+@Deprecated(
+    "This function may be affected by different window sizes. Use assertScreenshot on node instead.",
+    ReplaceWith("onNodeWithTag(\"YOUR_TAG\").assertScreenshot(expectedResource)"),
+    level = DeprecationLevel.ERROR,
+)
 actual fun AniComposeUiTest.assertScreenshot(expectedResource: String) {
 }
 
 actual fun ImageBitmap.assertScreenshot(expectedResource: String) {
+}
+
+actual fun SemanticsNodeInteraction.assertScreenshot(expectedResource: String) {
 }
 
 /**
