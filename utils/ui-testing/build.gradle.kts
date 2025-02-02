@@ -33,8 +33,16 @@ kotlin {
         api(compose.uiTest)
         api(kotlin("test"))
 
+        api(compose.runtime)
         implementation(libs.compose.lifecycle.runtime.compose)
         implementation(libs.compose.lifecycle.runtime)
+    }
+    sourceSets.desktopMain.dependencies {
+        runtimeOnly(libs.kotlinx.coroutines.swing)
+        api(compose.desktop.currentOs)
+    }
+    sourceSets.androidMain.dependencies {
+        runtimeOnly(libs.kotlinx.coroutines.android)
     }
 }
 
