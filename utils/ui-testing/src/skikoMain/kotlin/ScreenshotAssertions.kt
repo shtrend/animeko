@@ -79,8 +79,12 @@ actual fun ImageBitmap.assertScreenshot(expectedResource: String) {
                     The actual screenshot does not match the expected screenshot. 
                     Actual image saved as file://$tempFile
                       into directory file://$tempDir
+                    Expected file bytes: ${expectedBytes.size}
+                    Actual file bytes: ${actualBytes.size}
                     Actual image Base64: 
                     ${Base64.encode(actualBytes)}
+                    Expected image Base64:
+                    ${Base64.encode(expectedBytes)}
                     You should check if the actual image is correct. If it is, you can update the expected image by copying the actual image to the resources directory, overwriting `$expectedResource`. The resource directory is normally located at `src/skikoTest/resources/`.
                     For your convenience, you can copy:
                     assertScreenshot("/screenshots/${tempFile.path.name}")
