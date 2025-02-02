@@ -17,6 +17,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -53,7 +54,7 @@ fun CarouselAutoAdvanceEffect(
                 while (currentCoroutineContext().isActive) {
                     delay(period)
                     @Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
-                    launch {
+                    launch(start = CoroutineStart.UNDISPATCHED) {
                         // 实际测试, currentPage 只会到 pageCount - 2, 所以我们用  % (pageCount - 1)
                         carouselState.pagerState.animateScrollToPage(
                             (carouselState.pagerState.currentPage + 1) % (carouselState.pagerState.pageCount - 1),
