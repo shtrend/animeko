@@ -10,6 +10,7 @@
 package me.him188.ani.app.ui.comment
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -87,14 +88,16 @@ fun CommentColumn(
                 key = items.itemKey { it.id },
                 contentType = items.itemContentType(),
             ) { index ->
-                val item = items[index] ?: return@items
-                commentItem(index, item)
+                Column {
+                    val item = items[index] ?: return@items
+                    commentItem(index, item)
 
-                if (hasDividerLine && index != items.itemCount - 1) {
-                    HorizontalDivider(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = DividerDefaults.color.stronglyWeaken(),
-                    )
+                    if (hasDividerLine && index != items.itemCount - 1) {
+                        HorizontalDivider(
+                            modifier = Modifier.fillMaxWidth(),
+                            color = DividerDefaults.color.stronglyWeaken(),
+                        )
+                    }
                 }
             }
 
