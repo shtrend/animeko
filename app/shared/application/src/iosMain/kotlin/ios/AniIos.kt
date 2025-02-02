@@ -42,6 +42,7 @@ import me.him188.ani.app.navigation.BrowserNavigator
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.navigation.NavRoutes
 import me.him188.ani.app.navigation.NoopBrowserNavigator
+import me.him188.ani.app.platform.AppStartupTasks
 import me.him188.ani.app.platform.GrantedPermissionManager
 import me.him188.ani.app.platform.IosContext
 import me.him188.ani.app.platform.IosContextFiles
@@ -89,6 +90,7 @@ fun MainViewController(): UIViewController {
             dataDir = SystemDocumentDir.apply { createDirectories() },
         ),
     )
+    AppStartupTasks.printVersions()
 
     val koin = startKoin {
         modules(getCommonKoinModule({ context }, scope))
