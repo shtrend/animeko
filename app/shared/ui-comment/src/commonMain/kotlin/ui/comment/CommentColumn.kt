@@ -64,7 +64,7 @@ fun CommentColumn(
             items,
             error = {
                 LoadErrorCard(
-                    problem = it,
+                    error = it,
                     onRetry = { items.retry() },
                     modifier = Modifier.fillMaxWidth(), // noop
                 )
