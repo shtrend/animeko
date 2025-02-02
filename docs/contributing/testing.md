@@ -7,13 +7,13 @@
 - `commonTest`
     - `jvmTest`
         - `desktopTest`
-        - `androidUnitTest`
         - `androidInstrumentedTest`
     - `nativeTest`
         - `appleTest`
             - `iosTest`
                 - `iosSimulatorArm64Test`
     - `skikoTest` (由 `desktopTest` 和 `iosTest` 共享)
+- `androidUnitTest` (独立于其他所有测试)
 
 提示：
 
