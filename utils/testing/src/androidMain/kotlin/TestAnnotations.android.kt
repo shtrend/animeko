@@ -9,3 +9,8 @@
 
 package me.him188.ani.test
 
+import org.junit.jupiter.api.Disabled
+
+actual typealias DisabledOnAndroid = Disabled
+
+actual typealias EnabledOnlyOnDesktop = Disabled

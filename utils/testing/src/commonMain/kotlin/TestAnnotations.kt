@@ -9,6 +9,15 @@
 
 package me.him188.ani.test
 
-import org.junit.jupiter.api.Disabled
+@OptIn(ExperimentalMultiplatform::class)
+@OptionalExpectation
+expect annotation class DisabledOnAndroid()
 
-actual typealias DisabledOnAndroid = Disabled
+@OptionalExpectation
+@OptIn(ExperimentalMultiplatform::class)
+expect annotation class DisabledOnNative()
+
+
+@OptIn(ExperimentalMultiplatform::class)
+@OptionalExpectation
+expect annotation class EnabledOnlyOnDesktop()

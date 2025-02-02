@@ -9,6 +9,8 @@
 
 package me.him188.ani.test
 
-@OptIn(ExperimentalMultiplatform::class)
-@OptionalExpectation
-expect annotation class DisabledOnAndroid()
+import kotlin.test.Ignore
+
+actual typealias DisabledOnNative = Ignore
+
+actual typealias EnabledOnlyOnDesktop = Ignore
