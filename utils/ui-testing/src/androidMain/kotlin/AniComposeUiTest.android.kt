@@ -18,6 +18,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.resetMain
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.minutes
 
 /**
@@ -34,7 +35,7 @@ actual fun ImageBitmap.assertScreenshot(expectedResource: String) {
  * - [ComposeUiTest.waitUntil] 的超时时间更长
  */
 @OptIn(DelicateCoroutinesApi::class)
-actual fun runAniComposeUiTest(testBody: AniComposeUiTest.() -> Unit) {
+actual fun runAniComposeUiTest(effectContext: CoroutineContext, testBody: AniComposeUiTest.() -> Unit) {
     // 一定要调用这个, 否则在跟其他协程测试一起跑的时候, lifecycle 的一个地方会一直 block
     // androidx.lifecycle.MainDispatcherChecker.updateMainDispatcherThread
     Dispatchers.resetMain()

@@ -128,3 +128,20 @@ data object TestGlobalLifecycle : Lifecycle() {
 internal expect inline fun ProvidePlatformCompositionLocalsForPreview(
     crossinline content: @Composable () -> Unit
 )
+
+
+/**
+ * 用于 UI test. 固定主题颜色.
+ */
+@TestOnly
+@Composable
+fun ProvideFoundationCompositionLocalsForTest(
+    isDark: Boolean = false,
+    content: @Composable () -> Unit,
+) {
+    ProvideFoundationCompositionLocalsForPreview(
+        isDark,
+    ) {
+        content()
+    }
+}

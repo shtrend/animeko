@@ -12,12 +12,15 @@ package me.him188.ani.app.ui.framework
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.runComposeUiTest
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * 相对于 [runComposeUiTest], 有一些修改:
  * - [ComposeUiTest.waitUntil] 的超时时间更长
  */
 expect fun runAniComposeUiTest(
+    effectContext: CoroutineContext = EmptyCoroutineContext,
     testBody: AniComposeUiTest.() -> Unit
 )
 

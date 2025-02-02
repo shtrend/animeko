@@ -12,8 +12,10 @@ package me.him188.ani.app.ui.framework
 import androidx.compose.ui.test.runComposeUiTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.resetMain
+import kotlin.coroutines.CoroutineContext
 
 actual fun runAniComposeUiTest(
+    effectContext: CoroutineContext,
     testBody: AniComposeUiTest.() -> Unit
 ) {
     Dispatchers.resetMain()
