@@ -289,7 +289,7 @@ class CarouselAutoAdvanceEffectTest {
         }
 
         if (currentPlatform().isDesktop()) {
-            assertScreenshot("/screenshots/CarouselAutoAdvanceEffectTest.auto_advance___wrapAround___goesBackToFirstPage.interim.png")
+            onNodeWithTag("carousel").assertScreenshot("/screenshots/CarouselAutoAdvanceEffectTest.auto_advance___wrapAround___goesBackToFirstPage.interim.png")
         }
 
         // reaching end
@@ -301,7 +301,7 @@ class CarouselAutoAdvanceEffectTest {
         }
 
         if (currentPlatform().isDesktop()) {
-            assertScreenshot("/screenshots/CarouselAutoAdvanceEffectTest.auto_advance___wrapAround___goesBackToFirstPage.end.png")
+            onNodeWithTag("carousel").assertScreenshot("/screenshots/CarouselAutoAdvanceEffectTest.auto_advance___wrapAround___goesBackToFirstPage.end.png")
         }
 
         mainClock.advanceTimeBy(periodMs)
