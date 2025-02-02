@@ -38,6 +38,7 @@ fun PreviewCacheGroupCardMissingTotalSize() = ProvideCompositionLocalsForPreview
                 downloadSpeed = 233.megaBytes,
                 totalSize = Unspecified,
             ),
+            onPlay = { _, _ -> },
         )
     }
 }
@@ -54,6 +55,7 @@ fun PreviewCacheGroupCardMissingProgress() = ProvideCompositionLocalsForPreview 
                 downloadSpeed = 233.megaBytes,
                 totalSize = 888.megaBytes,
             ),
+            onPlay = { _, _ -> },
         )
     }
 }
@@ -70,6 +72,7 @@ fun PreviewCacheGroupCardMissingDownloadSpeed() = ProvideCompositionLocalsForPre
                 downloadSpeed = Unspecified,
                 totalSize = 888.megaBytes,
             ),
+            onPlay = { _, _ -> },
         )
     }
 }

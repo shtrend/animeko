@@ -13,7 +13,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -100,9 +99,7 @@ inline fun ProvideCompositionLocalsForPreview(
         LocalViewModelStoreOwner provides viewModelStoreOwner,
     ) {
         val navController = rememberNavController()
-        SideEffect {
-            aniNavigator.setNavController(navController)
-        }
+        aniNavigator.setNavController(navController)
         ProvidePlatformCompositionLocalsForPreview {
             AniTheme(isDark = isDark) {
                 ProvideAniMotionCompositionLocals {
