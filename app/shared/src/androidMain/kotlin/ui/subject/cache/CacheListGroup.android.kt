@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -35,7 +35,7 @@ import me.him188.ani.app.domain.media.cache.requester.EpisodeCacheRequester
 import me.him188.ani.app.domain.media.selector.MediaSelectorFactory
 import me.him188.ani.app.tools.Progress
 import me.him188.ani.app.tools.toProgress
-import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.settings.SettingsTab
 import me.him188.ani.datasources.api.EpisodeSort
@@ -46,7 +46,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @Composable
 @Preview
 private fun PreviewEpisodeCacheActionIcon() {
-    ProvideCompositionLocalsForPreview {
+    ProvideFoundationCompositionLocalsForPreview {
         Column(Modifier.width(IntrinsicSize.Min)) {
             Text(text = "isLoadingIndefinitely")
             Box(modifier = Modifier.size(64.dp), contentAlignment = Alignment.Center) {
@@ -113,7 +113,7 @@ private fun PreviewEpisodeCacheActionIcon() {
 @Composable
 @Preview
 private fun PreviewEpisodeCacheActionIconHasActionRunningChange() {
-    ProvideCompositionLocalsForPreview {
+    ProvideFoundationCompositionLocalsForPreview {
         var running by remember {
             mutableStateOf(false)
         }
@@ -139,7 +139,7 @@ private fun PreviewEpisodeCacheActionIconHasActionRunningChange() {
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-private fun PreviewEpisodeItem() = ProvideCompositionLocalsForPreview {
+private fun PreviewEpisodeItem() = ProvideFoundationCompositionLocalsForPreview {
     SettingsTab {
         var id = 0
         listOf(true, false).forEach { hasPublished ->
@@ -166,7 +166,7 @@ private fun PreviewEpisodeItem() = ProvideCompositionLocalsForPreview {
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-private fun PreviewEpisodeItemVeryLong() = ProvideCompositionLocalsForPreview {
+private fun PreviewEpisodeItemVeryLong() = ProvideFoundationCompositionLocalsForPreview {
     SettingsTab {
         EpisodeCacheItem(
             rememberTestEpisodeCacheState(

@@ -26,7 +26,7 @@ import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
 import me.him188.ani.app.domain.media.player.ChunkState
 import me.him188.ani.app.domain.media.player.staticMediaCacheProgressState
 import me.him188.ani.app.domain.player.VideoLoadingState
-import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.preview.PHONE_LANDSCAPE
 import me.him188.ani.app.ui.settings.danmaku.createTestDanmakuRegexFilterState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.TestMediaSourceResultListPresentation
@@ -83,7 +83,7 @@ private fun PreviewDetachedSlider() {
 private fun PreviewVideoScaffoldImpl(
     expanded: Boolean,
     controllerVisibility: ControllerVisibility = ControllerVisibility.Visible
-) = ProvideCompositionLocalsForPreview {
+) = ProvideFoundationCompositionLocalsForPreview {
     val scope = rememberCoroutineScope()
     val playerState = remember {
         DummyMediampPlayer(scope.coroutineContext)

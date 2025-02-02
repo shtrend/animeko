@@ -37,7 +37,7 @@ import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
 import me.him188.ani.app.domain.media.player.ChunkState
 import me.him188.ani.app.domain.media.player.staticMediaCacheProgressState
 import me.him188.ani.app.domain.player.VideoLoadingState
-import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.effects.TAG_CURSOR_VISIBILITY_EFFECT_INVISIBLE
 import me.him188.ani.app.ui.foundation.effects.TAG_CURSOR_VISIBILITY_EFFECT_VISIBLE
 import me.him188.ani.app.ui.framework.doesNotExist
@@ -82,7 +82,7 @@ class EpisodeVideoCursorTest {
 
     @Composable
     private fun Player(gestureFamily: GestureFamily = GestureFamily.MOUSE) {
-        ProvideCompositionLocalsForPreview(isDark = true) {
+        ProvideFoundationCompositionLocalsForPreview(isDark = true) {
             val scope = rememberCoroutineScope()
             val playerState = remember {
                 DummyMediampPlayer(scope.coroutineContext)

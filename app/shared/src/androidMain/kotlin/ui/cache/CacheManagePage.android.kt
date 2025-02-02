@@ -23,7 +23,7 @@ import me.him188.ani.app.ui.cache.components.CacheEpisodePaused
 import me.him188.ani.app.ui.cache.components.CacheEpisodeState
 import me.him188.ani.app.ui.cache.components.CacheGroupCommonInfo
 import me.him188.ani.app.ui.cache.components.CacheGroupState
-import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.datasources.api.EpisodeSort
@@ -35,7 +35,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @PreviewLightDark
 @Composable
 fun PreviewCacheManagementPage() {
-    ProvideCompositionLocalsForPreview {
+    ProvideFoundationCompositionLocalsForPreview {
         CacheManagementScreen(
             state = remember {
                 CacheManagementState(

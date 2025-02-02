@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.ui.cache.components
 
 import androidx.compose.foundation.background
@@ -12,7 +21,7 @@ import me.him188.ani.app.tools.Progress
 import me.him188.ani.app.tools.toProgress
 import me.him188.ani.app.ui.cache.TestCacheGroupSates
 import me.him188.ani.app.ui.cache.createTestCacheEpisode
-import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.datasources.api.topic.FileSize.Companion.Unspecified
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -20,7 +29,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-fun PreviewCacheGroupCardMissingTotalSize() = ProvideCompositionLocalsForPreview {
+fun PreviewCacheGroupCardMissingTotalSize() = ProvideFoundationCompositionLocalsForPreview {
     Box(Modifier.background(Color.DarkGray)) {
         CacheEpisodeItem(
             createTestCacheEpisode(
@@ -36,7 +45,7 @@ fun PreviewCacheGroupCardMissingTotalSize() = ProvideCompositionLocalsForPreview
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-fun PreviewCacheGroupCardMissingProgress() = ProvideCompositionLocalsForPreview {
+fun PreviewCacheGroupCardMissingProgress() = ProvideFoundationCompositionLocalsForPreview {
     Box(Modifier.background(Color.DarkGray)) {
         CacheEpisodeItem(
             createTestCacheEpisode(
@@ -52,7 +61,7 @@ fun PreviewCacheGroupCardMissingProgress() = ProvideCompositionLocalsForPreview 
 @OptIn(TestOnly::class)
 @Preview
 @Composable
-fun PreviewCacheGroupCardMissingDownloadSpeed() = ProvideCompositionLocalsForPreview {
+fun PreviewCacheGroupCardMissingDownloadSpeed() = ProvideFoundationCompositionLocalsForPreview {
     Box(Modifier.background(Color.DarkGray)) {
         CacheEpisodeItem(
             createTestCacheEpisode(
@@ -69,7 +78,7 @@ fun PreviewCacheGroupCardMissingDownloadSpeed() = ProvideCompositionLocalsForPre
 @PreviewLightDark
 @PreviewFontScale
 @Composable
-fun PreviewCacheGroupCard() = ProvideCompositionLocalsForPreview {
+fun PreviewCacheGroupCard() = ProvideFoundationCompositionLocalsForPreview {
     Box(Modifier.background(Color.DarkGray)) {
         CacheGroupCard(TestCacheGroupSates[0])
     }

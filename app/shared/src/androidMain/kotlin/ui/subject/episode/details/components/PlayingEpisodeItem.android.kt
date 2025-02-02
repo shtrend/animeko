@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.domain.media.TestMediaList
 import me.him188.ani.app.domain.media.TestMediaSourceInfo
 import me.him188.ani.app.domain.player.VideoLoadingState
-import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 import me.him188.ani.app.ui.media.renderProperties
 import me.him188.ani.app.ui.subject.episode.statistics.VideoLoadingSummary
 import me.him188.ani.datasources.api.DefaultMedia
@@ -99,19 +99,19 @@ private fun PreviewEpisodeItemImpl(
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeItem() = ProvideCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeItem() = ProvideFoundationCompositionLocalsForPreview {
     PreviewEpisodeItemImpl()
 }
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeItemNoFilename() = ProvideCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeItemNoFilename() = ProvideFoundationCompositionLocalsForPreview {
     PreviewEpisodeItemImpl(filename = null)
 }
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeItemLongTexts() = ProvideCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeItemLongTexts() = ProvideFoundationCompositionLocalsForPreview {
     PreviewEpisodeItemImpl(
         episodeTitle = "超长名称".repeat(20),
         filename = "filename-".repeat(20) + ".mkv",
@@ -120,7 +120,7 @@ fun PreviewPlayingEpisodeItemLongTexts() = ProvideCompositionLocalsForPreview {
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeNotSelected() = ProvideCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeNotSelected() = ProvideFoundationCompositionLocalsForPreview {
     PreviewEpisodeItemImpl(
         media = null,
         filename = null,
@@ -129,7 +129,7 @@ fun PreviewPlayingEpisodeNotSelected() = ProvideCompositionLocalsForPreview {
 
 @Composable
 @PreviewLightDark
-fun PreviewPlayingEpisodeItemFailed() = ProvideCompositionLocalsForPreview {
+fun PreviewPlayingEpisodeItemFailed() = ProvideFoundationCompositionLocalsForPreview {
     PreviewEpisodeItemImpl(
         videoLoadingState = VideoLoadingState.UnsupportedMedia,
     )

@@ -21,13 +21,13 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.ui.danmaku.DummyDanmakuEditor
-import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ProvideFoundationCompositionLocalsForPreview
 
 @Composable
 @Preview(widthDp = 1080 / 3, heightDp = 2400 / 3, showBackground = true)
 @Preview(device = Devices.TABLET, showBackground = true)
 internal fun PreviewEpisodePage() {
-    ProvideCompositionLocalsForPreview {
+    ProvideFoundationCompositionLocalsForPreview {
         val context = LocalContext.current
         EpisodeScreen(
             remember {
@@ -44,7 +44,7 @@ internal fun PreviewEpisodePage() {
 @Composable
 @PreviewLightDark
 fun PreviewEpisodeSceneContentPhoneScaffoldTabs() {
-    ProvideCompositionLocalsForPreview {
+    ProvideFoundationCompositionLocalsForPreview {
         EpisodeScreenContentPhoneScaffold(
             videoOnly = false,
             commentCount = { 100 },
