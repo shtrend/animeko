@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.ui.profile
 
-import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -38,6 +37,7 @@ import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.ui.external.placeholder.placeholder
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.avatar.AvatarImage
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 
 @Composable
