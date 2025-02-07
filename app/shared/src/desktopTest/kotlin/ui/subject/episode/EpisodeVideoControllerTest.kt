@@ -906,6 +906,7 @@ class EpisodeVideoControllerTest {
                 root.performMouseInput {
                     moveTo(centerRight)
                 }
+                waitForIdle()
                 waitForSideSheetOpen()
                 runOnIdle {
                     assertEquals(true, controllerState.alwaysOn)
