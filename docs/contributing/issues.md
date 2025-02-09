@@ -6,7 +6,7 @@ Animeko 使用 [GitHub Issues](https://github.com/open-ani/animeko/issues) 追�
 ## 推荐的筛选方式
 
 - 解决 P1
-  bug: [label:P1](https://github.com/open-ani/animeko/issues?q=is%3Aopen%20is%3Aissue%20label%3AP1)
+  bug: [(label:P1) (type:bug)](https://github.com/open-ani/animeko/issues?q=is%3Aopen%20is%3Aissue%20label%3AP1%20type%3ABug)
 - 解决 P1
   新功能: [(label:P1) (type:Feature OR type:"Meta Issue")](https://github.com/open-ani/animeko/issues?q=is%3Aopen%20is%3Aissue%20%20(label%3AP1)%20%20%20(type%3AFeature%20OR%20type%3A%22Meta%20Issue%22)%20%20)
 - 解决 P1 或 P2 的新 UI
