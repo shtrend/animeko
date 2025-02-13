@@ -15,6 +15,7 @@ import androidx.compose.runtime.LongState
 import androidx.compose.runtime.Stable
 import kotlin.math.log
 import kotlin.math.pow
+import kotlin.random.Random
 
 /**
  * FloatingDanmakuTrack 中的弹幕在以下情况会移除:
@@ -111,7 +112,8 @@ internal class FloatingDanmakuTrack<T : SizeSpecifiedDanmaku>(
         require(danmakuWidth > 0) { "danmaku width must be positive." }
         val speedMultiplier = this@FloatingDanmakuTrack.speedMultiplier.value
             .pow(log(danmakuWidth.toFloat() / baseSpeedTextWidth, 2f))
-            .coerceAtLeast(1f)
+            .coerceAtLeast(1f) + 
+                (Random.Default.nextFloat() - 0.5f) * 0.25f
         
         // 避免浮点数的量级过大
         val upcomingDistanceX = if (placeFrameTimeNanos == DanmakuTrack.NOT_PLACED) 0f else
