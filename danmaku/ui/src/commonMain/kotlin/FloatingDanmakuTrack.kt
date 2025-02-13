@@ -88,7 +88,7 @@ internal class FloatingDanmakuTrack<T : SizeSpecifiedDanmaku>(
      */
     private fun checkPlaceableImpl(danmaku: T, placeFrameTimeNanos: Long): Pair<FloatingDanmaku<T>, Int>? {
         check(placeFrameTimeNanos == DanmakuTrack.NOT_PLACED || placeFrameTimeNanos >= 0) {
-            "placeFrameTimeNanos must be NOT_PLACED or non-negative, but had $placeFrameTimeNanos"
+            "Expected placeFrameTimeNanos to be NOT_PLACED or non-negative, but got $placeFrameTimeNanos"
         }
         // 弹幕轨道宽度为 0 一定不能放
         if (trackWidth.value <= 0) return null
@@ -109,7 +109,7 @@ internal class FloatingDanmakuTrack<T : SizeSpecifiedDanmaku>(
     }
 
     private fun T.createFloating(placeFrameTimeNanos: Long): FloatingDanmaku<T> {
-        require(danmakuWidth > 0) { "danmaku width must be positive." }
+        require(danmakuWidth > 0) { "Expected danmaku width to be positive, but got $danmakuWidth." }
         val speedMultiplier = this@FloatingDanmakuTrack.speedMultiplier.value
             .pow(log(danmakuWidth.toFloat() / baseSpeedTextWidth, 2f))
             .coerceAtLeast(1f) + 
