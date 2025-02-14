@@ -168,7 +168,11 @@ fun LoadErrorCard(
                         Row {
                             if (currentAniBuildConfig.isDebug) {
                                 TextButton({ error.throwable?.printStackTrace() }) {
-                                    Text("Dump Trace", fontStyle = FontStyle.Italic)
+                                    Text("Dump", fontStyle = FontStyle.Italic)
+                                }
+                            } else {
+                                TextButton({ error.throwable?.printStackTrace() }) {
+                                    Text("复制")
                                 }
                             }
 
