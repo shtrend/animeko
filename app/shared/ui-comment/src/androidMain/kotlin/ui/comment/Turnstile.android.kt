@@ -42,6 +42,8 @@ import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.foundation.widgets.Toaster
+import me.him188.ani.utils.logging.info
+import me.him188.ani.utils.logging.logger
 import java.io.InputStream
 
 class AndroidTurnstileState(
@@ -87,6 +89,7 @@ class AndroidTurnstileState(
                 if (request?.url != null) {
                     val requestUrl = request.url.toString()
                     if (requestUrl.startsWith(TurnstileState.CALLBACK_INTERCEPTION_PREFIX)) {
+                        logger.info { "Intercepted request: $requestUrl" }
                         val responseToken = CALLBACK_REGEX.matchEntire(requestUrl)?.groupValues?.getOrNull(1)
                         if (responseToken != null) {
                             callbackTokenChannel.trySend(responseToken)
@@ -129,6 +132,7 @@ class AndroidTurnstileState(
 
     companion object {
         private val CALLBACK_REGEX = Regex("^${TurnstileState.CALLBACK_INTERCEPTION_PREFIX}/?\\?token=(.+)$")
+        private val logger = logger<AndroidTurnstileState>()
     }
 }
 
