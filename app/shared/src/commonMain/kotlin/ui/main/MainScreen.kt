@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import me.him188.ani.app.navigation.LocalNavigator
@@ -198,7 +199,7 @@ private fun MainScreenContent(
                         val vm = viewModel<UserCollectionsViewModel> { UserCollectionsViewModel() }
                         CollectionPage(
                             state = vm.state,
-                            items = vm.items,
+                            items = vm.items.collectAsLazyPagingItems(),
                             onClickSearch = { onNavigateToPage(MainScreenPage.Search) },
                             onClickSettings = { navigator.navigateSettings() },
                             Modifier.fillMaxSize(),
