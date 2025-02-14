@@ -22,7 +22,6 @@ import me.him188.ani.datasources.api.paging.Paged
 import me.him188.ani.datasources.api.paging.processPagedResponse
 import me.him188.ani.datasources.bangumi.BangumiClient
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextCreateEpisodeCommentRequest
-import me.him188.ani.datasources.bangumi.next.models.BangumiNextGetEpisodeComments200ResponseInner
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextSubjectInterestComment
 import me.him188.ani.utils.coroutines.IO_
 import kotlin.coroutines.CoroutineContext
@@ -80,8 +79,8 @@ class BangumiBangumiCommentServiceImpl(
                 createEpisodeComment(
                     episodeId,
                     BangumiNextCreateEpisodeCommentRequest(
-                        cfTurnstileResponse,
                         content,
+                        cfTurnstileResponse,
                         replyToCommentId,
                     ),
                 )
