@@ -39,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.paging.compose.collectAsLazyPagingItems
 import kotlinx.coroutines.CoroutineStart
@@ -71,8 +72,7 @@ import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.subject.collection.CollectionPage
 import me.him188.ani.app.ui.subject.collection.UserCollectionsViewModel
-import me.him188.ani.app.ui.subject.details.SubjectDetailsScreen
-import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateLoader
+import me.him188.ani.app.ui.subject.details.SubjectDetailsScene
 import me.him188.ani.app.ui.update.TextButtonUpdateLogo
 import me.him188.ani.utils.platform.isAndroid
 
@@ -227,13 +227,14 @@ private fun MainScreenContent(
                         SearchPage(
                             vm.searchPageState,
                             detailContent = {
-                                val result by vm.subjectDetailsStateLoader.result
-                                SubjectDetailsScreen(
-                                    result,
+                                val subjectDetailsState by vm.subjectDetailsStateLoader.state
+                                    .collectAsStateWithLifecycle(null)
+                                SubjectDetailsScene(
+                                    subjectDetailsState,
                                     onPlay = { episodeId ->
-                                        val curr = result
-                                        if (curr is SubjectDetailsStateLoader.LoadState.Ok) {
-                                            navigator.navigateEpisodeDetails(curr.value.subjectId, episodeId)
+                                        val current = subjectDetailsState
+                                        if (current != null) {
+                                            navigator.navigateEpisodeDetails(current.subjectId, episodeId)
                                         }
                                     },
                                     onLoadErrorRetry = { vm.reloadCurrentSubjectDetails() },
