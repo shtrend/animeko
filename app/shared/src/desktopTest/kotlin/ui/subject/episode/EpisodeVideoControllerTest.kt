@@ -1055,7 +1055,7 @@ class EpisodeVideoControllerTest {
                 click()
             }
         }
-        mainClock.advanceTimeBy(1000)
+        mainClock.advanceTimeBy(1001)
         runOnIdle {
             topBar.assertExists()
             assertEquals(
