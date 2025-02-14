@@ -22,6 +22,14 @@ import kotlin.random.Random
  * - tick 中的逻辑帧检测
  * - 调用 [DanmakuTrack.clearAll]
  * 移除时必须调用 [onRemoveDanmaku] 避免内存泄露.
+ * 
+ * @param baseSpeedPxPerSecond 放到这个轨道的弹幕里. 
+ *     长度大于此基础长度才会加速弹幕运动, 等于此长度的弹幕速度为 1 倍 [baseSpeedPxPerSecond].
+ * @param speedMultiplier 弹幕长度为 2 倍 [baseSpeedTextWidth] 时的速度倍率. 
+ *     [DanmakuTrackProperties.speedMultiplier] 默认值为 1.14 倍.
+ * @param randomizeSpeedFluctuation 弹幕速度随机波动范围.
+ *     设 [randomizeSpeedFluctuation] 为 θ, 对于根据 [baseSpeedPxPerSecond] 与 [speedMultiplier] 计算的速度 α,
+ *     最终的弹幕速度为 [[α - θ, α + θ]] 之间的随机值.
  */
 @Stable
 internal class FloatingDanmakuTrack<T : SizeSpecifiedDanmaku>(
@@ -31,15 +39,9 @@ internal class FloatingDanmakuTrack<T : SizeSpecifiedDanmaku>(
     private val trackWidth: IntState,
     var baseSpeedPxPerSecond: Float,
     var safeSeparation: Float,
-    /**
-     * 放到这个轨道的弹幕里, 长度大于此基础长度才会加速弹幕运动, 等于此长度的弹幕速度为 100% [baseSpeedPxPerSecond].
-     */
     var baseSpeedTextWidth: Int,
-    /**
-     * 弹幕长度为 2 倍 [baseSpeedTextWidth] 时的速度倍率.
-     */
     val speedMultiplier: FloatState,
-    private val randomizeSpeedFluctuation: Float = 0.125f,
+    private val randomizeSpeedFluctuation: Float = 0.0875f,
     // 某个弹幕需要消失, 必须调用此函数避免内存泄漏.
     private val onRemoveDanmaku: (FloatingDanmaku<T>) -> Unit
 ) : DanmakuTrack<T, FloatingDanmaku<T>> {
