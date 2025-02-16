@@ -21,6 +21,7 @@ import io.ktor.client.plugins.auth.providers.BearerTokens
 import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.plugin
 import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.http.URLBuilder
 import io.ktor.http.Url
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -28,8 +29,8 @@ import kotlinx.io.IOException
 import me.him188.ani.app.platform.getAniUserAgent
 import me.him188.ani.utils.coroutines.Symbol
 import me.him188.ani.utils.ktor.userAgent
-import me.him188.ani.utils.logging.SilentLogger
 import me.him188.ani.utils.logging.debug
+import me.him188.ani.utils.logging.logger
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmField
 
@@ -231,12 +232,7 @@ data class ServerListFeatureHandler(
 
         var lastCall: HttpClientCall? = null
         for (serverUrl in urls) {
-            // Apply server URL to request
-            request.url.protocol = serverUrl.protocol
-            request.url.host = serverUrl.host
-            request.url.port = serverUrl.port
-            request.url.encodedUser = serverUrl.encodedUser
-            request.url.encodedPassword = serverUrl.encodedPassword
+            replaceUrl(request.url, serverUrl)
 
             logger.debug { "Trying server $serverUrl for request ${request.url}" }
             val thisCall = try {
@@ -266,5 +262,17 @@ data class ServerListFeatureHandler(
         )
     }
 
-    private val logger = SilentLogger//logger<ServerListFeatureHandler>()
+    private val logger = logger<ServerListFeatureHandler>()
+
+    internal companion object {
+        // for testing
+        internal fun replaceUrl(urlBuilder: URLBuilder, newServerUrl: Url) {
+            // Apply server URL to request
+            urlBuilder.protocol = newServerUrl.protocol
+            urlBuilder.host = newServerUrl.host
+            urlBuilder.port = newServerUrl.port
+            urlBuilder.encodedUser = newServerUrl.encodedUser
+            urlBuilder.encodedPassword = newServerUrl.encodedPassword
+        }
+    }
 }
