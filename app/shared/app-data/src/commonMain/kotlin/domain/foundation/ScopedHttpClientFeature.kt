@@ -15,6 +15,7 @@ import io.ktor.client.call.HttpClientCall
 import io.ktor.client.plugins.BrowserUserAgent
 import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.ResponseException
+import io.ktor.client.plugins.SendCountExceedException
 import io.ktor.client.plugins.Sender
 import io.ktor.client.plugins.auth.Auth
 import io.ktor.client.plugins.auth.providers.BearerTokens
@@ -276,3 +277,27 @@ data class ServerListFeatureHandler(
         }
     }
 }
+
+// endregion
+
+
+// region ConvertSendCountExceedExceptionFeature
+
+val ConvertSendCountExceedExceptionFeature = ScopedHttpClientFeatureKey<Boolean>("ConvertSendCountExceedException")
+
+data object ConvertSendCountExceedExceptionFeatureHandler : ScopedHttpClientFeatureHandler<Boolean>(
+    ConvertSendCountExceedExceptionFeature,
+) {
+    override fun applyToClient(client: HttpClient, value: Boolean) {
+        if (!value) return
+        client.plugin(HttpSend).intercept { request ->
+            try {
+                execute(request)
+            } catch (e: SendCountExceedException) {
+                throw IOException("Send count exceeded for url ${request.url}, see cause", e)
+            }
+        }
+    }
+}
+
+// endregion

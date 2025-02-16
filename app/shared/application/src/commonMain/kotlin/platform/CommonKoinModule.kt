@@ -76,10 +76,14 @@ import me.him188.ani.app.data.repository.user.TokenRepository
 import me.him188.ani.app.data.repository.user.TokenRepositoryImpl
 import me.him188.ani.app.domain.danmaku.DanmakuManager
 import me.him188.ani.app.domain.danmaku.DanmakuManagerImpl
+import me.him188.ani.app.domain.foundation.ConvertSendCountExceedExceptionFeature
+import me.him188.ani.app.domain.foundation.ConvertSendCountExceedExceptionFeatureHandler
 import me.him188.ani.app.domain.foundation.DefaultHttpClientProvider
 import me.him188.ani.app.domain.foundation.DefaultHttpClientProvider.HoldingInstanceMatrix
 import me.him188.ani.app.domain.foundation.HttpClientProvider
 import me.him188.ani.app.domain.foundation.ScopedHttpClientUserAgent
+import me.him188.ani.app.domain.foundation.ServerListFeature
+import me.him188.ani.app.domain.foundation.ServerListFeatureConfig
 import me.him188.ani.app.domain.foundation.ServerListFeatureHandler
 import me.him188.ani.app.domain.foundation.UseBangumiTokenFeature
 import me.him188.ani.app.domain.foundation.UseBangumiTokenFeatureHandler
@@ -171,6 +175,7 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
                         }
                     },
                 ),
+                ConvertSendCountExceedExceptionFeatureHandler,
             ),
         )
     }
@@ -506,6 +511,8 @@ private fun holdingInstanceMatrixSequence() = sequence {
                 setOf(
                     UserAgentFeature.withValue(userAgent),
                     UseBangumiTokenFeature.withValue(false),
+                    ServerListFeature.withValue(ServerListFeatureConfig.Default),
+                    ConvertSendCountExceedExceptionFeature.withValue(true),
                 ),
             ),
         )
@@ -516,6 +523,8 @@ private fun holdingInstanceMatrixSequence() = sequence {
             setOf(
                 UserAgentFeature.withValue(ScopedHttpClientUserAgent.ANI),
                 UseBangumiTokenFeature.withValue(true),
+                ServerListFeature.withValue(ServerListFeatureConfig.Default),
+                ConvertSendCountExceedExceptionFeature.withValue(true),
             ),
         ),
     )
