@@ -161,6 +161,11 @@ fun OnboardingScreen(
         ) {
             val configureProxyState = state.configureProxyState
 
+            DisposableEffect(Unit) {
+                configureProxyState.onRequestReTest()
+                onDispose { }
+            }
+
             ConfigureProxyStep(
                 state = proxyState,
                 onUpdate = { new ->
