@@ -417,6 +417,10 @@ sealed class AuthStateNew {
         val avatarUrl: String?,
         val isGuest: Boolean
     ) : AuthStateNew()
+
+    fun isKnownLogin(): Boolean {
+        return this is Success && !isGuest
+    }
 }
 
 /**

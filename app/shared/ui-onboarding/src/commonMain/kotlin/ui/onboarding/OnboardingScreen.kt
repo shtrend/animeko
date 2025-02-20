@@ -224,7 +224,7 @@ fun OnboardingScreen(
         }*/
         step(
             "bangumi",
-            { Text("Bangumi 授权") },
+            { Text("登录") },
             forwardButton = {
                 WizardDefaults.GoForwardButton(
                     onFinishOnboarding,

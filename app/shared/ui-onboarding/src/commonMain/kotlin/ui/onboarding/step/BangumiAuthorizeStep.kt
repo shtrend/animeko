@@ -41,7 +41,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.SplitButtonDefaults
-import androidx.compose.material3.SplitButtonShapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -145,17 +144,10 @@ private fun SettingsScope.DefaultAuthorize(
                 modifier = Modifier
                     .padding(horizontal = layoutParams.horizontalPadding)
                     .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(
-                    "Ani 的追番进度管理服务由 Bangumi 提供",
+                    "登录 Bangumi 账号可以同步番剧收藏和追番进度，不登录也会保存在本地",
                     style = MaterialTheme.typography.titleMedium,
-                )
-                Text(
-                    "Bangumi 番组计划 是一个中文 ACGN 互联网分享与交流项目，不提供资源下载。" +
-                            "登录 Bangumi 账号方可使用收藏、记录观看进度等功能。",
-                    modifier = Modifier.padding(horizontal = layoutParams.descHorizontalPadding),
-                    style = MaterialTheme.typography.bodyMedium,
                 )
             }
             Column(
@@ -208,7 +200,7 @@ private fun AuthorizeButton(
             ) {
                 when (authorizeState) {
                     is AuthStateNew.Idle, is AuthStateNew.Error -> {
-                        Text("启动浏览器授权")
+                        Text("登录")
                     }
 
                     is AuthStateNew.AwaitingResult -> {
@@ -220,12 +212,12 @@ private fun AuthorizeButton(
                                 modifier = Modifier.size(16.dp),
                                 strokeWidth = 3.dp,
                             )
-                            Text("等待授权结果")
+                            Text("等待登录结果")
                         }
                     }
 
                     is AuthStateNew.Success -> {
-                        Text(if (authorizeState.isGuest) "启动浏览器授权" else "重新授权其他账号")
+                        Text(if (authorizeState.isGuest) "登录" else "登录其他账号")
                     }
                 }
             }
@@ -270,7 +262,7 @@ private fun AuthorizeStateText(
 ) {
 
     AnimatedVisibility(
-        visible = authorizeState is AuthStateNew.Success || authorizeState is AuthStateNew.Error,
+        visible = authorizeState.isKnownLogin() || authorizeState is AuthStateNew.Error,
         enter = animatedVisibilityMotionScheme.columnEnter,
         exit = animatedVisibilityMotionScheme.columnExit,
         modifier = modifier,
@@ -279,14 +271,7 @@ private fun AuthorizeStateText(
             remember(authorizeState) {
                 when (authorizeState) {
                     is AuthStateNew.Idle, is AuthStateNew.AwaitingResult -> ""
-                    is AuthStateNew.Success -> {
-                        if (authorizeState.isGuest) {
-                            "目前是游客模式"
-                        } else {
-                            "授权登录成功: ${authorizeState.username}"
-                        }
-                    }
-
+                    is AuthStateNew.Success -> "授权登录成功: ${authorizeState.username}"
                     is AuthStateNew.NetworkError -> "授权登录失败：网络错误，请重试"
                     is AuthStateNew.TokenExpired -> "验证登陆失败：Token 已过期，请重新授权"
                     is AuthStateNew.UnknownError -> "授权登录失败：未知错误，请重试\n" + authorizeState.message
@@ -304,6 +289,7 @@ private fun AuthorizeStateText(
 
 @Stable
 private enum class HelpOption {
+    BANGUMI_DESC,
     WEBSITE_BLOCKED,
     BANGUMI_REGISTER_CHOOSE,
     REGISTER_TYPE_WRONG_CAPTCHA,
@@ -316,6 +302,7 @@ private enum class HelpOption {
 @Composable
 private fun renderHelpOptionTitle(option: HelpOption): String {
     return when (option) {
+        HelpOption.BANGUMI_DESC -> "Bangumi 是什么"
         HelpOption.WEBSITE_BLOCKED -> "浏览器提示网站被屏蔽或禁止访问"
         HelpOption.BANGUMI_REGISTER_CHOOSE -> "注册时应该选择哪一项"
         HelpOption.REGISTER_TYPE_WRONG_CAPTCHA -> "注册或登录时一直提示验证码错误"
@@ -336,6 +323,14 @@ private fun renderHelpOptionContent(
 ) {
     Box(modifier) {
         when (option) {
+            HelpOption.BANGUMI_DESC -> {
+
+                Text(
+                    "Bangumi 番组计划 是一个中文互联网的 ACGN 内容分享与交流网站，致力于提供一个轻松便捷独特的交流与沟通环境。\n" +
+                            "Bangumi 提供了番剧索引、番剧收藏、追番进等功能，Ani 可以将你的观看记录同步至 Bangumi。",
+                )
+            }
+
             HelpOption.WEBSITE_BLOCKED -> {
                 Text("请在系统设置中更换默认浏览器，推荐按使用 Google Chrome，Microsoft Edge 或 Mozilla Firefox 浏览器")
             }
