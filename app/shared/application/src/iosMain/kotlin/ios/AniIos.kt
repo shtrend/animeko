@@ -49,8 +49,6 @@ import me.him188.ani.app.platform.PermissionManager
 import me.him188.ani.app.platform.PlatformWindow
 import me.him188.ani.app.platform.createAppRootCoroutineScope
 import me.him188.ani.app.platform.getCommonKoinModule
-import me.him188.ani.app.platform.notification.NoopNotifManager
-import me.him188.ani.app.platform.notification.NotifManager
 import me.him188.ani.app.platform.startCommonKoinModule
 import me.him188.ani.app.tools.update.IosUpdateInstaller
 import me.him188.ani.app.tools.update.UpdateInstaller
@@ -156,9 +154,6 @@ fun getIosModules(
 ) = module {
     single<PermissionManager> {
         GrantedPermissionManager
-    }
-    single<NotifManager> {
-        NoopNotifManager
     }
     single<BrowserNavigator> { NoopBrowserNavigator }
     single<TorrentManager> {

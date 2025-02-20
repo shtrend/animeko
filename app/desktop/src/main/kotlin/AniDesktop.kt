@@ -84,8 +84,6 @@ import me.him188.ani.app.platform.PermissionManager
 import me.him188.ani.app.platform.PlatformWindow
 import me.him188.ani.app.platform.createAppRootCoroutineScope
 import me.him188.ani.app.platform.getCommonKoinModule
-import me.him188.ani.app.platform.notification.NoopNotifManager
-import me.him188.ani.app.platform.notification.NotifManager
 import me.him188.ani.app.platform.startCommonKoinModule
 import me.him188.ani.app.platform.window.LocalTitleBarThemeController
 import me.him188.ani.app.platform.window.setTitleBar
@@ -280,7 +278,6 @@ object AniDesktop {
                     }
                     single<UpdateInstaller> { DesktopUpdateInstaller.currentOS() }
                     single<PermissionManager> { GrantedPermissionManager }
-                    single<NotifManager> { NoopNotifManager }
                     single<WindowStateRepository> { WindowStateRepositoryImpl(context.dataStores.savedWindowStateStore) }
                     single<AppTerminator> { DefaultAppTerminator }
                 },
