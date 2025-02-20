@@ -30,7 +30,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,36 +69,14 @@ internal fun BitTorrentFeatureStep(
             )
         }
         Column(
+            modifier = Modifier
+                .padding(horizontal = layoutParams.horizontalPadding)
+                .padding(horizontal = layoutParams.descHorizontalPadding)
+                .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(horizontal = layoutParams.horizontalPadding)
-                    .padding(horizontal = layoutParams.descHorizontalPadding)
-                    .fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                ProvideTextStyle(MaterialTheme.typography.bodyMedium) {
-                    Text(
-                        "Ani 可以通过 BitTorrent P2P 网络搜索、在线观看和缓存番剧。" +
-                                "你将从其他 Ani 用户和全球的 BT 用户下载并缓存内容，同时你的缓存也将分享给他们。",
-                    )
-
-                    /*when (platform) {
-                        // 启用 BitTorrent 功能，App 将会启动前台服务来保持运行 torrent 引擎，这可能会增加耗电。
-                        is Platform.Android -> Text(
-                            "App 将会启动前台服务来保持运行 BT 引擎，这可能会增加耗电。" +
-                                    "App 还会创建一个常驻的通知显示 BT 引擎的运行状态。",
-                        )
-
-                        else -> {}
-                    }*/
-
-                    // Text("你也可以在 设置 - BitTorrent 中开启或关闭 BitTorrent 功能。")
-
-                    Text("BT 源的下载速度取决于你的运营商网络质量。")
-                }
-            }
+            Text("Ani 支持边下边播 BT 资源，BT 下载速度取决于网络质量")
+            Text("允许通知权限，在缓存时查看下载进度")
         }
         Column(
             modifier = Modifier.padding(vertical = 16.dp),

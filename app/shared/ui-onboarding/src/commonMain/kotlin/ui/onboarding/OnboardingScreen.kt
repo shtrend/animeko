@@ -10,11 +10,8 @@
 package me.him188.ani.app.ui.onboarding
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,7 +31,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import me.him188.ani.app.domain.session.AuthStateNew
 import me.him188.ani.app.platform.LocalContext
-import me.him188.ani.app.tools.rememberUiMonoTasker
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.stateOf
@@ -44,7 +40,6 @@ import me.him188.ani.app.ui.onboarding.navigation.WizardController
 import me.him188.ani.app.ui.onboarding.navigation.WizardDefaults
 import me.him188.ani.app.ui.onboarding.navigation.WizardNavHost
 import me.him188.ani.app.ui.onboarding.step.BangumiAuthorizeStep
-import me.him188.ani.app.ui.onboarding.step.BitTorrentFeatureStep
 import me.him188.ani.app.ui.onboarding.step.ConfigureProxyStep
 import me.him188.ani.app.ui.onboarding.step.ConfigureProxyUIState
 import me.him188.ani.app.ui.onboarding.step.GrantNotificationPermissionState
@@ -53,7 +48,6 @@ import me.him188.ani.app.ui.onboarding.step.ProxyTestCaseState
 import me.him188.ani.app.ui.onboarding.step.ProxyTestItem
 import me.him188.ani.app.ui.onboarding.step.ProxyTestState
 import me.him188.ani.app.ui.onboarding.step.ProxyUIConfig
-import me.him188.ani.app.ui.onboarding.step.RequestNotificationPermission
 import me.him188.ani.app.ui.onboarding.step.ThemeSelectStep
 import me.him188.ani.app.ui.onboarding.step.ThemeSelectUIState
 import me.him188.ani.app.ui.settings.framework.SettingsState
@@ -175,9 +169,9 @@ fun OnboardingScreen(
                 onRequestReTest = { configureProxyState.onRequestReTest() }
             )
         }
-        step(
+        /*step(
             "bittorrent",
-            { Text("BitTorrent") },
+            { Text("BT 播放和缓存") },
             forwardButton = {
                 WizardDefaults.GoForwardButton(
                     {
@@ -227,7 +221,7 @@ fun OnboardingScreen(
                     }
                 } else null,
             )
-        }
+        }*/
         step(
             "bangumi",
             { Text("Bangumi 授权") },
