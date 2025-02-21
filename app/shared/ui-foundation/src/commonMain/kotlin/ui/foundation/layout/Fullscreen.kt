@@ -28,10 +28,4 @@ expect fun Context.setSystemBarVisible(visible: Boolean)
 
 @Suppress("NOTHING_TO_INLINE", "KotlinRedundantDiagnosticSuppress")
 @Composable
-inline fun isSystemInFullscreen(): Boolean = isSystemInFullscreenImpl()
-
-/**
- * @see isInLandscapeMode
- */
-@Composable
-expect fun isSystemInFullscreenImpl(): Boolean
+inline fun isSystemInFullscreen(): Boolean = LocalPlatformWindow.current.isUndecoratedFullscreen

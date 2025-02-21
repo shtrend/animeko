@@ -10,11 +10,17 @@
 package me.him188.ani.app.ui.foundation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import me.him188.ani.app.platform.rememberPlatformWindow
+import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Composable
 @TestOnly
 @PublishedApi
 internal actual inline fun ProvidePlatformCompositionLocalsForPreview(crossinline content: @Composable () -> Unit) {
-    content()
+    CompositionLocalProvider(
+        LocalPlatformWindow provides rememberPlatformWindow(),
+        content = { content() }
+    )
 }

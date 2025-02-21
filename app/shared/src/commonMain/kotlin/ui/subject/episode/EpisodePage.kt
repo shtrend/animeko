@@ -141,6 +141,7 @@ import me.him188.ani.app.videoplayer.ui.progress.rememberMediaProgressSliderStat
 import me.him188.ani.danmaku.api.DanmakuPresentation
 import me.him188.ani.danmaku.ui.DanmakuHostState
 import me.him188.ani.danmaku.ui.DanmakuTrackProperties
+import me.him188.ani.utils.platform.isDesktop
 import me.him188.ani.utils.platform.isMobile
 import org.openani.mediamp.features.Screenshots
 
@@ -222,6 +223,11 @@ private fun EpisodeScreenContent(
         ScreenRotationEffect {
             vm.isFullscreen = it
         }
+    }
+    
+    //Enable window fullscreen mode detection
+    if (LocalPlatform.current.isDesktop()) {
+        vm.isFullscreen = LocalPlatformWindow.current.isUndecoratedFullscreen
     }
 
     SideEffect {

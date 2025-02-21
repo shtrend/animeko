@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.unit.dp
+import me.him188.ani.app.platform.DeviceOrientation
 
 
 /**
@@ -11,10 +12,9 @@ import androidx.compose.ui.unit.dp
  *
  * PC 一定处于横屏模式.
  *
- * @see isSystemInFullscreenImpl
  */
 @Composable
-expect fun isInLandscapeMode(): Boolean
+inline fun isInLandscapeMode(): Boolean = LocalPlatformWindow.current.deviceOrientation == DeviceOrientation.LANDSCAPE
 
 @Stable
 fun BoxWithConstraintsScope.showTabletUI(): Boolean {
