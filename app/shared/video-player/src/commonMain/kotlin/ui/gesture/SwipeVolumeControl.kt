@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.videoplayer.ui.guesture
+package me.him188.ani.app.videoplayer.ui.gesture
 
 import androidx.annotation.MainThread
 import androidx.compose.foundation.gestures.Orientation
