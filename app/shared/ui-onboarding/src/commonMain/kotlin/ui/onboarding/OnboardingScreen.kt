@@ -59,7 +59,7 @@ fun OnboardingScreen(
     vm: OnboardingViewModel,
     onFinishOnboarding: () -> Unit,
     contactActions: @Composable () -> Unit,
-    navigationIcon: @Composable () -> Unit, 
+    navigationIcon: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
@@ -67,7 +67,7 @@ fun OnboardingScreen(
         vm.finishOnboarding()
         onFinishOnboarding()
     }
-    
+
     LaunchedEffect(vm) {
         vm.collectNewLoginEvent(finishOnboarding)
     }
@@ -134,7 +134,7 @@ fun OnboardingScreen(
                 config = themeSelectUiState,
                 onUpdateUseDarkMode = { state.themeSelectState.onUpdateUseDarkMode(it) },
                 onUpdateUseDynamicTheme = { state.themeSelectState.onUpdateUseDynamicTheme(it) },
-                onUpdateSeedColor = { state.themeSelectState.onUpdateSeedColor(it) }
+                onUpdateSeedColor = { state.themeSelectState.onUpdateSeedColor(it) },
             )
         }
         step(
@@ -171,9 +171,9 @@ fun OnboardingScreen(
             ConfigureProxyStep(
                 state = proxyState,
                 onUpdate = { new ->
-                    configureProxyState.updateConfig(proxyState.config, new, proxyState.systemProxy) 
-               },
-                onRequestReTest = { configureProxyState.onRequestReTest() }
+                    configureProxyState.updateConfig(proxyState.config, new, proxyState.systemProxy)
+                },
+                onRequestReTest = { configureProxyState.onRequestReTest() },
             )
         }
         /*step(
@@ -229,9 +229,16 @@ fun OnboardingScreen(
                 } else null,
             )
         }*/
+
+        val onSkipLogin: () -> Unit = {
+            scope.launch {
+                state.bangumiAuthorizeState.onUseGuestMode()
+                controller.goForward()
+            }
+        }
         step(
             "bangumi",
-            { Text("登录") },
+            { Text("登录 Bangumi 账号") },
             forwardButton = {
                 WizardDefaults.GoForwardButton(
                     {
@@ -259,12 +266,7 @@ fun OnboardingScreen(
             },
             skipButton = {
                 WizardDefaults.SkipButton(
-                    {
-                        scope.launch {
-                            state.bangumiAuthorizeState.onUseGuestMode()
-                            controller.goForward()
-                        }
-                    },
+                    onSkipLogin,
                     text = "跳过",
                 )
             },
@@ -286,16 +288,17 @@ fun OnboardingScreen(
                 authorizeState = authorizeState,
                 showTokenAuthorizePage = bangumiShowTokenAuthorizePage,
                 contactActions = contactActions,
-                onSetShowTokenAuthorizePage = { 
+                onSetShowTokenAuthorizePage = {
                     bangumiShowTokenAuthorizePage = it
                     if (it) scope.launch { scrollTopAppBarExpanded() }
                 },
                 onClickAuthorize = { state.bangumiAuthorizeState.onClickNavigateAuthorize(context) },
                 onCancelAuthorize = { state.bangumiAuthorizeState.onCancelAuthorize() },
                 onAuthorizeByToken = { state.bangumiAuthorizeState.onAuthorizeByToken(it) },
+                onSkip = onSkipLogin,
                 onClickNavigateToBangumiDev = {
                     state.bangumiAuthorizeState.onClickNavigateToBangumiDev(context)
-                }
+                },
             )
         }
     }

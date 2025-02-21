@@ -82,6 +82,7 @@ internal fun BangumiAuthorizeStep(
     onCancelAuthorize: () -> Unit,
     onClickNavigateToBangumiDev: () -> Unit,
     onAuthorizeByToken: (String) -> Unit,
+    onSkip: () -> Unit,
     modifier: Modifier = Modifier,
     layoutParams: WizardLayoutParams = WizardLayoutParams.calculate(currentWindowAdaptiveInfo1().windowSizeClass),
 ) {
@@ -99,6 +100,7 @@ internal fun BangumiAuthorizeStep(
                         onCancelAuthorize()
                         onSetShowTokenAuthorizePage(true)
                     },
+                    onSkip = onSkip,
                     onClickCancelAuthorize = onCancelAuthorize,
                     layoutParams = layoutParams,
                 )
@@ -122,6 +124,7 @@ private fun SettingsScope.DefaultAuthorize(
     onClickAuthorize: () -> Unit,
     onClickTokenAuthorize: () -> Unit,
     onClickCancelAuthorize: () -> Unit,
+    onSkip: () -> Unit,
     contactActions: @Composable () -> Unit,
     layoutParams: WizardLayoutParams,
     modifier: Modifier = Modifier,
@@ -146,7 +149,7 @@ private fun SettingsScope.DefaultAuthorize(
                     .fillMaxWidth(),
             ) {
                 Text(
-                    "登录 Bangumi 账号可以同步番剧收藏和追番进度，不登录也会保存在本地",
+                    "登录后，可以使用收藏、观看进度管理等额外功能",
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
@@ -164,6 +167,14 @@ private fun SettingsScope.DefaultAuthorize(
                         .fillMaxWidth()
                         .widthIn(max = 720.dp),
                 )
+                TextButton(
+                    onClick = onSkip,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 720.dp),
+                ) {
+                    Text("跳过")
+                }
                 AuthorizeStateText(
                     authorizeState,
                     modifier = Modifier.padding(
@@ -178,10 +189,10 @@ private fun SettingsScope.DefaultAuthorize(
             onClickTokenAuthorize = onClickTokenAuthorize,
             contactActions = contactActions,
             layoutParams = layoutParams,
+            Modifier.padding(top = 36.dp),
         )
     }
 }
-
 
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -200,7 +211,7 @@ private fun AuthorizeButton(
             ) {
                 when (authorizeState) {
                     is AuthStateNew.Idle, is AuthStateNew.Error -> {
-                        Text("登录")
+                        Text("登录 / 注册")
                     }
 
                     is AuthStateNew.AwaitingResult -> {
@@ -212,21 +223,21 @@ private fun AuthorizeButton(
                                 modifier = Modifier.size(16.dp),
                                 strokeWidth = 3.dp,
                             )
-                            Text("等待登录结果")
+                            Text("正在等待登录结果")
                         }
                     }
 
                     is AuthStateNew.Success -> {
-                        Text(if (authorizeState.isGuest) "登录" else "登录其他账号")
+                        Text(if (authorizeState.isGuest) "登录 / 注册" else "登录其他账号")
                     }
                 }
             }
         }
     }
-    
+
     Row(
         modifier,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         val awaitingResult = authorizeState is AuthStateNew.AwaitingResult
         if (authorizeState is AuthStateNew.Success && !authorizeState.isGuest) OutlinedButton(
@@ -248,7 +259,7 @@ private fun AuthorizeButton(
             FilledTonalButton(
                 onClick = onClickCancel,
                 content = { Text("取消") },
-                shape = SplitButtonDefaults.trailingButtonShapes().shape
+                shape = SplitButtonDefaults.trailingButtonShapes().shape,
             )
         }
     }
@@ -271,10 +282,10 @@ private fun AuthorizeStateText(
             remember(authorizeState) {
                 when (authorizeState) {
                     is AuthStateNew.Idle, is AuthStateNew.AwaitingResult -> ""
-                    is AuthStateNew.Success -> "授权登录成功: ${authorizeState.username}"
-                    is AuthStateNew.NetworkError -> "授权登录失败：网络错误，请重试"
-                    is AuthStateNew.TokenExpired -> "验证登陆失败：Token 已过期，请重新授权"
-                    is AuthStateNew.UnknownError -> "授权登录失败：未知错误，请重试\n" + authorizeState.message
+                    is AuthStateNew.Success -> "已登录: ${authorizeState.username}"
+                    is AuthStateNew.NetworkError -> "登录失败：网络错误，请重试"
+                    is AuthStateNew.TokenExpired -> "登录失败：Token 已过期，请重新授权"
+                    is AuthStateNew.UnknownError -> "登录失败：未知错误，请重试\n" + authorizeState.message
                 }
             },
             style = MaterialTheme.typography.bodyMedium,
@@ -318,7 +329,7 @@ private fun renderHelpOptionTitle(option: HelpOption): String {
 private fun renderHelpOptionContent(
     option: HelpOption,
     onClickTokenAuthorize: () -> Unit,
-    contactActions : @Composable () -> Unit,
+    contactActions: @Composable () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(modifier) {
@@ -415,17 +426,17 @@ private fun SettingsScope.AuthorizeHelpQA(
                     title = {
                         Text(
                             renderHelpOptionTitle(option),
-                            fontWeight = if (currentSelected == option) FontWeight.SemiBold else null
+                            fontWeight = if (currentSelected == option) FontWeight.SemiBold else null,
                         )
                     },
                     content = {
                         renderHelpOptionContent(
-                            option, 
-                            onClickTokenAuthorize, 
+                            option,
+                            onClickTokenAuthorize,
                             contactActions,
                             modifier = Modifier.ifThen(option != HelpOption.LOGIN_SUCCESS_NO_RESPONSE) {
                                 Modifier.padding(vertical = 16.dp)
-                            }
+                            },
                         )
                     },
                     expanded = currentSelected == option,
