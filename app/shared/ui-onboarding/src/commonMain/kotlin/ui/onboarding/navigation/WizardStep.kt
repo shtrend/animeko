@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 class WizardStep(
     val key: String,
     val stepName: @Composable () -> Unit,
+    val autoSkip: () -> Boolean,
     val backwardButton: @Composable () -> Unit,
     val skipButton: @Composable () -> Unit,
     val indicatorBar: @Composable (WizardIndicatorState, WindowInsets) -> Unit,

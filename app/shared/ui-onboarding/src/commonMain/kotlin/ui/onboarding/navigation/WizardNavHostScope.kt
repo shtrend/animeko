@@ -25,10 +25,17 @@ class WizardNavHostScope(
 ) {
     private val steps: LinkedHashMap<String, WizardStep> = linkedMapOf()
 
+    /**
+     * Add a step to the wizard.
+     *
+     * @param autoSkip If true, the step will be skipped from last step by [WizardController.goForward].
+     *   Not that the the first step cannot be skipped.
+     */
     @WizardStepDsl
     fun step(
         key: String,
         title: @Composable () -> Unit,
+        autoSkip: () -> Boolean = { false },
         forwardButton: @Composable () -> Unit = {
             val scope = rememberCoroutineScope()
             WizardDefaults.GoForwardButton(
@@ -90,6 +97,7 @@ class WizardNavHostScope(
         steps[key] = WizardStep(
             key = key,
             stepName = title,
+            autoSkip = autoSkip,
             backwardButton = navigationIcon,
             skipButton = skipButton,
             indicatorBar = indicatorBar,

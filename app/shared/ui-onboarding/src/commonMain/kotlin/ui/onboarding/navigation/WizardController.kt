@@ -18,7 +18,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -38,6 +40,7 @@ fun rememberWizardController(): WizardController {
 @Stable
 class WizardController() {
     private val navController = MutableStateFlow<NavHostController?>(null)
+    private val completedFlow = MutableSharedFlow<Any>(extraBufferCapacity = 1)
 
     private val steps = MutableStateFlow(emptyMap<String, WizardStep>())
     private val currentStepKey = combine(
@@ -66,6 +69,12 @@ class WizardController() {
         }
     }
 
+    suspend fun collectOnCompletedEvent(block: suspend () -> Unit) {
+        completedFlow.collectLatest {
+            block()
+        }
+    }
+
     suspend fun goForward() {
         move(forward = true)
     }
@@ -76,22 +85,43 @@ class WizardController() {
 
     private suspend fun move(forward: Boolean) {
         val navController = navController.value ?: return
+
         val currentStepKey = currentStepKey.filterNotNull().first()
         val stepEntries = steps.value.entries.toList()
         val currentStepIndex = stepEntries.indexOfFirst { it.key == currentStepKey }
 
-        val targetStepKey = stepEntries
-            .getOrNull(currentStepIndex + (if (forward) 1 else -1))?.value?.key ?: return
-        val targetStep = steps.value[targetStepKey] ?: return
+        if (currentStepIndex < 0) return
+
+        val targetStepIndex = if (forward) {
+            var i = currentStepIndex + 1
+            while (i < stepEntries.size && stepEntries[i].value.autoSkip()) {
+                i++
+            }
+            i
+        } else {
+            currentStepIndex - 1
+        }
+
+        if (targetStepIndex < 0) return
+        if (targetStepIndex >= stepEntries.size) {
+            completedFlow.emit(Any())
+            return
+        }
+
+        val targetStep = stepEntries[targetStepIndex].value
 
         val prevBackEntry = navController.previousBackStackEntry
-        if (!forward
-            && prevBackEntry != null
-            && prevBackEntry.destination.route == targetStepKey
-        ) {
-            navController.popBackStack(targetStepKey, false)
-        } else {
+
+        if (forward) {
             navController.navigate(targetStep.key)
+        } else {
+            if (prevBackEntry?.destination?.route == targetStep.key) {
+                navController.popBackStack(targetStep.key, false)
+            } else {
+                navController.navigate(targetStep.key) {
+                    popUpTo(currentStepKey) { inclusive = true }
+                }
+            }
         }
     }
 }

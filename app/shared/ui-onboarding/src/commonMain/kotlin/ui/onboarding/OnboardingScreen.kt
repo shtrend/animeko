@@ -118,8 +118,9 @@ fun OnboardingScreen(
 
     WizardNavHost(
         controller,
+        onCompleted = onFinishOnboarding,
         modifier = modifier,
-        windowInsets = windowInsets
+        windowInsets = windowInsets,
     ) {
         step(
             "theme",
@@ -232,7 +233,11 @@ fun OnboardingScreen(
             { Text("登录") },
             forwardButton = {
                 WizardDefaults.GoForwardButton(
-                    onFinishOnboarding,
+                    {
+                        scope.launch {
+                            controller.goForward()
+                        }
+                    },
                     text = "完成",
                     enabled = authorizeState is AuthStateNew.Success,
                 )
@@ -256,7 +261,7 @@ fun OnboardingScreen(
                     {
                         scope.launch {
                             state.bangumiAuthorizeState.onUseGuestMode()
-                            onFinishOnboarding()
+                            controller.goForward()
                         }
                     },
                     text = "跳过",

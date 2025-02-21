@@ -73,6 +73,7 @@ import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 @Composable
 fun WizardNavHost(
     controller: WizardController,
+    onCompleted: () -> Unit,
     modifier: Modifier = Modifier,
     motionScheme: NavigationMotionScheme = LocalNavigationMotionScheme.current,
     windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
@@ -85,6 +86,10 @@ fun WizardNavHost(
         val steps = WizardNavHostScope(controller).apply(content).build()
         controller.setupSteps(steps)
         onDispose { }
+    }
+
+    LaunchedEffect(controller) {
+        controller.collectOnCompletedEvent(onCompleted)
     }
 
     val wizardState = controller.state.collectAsState(null).value ?: return

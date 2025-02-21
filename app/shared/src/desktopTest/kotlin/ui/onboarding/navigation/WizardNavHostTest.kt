@@ -24,6 +24,7 @@ import androidx.compose.ui.test.performClick
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.framework.runAniComposeUiTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 
 private const val TAG_INDICATOR_TEXT = "indicatorText"
 private const val TAG_INDICATOR_TITLE = "indicatorTitle"
@@ -45,10 +46,16 @@ class WizardNavHostTest {
 
 
     @Composable
-    private fun View(wizardController: WizardController) {
+    private fun View(
+        wizardController: WizardController,
+        skipSecond: Boolean = false,
+        skipThird: Boolean = false,
+        onCompleted: () -> Unit = { },
+    ) {
         WizardNavHost(
             wizardController,
             modifier = Modifier.fillMaxSize(),
+            onCompleted = onCompleted,
         ) {
             step(
                 "step_1",
@@ -60,11 +67,21 @@ class WizardNavHostTest {
             }
             step(
                 "step_2",
+                autoSkip = { skipSecond },
                 title = {
                     Text("Step 2", Modifier.testTag(TAG_INDICATOR_TITLE))
                 },
             ) {
                 Text("this is my second step", Modifier.testTag(TAG_STEP_CONTENT_TEXT))
+            }
+            step(
+                "step_3",
+                autoSkip = { skipThird },
+                title = {
+                    Text("Step 3", Modifier.testTag(TAG_INDICATOR_TITLE))
+                },
+            ) {
+                Text("this is my third step", Modifier.testTag(TAG_STEP_CONTENT_TEXT))
             }
         }
     }
@@ -72,16 +89,17 @@ class WizardNavHostTest {
     @Test
     fun `step test`() = runAniComposeUiTest {
         val wizardController = WizardController()
+        var completedCount = 0
 
         setContent {
             ProvideCompositionLocalsForPreview {
-                View(wizardController)
+                View(wizardController, onCompleted = { completedCount++ })
             }
         }
 
         runOnIdle {
             indicatorText.assertAll(
-                hasTextExactly(WizardDefaults.renderStepIndicatorText(1, 2)),
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(1, 3)),
             )
             indicatorTitle.assertAll(hasTextExactly("Step 1"))
             stepContentText.assertTextEquals("this is my first step")
@@ -93,7 +111,7 @@ class WizardNavHostTest {
 
         runOnIdle {
             indicatorText.assertAll(
-                hasTextExactly(WizardDefaults.renderStepIndicatorText(1, 2)),
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(1, 3)),
             )
             indicatorTitle.assertAll(hasTextExactly("Step 1"))
             stepContentText.assertTextEquals("this is my first step")
@@ -105,34 +123,164 @@ class WizardNavHostTest {
 
         runOnIdle {
             indicatorText.assertAll(
-                hasTextExactly(WizardDefaults.renderStepIndicatorText(2, 2)),
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(2, 3)),
             )
             indicatorTitle.assertAll(hasTextExactly("Step 2"))
             stepContentText.assertTextEquals("this is my second step")
         }
 
         runOnIdle {
-            buttonNextStep.performClick() // 已经是最后一步，所以不会到下一步
+            buttonNextStep.performClick()
         }
 
         runOnIdle {
             indicatorText.assertAll(
-                hasTextExactly(WizardDefaults.renderStepIndicatorText(2, 2)),
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(3, 3)),
             )
-            indicatorTitle.assertAll(hasTextExactly("Step 2"))
-            stepContentText.assertTextEquals("this is my second step")
+            indicatorTitle.assertAll(hasTextExactly("Step 3"))
+            stepContentText.assertTextEquals("this is my third step")
         }
 
         runOnIdle {
-            buttonPrevStep.performClick() // 回到上一步
+            buttonNextStep.performClick() // 已经到最后一步了，不会进行下一步
         }
 
         runOnIdle {
             indicatorText.assertAll(
-                hasTextExactly(WizardDefaults.renderStepIndicatorText(1, 2)),
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(3, 3)),
+            )
+            indicatorTitle.assertAll(hasTextExactly("Step 3"))
+            stepContentText.assertTextEquals("this is my third step")
+
+            assertEquals(1, completedCount, "Expected trigger onCompleted once")
+        }
+    }
+
+    @Test
+    fun `skip middle steps test`() = runAniComposeUiTest {
+        val wizardController = WizardController()
+        var completedCount = 0
+
+        setContent {
+            ProvideCompositionLocalsForPreview {
+                View(
+                    wizardController,
+                    skipSecond = true,
+                    onCompleted = { completedCount++ },
+                )
+            }
+        }
+
+        runOnIdle {
+            indicatorText.assertAll(
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(1, 3)),
             )
             indicatorTitle.assertAll(hasTextExactly("Step 1"))
             stepContentText.assertTextEquals("this is my first step")
+        }
+
+        runOnIdle {
+            buttonNextStep.performClick() // 第二步会跳过, 应该直接到第三步
+        }
+
+        runOnIdle {
+            indicatorText.assertAll(
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(3, 3)),
+            )
+            indicatorTitle.assertAll(hasTextExactly("Step 3"))
+            stepContentText.assertTextEquals("this is my third step")
+        }
+
+        runOnIdle {
+            buttonNextStep.performClick()
+        }
+
+        runOnIdle {
+            indicatorText.assertAll(
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(3, 3)),
+            )
+            indicatorTitle.assertAll(hasTextExactly("Step 3"))
+            stepContentText.assertTextEquals("this is my third step")
+
+            assertEquals(1, completedCount, "Expected trigger onCompleted once")
+        }
+
+        runOnIdle {
+            buttonNextStep.performClick()
+        }
+
+        runOnIdle {
+            indicatorText.assertAll(
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(3, 3)),
+            )
+            indicatorTitle.assertAll(hasTextExactly("Step 3"))
+            stepContentText.assertTextEquals("this is my third step")
+
+            assertEquals(2, completedCount, "Expected trigger onCompleted once")
+        }
+    }
+
+    @Test
+    fun `skip last step test`() = runAniComposeUiTest {
+        val wizardController = WizardController()
+        var completedCount = 0
+
+        setContent {
+            ProvideCompositionLocalsForPreview {
+                View(
+                    wizardController,
+                    skipThird = true,
+                    onCompleted = { completedCount++ },
+                )
+            }
+        }
+
+        runOnIdle {
+            indicatorText.assertAll(
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(1, 3)),
+            )
+            indicatorTitle.assertAll(hasTextExactly("Step 1"))
+            stepContentText.assertTextEquals("this is my first step")
+        }
+
+        runOnIdle {
+            buttonNextStep.performClick() // 第二步
+        }
+
+        runOnIdle {
+            indicatorText.assertAll(
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(2, 3)),
+            )
+            indicatorTitle.assertAll(hasTextExactly("Step 2"))
+            stepContentText.assertTextEquals("this is my second step")
+        }
+
+        runOnIdle {
+            buttonNextStep.performClick() // 最后一步会跳过
+        }
+
+        runOnIdle {
+            indicatorText.assertAll(
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(2, 3)),
+            )
+            indicatorTitle.assertAll(hasTextExactly("Step 2"))
+            stepContentText.assertTextEquals("this is my second step")
+
+            assertEquals(1, completedCount, "Expected trigger onCompleted once")
+        }
+
+        runOnIdle {
+            buttonNextStep.performClick() // 再点一次也是一样
+        }
+
+        runOnIdle {
+            indicatorText.assertAll(
+                hasTextExactly(WizardDefaults.renderStepIndicatorText(2, 3)),
+            )
+            indicatorTitle.assertAll(hasTextExactly("Step 2"))
+            stepContentText.assertTextEquals("this is my second step")
+
+            assertEquals(2, completedCount, "Expected trigger onCompleted once")
         }
     }
 }

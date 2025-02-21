@@ -20,7 +20,10 @@ import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 @Composable
 fun PreviewWizardNavHost() {
     ProvideCompositionLocalsForPreview {
-        WizardNavHost(rememberWizardController()) {
+        WizardNavHost(
+            rememberWizardController(),
+            { },
+        ) {
             step(
                 key = "theme",
                 title = { Text("选择主题") },
