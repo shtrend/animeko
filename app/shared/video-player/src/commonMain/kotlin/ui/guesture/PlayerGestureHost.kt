@@ -618,7 +618,6 @@ fun PlayerGestureHost(
                                     ((maxHeight - 100.dp) / 40).coerceAtLeast(2.dp),
                                     Orientation.Vertical,
                                     indicatorState,
-                                    indicatorTasker,
                                     step = 0.01f,
                                     setup = {
                                         indicatorState.state = BRIGHTNESS
@@ -639,7 +638,6 @@ fun PlayerGestureHost(
                                     ((maxHeight - 100.dp) / 40).coerceAtLeast(2.dp),
                                     Orientation.Vertical,
                                     indicatorState,
-                                    indicatorTasker,
                                     step = 0.05f,
                                     setup = {
                                         indicatorState.state = VOLUME
@@ -777,7 +775,6 @@ fun PlayerGestureHost(
                                     ((maxHeight - 100.dp) / 40).coerceAtLeast(2.dp),
                                     Orientation.Vertical,
                                     indicatorState,
-                                    indicatorTasker,
                                     step = 0.01f,
                                     setup = {
                                         indicatorState.state = BRIGHTNESS
@@ -798,7 +795,6 @@ fun PlayerGestureHost(
                                     ((maxHeight - 100.dp) / 40).coerceAtLeast(2.dp),
                                     Orientation.Vertical,
                                     indicatorState,
-                                    indicatorTasker,
                                     step = 0.05f,
                                     setup = {
                                         indicatorState.state = VOLUME
