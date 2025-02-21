@@ -85,7 +85,14 @@ private const val BANGUMI_NEXT_API_HOST = "https://next.bgm.tv" // dev.bgm38.com
 private const val BANGUMI_HOST = "https://bgm.tv"
 
 class BangumiClientImpl(
+    /**
+     * 总是带有 token
+     */
     private val client: ScopedHttpClient,
+    /**
+     * 不会自带 bangumi token 的 client, 用来在登录时检查 token 是否正确
+     */
+    private val noTokenClient: ScopedHttpClient,
 ) : BangumiClient {
     private val logger = thisLogger()
 
@@ -121,7 +128,7 @@ class BangumiClientImpl(
             return null
         }
         try {
-            return client.use {
+            return noTokenClient.use {
                 get("$BANGUMI_API_HOST/v0/me") {
                     bearerAuth(accessToken)
                 }.body<BangumiUser>()

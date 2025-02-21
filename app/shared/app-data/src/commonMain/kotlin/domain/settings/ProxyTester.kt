@@ -41,14 +41,14 @@ class ProxyTester(
         )
 
         ServiceConnectionTesters.createDefault(
-            bangumiClient = BangumiClientImpl(client),
+            bangumiClient = BangumiClientImpl(client, client),
             aniClient = AniApiProvider(client).trendsApi,
         )
     }
         .shareIn(
             flowScope,
             SharingStarted.WhileSubscribed(),
-            replay = 1
+            replay = 1,
         )
 
     val testResult = connectionTester.flatMapLatest { it.results }

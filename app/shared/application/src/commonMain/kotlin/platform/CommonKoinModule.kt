@@ -75,7 +75,6 @@ import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.data.repository.user.TokenRepository
 import me.him188.ani.app.data.repository.user.TokenRepositoryImpl
 import me.him188.ani.app.domain.comment.TurnstileState
-import me.him188.ani.app.ui.comment.TurnstileState as CreateTurnstileState
 import me.him188.ani.app.domain.danmaku.DanmakuManager
 import me.him188.ani.app.domain.danmaku.DanmakuManagerImpl
 import me.him188.ani.app.domain.foundation.ConvertSendCountExceedExceptionFeature
@@ -136,6 +135,7 @@ import org.koin.core.KoinApplication
 import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import kotlin.time.Duration.Companion.minutes
+import me.him188.ani.app.ui.comment.TurnstileState as CreateTurnstileState
 
 private val Scope.client get() = get<BangumiClient>()
 private val Scope.database get() = get<AniDatabase>()
@@ -195,6 +195,10 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
             get<HttpClientProvider>().get(
                 userAgent = ScopedHttpClientUserAgent.ANI,
                 useBangumiToken = true,
+            ),
+            get<HttpClientProvider>().get(
+                userAgent = ScopedHttpClientUserAgent.ANI,
+                useBangumiToken = false,
             ),
         )
     }
