@@ -355,7 +355,7 @@ fun GestureIndicator(
                         }
 
                         FAST_BACKWARD -> {
-                            Icon(Icons.Rounded.FastForward, null, Modifier.size(iconSize))
+                            Icon(Icons.Rounded.FastRewind, null, Modifier.size(iconSize))
                         }
 
                         null -> {}
