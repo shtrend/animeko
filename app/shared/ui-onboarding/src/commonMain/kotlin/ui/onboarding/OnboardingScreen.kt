@@ -140,6 +140,7 @@ fun OnboardingScreen(
         step(
             "proxy",
             title = { Text("网络设置") },
+            autoSkip = { proxyState.overallState == ProxyOverallTestState.SUCCESS },
             forwardButton = {
                 WizardDefaults.GoForwardButton(
                     {
