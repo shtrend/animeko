@@ -249,7 +249,7 @@ fun GestureIndicator(
 ) {
     val shape = MaterialTheme.shapes.small
     val colors = MaterialTheme.colorScheme
-    var lastDelta by remember {
+    var lastDelta by remember(state) {
         mutableIntStateOf(state.deltaSeconds)
     }
 
