@@ -711,7 +711,13 @@ internal class TitleBarWindowProc(
         eraseWindowBackground()
     }
 
+    /***
+     * @param x, the horizontal offset relative to the client area.
+     * @param y, the vertical offset relative to the client area.
+     */
     private fun hitTestWindowResizerBorder(x: Int, y: Int): Int {
+        // Force update window info.
+        updateWindowInfo()
         val horizontalPadding = frameX
         val verticalPadding = frameY
         return when {
@@ -727,17 +733,18 @@ internal class TitleBarWindowProc(
             else -> HTNOWHERE
         }
     }
-
-    private fun hitTest(x: Int, y: Int): Int {
-        // skip resizer border hit test if window is maximized
-        if (!isMaximized) {
-            hitTestResult = hitTestWindowResizerBorder(x, y)
-            if (hitTestResult != HTNOWHERE) {
-                return hitTestResult
+    
+    private fun hitTest(lParam: WinDef.LPARAM): Int {
+        return lParam.usePoint { x, y ->
+            if (!isMaximized) {
+                hitTestResult = hitTestWindowResizerBorder(x, y)
+                if (isHitWindowResizer(hitTestResult)) {
+                    return@usePoint hitTestResult
+                }
             }
+            hitTestResult = childHitTest(x.toFloat(), y.toFloat())
+            hitTestResult
         }
-        hitTestResult = childHitTest(x.toFloat(), y.toFloat())
-        return hitTestResult
     }
 
     override fun callback(hWnd: HWND, uMsg: Int, wParam: WinDef.WPARAM, lParam: WinDef.LPARAM): WinDef.LRESULT? {
@@ -797,14 +804,11 @@ internal class TitleBarWindowProc(
             }
 
             WM_NCHITTEST -> {
-                // skip resizer border hit test if window is maximized
+                // Skip resizer border hit test if window is maximized
                 if (!isMaximized) {
-                    val callResult = user32.CallWindowProc(defaultWindowProc, hWnd, uMsg, wParam, lParam)
-                    when (val result = callResult.toInt()) {
-                        HTTOP, HTLEFT, HTRIGHT, HTBOTTOM,
-                        HTTOPLEFT, HTTOPRIGHT, HTBOTTOMLEFT, HTBOTTOMRIGHT -> {
-                            hitTestResult = result
-                        }
+                    val callResult = lParam.usePoint(::hitTestWindowResizerBorder)
+                    if (isHitWindowResizer(callResult)) {
+                        hitTestResult = callResult
                     }
                 }
                 return LRESULT(hitTestResult.toLong())
@@ -818,7 +822,7 @@ internal class TitleBarWindowProc(
                     user32.SetWindowLong(hWnd, WinUser.GWL_STYLE, oldStyle)
                     isMaximized = user32.isWindowInMaximized(hWnd)
                     if (menu != null) {
-                        // 更新菜单项状态
+                        // Update menu items state.
                         val menuItemInfo = MENUITEMINFO().apply {
                             cbSize = this.size()
                             fMask = MIIM_STATE
@@ -832,18 +836,18 @@ internal class TitleBarWindowProc(
                         updateMenuItemInfo(menu, menuItemInfo, WinUser.SC_MAXIMIZE, !isMaximized)
                         updateMenuItemInfo(menu, menuItemInfo, SC_CLOSE, true)
 
-                        // 设置默认菜单项
+                        // Set default menu item.
                         user32.SetMenuDefaultItem(menu, WINT_MAX, false)
 
-                        // 获取鼠标位置
+                        // Get cursor position.
                         val lParamValue = lParam.toInt()
                         val x = lowWord(lParamValue)
                         val y = highWord(lParamValue)
 
-                        // 显示菜单并获取用户选择
+                        // Show menu and get user selection.
                         val ret = user32.TrackPopupMenu(menu, TPM_RETURNCMD, x, y, 0, hWnd, null)
                         if (ret != 0) {
-                            // 发送系统命令
+                            // Send WM_SYSCOMMAND message.
                             user32.PostMessage(
                                 hWnd,
                                 WinUser.WM_SYSCOMMAND,
@@ -869,7 +873,7 @@ internal class TitleBarWindowProc(
 
             WM_SETTINGCHANGE -> {
                 val changedKey = Pointer(lParam.toLong()).getWideString(0)
-                // theme changed for color and darkTheme
+                // Theme changed for color and darkTheme
                 if (changedKey == "ImmersiveColorSet") {
                     _systemTheme.tryEmit(currentSystemTheme)
                     _systemColor.tryEmit(currentAccentColor())
@@ -896,8 +900,8 @@ internal class TitleBarWindowProc(
         menuItemInfo.fState = if (enabled) ExtendedUser32.MFS_ENABLED else ExtendedUser32.MFS_DISABLED
         user32.SetMenuItemInfo(menu, item, false, menuItemInfo)
     }
-    
-    //workaround for background erase.
+
+    // Workaround for background erase.
     private fun eraseWindowBackground() {
         val buildNumber = WindowsWindowUtils.instance.windowsBuildNumber() ?: return
         if (buildNumber < 22000) {
@@ -913,6 +917,40 @@ internal class TitleBarWindowProc(
     fun lowWord(value: Int): Int = value and 0xFFFF
 
     fun word(high: Int, low: Int): Int = (high and 0xFFFF shl 16) + low and 0xFFFF
+    
+    private fun isHitWindowResizer(result: Int): Boolean = when(result) {
+        HTTOP, HTLEFT, HTRIGHT, HTBOTTOM,
+        HTTOPLEFT, HTTOPRIGHT, HTBOTTOMLEFT, HTBOTTOMRIGHT -> {
+            true
+        }
+        else -> false
+    }
+    
+    private fun updateWindowInfo() {
+        dpi = user32.GetDpiForWindow(windowHandle)
+        frameX = user32.GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi)
+        frameY = user32.GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi)
+        
+        val rect = RECT()
+        if (user32.GetWindowRect(windowHandle, rect)) {
+            rect.read()
+            width = rect.right - rect.left
+            height = rect.bottom - rect.top
+        }
+        rect.clear()
+    }
+    
+    private inline fun <T> WinDef.LPARAM.usePoint(crossinline block: (x: Int, y: Int) -> T): T {
+        val intValue = toInt()
+        val x = lowWord(intValue).toShort().toInt()
+        val y = highWord(intValue).toShort().toInt()
+        val point = POINT(x, y)
+        user32.ScreenToClient(windowHandle, point)
+        point.read()
+        val result = block(point.x, point.y)
+        point.clear()
+        return result
+    }
 
     fun currentAccentColor(): Color {
         val value = Advapi32Util.registryGetIntValue(
@@ -971,7 +1009,7 @@ internal class TitleBarWindowProc(
 internal class SkiaLayerHitTestWindowProc(
     skiaLayer: SkiaLayer,
     private val user32: ExtendedUser32,
-    private val hitTest: (x: Int, y: Int) -> Int,
+    private val hitTest: (lParam: WinDef.LPARAM) -> Int,
 ) : WindowProc {
     private val windowHandle = HWND(Pointer(skiaLayer.windowHandle))
     internal val contentHandle = HWND(skiaLayer.canvas.let(Native::getComponentPointer))
@@ -995,12 +1033,7 @@ internal class SkiaLayerHitTestWindowProc(
         return when (uMsg) {
             
             WM_NCHITTEST -> {
-                val x = lParam.toInt() and 0xFFFF
-                val y = (lParam.toInt() shr 16) and 0xFFFF
-                val point = POINT(x, y)
-                user32.ScreenToClient(windowHandle, point)
-                hitResult = hitTest(point.x, point.y)
-                point.clear()
+                hitResult = hitTest(lParam)
                 when (hitResult) {
                     HTCLIENT, HTMAXBUTTON, HTMINBUTTON, HTCLOSE -> LRESULT(hitResult.toLong())
                     else -> LRESULT(HTTRANSPANRENT.toLong())
