@@ -8,6 +8,7 @@
  */
 
 package me.him188.ani.app.domain.session
+
 import app.cash.turbine.test
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
@@ -34,28 +35,28 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             refreshAccessToken = { noCall() },
         )
         val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
-        
+
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
         }
-        
+
         configurator.state.test {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
-            
+
             advanceUntilIdle()
             expectNoEvents()
         }
         assertFalse(launchedAuthorize, "Initial state should not trigger launch authorize.")
         loopJob.cancel()
     }
-    
+
     @Test
     fun `test initial check - no existing session`() = runCoroutineTest {
         val manager = createManager(
@@ -69,36 +70,36 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
         }
-        
+
         configurator.state.test {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
 
             advanceUntilIdle()
             expectNoEvents()
-            
+
             configurator.checkAuthorizeState()
             assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "Start check should change state to AwaitingResult.")
             assertIs<AuthStateNew.Idle>(awaitItem(), "No session exists, after checking should change state to Idle.")
 
-            
+
             advanceUntilIdle()
             expectNoEvents()
         }
         assertFalse(launchedAuthorize, "Check state should not trigger launch authorize.")
         loopJob.cancel()
     }
-    
+
     @Test
     fun `test initial check - session existed - refresh succeeded`() = runCoroutineTest {
         val manager = createManager(
             getSelfInfo = { getSelfInfoSuccess() },
             refreshAccessToken = { refreshTokenSuccess() },
-        ).apply { 
+        ).apply {
             setSession(AccessTokenSession(ACCESS_TOKEN, Long.MAX_VALUE))
         }
         val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
@@ -108,21 +109,25 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
         }
-        
+
         configurator.state.test {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
 
             advanceUntilIdle()
             expectNoEvents()
-            
+
             configurator.checkAuthorizeState()
             assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "Start check should change state to AwaitingResult.")
-            assertIs<AuthStateNew.Success>(awaitItem(), "Session existed, after checking should change state to Success.")
+            assertIs<AuthStateNew.AwaitingUserInfo>(awaitItem())
+            assertIs<AuthStateNew.Success>(
+                awaitItem(),
+                "Session existed, after checking should change state to Success.",
+            )
 
             advanceUntilIdle()
             expectNoEvents()
@@ -146,7 +151,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -160,7 +165,10 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
 
             configurator.checkAuthorizeState()
             assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "Start check should change state to AwaitingResult.")
-            assertIs<AuthStateNew.TokenExpired>(awaitItem(), "Session existed, after checking should change state to TokenExpired.")
+            assertIs<AuthStateNew.TokenExpired>(
+                awaitItem(),
+                "Session existed, after checking should change state to TokenExpired.",
+            )
 
             advanceUntilIdle()
             expectNoEvents()
@@ -184,7 +192,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -198,7 +206,10 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
 
             configurator.checkAuthorizeState()
             assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "Start check should change state to AwaitingResult.")
-            assertIs<AuthStateNew.TokenExpired>(awaitItem(), "Session existed, after checking should change state to TokenExpired.")
+            assertIs<AuthStateNew.TokenExpired>(
+                awaitItem(),
+                "Session existed, after checking should change state to TokenExpired.",
+            )
 
             advanceUntilIdle()
             expectNoEvents()
@@ -206,7 +217,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         assertFalse(launchedAuthorize, "Check state should not trigger launch authorize.")
         loopJob.cancel()
     }
-    
+
     @Test
     fun `test success`() = runCoroutineTest {
         val manager = createManager(
@@ -214,15 +225,15 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             refreshAccessToken = { refreshTokenSuccess() },
         )
         val authClient = createTestAuthClient(
-            getResult = { checkAuthorizeResultSuccess() }
+            getResult = { checkAuthorizeResultSuccess() },
         )
-        
+
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -230,10 +241,11 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
 
         configurator.state.test {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
-            
+
             configurator.startAuthorize()
             assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "startAuthorize should change state to AwaitingResult.")
-            
+            assertIs<AuthStateNew.AwaitingUserInfo>(awaitItem())
+
             val successState = awaitItem()
             assertIs<AuthStateNew.Success>(successState, "Should success.")
             assertEquals(TestUserInfo.username, successState.username)
@@ -244,7 +256,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         assertTrue(launchedAuthorize, "Start authorize should trigger launch authorize.")
         loopJob.cancel()
     }
-    
+
     @Test
     fun `test guest`() = runCoroutineTest {
         val manager = createManager(
@@ -252,15 +264,15 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             refreshAccessToken = { refreshTokenSuccess() },
         )
         val authClient = createTestAuthClient(
-            getResult = { checkAuthorizeResultSuccess() }
+            getResult = { checkAuthorizeResultSuccess() },
         )
-        
+
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -268,12 +280,15 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
 
         configurator.state.test {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
-            
+
             configurator.setGuestSession()
-            
+
             advanceUntilIdle()
-            assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "Set guest session, should change state to AwaitingResult.")
-            
+            assertIs<AuthStateNew.AwaitingResult>(
+                awaitItem(),
+                "Set guest session, should change state to AwaitingResult.",
+            )
+
             val successState = awaitItem()
             assertIs<AuthStateNew.Success>(successState, "Should success if set guest session.")
             assertTrue(successState.isGuest, "Set guest session, should be guest.")
@@ -298,7 +313,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -306,10 +321,10 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
 
         configurator.state.test {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
-            
+
             configurator.startAuthorize()
             assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "startAuthorize should change state to AwaitingResult.")
-            
+
             configurator.cancelAuthorize()
             assertIs<AuthStateNew.Idle>(awaitItem(), "Cancel authorize should change state to Idle.")
 
@@ -319,7 +334,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         assertTrue(launchedAuthorize, "Start authorize should trigger launch authorize.")
         loopJob.cancel()
     }
-    
+
     @Test
     fun `test authorize by session - succeeded`() = runCoroutineTest {
         val manager = createManager(
@@ -333,7 +348,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -343,7 +358,11 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
 
             configurator.setAuthorizationToken(ACCESS_TOKEN)
-            assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "setAuthorizationToken should change state to AwaitingResult.")
+            assertIs<AuthStateNew.AwaitingResult>(
+                awaitItem(),
+                "setAuthorizationToken should change state to AwaitingResult.",
+            )
+            assertIs<AuthStateNew.AwaitingUserInfo>(awaitItem())
 
             val successState = awaitItem()
             assertIs<AuthStateNew.Success>(successState, "Should success.")
@@ -355,7 +374,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         assertFalse(launchedAuthorize, "Set authorization token should not trigger launch authorize.")
         loopJob.cancel()
     }
-    
+
     @Test
     fun `test authorize by session - failed`() = runCoroutineTest {
         val manager = createManager(
@@ -369,7 +388,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -379,7 +398,11 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
 
             configurator.setAuthorizationToken(ACCESS_TOKEN)
-            assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "setAuthorizationToken should change state to AwaitingResult.")
+            assertIs<AuthStateNew.AwaitingResult>(
+                awaitItem(),
+                "setAuthorizationToken should change state to AwaitingResult.",
+            )
+            assertIs<AuthStateNew.AwaitingUserInfo>(awaitItem())
             assertIs<AuthStateNew.TokenExpired>(awaitItem(), "Token is invalid, should change state to TokenExpired.")
 
             advanceUntilIdle()
@@ -402,7 +425,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -412,21 +435,24 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
 
             configurator.startAuthorize()
-            assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "setAuthorizationToken should change state to AwaitingResult.")
+            assertIs<AuthStateNew.AwaitingResult>(
+                awaitItem(),
+                "setAuthorizationToken should change state to AwaitingResult.",
+            )
 
             expectNoEvents()
         }
         assertTrue(launchedAuthorize, "Start authorize should trigger launch authorize.")
         loopJob.cancel()
     }
-    
+
     @Test
     fun `test authorize - network error initially error but later ok`() = runCoroutineTest {
         val manager = createManager(
             getSelfInfo = { getSelfInfoSuccess() },
             refreshAccessToken = { refreshTokenSuccess() },
         )
-        
+
         var retriesThenNetworkOk = 5
         val authClient = createTestAuthClient(
             getResult = {
@@ -444,7 +470,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -454,7 +480,11 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
 
             configurator.startAuthorize()
-            assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "setAuthorizationToken should change state to AwaitingResult.")
+            assertIs<AuthStateNew.AwaitingResult>(
+                awaitItem(),
+                "setAuthorizationToken should change state to AwaitingResult.",
+            )
+            assertIs<AuthStateNew.AwaitingUserInfo>(awaitItem())
             assertIs<AuthStateNew.Success>(awaitItem(), "Network store, should change state to Success.")
 
             advanceUntilIdle()
@@ -463,21 +493,21 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         assertTrue(launchedAuthorize, "Start authorize should trigger launch authorize.")
         loopJob.cancel()
     }
-    
+
     @Test
     fun `test authorize - network error - in refresh token`() = runCoroutineTest {
         val manager = createManager(
             getSelfInfo = { ApiResponse.networkError() },
             refreshAccessToken = { ApiResponse.networkError() },
         )
-        val authClient = createTestAuthClient(getResult = { checkAuthorizeResultSuccess()})
+        val authClient = createTestAuthClient(getResult = { checkAuthorizeResultSuccess() })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
             sessionManager = manager,
             authClient = authClient,
             onLaunchAuthorize = { launchedAuthorize = true },
-            parentCoroutineContext = backgroundScope.coroutineContext
+            parentCoroutineContext = backgroundScope.coroutineContext,
         )
         val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
             configurator.authorizeRequestCheckLoop()
@@ -487,7 +517,11 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
 
             configurator.startAuthorize()
-            assertIs<AuthStateNew.AwaitingResult>(awaitItem(), "setAuthorizationToken should change state to AwaitingResult.")
+            assertIs<AuthStateNew.AwaitingResult>(
+                awaitItem(),
+                "setAuthorizationToken should change state to AwaitingResult.",
+            )
+            assertIs<AuthStateNew.AwaitingUserInfo>(awaitItem())
             assertIs<AuthStateNew.NetworkError>(awaitItem(), "Network error, should change state to Network.")
 
             advanceUntilIdle()
@@ -496,18 +530,55 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         assertTrue(launchedAuthorize, "Start authorize should trigger launch authorize.")
         loopJob.cancel()
     }
-    
+
+    @Test
+    fun `test authorize - network error - in refresh token getSelfInfo`() = runCoroutineTest {
+        val manager = createManager(
+            getSelfInfo = { ApiResponse.networkError() },
+            refreshAccessToken = { refreshTokenSuccess() },
+        )
+        val authClient = createTestAuthClient(getResult = { checkAuthorizeResultSuccess() })
+
+        var launchedAuthorize = false
+        val configurator = AniAuthConfigurator(
+            sessionManager = manager,
+            authClient = authClient,
+            onLaunchAuthorize = { launchedAuthorize = true },
+            parentCoroutineContext = backgroundScope.coroutineContext,
+        )
+        val loopJob = launch(start = CoroutineStart.UNDISPATCHED) {
+            configurator.authorizeRequestCheckLoop()
+        }
+
+        configurator.state.test {
+            assertIs<AuthStateNew.Idle>(awaitItem(), "Initially should be Idle.")
+
+            configurator.startAuthorize()
+            assertIs<AuthStateNew.AwaitingResult>(
+                awaitItem(),
+                "setAuthorizationToken should change state to AwaitingResult.",
+            )
+            assertIs<AuthStateNew.AwaitingUserInfo>(awaitItem())
+            assertIs<AuthStateNew.NetworkError>(awaitItem(), "Network error, should change state to Network.")
+
+            advanceUntilIdle()
+            expectNoEvents()
+        }
+        assertTrue(launchedAuthorize, "Start authorize should trigger launch authorize.")
+        loopJob.cancel()
+    }
+
     private fun getSelfInfoSuccess(): ApiResponse<UserInfo> {
         return ApiResponse.success(TestUserInfo)
     }
-    
+
     private fun checkAuthorizeResultSuccess(): ApiResponse<AniBangumiUserToken> {
         return ApiResponse.success(AniBangumiUserToken(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN, TestUserInfo.id))
     }
 
     private fun createTestAuthClient(
         getResult: suspend () -> ApiResponse<AniBangumiUserToken?>,
-        refreshAccessToken: suspend () -> AniAnonymousBangumiUserToken? = { 
+        refreshAccessToken: suspend () -> AniAnonymousBangumiUserToken? = {
             AniAnonymousBangumiUserToken(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN)
         },
     ): AniAuthClient {
@@ -515,7 +586,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             override suspend fun getResult(requestId: String): ApiResponse<AniBangumiUserToken?> {
                 return getResult()
             }
-            
+
             override suspend fun refreshAccessToken(refreshToken: String): ApiResponse<AniAnonymousBangumiUserToken> {
                 val result = refreshAccessToken()
                 return if (result != null) {
@@ -526,7 +597,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             }
         }
     }
-    
+
     private companion object {
         val TestUserInfo = UserInfo(123, "TestUser")
     }
