@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthCompact
 import me.him188.ani.app.ui.foundation.theme.EasingDurations
+import me.him188.ani.utils.platform.Platform
+import me.him188.ani.utils.platform.currentPlatform
 
 /**
  * APP 统一动画方案
@@ -126,11 +128,21 @@ class AniMotionScheme(
                     delayMillis = feedItemFadeOutTime,
                     easing = StandardDecelerateEasing,
                 ),
-                feedItemFadeOutSpec = tween(
-                    durationMillis = feedItemFadeOutTime,
-                    delayMillis = 0,
-                    easing = StandardAccelerateEasing,
-                ),
+                feedItemFadeOutSpec = kotlin.run {
+                    // Workaround for CMP-7160: 
+                    //   https://youtrack.jetbrains.com/issue/CMP-7160/Compose-Desktop-crash-after-update-to-1.7.0#focus=Comments-27-11539861.0-0
+                    // Fixed by https://github.com/JetBrains/compose-multiplatform-core/pull/1839
+                    // TODO: remove the workaround on CMP 1.8.0-beta01 or later
+                    if (currentPlatform() is Platform.Desktop) {
+                        snap()
+                    } else {
+                        tween(
+                            durationMillis = feedItemFadeOutTime,
+                            delayMillis = 0,
+                            easing = StandardAccelerateEasing,
+                        )
+                    }
+                },
                 feedItemPlacementSpec = spring(
                     stiffness = Spring.StiffnessMediumLow,
                     visibilityThreshold = IntOffset.VisibilityThreshold,
