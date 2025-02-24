@@ -33,7 +33,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.State
@@ -47,7 +46,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -76,8 +74,8 @@ import me.him188.ani.app.platform.PlatformWindow
 import me.him188.ani.app.platform.window.LayoutHitTestOwner
 import me.him188.ani.app.platform.window.LocalTitleBarThemeController
 import me.him188.ani.app.platform.window.TitleBarThemeController
+import me.him188.ani.app.platform.window.WindowsWindowHitResult
 import me.him188.ani.app.platform.window.WindowsWindowUtils
-import me.him188.ani.app.platform.window.rememberLayoutHitTestOwner
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.LocalCaptionButtonInsets
 import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
@@ -94,7 +92,6 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Duration.Companion.seconds
 
-@OptIn(ExperimentalTextApi::class, InternalComposeUiApi::class)
 @Composable
 internal fun FrameWindowScope.WindowsWindowFrame(
     windowState: WindowState,
@@ -106,14 +103,15 @@ internal fun FrameWindowScope.WindowsWindowFrame(
         content()
         return
     }
-    val windowUtils = WindowsWindowUtils.instance
+
     val platformWindow = LocalPlatformWindow.current
+    val windowUtils = WindowsWindowUtils.instance
     val scope = rememberCoroutineScope()
-    
+
     //Keep 1px for showing float window top area border.
     val topBorderFixedInsets by remember(platformWindow) {
-        derivedStateOf { 
-            if (!platformWindow.isUndecoratedFullscreen) WindowInsets(top = 1) else ZeroInsets 
+        derivedStateOf {
+            if (!platformWindow.isUndecoratedFullscreen) WindowInsets(top = 1) else ZeroInsets
         }
     }
     Box(modifier = Modifier.fillMaxSize().windowInsetsPadding(topBorderFixedInsets)) {
@@ -145,7 +143,9 @@ internal fun FrameWindowScope.WindowsWindowFrame(
         AnimatedVisibility(
             visible = frameState.isTitleBarVisible,
             modifier = Modifier
-                .ifThen(frameState.isTitleBarVisible && platformWindow.isUndecoratedFullscreen) { hoverable(titleBarInteractionSource) }
+                .ifThen(frameState.isTitleBarVisible && platformWindow.isUndecoratedFullscreen) {
+                    hoverable(titleBarInteractionSource)
+                }
                 .fillMaxWidth()
                 .onSizeChanged(frameState::updateTitleBarInsets)
                 .wrapContentWidth(AbsoluteAlignment.Right),
@@ -201,9 +201,8 @@ internal fun FrameWindowScope.WindowsWindowFrame(
 
 @Composable
 internal fun rememberWindowsWindowFrameState(): WindowsWindowFrameState? {
-    val layoutHitTestOwner = rememberLayoutHitTestOwner()
-    if (layoutHitTestOwner == null) return null
     val platformWindow = LocalPlatformWindow.current
+    val layoutHitTestOwner = platformWindow.layoutHitTestOwner ?: return null
     return remember(platformWindow, layoutHitTestOwner) { WindowsWindowFrameState(platformWindow, layoutHitTestOwner) }
 }
 
@@ -256,11 +255,11 @@ internal class WindowsWindowFrameState(
     }
 
     fun hitTest(x: Float, y: Float, density: Density) = when {
-        captionButtonsRect[0].contains(x, y) -> WindowsWindowUtils.hitMinimize
-        captionButtonsRect[1].contains(x, y) -> WindowsWindowUtils.hitMaxButton
-        captionButtonsRect[2].contains(x, y) -> WindowsWindowUtils.hitClose
-        y <= titleBarInsets.getTop(density) && !layoutHitTestOwner.hitTest(x, y) -> WindowsWindowUtils.hitCaption
-        else -> WindowsWindowUtils.hitClient
+        captionButtonsRect[0].contains(x, y) -> WindowsWindowHitResult.CAPTION_MIN
+        captionButtonsRect[1].contains(x, y) -> WindowsWindowHitResult.CAPTION_MAX
+        captionButtonsRect[2].contains(x, y) -> WindowsWindowHitResult.CAPTION_CLOSE
+        y <= titleBarInsets.getTop(density) && !layoutHitTestOwner.hitTest(x, y) -> WindowsWindowHitResult.CAPTION
+        else -> WindowsWindowHitResult.CLIENT
     }
 
     @Composable
@@ -275,11 +274,10 @@ internal class WindowsWindowFrameState(
 @Composable
 private fun ExtendToTitleBar(frameState: WindowsWindowFrameState) {
     val density = LocalDensity.current
-    DisposableEffect(frameState.platformWindow.windowHandle, density, frameState.platformWindow, frameState) {
-        val windowUtils = WindowsWindowUtils.instance
-        windowUtils.extendToTitleBar(frameState.platformWindow) { x, y -> frameState.hitTest(x, y, density) }
-        onDispose {
-            windowUtils.removeExtendToTitleBar(frameState.platformWindow)
+    val platformWindow = LocalPlatformWindow.current
+    LaunchedEffect(platformWindow, density, frameState) {
+        WindowsWindowUtils.instance.collectWindowProcHitTestProvider(platformWindow) { x, y ->
+            frameState.hitTest(x, y, density)
         }
     }
 }
@@ -290,9 +288,7 @@ private fun WindowsWindowFrameState.collectCaptionButtonColors(): CaptionButtonC
         WindowsWindowUtils.instance.frameIsColorful(platformWindow)
     }.collectAsState(false)
     return if (isAccentColorFrameEnabled.value) {
-        val accentColor = remember(platformWindow) {
-            WindowsWindowUtils.instance.windowAccentColor(platformWindow)
-        }.collectAsState(Color.Unspecified)
+        val accentColor = LocalPlatformWindow.current.accentColor.collectAsState(Color.Unspecified)
         if (accentColor.value != Color.Unspecified) {
             CaptionButtonDefaults.accentColors(seedColor = accentColor.value)
         } else {
@@ -410,20 +406,11 @@ private fun CaptionButton(
             }
         }
     Surface(
-        color =
-            if (isActive) {
-                color.background
-            } else {
-                color.inactiveBackground
-            },
-        contentColor =
-            if (isActive) {
-                color.foreground
-            } else {
-                color.inactiveForeground
-            },
-        modifier =
-            modifier.size(46.dp, 32.dp).clickable(
+        color = if (isActive) color.background else color.inactiveBackground,
+        contentColor = if (isActive) color.foreground else color.inactiveForeground,
+        modifier = modifier
+            .size(46.dp, 32.dp)
+            .clickable(
                 onClick = onClick,
                 interactionSource = interaction,
                 indication = null,

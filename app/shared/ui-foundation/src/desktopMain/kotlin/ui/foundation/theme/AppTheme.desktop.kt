@@ -11,9 +11,15 @@ package me.him188.ani.app.ui.foundation.theme
 
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
+import me.him188.ani.app.ui.foundation.LocalPlatform
+import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
+import me.him188.ani.utils.platform.isWindows
 
 @Composable
 actual fun appColorScheme(
@@ -22,8 +28,15 @@ actual fun appColorScheme(
     useBlackBackground: Boolean,
     isDark: Boolean,
 ): ColorScheme {
+    val actualSeedColor = if (useDynamicTheme && isPlatformSupportDynamicTheme()) {
+        val currentWindowColor by LocalPlatformWindow.current.accentColor.collectAsState(Color.Unspecified)
+        //fallback to default color, if platform can't get the accent color
+        currentWindowColor.takeOrElse { seedColor }
+    } else {
+        seedColor
+    }
     return dynamicColorScheme(
-        primary = seedColor,
+        primary = actualSeedColor,
         isDark = isDark,
         isAmoled = useBlackBackground,
         style = PaletteStyle.TonalSpot,
@@ -31,4 +44,9 @@ actual fun appColorScheme(
             modifyColorSchemeForBlackBackground(colorScheme, isDark, useBlackBackground)
         },
     )
+}
+
+@Composable
+actual fun isPlatformSupportDynamicTheme(): Boolean {
+    return LocalPlatform.current.isWindows()
 }

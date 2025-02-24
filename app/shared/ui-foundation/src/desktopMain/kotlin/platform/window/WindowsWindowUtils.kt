@@ -10,14 +10,11 @@
 package me.him188.ani.app.platform.window
 
 import androidx.annotation.Keep
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.window.WindowScope
 import androidx.compose.ui.window.WindowState
-import com.sun.jna.CallbackReference
 import com.sun.jna.Native
 import com.sun.jna.Pointer
 import com.sun.jna.Structure
@@ -38,74 +35,24 @@ import com.sun.jna.platform.win32.WinDef.UINT
 import com.sun.jna.platform.win32.WinReg
 import com.sun.jna.platform.win32.WinUser
 import com.sun.jna.platform.win32.WinUser.MONITORINFO
-import com.sun.jna.platform.win32.WinUser.SWP_ASYNCWINDOWPOS
 import com.sun.jna.platform.win32.WinUser.SWP_FRAMECHANGED
-import com.sun.jna.platform.win32.WinUser.SWP_HIDEWINDOW
-import com.sun.jna.platform.win32.WinUser.SWP_NOMOVE
-import com.sun.jna.platform.win32.WinUser.SWP_NOSIZE
 import com.sun.jna.platform.win32.WinUser.SWP_NOZORDER
-import com.sun.jna.platform.win32.WinUser.SWP_SHOWWINDOW
-import com.sun.jna.platform.win32.WinUser.WM_DESTROY
-import com.sun.jna.platform.win32.WinUser.WM_SIZE
-import com.sun.jna.platform.win32.WinUser.WS_SYSMENU
-import com.sun.jna.platform.win32.WinUser.WindowProc
 import com.sun.jna.ptr.IntByReference
 import com.sun.jna.win32.StdCallLibrary
 import com.sun.jna.win32.W32APIOptions
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapConcat
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import me.him188.ani.app.platform.PlatformWindow
 import me.him188.ani.app.platform.SavedWindowsWindowState
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTBOTTOM
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTBOTTOMLEFT
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTBOTTOMRIGHT
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTCAPTION
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTCLIENT
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTCLOSE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTLEFT
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTMAXBUTTON
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTMINBUTTON
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTNOWHERE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTRIGHT
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTTOP
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTTOPLEFT
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTTOPRIGHT
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.HTTRANSPANRENT
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.MFT_STRING
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.MIIM_STATE
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.MONITOR_DEFAULTTONEAREST
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.SC_CLOSE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.SC_MOVE
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.SC_RESTORE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.SC_SIZE
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.SWP_NOACTIVATE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.TPM_RETURNCMD
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WA_INACTIVE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WINT_MAX
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_ACTIVATE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_LBUTTONDOWN
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_LBUTTONUP
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_MOUSEMOVE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_NCCALCSIZE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_NCHITTEST
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_NCLBUTTONDOWN
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_NCLBUTTONUP
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_NCMOUSEMOVE
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_NCRBUTTONUP
-import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WM_SETTINGCHANGE
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WS_EX_CLIENTEDGE
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WS_EX_DLGMODALFRAME
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WS_EX_STATICEDGE
 import me.him188.ani.app.platform.window.ExtendedUser32.Companion.WS_EX_WINDOWEDGE
-import me.him188.ani.app.platform.window.ExtendedUser32.MENUITEMINFO
-import org.jetbrains.skiko.SkiaLayer
-import org.jetbrains.skiko.SystemTheme
-import org.jetbrains.skiko.currentSystemTheme
-import java.awt.Window
 import kotlin.math.roundToInt
 
 @OptIn(UnsafePlatformWindowApi::class)
@@ -149,35 +96,47 @@ class WindowsWindowUtils : AwtWindowUtils() {
         }.getOrElse { false }
     }
 
-    fun extendToTitleBar(
+    fun handleWindowProc(
         platformWindow: PlatformWindow,
         windowScope: WindowScope? = platformWindow.windowScope,
-        hitTest: (Float, Float) -> Int
     ) {
         if (windowScope != null) {
-            platformWindow.titleBarWindowProc?.dispose()
-            platformWindow.titleBarWindowProc = TitleBarWindowProc(
-                windowScope.window,
-                extendedUser32,
-                dwmAPi,
-                hitTest,
+            platformWindow.windowsWindowProc.value?.close()
+            platformWindow.windowsWindowProc.tryEmit(
+                if (platformWindow.layoutHitTestOwner == null) {
+                    BasicWindowProc(
+                        extendedUser32,
+                        windowScope.window,
+                    )
+                } else {
+                    ExtendedTitleBarWindowProc(
+                        windowScope.window,
+                        extendedUser32,
+                        dwmAPi,
+                    )
+                },
             )
         }
     }
 
-    fun windowIsActive(platformWindow: PlatformWindow): Flow<Boolean?> {
-        return snapshotFlow { platformWindow.titleBarWindowProc }
-            .flatMapConcat { it?.windowIsActive ?: flowOf(null) }
+    suspend fun collectWindowProcHitTestProvider(
+        platformWindow: PlatformWindow,
+        hitTestOwner: WindowsWindowHitTestOwner
+    ) {
+        platformWindow
+            .windowsWindowProc
+            .filterIsInstance<ExtendedTitleBarWindowProc>()
+            .collect { it.updateChildHitTestProvider(hitTestOwner) }
     }
 
-    fun windowAccentColor(platformWindow: PlatformWindow): Flow<Color> {
-        return snapshotFlow { platformWindow.titleBarWindowProc }
-            .flatMapConcat { it?.systemColor ?: flowOf(Color.Unspecified) }
+    fun windowIsActive(platformWindow: PlatformWindow): Flow<Boolean?> {
+        return platformWindow.windowsWindowProc
+            .flatMapLatest { (it as? ExtendedTitleBarWindowProc)?.windowIsActive ?: flowOf(null) }
     }
 
     fun frameIsColorful(platformWindow: PlatformWindow): Flow<Boolean> {
-        return snapshotFlow { platformWindow.titleBarWindowProc }
-            .flatMapConcat { it?.frameIsColorful ?: flowOf(false) }
+        return platformWindow.windowsWindowProc
+            .flatMapLatest { (it as? ExtendedTitleBarWindowProc)?.frameIsColorful ?: flowOf(false) }
     }
 
     fun restoreWindow(windowHandle: Long) {
@@ -192,9 +151,9 @@ class WindowsWindowUtils : AwtWindowUtils() {
         extendedUser32.ShowWindow(HWND(Pointer(windowHandle)), WinUser.SW_MAXIMIZE)
     }
 
-    fun removeExtendToTitleBar(platformWindow: PlatformWindow) {
-        platformWindow.titleBarWindowProc?.dispose()
-        platformWindow.titleBarWindowProc = null
+    fun disposeWindowProc(platformWindow: PlatformWindow) {
+        platformWindow.windowsWindowProc.value?.close()
+        platformWindow.windowsWindowProc.tryEmit(null)
     }
 
     fun windowsBuildNumber(): Int? = kotlin.runCatching {
@@ -237,7 +196,7 @@ class WindowsWindowUtils : AwtWindowUtils() {
             window.savedWindowsWindowState = SavedWindowsWindowState(
                 style = currentStyle,
                 exStyle = User32.INSTANCE.GetWindowLong(hwnd, WinUser.GWL_EXSTYLE),
-                rect = WinDef.RECT().apply {
+                rect = RECT().apply {
                     User32.INSTANCE.GetWindowRect(hwnd, this)
                 }.toComposeRect(),
                 maximized = maximised,
@@ -318,22 +277,11 @@ class WindowsWindowUtils : AwtWindowUtils() {
     }
 
     companion object {
-
         val instance: WindowsWindowUtils by lazy { WindowsWindowUtils() }
-
-        val hitClient: Int get() = HTCLIENT
-
-        val hitMaxButton: Int get() = HTMAXBUTTON
-
-        val hitMinimize: Int get() = HTMINBUTTON
-
-        val hitClose: Int get() = HTCLOSE
-
-        val hitCaption: Int get() = HTCAPTION
     }
 }
 
-private fun WinDef.RECT.toComposeRect(): Rect {
+private fun RECT.toComposeRect(): Rect {
     return Rect(left.toFloat(), top.toFloat(), right.toFloat(), bottom.toFloat())
 }
 
@@ -399,7 +347,7 @@ internal interface ExtendedUser32 : User32 {
      * @param lpMonitorInfo structure to receive monitor information
      * @return `true` on success; `false` otherwise
      */
-    fun GetMonitorInfoA(hMonitor: Pointer?, lpMonitorInfo: WinUser.MONITORINFO?): Boolean
+    fun GetMonitorInfoA(hMonitor: Pointer?, lpMonitorInfo: MONITORINFO?): Boolean
 
     /**
      * Send a message to a native window.
@@ -410,7 +358,7 @@ internal interface ExtendedUser32 : User32 {
      * @param lParam message parameter
      * @return result
      */
-    override fun SendMessage(hWnd: HWND, Msg: Int, wParam: WinDef.WPARAM, lParam: WinDef.LPARAM): WinDef.LRESULT
+    override fun SendMessage(hWnd: HWND, Msg: Int, wParam: WinDef.WPARAM, lParam: WinDef.LPARAM): LRESULT
 
     /**
      * Converts the screen coordinates of a specified point on the screen to client-area coordinates.
@@ -618,472 +566,14 @@ internal interface ExtendedUser32 : User32 {
         // window is deactivated
         const val WA_INACTIVE: Int = 0x00000000
 
-        // pass the hit test to parent window
-        internal const val HTTRANSPANRENT: Int = -1
-
-        // no hit test
-        internal const val HTNOWHERE: Int = 0
-
-        // client area
-        const val HTCLIENT: Int = 1
-
-        // title bar
-        internal const val HTCAPTION: Int = 2
-
-        //
-        internal const val HTMINBUTTON: Int = 8
-
-        // max button
-        internal const val HTMAXBUTTON: Int = 9
-
-        // close button
-        internal const val HTCLOSE: Int = 20
-
-        // window edges
-        internal const val HTLEFT: Int = 10
-        internal const val HTRIGHT: Int = 11
-        internal const val HTTOP: Int = 12
-        internal const val HTTOPLEFT: Int = 13
-        internal const val HTTOPRIGHT: Int = 14
-        internal const val HTBOTTOM: Int = 15
-        internal const val HTBOTTOMLEFT: Int = 16
-        internal const val HTBOTTOMRIGHT: Int = 17
-
-        const val WS_THICKFRAME: Int = 0x00040000
-        const val WS_CAPTION: Int = 0x00c00000
 
         const val WS_EX_DLGMODALFRAME: Int = 0x00000001
         const val WS_EX_WINDOWEDGE: Int = 0x00000100
         const val WS_EX_CLIENTEDGE: Int = 0x00000200
         const val WS_EX_STATICEDGE: Int = 0x00020000
 
-        const val SWP_NOZORDER: Int = 0x0004
         const val SWP_NOACTIVATE: Int = 0x0010
-        const val SWP_FRAMECHANGED: Int = 0x0020
 
         val MONITOR_DEFAULTTONEAREST: DWORD = DWORD(2)
     }
-}
-
-internal class TitleBarWindowProc(
-    window: Window,
-    private val user32: ExtendedUser32,
-    dwmapi: Dwmapi,
-    private val childHitTest: (Float, Float) -> Int
-) : WindowProc {
-
-    private val windowHandle: HWND =
-        HWND((window as? ComposeWindow)?.let { Pointer(it.windowHandle) } ?: Native.getWindowPointer(window))
-
-    private val _systemTheme: MutableStateFlow<SystemTheme> = MutableStateFlow(currentSystemTheme)
-    val systemTheme: StateFlow<SystemTheme> = _systemTheme.asStateFlow()
-
-    private val _systemColor: MutableStateFlow<Color> = MutableStateFlow(currentAccentColor())
-    val systemColor: StateFlow<Color> = _systemColor.asStateFlow()
-
-    private val _windowIsActive: MutableStateFlow<Boolean> = MutableStateFlow(user32.GetActiveWindow() == windowHandle)
-    val windowIsActive: StateFlow<Boolean> = _windowIsActive.asStateFlow()
-
-    private val _frameIsColorful: MutableStateFlow<Boolean> = MutableStateFlow(isAccentColorWindowFrame())
-    val frameIsColorful: StateFlow<Boolean> = _frameIsColorful.asStateFlow()
-
-    private var hitTestResult: Int = HTCLIENT
-
-    private val skiaLayerWindowProc: SkiaLayerHitTestWindowProc? =
-        window.findSkiaLayer()?.let { SkiaLayerHitTestWindowProc(it, user32, ::hitTest) }
-
-    private val defaultWindowProc =
-        user32.SetWindowLongPtr(windowHandle, WinUser.GWL_WNDPROC, CallbackReference.getFunctionPointer(this))
-
-    private var isMaximized: Boolean = user32.isWindowInMaximized(windowHandle)
-    private var dpi: UINT = UINT(0)
-    private var width: Int = 0
-    private var height: Int = 0
-    private var frameX: Int = 0
-    private var frameY: Int = 0
-    private var edgeX: Int = 0
-    private var edgeY: Int = 0
-    private var padding: Int = 0
-
-    init {
-        dwmapi.DwmExtendFrameIntoClientArea(windowHandle, Dwmapi.WindowMargins(-1, -1, -1, -1))
-        windowHandle.updateWindowStyle { it and WS_SYSMENU.inv() }
-        eraseWindowBackground()
-    }
-
-    /***
-     * @param x, the horizontal offset relative to the client area.
-     * @param y, the vertical offset relative to the client area.
-     */
-    private fun hitTestWindowResizerBorder(x: Int, y: Int): Int {
-        // Force update window info.
-        updateWindowInfo()
-        val horizontalPadding = frameX
-        val verticalPadding = frameY
-        return when {
-            x <= horizontalPadding && y > verticalPadding && y < height - verticalPadding -> HTLEFT
-            x <= horizontalPadding && y <= verticalPadding -> HTTOPLEFT
-            x <= horizontalPadding -> HTBOTTOMLEFT
-            y <= verticalPadding && x > horizontalPadding && x < width - horizontalPadding -> HTTOP
-            y <= verticalPadding -> HTTOPRIGHT
-            x >= width - horizontalPadding && y > verticalPadding && y < height - verticalPadding -> HTRIGHT
-            x >= width - horizontalPadding -> HTBOTTOMRIGHT
-            y >= height - verticalPadding && x > horizontalPadding && x < width - horizontalPadding -> HTBOTTOM
-            y >= height - verticalPadding -> HTBOTTOMRIGHT
-            else -> HTNOWHERE
-        }
-    }
-    
-    private fun hitTest(lParam: WinDef.LPARAM): Int {
-        return lParam.usePoint { x, y ->
-            if (!isMaximized) {
-                hitTestResult = hitTestWindowResizerBorder(x, y)
-                if (isHitWindowResizer(hitTestResult)) {
-                    return@usePoint hitTestResult
-                }
-            }
-            hitTestResult = childHitTest(x.toFloat(), y.toFloat())
-            hitTestResult
-        }
-    }
-
-    override fun callback(hWnd: HWND, uMsg: Int, wParam: WinDef.WPARAM, lParam: WinDef.LPARAM): WinDef.LRESULT? {
-        return when (uMsg) {
-            // Returns 0 to make the window not draw the non-client area (title bar and border)
-            // thus effectively making all the window our client area
-            WM_NCCALCSIZE -> {
-                if (wParam.toInt() == 0) {
-                    user32.CallWindowProc(defaultWindowProc, hWnd, uMsg, wParam, lParam)
-                } else {
-                    // this behavior is call full screen mode
-                    val style = user32.GetWindowLong(hWnd, WinUser.GWL_STYLE)
-                    if (style and (WinUser.WS_CAPTION or WinUser.WS_THICKFRAME) == 0) {
-                        frameX = 0
-                        frameY = 0
-                        edgeX = 0
-                        edgeY = 0
-                        padding = 0
-                        isMaximized = user32.isWindowInMaximized(hWnd)
-                        return LRESULT(0)
-                    }
-
-                    dpi = user32.GetDpiForWindow(hWnd)
-                    frameX = user32.GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi)
-                    frameY = user32.GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi)
-                    edgeX = user32.GetSystemMetricsForDpi(WinUser.SM_CXEDGE, dpi)
-                    edgeY = user32.GetSystemMetricsForDpi(WinUser.SM_CYEDGE, dpi)
-                    padding = user32.GetSystemMetricsForDpi(WinUser.SM_CXPADDEDBORDER, dpi)
-                    isMaximized = user32.isWindowInMaximized(hWnd)
-                    val params = Structure.newInstance(NCCalcSizeParams::class.java, Pointer(lParam.toLong()))
-                    params.read()
-                    params.rgrc[0]?.apply {
-                        left += if (isMaximized) {
-                            frameX + padding
-                        } else {
-                            edgeX
-                        }
-                        right -= if (isMaximized) {
-                            frameX + padding
-                        } else {
-                            edgeX
-                        }
-                        bottom -= if (isMaximized) {
-                            padding + frameX
-                        } else {
-                            edgeY
-                        }
-                        top += if (isMaximized) {
-                            padding + frameX
-                        } else {
-                            0
-                        }
-                    }
-                    params.write()
-                    LRESULT(0)
-                }
-            }
-
-            WM_NCHITTEST -> {
-                // Skip resizer border hit test if window is maximized
-                if (!isMaximized) {
-                    val callResult = lParam.usePoint(::hitTestWindowResizerBorder)
-                    if (isHitWindowResizer(callResult)) {
-                        hitTestResult = callResult
-                    }
-                }
-                return LRESULT(hitTestResult.toLong())
-            }
-
-            WM_NCRBUTTONUP -> {
-                if (wParam.toInt() == HTCAPTION) {
-                    val oldStyle = user32.GetWindowLong(hWnd, WinUser.GWL_STYLE)
-                    user32.SetWindowLong(hWnd, WinUser.GWL_STYLE, oldStyle or WS_SYSMENU)
-                    val menu = user32.GetSystemMenu(hWnd, false)
-                    user32.SetWindowLong(hWnd, WinUser.GWL_STYLE, oldStyle)
-                    isMaximized = user32.isWindowInMaximized(hWnd)
-                    if (menu != null) {
-                        // Update menu items state.
-                        val menuItemInfo = MENUITEMINFO().apply {
-                            cbSize = this.size()
-                            fMask = MIIM_STATE
-                            fType = MFT_STRING
-                        }
-
-                        updateMenuItemInfo(menu, menuItemInfo, SC_RESTORE, isMaximized)
-                        updateMenuItemInfo(menu, menuItemInfo, SC_MOVE, !isMaximized)
-                        updateMenuItemInfo(menu, menuItemInfo, SC_SIZE, !isMaximized)
-                        updateMenuItemInfo(menu, menuItemInfo, WinUser.SC_MINIMIZE, true)
-                        updateMenuItemInfo(menu, menuItemInfo, WinUser.SC_MAXIMIZE, !isMaximized)
-                        updateMenuItemInfo(menu, menuItemInfo, SC_CLOSE, true)
-
-                        // Set default menu item.
-                        user32.SetMenuDefaultItem(menu, WINT_MAX, false)
-
-                        // Get cursor position.
-                        val lParamValue = lParam.toInt()
-                        val x = lowWord(lParamValue)
-                        val y = highWord(lParamValue)
-
-                        // Show menu and get user selection.
-                        val ret = user32.TrackPopupMenu(menu, TPM_RETURNCMD, x, y, 0, hWnd, null)
-                        menuItemInfo.clear()
-                        if (ret != 0) {
-                            // Send WM_SYSCOMMAND message.
-                            user32.PostMessage(
-                                hWnd,
-                                WinUser.WM_SYSCOMMAND,
-                                WinDef.WPARAM(ret.toLong()),
-                                WinDef.LPARAM(0),
-                            )
-                        }
-                    }
-                }
-                user32.CallWindowProc(defaultWindowProc, hWnd, uMsg, wParam, lParam) ?: LRESULT(0)
-            }
-
-            WM_DESTROY -> {
-                user32.CallWindowProc(defaultWindowProc, hWnd, uMsg, wParam, lParam) ?: LRESULT(0)
-            }
-
-            WM_SIZE -> {
-                val lParamValue = lParam.toInt()
-                width = lowWord(lParamValue)
-                height = highWord(lParamValue)
-                user32.CallWindowProc(defaultWindowProc, hWnd, uMsg, wParam, lParam) ?: LRESULT(0)
-            }
-
-            WM_SETTINGCHANGE -> {
-                val changedKey = Pointer(lParam.toLong()).getWideString(0)
-                // Theme changed for color and darkTheme
-                if (changedKey == "ImmersiveColorSet") {
-                    _systemTheme.tryEmit(currentSystemTheme)
-                    _systemColor.tryEmit(currentAccentColor())
-                    _frameIsColorful.tryEmit(isAccentColorWindowFrame())
-                }
-                user32.CallWindowProc(defaultWindowProc, hWnd, uMsg, wParam, lParam)
-            }
-
-            else -> {
-                if (uMsg == WM_ACTIVATE) {
-                    _windowIsActive.tryEmit(wParam.toInt() != WA_INACTIVE)
-                }
-                if (uMsg == WM_NCMOUSEMOVE) {
-                    skiaLayerWindowProc?.let {
-                        user32.PostMessage(it.contentHandle, uMsg, wParam, lParam)
-                    }
-                }
-                user32.CallWindowProc(defaultWindowProc, hWnd, uMsg, wParam, lParam)
-            }
-        }
-    }
-
-    private fun updateMenuItemInfo(menu: HMENU, menuItemInfo: MENUITEMINFO, item: Int, enabled: Boolean) {
-        menuItemInfo.fState = if (enabled) ExtendedUser32.MFS_ENABLED else ExtendedUser32.MFS_DISABLED
-        user32.SetMenuItemInfo(menu, item, false, menuItemInfo)
-    }
-
-    // Workaround for background erase.
-    private fun eraseWindowBackground() {
-        val buildNumber = WindowsWindowUtils.instance.windowsBuildNumber() ?: return
-        if (buildNumber < 22000) {
-            val flag = SWP_NOZORDER or SWP_NOACTIVATE or SWP_FRAMECHANGED or SWP_NOMOVE or SWP_NOSIZE or SWP_ASYNCWINDOWPOS
-            user32.SetWindowPos(windowHandle, null, 0, 0, 0, 0, flag or SWP_HIDEWINDOW)
-            user32.SetWindowPos(windowHandle, null, 0, 0, 0, 0, flag or SWP_SHOWWINDOW)
-        }
-
-    }
-
-    fun highWord(value: Int): Int = (value shr 16) and 0xFFFF
-
-    fun lowWord(value: Int): Int = value and 0xFFFF
-
-    fun word(high: Int, low: Int): Int = (high and 0xFFFF shl 16) + low and 0xFFFF
-    
-    private fun isHitWindowResizer(result: Int): Boolean = when(result) {
-        HTTOP, HTLEFT, HTRIGHT, HTBOTTOM,
-        HTTOPLEFT, HTTOPRIGHT, HTBOTTOMLEFT, HTBOTTOMRIGHT -> {
-            true
-        }
-        else -> false
-    }
-    
-    private fun updateWindowInfo() {
-        dpi = user32.GetDpiForWindow(windowHandle)
-        frameX = user32.GetSystemMetricsForDpi(WinUser.SM_CXFRAME, dpi)
-        frameY = user32.GetSystemMetricsForDpi(WinUser.SM_CYFRAME, dpi)
-        
-        val rect = RECT()
-        if (user32.GetWindowRect(windowHandle, rect)) {
-            rect.read()
-            width = rect.right - rect.left
-            height = rect.bottom - rect.top
-        }
-        rect.clear()
-    }
-    
-    private inline fun <T> WinDef.LPARAM.usePoint(crossinline block: (x: Int, y: Int) -> T): T {
-        val intValue = toInt()
-        val x = lowWord(intValue).toShort().toInt()
-        val y = highWord(intValue).toShort().toInt()
-        val point = POINT(x, y)
-        user32.ScreenToClient(windowHandle, point)
-        point.read()
-        val result = block(point.x, point.y)
-        point.clear()
-        return result
-    }
-
-    private inline fun HWND.updateWindowStyle(block: (old: Int) -> Int) {
-        val oldStyle = user32.GetWindowLong(this, WinUser.GWL_STYLE)
-        user32.SetWindowLong(this, WinUser.GWL_STYLE, block(oldStyle))
-    }
-
-    fun currentAccentColor(): Color {
-        val value = Advapi32Util.registryGetIntValue(
-            WinReg.HKEY_CURRENT_USER,
-            "SOFTWARE\\Microsoft\\Windows\\DWM",
-            "AccentColor",
-        ).toLong()
-        val alpha = (value and 0xFF000000)
-        val green = (value and 0xFF).shl(16)
-        val blue = (value and 0xFF00)
-        val red = (value and 0xFF0000).shr(16)
-        return Color((alpha or green or blue or red).toInt())
-    }
-
-    fun isAccentColorWindowFrame(): Boolean {
-        return Advapi32Util.registryGetIntValue(
-            WinReg.HKEY_CURRENT_USER,
-            "SOFTWARE\\Microsoft\\Windows\\DWM",
-            "ColorPrevalence",
-        ) != 0
-    }
-
-    @Structure.FieldOrder("rgrc", "lppos")
-    @Suppress("SpellCheckingInspection", "unused")
-    class NCCalcSizeParams(
-        @JvmField var rgrc: Array<RECT?> = Array(3) { null },
-        @JvmField var lppos: WindowPos? = null
-    ) : Structure(), Structure.ByReference
-
-    @Structure.FieldOrder(
-        "hwnd",
-        "hwndInsertAfter",
-        "x",
-        "y",
-        "cx",
-        "cy",
-        "flags",
-    )
-    @Suppress("SpellCheckingInspection", "unused")
-    class WindowPos(
-        @JvmField var hwnd: HWND? = null,
-        @JvmField var hwndInsertAfter: HWND? = null,
-        @JvmField var x: Int = 0,
-        @JvmField var y: Int = 0,
-        @JvmField var cx: Int = 0,
-        @JvmField var cy: Int = 0,
-        @JvmField var flags: UINT = UINT()
-    ) : Structure(), Structure.ByReference
-
-    fun dispose() {
-        skiaLayerWindowProc?.dispose()
-        windowHandle.updateWindowStyle { it or WS_SYSMENU }
-        user32.SetWindowLongPtr(windowHandle, WinUser.GWL_WNDPROC, defaultWindowProc)
-    }
-}
-
-internal class SkiaLayerHitTestWindowProc(
-    skiaLayer: SkiaLayer,
-    private val user32: ExtendedUser32,
-    private val hitTest: (lParam: WinDef.LPARAM) -> Int,
-) : WindowProc {
-    private val windowHandle = HWND(Pointer(skiaLayer.windowHandle))
-    internal val contentHandle = HWND(skiaLayer.canvas.let(Native::getComponentPointer))
-
-    private val defaultWindowProc =
-        user32.SetWindowLongPtr(contentHandle, WinUser.GWL_WNDPROC, CallbackReference.getFunctionPointer(this))
-
-    private var hitResult = HTCLIENT
-    
-    init {
-        val buildNumber = WindowsWindowUtils.instance.windowsBuildNumber() ?: 22000
-        skiaLayer.transparency = buildNumber < 22000
-    }
-    
-    override fun callback(
-        hwnd: HWND,
-        uMsg: Int,
-        wParam: WinDef.WPARAM,
-        lParam: WinDef.LPARAM,
-    ): LRESULT {
-        return when (uMsg) {
-            
-            WM_NCHITTEST -> {
-                hitResult = hitTest(lParam)
-                when (hitResult) {
-                    HTCLIENT, HTMAXBUTTON, HTMINBUTTON, HTCLOSE -> LRESULT(hitResult.toLong())
-                    else -> LRESULT(HTTRANSPANRENT.toLong())
-                }
-            }
-
-            WM_NCMOUSEMOVE -> {
-                user32.SendMessage(contentHandle, WM_MOUSEMOVE, wParam, lParam)
-                LRESULT(0)
-            }
-
-            WM_NCLBUTTONDOWN -> {
-                user32.SendMessage(contentHandle, WM_LBUTTONDOWN, wParam, lParam)
-                LRESULT(0)
-            }
-
-            WM_NCLBUTTONUP -> {
-                user32.SendMessage(contentHandle, WM_LBUTTONUP, wParam, lParam)
-                return LRESULT(0)
-            }
-
-            WM_NCRBUTTONUP -> {
-                user32.SendMessage(windowHandle, uMsg, wParam, lParam)
-                return LRESULT(0)
-            }
-
-            else -> {
-                user32.CallWindowProc(defaultWindowProc, hwnd, uMsg, wParam, lParam) ?: LRESULT(0)
-            }
-        }
-    }
-
-    fun dispose() {
-        user32.SetWindowLongPtr(contentHandle, WinUser.GWL_WNDPROC, defaultWindowProc)
-    }
-}
-
-private fun User32.isWindowInMaximized(hWnd: HWND): Boolean {
-    val placement = WinUser.WINDOWPLACEMENT()
-    val result =
-        GetWindowPlacement(hWnd, placement)
-            .booleanValue() &&
-                placement.showCmd == WinUser.SW_SHOWMAXIMIZED
-    placement.clear()
-    return result
 }

@@ -86,7 +86,9 @@ import me.him188.ani.app.platform.PlatformWindow
 import me.him188.ani.app.platform.createAppRootCoroutineScope
 import me.him188.ani.app.platform.getCommonKoinModule
 import me.him188.ani.app.platform.startCommonKoinModule
+import me.him188.ani.app.platform.window.HandleWindowsWindowProc
 import me.him188.ani.app.platform.window.LocalTitleBarThemeController
+import me.him188.ani.app.platform.window.rememberLayoutHitTestOwner
 import me.him188.ani.app.platform.window.setTitleBar
 import me.him188.ani.app.tools.update.DesktopUpdateInstaller
 import me.him188.ani.app.tools.update.UpdateInstaller
@@ -114,6 +116,7 @@ import me.him188.ani.utils.io.toKtPath
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.platform.isWindows
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -394,6 +397,12 @@ object AniDesktop {
 
                 val systemTheme by systemThemeDetector.current.collectAsStateWithLifecycle()
                 val platform = LocalPlatform.current
+                // We need layout hit test owner to do hit test on windows.
+                val layoutHitTestOwner = if (platform.isWindows()) {
+                    rememberLayoutHitTestOwner()
+                } else {
+                    null
+                }
                 CompositionLocalProvider(
                     LocalContext provides context,
                     LocalWindowState provides windowState,
@@ -402,14 +411,15 @@ object AniDesktop {
                             windowHandle = window.windowHandle,
                             windowScope = this,
                             platform = platform,
-                            windowState = windowState
+                            windowState = windowState,
+                            layoutHitTestOwner = layoutHitTestOwner,
                         )
                     },
                     LocalOnBackPressedDispatcherOwner provides backPressedDispatcherOwner,
                     @OptIn(InternalComposeUiApi::class)
                     LocalSystemTheme provides systemTheme,
                 ) {
-
+                    HandleWindowsWindowProc()
                     WindowFrame(
                         windowState = windowState,
                         onCloseRequest = { exitApplication() },
@@ -443,7 +453,7 @@ private fun FrameWindowScope.MainWindowContent(
                 DarkMode.DARK -> true
             }
         }
-        DisposableEffect(isTitleBarDark, titleBarThemeController) {
+        DisposableEffect(isTitleBarDark, navContainerColor, titleBarThemeController) {
             window.setTitleBar(navContainerColor, isTitleBarDark)
             onDispose {}
         }
