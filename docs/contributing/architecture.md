@@ -227,7 +227,7 @@ Ani UI 100% 使用 [Compose Multiplatform][CMP]（CMP）编写。
 - `ui-comment`：评论功能
 - `ui-settings`：设置页
 - `ui-subject`：条目（番剧）详情页、剧集详情页（播放页）、评分
-- `ui-wizard`：新用户引导页
+- `ui-onboarding`：新用户引导页
 - `ui-exploration`：首页的探索分区。包含“最高热度”、“新番时间表”、“继续观看”栏目
 - `video-player`：播放器的控制器 UI
 - 特别地，弹幕功能位于 `:danmaku:ui` 模块内，而非 `:app:shared`
@@ -237,7 +237,7 @@ Ani UI 100% 使用 [Compose Multiplatform][CMP]（CMP）编写。
 层的最佳实践，请参考 [Jetcaster](https://github.com/android/compose-samples/tree/main/Jetcaster)。
 
 由于历史遗留原因，Ani 项目内留有许多不好的实践，但新编写的代码遵循最佳实践。所以，如果你想查看 Ani
-中的最佳实践，可以阅读 `ui-exploration` 和 `ui-wizard`。
+中的最佳实践，可以阅读 `ui-exploration` 和 `ui-onboarding`。
 
 [//]: # (对于每个页面，我们会有一个 composable 函数实现页面的布局，一个 ui state class 用于管理页面的状态，一个)
 
