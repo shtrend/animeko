@@ -122,25 +122,12 @@ interface AniNavigator {
      *   则 [pop back][NavHostController.popBackStack] 到 back stack 中第一个 [NavRoutes.Main].
      * * 如果 [currentBackStack][NavHostController.currentBackStack] 没有 [NavRoutes.Main],
      *   则 [navigate][NavHostController.navigate] 到 [NavRoutes.Main], 并 pop 所有的 back stack,
-     *   此时 back stack 中将只有一个 [NavRoutes.Main]. **这种情况通常不会出现.**
+     *   此时 back stack 中将只有一个 [NavRoutes.Main]. **这种情况通常不会出现**.
+     *
+     * TODO: ios uses restricted api.
      */
     fun popBackOrNavigateToMain(mainSceneInitialPage: MainScreenPage) {
-        val firstMain = currentNavigator.findFirst<NavRoutes.Main>()
-        if (firstMain != null) {
-            popBackStack(firstMain, inclusive = false)
-            return
-        }
-
-        val firstRouteId = currentNavigator
-            .currentBackStack.value
-            // drop 第一个, 第一个不是我们的 NavRoute destination
-            .drop(1).firstOrNull()?.destination?.id
-
-        currentNavigator.navigate(NavRoutes.Main(mainSceneInitialPage)) {
-            if (firstRouteId != null) {
-                popUpTo(id = firstRouteId) { inclusive = true }
-            }
-        }
+        currentNavigator.popBackOrNavigateToMain(mainSceneInitialPage)
     }
 
     /**
@@ -179,6 +166,11 @@ interface AniNavigator {
         currentNavigator.navigate(NavRoutes.Schedule)
     }
 }
+
+// Workaround for calling restricted API on common source
+// - androidx.navigation.NavDestination#id
+// - androidx.navigation.NavOptionsBuilder#popUpTo(id: Int, popUpToBuilder: PopUpToBuilder.() -> Unit = {})
+expect fun NavHostController.popBackOrNavigateToMain(mainSceneInitialPage: MainScreenPage)
 
 fun AniNavigator(): AniNavigator = AniNavigatorImpl()
 
