@@ -31,12 +31,14 @@ import coil3.compose.LocalPlatformContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
 import me.him188.ani.app.data.models.preference.ThemeSettings
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.foundation.HttpClientProvider
 import me.him188.ani.app.domain.foundation.ScopedHttpClientUserAgent
 import me.him188.ani.app.domain.foundation.get
+import me.him188.ani.app.navigation.MainScreenPage
 import me.him188.ani.app.navigation.NavRoutes
 import me.him188.ani.app.tools.LocalTimeFormatter
 import me.him188.ani.app.tools.TimeFormatter
@@ -55,6 +57,7 @@ import org.koin.core.component.inject
 @Stable
 class AniAppState(
     val initialNavRoute: NavRoutes,
+    val mainSceneInitialPage: MainScreenPage,
     val themeSettings: ThemeSettings,
     val imageLoaderClient: ScopedHttpClient
 )
@@ -68,15 +71,17 @@ class AniAppViewModel : AbstractViewModel(), KoinComponent {
 
     val appState: Flow<AniAppState?> = combine(
         settings.themeSettings.flow,
-        settings.uiSettings.flow.take(1), // 只需要读取一次
+        settings.uiSettings.flow.take(1).map { it.mainSceneInitialPage }, // 只需要读取一次
+        settings.uiSettings.flow,
         httpClientProvider.configurationFlow,
-    ) { themeSettings, uiSettings, _ ->
+    ) { themeSettings, mainSceneInitialPage, uiSettings, _ ->
         AniAppState(
             if (!uiSettings.onboardingCompleted) {
                 NavRoutes.Welcome
             } else {
-                NavRoutes.Main(uiSettings.mainSceneInitialPage)
+                NavRoutes.Main(mainSceneInitialPage)
             },
+            uiSettings.mainSceneInitialPage,
             themeSettings,
             imageLoaderClient,
         )

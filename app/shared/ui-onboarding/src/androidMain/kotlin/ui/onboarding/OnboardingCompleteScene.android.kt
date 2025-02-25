@@ -17,13 +17,13 @@ import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 @Preview(
     showBackground = true,
     device = "spec:width=1920px,height=1080px,dpi=240",
-    showSystemUi = false
+    showSystemUi = false,
 )
 @Composable
 fun PreviewOnboardingCompleteScene() {
     ProvideCompositionLocalsForPreview {
         OnboardingCompleteScreen(
-            state = OnboardingCompleteState("SG", "", null),
+            state = OnboardingCompleteState("SG", ""),
             onClickContinue = { },
             backNavigation = { },
         )
@@ -34,13 +34,13 @@ fun PreviewOnboardingCompleteScene() {
 @Preview(
     showBackground = true,
     device = "spec:width=1920px,height=1080px,dpi=240",
-    showSystemUi = false
+    showSystemUi = false,
 )
 @Composable
 fun PreviewOnboardingCompleteSceneLongUsername() {
     ProvideCompositionLocalsForPreview {
         OnboardingCompleteScreen(
-            state = OnboardingCompleteState("SG has long username12312321321321321", "", null),
+            state = OnboardingCompleteState("SG has long username12312321321321321", ""),
             onClickContinue = { },
             backNavigation = { },
         )

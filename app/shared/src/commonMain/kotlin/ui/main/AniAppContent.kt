@@ -15,16 +15,21 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,6 +75,7 @@ import me.him188.ani.app.ui.foundation.layout.SharedTransitionScopeProvider
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
+import me.him188.ani.app.ui.foundation.widgets.TopAppBarActionButton
 import me.him188.ani.app.ui.onboarding.OnboardingCompleteScreen
 import me.him188.ani.app.ui.onboarding.OnboardingCompleteViewModel
 import me.him188.ani.app.ui.onboarding.OnboardingScreen
@@ -196,13 +202,15 @@ private fun AniAppContentImpl(
                     typeOf<NavRoutes?>() to NavRoutes.NavType,
                 ),
             ) { backStackEntry ->
+                val appState by viewModel<AniAppViewModel>().appState.collectAsState(null)
+
                 OnboardingCompleteScreen(
                     viewModel { OnboardingCompleteViewModel() },
-                    onClickContinue = { mainSceneInitialPage ->
+                    onClickContinue = {
                         // 传递 popUpTarget 给 OnboardingComplete
                         val currentRoute = backStackEntry.toRoute<NavRoutes.OnboardingComplete>()
                         aniNavigator.navigateMain(
-                            page = mainSceneInitialPage ?: UISettings.Default.mainSceneInitialPage,
+                            page = appState?.mainSceneInitialPage ?: UISettings.Default.mainSceneInitialPage,
                             popUpTargetInclusive = currentRoute.popUpTargetInclusive,
                         )
                     },
@@ -266,12 +274,14 @@ private fun AniAppContentImpl(
                 popEnterTransition = popEnterTransition,
                 popExitTransition = popExitTransition,
             ) {
+                val appState by viewModel<AniAppViewModel>().appState.collectAsState(null)
+
                 BangumiAuthorizePage(
                     viewModel { BangumiAuthorizeViewModel() },
                     onClickBackNavigation = { aniNavigator.popBackStack() },
-                    onFinishLogin = { mainSceneInitialPage ->
+                    onFinishLogin = {
                         aniNavigator.navigateMain(
-                            mainSceneInitialPage ?: UISettings.Default.mainSceneInitialPage,
+                            appState?.mainSceneInitialPage ?: UISettings.Default.mainSceneInitialPage,
                             aniNavigator.currentNavigator.findLast<NavRoutes.Main>(),
                         )
                     },
@@ -289,9 +299,10 @@ private fun AniAppContentImpl(
                 typeMap = mapOf(
                     typeOf<SubjectDetailPlaceholder?>() to SubjectDetailPlaceholder.NavType,
                 ),
-
-                ) { backStackEntry ->
+            ) { backStackEntry ->
                 val details = backStackEntry.toRoute<NavRoutes.SubjectDetail>()
+                val appState by viewModel<AniAppViewModel>().appState.collectAsState(null)
+
                 val vm = viewModel<SubjectDetailsViewModel>(key = details.subjectId.toString()) {
                     val placeholder = details.placeholder?.run {
                         SubjectInfo.createPlaceholder(id, name, coverUrl, nameCN)
@@ -309,11 +320,26 @@ private fun AniAppContentImpl(
                         onLoadErrorRetry = { vm.reload() },
                         windowInsets = windowInsets,
                         navigationIcon = {
-                            BackNavigationIconButton(
-                                {
-                                    aniNavigator.popBackStack(details, inclusive = true)
-                                },
-                            )
+                            Row {
+                                BackNavigationIconButton(
+                                    {
+                                        aniNavigator.popBackStack(details, inclusive = true)
+                                    },
+                                )
+                                TopAppBarActionButton(
+                                    {
+                                        aniNavigator.popBackOrNavigateToMain(
+                                            appState?.mainSceneInitialPage
+                                                ?: UISettings.Default.mainSceneInitialPage,
+                                        )
+                                    },
+                                ) {
+                                    Icon(
+                                        Icons.Outlined.Home,
+                                        contentDescription = null,
+                                    )
+                                }
+                            }
                         },
                     )
                 }

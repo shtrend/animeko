@@ -44,7 +44,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import me.him188.ani.app.navigation.MainScreenPage
 import me.him188.ani.app.ui.foundation.avatar.AvatarImage
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
@@ -53,7 +52,7 @@ import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 @Composable
 fun OnboardingCompleteScreen(
     vm: OnboardingCompleteViewModel,
-    onClickContinue: (mainSceneInitialPage: MainScreenPage?) -> Unit,
+    onClickContinue: () -> Unit,
     backNavigation: @Composable () -> Unit,
     modifier: Modifier = Modifier,
     windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
@@ -63,7 +62,7 @@ fun OnboardingCompleteScreen(
     Surface(color = AniThemeDefaults.pageContentBackgroundColor) {
         OnboardingCompleteScreen(
             state = state,
-            onClickContinue = { onClickContinue(state.mainSceneInitialPage) },
+            onClickContinue = onClickContinue,
             backNavigation = backNavigation,
             modifier = modifier,
             windowInsets = windowInsets,
@@ -148,9 +147,8 @@ internal fun OnboardingCompleteScreen(
 class OnboardingCompleteState(
     val username: String?, // guest has no username
     val avatarUrl: String, // guest use default avatar
-    val mainSceneInitialPage: MainScreenPage?,
 ) {
     companion object {
-        val Placeholder = OnboardingCompleteState(null, OnboardingCompleteViewModel.DEFAULT_AVATAR, null)
+        val Placeholder = OnboardingCompleteState(null, OnboardingCompleteViewModel.DEFAULT_AVATAR)
     }
 }

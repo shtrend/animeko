@@ -57,6 +57,11 @@ interface AniNavigator {
         currentNavigator.popBackStack(route, inclusive, saveState)
     }
 
+    fun popBackStack(destinationId: Int, inclusive: Boolean, saveState: Boolean = false) {
+        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+        currentNavigator.popBackStack(destinationId = destinationId, inclusive, saveState)
+    }
+
 //    fun popBackStack(
 //        route: String,
 //        inclusive: Boolean,
@@ -111,6 +116,41 @@ interface AniNavigator {
         currentNavigator.navigate(NavRoutes.Main(page)) {
             if (popUpTargetInclusive != null) {
                 popUpTo(popUpTargetInclusive) { inclusive = true }
+            }
+        }
+    }
+
+    fun navigateMain(
+        page: MainScreenPage,
+        popUpTargetIdInclusive: Int? = null,
+    ) {
+
+    }
+
+    /**
+     * 返回到第一个 [NavRoutes.Main], 根据当前的 back stack 进行不同的操作:
+     *
+     * * 如果 [currentBackStack][NavHostController.currentBackStack] 中有 [NavRoutes.Main],
+     *   则 [pop back][NavHostController.popBackStack] 到 back stack 中第一个 [NavRoutes.Main].
+     * * 如果 [currentBackStack][NavHostController.currentBackStack] 没有 [NavRoutes.Main],
+     *   则 [navigate][NavHostController.navigate] 到 [NavRoutes.Main], 并 pop 所有的 back stack,
+     *   此时 back stack 中将只有一个 [NavRoutes.Main]. **这种情况通常不会出现.**
+     */
+    fun popBackOrNavigateToMain(mainSceneInitialPage: MainScreenPage) {
+        val firstMain = currentNavigator.findFirst<NavRoutes.Main>()
+        if (firstMain != null) {
+            popBackStack(firstMain, inclusive = false)
+            return
+        }
+
+        val firstRouteId = currentNavigator
+            .currentBackStack.value
+            // drop 第一个, 第一个不是我们的 NavRoute destination
+            .drop(1).firstOrNull()?.destination?.id
+
+        currentNavigator.navigate(NavRoutes.Main(mainSceneInitialPage)) {
+            if (firstRouteId != null) {
+                popUpTo(id = firstRouteId) { inclusive = true }
             }
         }
     }
@@ -187,6 +227,16 @@ inline fun <reified T : NavRoutes> NavHostController.findLast(): NavRoutes? {
     val routeFQN = T::class.qualifiedName ?: return null
     return currentBackStack.value
         .asReversed()
+        .firstOrNull { it.destination.route?.contains(routeFQN) == true }
+        ?.toRoute<NavRoutes.Main>()
+}
+
+/**
+ * Find first route of type [T] in the back stack.
+ */
+inline fun <reified T : NavRoutes> NavHostController.findFirst(): NavRoutes? {
+    val routeFQN = T::class.qualifiedName ?: return null
+    return currentBackStack.value
         .firstOrNull { it.destination.route?.contains(routeFQN) == true }
         ?.toRoute<NavRoutes.Main>()
 }

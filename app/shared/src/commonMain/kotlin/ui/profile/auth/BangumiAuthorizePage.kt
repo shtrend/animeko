@@ -31,7 +31,6 @@ import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import me.him188.ani.app.domain.session.AuthState
-import me.him188.ani.app.navigation.MainScreenPage
 import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
@@ -48,7 +47,7 @@ import me.him188.ani.app.ui.onboarding.step.BangumiAuthorizeStep
 fun BangumiAuthorizePage(
     vm: BangumiAuthorizeViewModel,
     onClickBackNavigation: () -> Unit,
-    onFinishLogin: (mainSceneInitialPage: MainScreenPage?) -> Unit,
+    onFinishLogin: () -> Unit,
     modifier: Modifier = Modifier,
     windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
@@ -58,7 +57,7 @@ fun BangumiAuthorizePage(
 
     LaunchedEffect(vm) {
         vm.collectNewLoginEvent {
-            onFinishLogin(state.mainSceneInitialPage)
+            onFinishLogin()
         }
     }
 

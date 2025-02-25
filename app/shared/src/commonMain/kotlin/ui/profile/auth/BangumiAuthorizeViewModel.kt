@@ -15,7 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -27,7 +26,6 @@ import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.domain.session.SessionEvent
 import me.him188.ani.app.domain.session.SessionManager
 import me.him188.ani.app.navigation.BrowserNavigator
-import me.him188.ani.app.navigation.MainScreenPage
 import me.him188.ani.app.platform.ContextMP
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.AbstractViewModel
@@ -54,15 +52,12 @@ class BangumiAuthorizeViewModel : AbstractViewModel(), KoinComponent {
     )
 
     val state: Flow<BangumiAuthorizeState> =
-        combine(
-            authConfigurator.state,
-            settings.uiSettings.flow.map { it.mainSceneInitialPage },
-        ) { authState, initialPage ->
-            BangumiAuthorizeState(
-                authState = authState,
-                mainSceneInitialPage = initialPage,
-            )
-        }
+        authConfigurator.state
+            .map { authState ->
+                BangumiAuthorizeState(
+                    authState = authState,
+                )
+            }
             .stateInBackground(
                 initialValue = BangumiAuthorizeState.Placeholder,
                 SharingStarted.WhileSubscribed(),
@@ -114,10 +109,9 @@ class BangumiAuthorizeViewModel : AbstractViewModel(), KoinComponent {
 @Stable
 class BangumiAuthorizeState(
     val authState: AuthState,
-    val mainSceneInitialPage: MainScreenPage?,
 ) {
     companion object {
         @Stable
-        val Placeholder = BangumiAuthorizeState(AuthState.NotAuthed, null)
+        val Placeholder = BangumiAuthorizeState(AuthState.NotAuthed)
     }
 }
