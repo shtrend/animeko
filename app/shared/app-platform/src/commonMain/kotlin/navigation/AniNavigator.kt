@@ -57,11 +57,6 @@ interface AniNavigator {
         currentNavigator.popBackStack(route, inclusive, saveState)
     }
 
-    fun popBackStack(destinationId: Int, inclusive: Boolean, saveState: Boolean = false) {
-        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-        currentNavigator.popBackStack(destinationId = destinationId, inclusive, saveState)
-    }
-
 //    fun popBackStack(
 //        route: String,
 //        inclusive: Boolean,
@@ -118,13 +113,6 @@ interface AniNavigator {
                 popUpTo(popUpTargetInclusive) { inclusive = true }
             }
         }
-    }
-
-    fun navigateMain(
-        page: MainScreenPage,
-        popUpTargetIdInclusive: Int? = null,
-    ) {
-
     }
 
     /**
