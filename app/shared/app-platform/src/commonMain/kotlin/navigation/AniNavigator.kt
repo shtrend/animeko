@@ -216,7 +216,7 @@ inline fun <reified T : NavRoutes> NavHostController.findLast(): NavRoutes? {
     return currentBackStack.value
         .asReversed()
         .firstOrNull { it.destination.route?.contains(routeFQN) == true }
-        ?.toRoute<NavRoutes.Main>()
+        ?.toRoute<T>()
 }
 
 /**
@@ -226,7 +226,7 @@ inline fun <reified T : NavRoutes> NavHostController.findFirst(): NavRoutes? {
     val routeFQN = T::class.qualifiedName ?: return null
     return currentBackStack.value
         .firstOrNull { it.destination.route?.contains(routeFQN) == true }
-        ?.toRoute<NavRoutes.Main>()
+        ?.toRoute<T>()
 }
 
 /**
