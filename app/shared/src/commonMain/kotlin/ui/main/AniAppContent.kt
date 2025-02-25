@@ -29,7 +29,6 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,7 +45,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import androidx.window.core.layout.WindowSizeClass
-import me.him188.ani.app.data.models.preference.UISettings
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.domain.mediasource.rss.RssMediaSource
 import me.him188.ani.app.domain.mediasource.web.SelectorMediaSource
@@ -117,7 +115,12 @@ fun AniAppContent(aniNavigator: AniNavigator) {
             LocalNavigator provides aniNavigator,
         ) {
             ProvideAniMotionCompositionLocals {
-                AniAppContentImpl(aniNavigator, appState.initialNavRoute, Modifier.fillMaxSize())
+                AniAppContentImpl(
+                    aniNavigator,
+                    appState.initialNavRoute, // 只有在 APP 首次启动的时候加载这个, 只加载一次
+                    appState.mainSceneInitialPage,
+                    Modifier.fillMaxSize(),
+                )
             }
         }
     }
@@ -127,6 +130,7 @@ fun AniAppContent(aniNavigator: AniNavigator) {
 private fun AniAppContentImpl(
     aniNavigator: AniNavigator,
     initialRoute: NavRoutes,
+    mainSceneInitialPage: MainScreenPage,
     modifier: Modifier = Modifier,
 ) {
     val navController by aniNavigator.collectNavigatorAsState()
@@ -202,15 +206,13 @@ private fun AniAppContentImpl(
                     typeOf<NavRoutes?>() to NavRoutes.NavType,
                 ),
             ) { backStackEntry ->
-                val appState by viewModel<AniAppViewModel>().appState.collectAsState(null)
-
                 OnboardingCompleteScreen(
                     viewModel { OnboardingCompleteViewModel() },
                     onClickContinue = {
                         // 传递 popUpTarget 给 OnboardingComplete
                         val currentRoute = backStackEntry.toRoute<NavRoutes.OnboardingComplete>()
                         aniNavigator.navigateMain(
-                            page = appState?.mainSceneInitialPage ?: UISettings.Default.mainSceneInitialPage,
+                            page = mainSceneInitialPage,
                             popUpTargetInclusive = currentRoute.popUpTargetInclusive,
                         )
                     },
@@ -274,14 +276,12 @@ private fun AniAppContentImpl(
                 popEnterTransition = popEnterTransition,
                 popExitTransition = popExitTransition,
             ) {
-                val appState by viewModel<AniAppViewModel>().appState.collectAsState(null)
-
                 BangumiAuthorizePage(
                     viewModel { BangumiAuthorizeViewModel() },
                     onClickBackNavigation = { aniNavigator.popBackStack() },
                     onFinishLogin = {
                         aniNavigator.navigateMain(
-                            appState?.mainSceneInitialPage ?: UISettings.Default.mainSceneInitialPage,
+                            mainSceneInitialPage,
                             aniNavigator.currentNavigator.findLast<NavRoutes.Main>(),
                         )
                     },
@@ -301,8 +301,6 @@ private fun AniAppContentImpl(
                 ),
             ) { backStackEntry ->
                 val details = backStackEntry.toRoute<NavRoutes.SubjectDetail>()
-                val appState by viewModel<AniAppViewModel>().appState.collectAsState(null)
-
                 val vm = viewModel<SubjectDetailsViewModel>(key = details.subjectId.toString()) {
                     val placeholder = details.placeholder?.run {
                         SubjectInfo.createPlaceholder(id, name, coverUrl, nameCN)
@@ -328,10 +326,7 @@ private fun AniAppContentImpl(
                                 )
                                 TopAppBarActionButton(
                                     {
-                                        aniNavigator.popBackOrNavigateToMain(
-                                            appState?.mainSceneInitialPage
-                                                ?: UISettings.Default.mainSceneInitialPage,
-                                        )
+                                        aniNavigator.popBackOrNavigateToMain(mainSceneInitialPage)
                                     },
                                 ) {
                                     Icon(
