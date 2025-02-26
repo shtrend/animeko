@@ -121,9 +121,11 @@ compose.desktop {
 //                    add(TargetFormat.AppImage) // portable distribution (installation-free)
 //                }
             }
-            targetFormats(
-                *formats.toTypedArray(),
-            )
+            if (formats.isNotEmpty()) {
+                targetFormats(
+                    *formats.toTypedArray(),
+                )
+            }
             packageName = "Ani"
             description = project.description
             vendor = "Him188"
