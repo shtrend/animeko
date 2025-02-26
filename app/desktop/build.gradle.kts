@@ -94,34 +94,35 @@ compose.desktop {
             // ./gradlew suggestRuntimeModules
 
             appResourcesRootDir.set(file("appResources"))
-            targetFormats(
-                *buildList {
-                    when (getOs()) {
-                        Os.Linux -> {
-                            when {
-                                isDebianBased -> {
-                                    add(TargetFormat.Deb)
-                                }
+            val formats = buildList {
+                when (getOs()) {
+                    Os.Linux -> {
+                        when {
+                            isDebianBased -> {
+                                add(TargetFormat.Deb)
+                            }
 
-                                isRedHatBased -> {
-                                    add(TargetFormat.Rpm)
-                                }
+                            isRedHatBased -> {
+                                add(TargetFormat.Rpm)
                             }
                         }
-
-                        Os.MacOS -> {
-                            add(TargetFormat.Dmg)
-                        }
-
-                        Os.Windows -> {
-                        }
-
-                        else -> {}
                     }
+
+                    Os.MacOS -> {
+                        add(TargetFormat.Dmg)
+                    }
+
+                    Os.Windows -> {
+                    }
+
+                    else -> {}
+                }
 //                if (getOs() == Os.Windows) {
 //                    add(TargetFormat.AppImage) // portable distribution (installation-free)
 //                }
-                }.toTypedArray(),
+            }
+            targetFormats(
+                *formats.toTypedArray(),
             )
             packageName = "Ani"
             description = project.description
@@ -144,7 +145,7 @@ compose.desktop {
             }
             linux {
                 shortcut = true
-                packageName ="animeko"
+                packageName = "animeko"
 //                packageVersion = properties["package.version"].toString()
 //                debPackageVersion = properties["package.version"].toString()
 //                iconFile.set(file("icons/a_1024x1024_rounded.ico"))
