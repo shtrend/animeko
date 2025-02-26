@@ -17,6 +17,8 @@ import kotlinx.coroutines.sync.withLock
 import me.him188.ani.utils.logging.*
 import me.him188.ani.utils.platform.currentPlatform
 import me.him188.ani.utils.platform.currentTimeMillis
+import me.him188.ani.utils.platform.isAndroid
+import me.him188.ani.utils.platform.isLinux
 import me.him188.ani.utils.platform.isMacOS
 import org.cef.CefApp
 import org.cef.CefClient
@@ -95,7 +97,8 @@ object AniCefApp {
             proxyServer?.let { add("--proxy-server=${it}") }
         }
 
-        if (currentPlatform().isMacOS()) {
+        val platform = currentPlatform()
+        if (platform.isMacOS()) {
             // Fix framework paths when packaged
             jcefConfig.appArgsAsList.apply {
                 removeAll { it.startsWith("--framework-dir-path") }
@@ -108,6 +111,15 @@ object AniCefApp {
                     add("--browser-subprocess-path=${it.resolve("jcef Helper.app/Contents/MacOS/jcef Helper")}")
                     add("--main-bundle-path=${it.resolve("jcef Helper.app")}")
                 } ?: logger.error { "CEF framework not found" }
+            }
+        }
+        if (platform.isLinux()) {
+            jcefConfig.appArgsAsList.apply {
+                // will cause 139 (segfault)
+                // add("--disable-gpu")
+                // add("--disable-software-rasterizer")
+                
+                // add("--no-sandbox") // will cause 139 (segfault)
             }
         }
 
