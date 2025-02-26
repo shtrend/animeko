@@ -51,6 +51,14 @@ sourceSets {
     }
 }
 
+val isDebianBased: Boolean by lazy {
+    File("/etc/debian_version").exists()
+}
+
+val isRedHatBased: Boolean by lazy {
+    File("/etc/redhat-release").exists()
+}
+
 compose.desktop {
     application {
         jvmArgs(
@@ -88,9 +96,28 @@ compose.desktop {
             appResourcesRootDir.set(file("appResources"))
             targetFormats(
                 *buildList {
-                    add(TargetFormat.Deb)
-                    add(TargetFormat.Rpm)
-                    add(TargetFormat.Dmg)
+                    when (getOs()) {
+                        Os.Linux -> {
+                            when {
+                                isDebianBased -> {
+                                    add(TargetFormat.Deb)
+                                }
+
+                                isRedHatBased -> {
+                                    add(TargetFormat.Rpm)
+                                }
+                            }
+                        }
+
+                        Os.MacOS -> {
+                            add(TargetFormat.Dmg)
+                        }
+
+                        Os.Windows -> {
+                        }
+
+                        else -> {}
+                    }
 //                if (getOs() == Os.Windows) {
 //                    add(TargetFormat.AppImage) // portable distribution (installation-free)
 //                }
@@ -114,6 +141,13 @@ compose.desktop {
             windows {
                 this.upgradeUuid = UUID.randomUUID().toString()
                 iconFile.set(file("icons/a_1024x1024_rounded.ico"))
+            }
+            linux {
+                shortcut = true
+                packageName ="animeko"
+//                packageVersion = properties["package.version"].toString()
+//                debPackageVersion = properties["package.version"].toString()
+//                iconFile.set(file("icons/a_1024x1024_rounded.ico"))
             }
 
             // adding copyright causes package to fail.
