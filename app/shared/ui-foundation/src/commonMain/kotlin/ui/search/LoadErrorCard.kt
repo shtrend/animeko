@@ -39,11 +39,16 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.icons.Passkey_24dp_E8EAED_FILL0_wght400_GRAD0_opsz24
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.utils.logging.error
+import me.him188.ani.utils.logging.logger
 
 
 @Composable
@@ -179,6 +184,12 @@ fun LoadErrorCard(
                                                 error.throwable?.stackTraceToString() ?: "null",
                                             ),
                                         )
+                                        @OptIn(DelicateCoroutinesApi::class)
+                                        GlobalScope.launch {
+                                            logger<LoadError>().error(error.throwable) {
+                                                "<User clicked copy, I'm just printing the stack trace>"
+                                            }
+                                        }
                                         toaster.toast("已复制，请反馈到 GitHub issues 或群里")
                                     },
                                 ) {
