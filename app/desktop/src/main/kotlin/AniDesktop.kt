@@ -302,7 +302,11 @@ object AniDesktop {
         }
         
         val loadAnitorrentJob = coroutineScope.launch {
-            AnitorrentLibraryLoader.loadLibraries()
+            try {
+                AnitorrentLibraryLoader.loadLibraries()
+            } catch (e: Throwable){
+                logger.error(e) { "Failed to load anitorrent libraries" }
+            }
         }
 
         // Initialize CEF application.
