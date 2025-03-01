@@ -135,6 +135,7 @@ compose.desktop {
                 dockName = "Animeko"
                 pkgPackageVersion = projectVersion
                 pkgPackageBuildVersion = projectVersion
+                setDockNameSameAsPackageName = false
                 iconFile.set(file("icons/a_512x512.icns"))
 //                iconFile.set(project(":app:shared").projectDir.resolve("androidRes/mipmap-xxxhdpi/a.png"))
                 infoPlist {
