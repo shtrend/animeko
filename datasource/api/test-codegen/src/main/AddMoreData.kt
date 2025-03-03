@@ -13,6 +13,10 @@ import io.ktor.client.plugins.UserAgent
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import me.him188.ani.datasources.api.source.DownloadSearchQuery
@@ -83,7 +87,8 @@ class TopicFetcher(
         originalName: String,
         className: String
     ) {
-        val output = saveDir.resolve("$className.json")
+        val date = getCurrentDateString()
+        val output = saveDir.resolve(if (className.isEmpty()) "mostRecentData${date}.json" else "$className.json")
         output.writeText(
             json.encodeToString(
                 TestData(
@@ -95,6 +100,16 @@ class TopicFetcher(
             ),
         )
         println("'$className' total ${list.size} topics, saved to $output")
+    }
+
+    private fun getCurrentDateString(): String {
+        val format = LocalDate.Format {
+            year()
+            monthNumber()
+            dayOfMonth()
+        }
+        val date = format.format(Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date)
+        return date
     }
 
     suspend fun fetchAndSave(originalName: String, className: String = originalName): List<Topic> {
