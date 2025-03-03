@@ -7,6 +7,8 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
 
 plugins {
@@ -42,6 +44,7 @@ kotlin {
         api(libs.compose.material3.adaptive.navigation0)
 
         api(libs.koin.core)
+        api(libs.sentry.kotlin.multiplatform)
     }
     sourceSets.commonTest.dependencies {
         api(projects.utils.uiTesting)
@@ -66,6 +69,7 @@ val aniAuthServerUrlDebug =
 val aniAuthServerUrlRelease = getPropertyOrNull("ani.auth.server.url.release") ?: "https://auth.myani.org"
 val dandanplayAppId = getPropertyOrNull("ani.dandanplay.app.id") ?: ""
 val dandanplayAppSecret = getPropertyOrNull("ani.dandanplay.app.secret") ?: ""
+val sentryDsn = getPropertyOrNull("ani.sentry.dsn") ?: ""
 
 //if (bangumiClientDesktopAppId == null || bangumiClientDesktopSecret == null) {
 //    logger.warn("bangumi.oauth.client.desktop.appId or bangumi.oauth.client.desktop.secret is not set. Bangumi authorization will not work. Get a token from https://bgm.tv/dev/app and set them in local.properties.")
@@ -76,6 +80,7 @@ android {
         buildConfigField("String", "VERSION_NAME", "\"${getProperty("version.name")}\"")
         buildConfigField("String", "DANDANPLAY_APP_ID", "\"$dandanplayAppId\"")
         buildConfigField("String", "DANDANPLAY_APP_SECRET", "\"$dandanplayAppSecret\"")
+        buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
     }
     buildTypes.getByName("release") {
         isMinifyEnabled = false
@@ -130,6 +135,7 @@ val generateAniBuildConfigDesktop = tasks.register("generateAniBuildConfigDeskto
                 override val aniAuthServerUrl = if (isDebug) "$aniAuthServerUrlDebug" else "$aniAuthServerUrlRelease"
                 override val dandanplayAppId = "$dandanplayAppId"
                 override val dandanplayAppSecret = "$dandanplayAppSecret"
+                override val sentryDsn = "$sentryDsn"
             }
             """.trimIndent()
 
@@ -164,6 +170,7 @@ if (enableIos) {
                 override val aniAuthServerUrl = if (isDebug) "$aniAuthServerUrlDebug" else "$aniAuthServerUrlRelease"
                 override val dandanplayAppId = "$dandanplayAppId"
                 override val dandanplayAppSecret = "$dandanplayAppSecret"
+                override val sentryDsn = "$sentryDsn"
             }
             """.trimIndent()
 
