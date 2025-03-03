@@ -10,6 +10,8 @@
 package me.him188.ani.datasources.api.test.codegen.main
 
 import io.ktor.client.plugins.UserAgent
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -60,6 +62,7 @@ class TopicFetcher(
             }
 
         }.use { http ->
+            var count = 0
             val topics = DmhyPagedSourceImpl(
                 DownloadSearchQuery(
                     keywords = name,
@@ -67,7 +70,9 @@ class TopicFetcher(
                     allowAny = true,
                 ),
                 Network(http.asScopedHttpClient()),
-            ).results.toList()
+            ).results.onEach {
+                println("Fetched ${++count} topics")
+            }.take(3000).toList()
             println(topics)
             return topics
         }
