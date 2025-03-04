@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -9,6 +9,8 @@
 
 package me.him188.ani.app.ui.exploration.search
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -26,9 +28,12 @@ import me.him188.ani.app.data.models.subject.kind
 import me.him188.ani.app.data.models.subject.nameCnOrName
 import me.him188.ani.app.data.network.LightRelatedCharacterInfo
 import me.him188.ani.app.data.network.LightRelatedPersonInfo
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.rating.RatingText
 import me.him188.ani.app.ui.subject.renderSubjectSeason
 import me.him188.ani.utils.platform.annotations.TestOnly
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Immutable
 class SubjectPreviewItemInfo(
@@ -209,5 +214,33 @@ fun SubjectPreviewItem(
 //            SubjectItemDefaults.ActionPlay(onPlay)
         },
         modifier,
+    )
+}
+
+
+@OptIn(TestOnly::class)
+@Composable
+@Preview
+private fun PreviewSubjectPreviewItem() {
+    val info = TestSubjectPreviewItemInfos[0]
+    SubjectPreviewItem(
+        selected = false,
+        onClick = { },
+        onPlay = { },
+        info = info,
+        Modifier
+            .fillMaxWidth()
+            .padding(vertical = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding / 2),
+        image = {
+            SubjectItemDefaults.Image(
+                info.imageUrl,
+            )
+        },
+        title = { maxLines ->
+            Text(
+                info.title,
+                maxLines = maxLines,
+            )
+        },
     )
 }
