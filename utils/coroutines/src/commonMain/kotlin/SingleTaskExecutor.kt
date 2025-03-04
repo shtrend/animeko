@@ -12,6 +12,7 @@ package me.him188.ani.utils.coroutines
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.*
 import me.him188.ani.utils.platform.annotations.TestOnly
+import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -69,9 +70,14 @@ class AtomicSingleTaskExecutor(
         val previousJob = _job.value
         previousJob?.cancel()
 
+        val continuationInterceptor =
+            coroutineContext[ContinuationInterceptor] // prefer to use the provided ContinuationInterceptor
+                ?: currentCoroutineContext()[ContinuationInterceptor] // if not provided, run on the same thread as the caller
+                ?: Dispatchers.Default
+
         // 2. Create a new job but does not start it
         val newJob = scope.async(
-            coroutineContext + currentCoroutineContext()[Job]!!,
+            coroutineContext + currentCoroutineContext()[Job]!! + continuationInterceptor,
             start = CoroutineStart.LAZY,
             block = block,
         )
