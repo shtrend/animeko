@@ -123,8 +123,8 @@ class EstimatedProgressIndicatorState private constructor(
             restore = {
                 it as List<*>
                 EstimatedProgressIndicatorState(
-                    initialProgress = it[2] as Float,
-                    initialHeightScale = it[1] as Float,
+                    initialProgress = it[1] as Float,
+                    initialHeightScale = it[0] as Float,
                 )
             },
         )
