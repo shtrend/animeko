@@ -27,7 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
-import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import me.him188.ani.app.ui.foundation.LocalPlatform
@@ -44,7 +44,7 @@ import me.him188.ani.utils.platform.isMobile
 
 @Composable
 fun CommentColumn(
-    state: CommentState,
+    items: LazyPagingItems<UIComment>,
     modifier: Modifier = Modifier,
     hasDividerLine: Boolean = true,
     contentPadding: PaddingValues = PaddingValues(0.dp),
@@ -52,8 +52,6 @@ fun CommentColumn(
     lazyStaggeredGridState: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
     commentItem: @Composable LazyStaggeredGridItemScope.(index: Int, item: UIComment) -> Unit
 ) {
-    val items = state.list.collectAsLazyPagingItemsWithLifecycle()
-
     PullToRefreshBox(
         isRefreshing = items.isLoadingFirstPageOrRefreshing,
         onRefresh = { items.refresh() },
