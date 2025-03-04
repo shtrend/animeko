@@ -239,6 +239,8 @@ fun MediaSelectorSummaryCard(
                                 softWrap = true,
                                 maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
                     }
