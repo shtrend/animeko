@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.tooling.preview.Preview
+import me.him188.ani.app.data.models.subject.TestSubjectInfo
 import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.domain.session.TestAuthState
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview

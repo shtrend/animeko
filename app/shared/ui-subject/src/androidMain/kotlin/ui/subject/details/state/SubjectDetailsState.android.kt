@@ -13,8 +13,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import me.him188.ani.app.data.models.subject.TestSelfRatingInfo
 import me.him188.ani.app.data.models.subject.TestSubjectCollections
+import me.him188.ani.app.data.models.subject.TestSubjectInfo
 import me.him188.ani.app.ui.comment.createTestCommentState
 import me.him188.ani.app.ui.foundation.stateOf
+import me.him188.ani.app.ui.rating.createTestEditableRatingState
 import me.him188.ani.app.ui.search.createTestPager
 import me.him188.ani.app.ui.subject.collection.components.createTestEditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.progress.createTestEpisodeListState
@@ -22,8 +24,6 @@ import me.him188.ani.app.ui.subject.collection.progress.createTestSubjectProgres
 import me.him188.ani.app.ui.subject.createTestAiringLabelState
 import me.him188.ani.app.ui.subject.details.TestRelatedSubjects
 import me.him188.ani.app.ui.subject.details.TestSubjectCharacterList
-import me.him188.ani.app.ui.subject.details.TestSubjectInfo
-import me.him188.ani.app.ui.subject.rating.createTestEditableRatingState
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.coroutines.flows.flowOfEmptyList
 import me.him188.ani.utils.platform.annotations.TestOnly

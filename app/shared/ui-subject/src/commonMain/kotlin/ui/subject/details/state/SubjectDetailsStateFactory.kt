@@ -61,7 +61,7 @@ import me.him188.ani.app.ui.subject.collection.progress.EpisodeListState
 import me.him188.ani.app.ui.subject.collection.progress.EpisodeListStateFactory
 import me.him188.ani.app.ui.subject.collection.progress.SubjectProgressStateFactory
 import me.him188.ani.app.ui.subject.details.updateRating
-import me.him188.ani.app.ui.subject.rating.EditableRatingState
+import me.him188.ani.app.ui.rating.EditableRatingState
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.datasources.api.topic.isDoneOrDropped

@@ -124,8 +124,8 @@ import me.him188.ani.app.ui.subject.details.components.SubjectDetailsDefaults
 import me.him188.ani.app.ui.subject.details.components.SubjectDetailsHeader
 import me.him188.ani.app.ui.subject.details.state.SubjectDetailsState
 import me.him188.ani.app.ui.subject.episode.list.EpisodeListDialog
-import me.him188.ani.app.ui.subject.rating.EditableRating
-import me.him188.ani.app.ui.subject.rating.EditableRatingState
+import me.him188.ani.app.ui.rating.EditableRating
+import me.him188.ani.app.ui.rating.EditableRatingState
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.utils.platform.isMobile
 

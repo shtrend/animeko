@@ -33,7 +33,7 @@ import me.him188.ani.app.ui.comment.CommentState
 import me.him188.ani.app.ui.comment.UIComment
 import me.him188.ani.app.ui.foundation.layout.ConnectedScrollState
 import me.him188.ani.app.ui.richtext.RichText
-import me.him188.ani.app.ui.subject.rating.FiveRatingStars
+import me.him188.ani.app.ui.rating.FiveRatingStars
 
 @Composable
 fun SubjectDetailsDefaults.SubjectCommentColumn(

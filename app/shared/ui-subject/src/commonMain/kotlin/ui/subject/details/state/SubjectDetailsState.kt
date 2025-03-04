@@ -32,7 +32,7 @@ import me.him188.ani.app.ui.subject.AiringLabelState
 import me.him188.ani.app.ui.subject.SubjectProgressState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.progress.EpisodeListState
-import me.him188.ani.app.ui.subject.rating.EditableRatingState
+import me.him188.ani.app.ui.rating.EditableRatingState
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 
 /**
