@@ -462,7 +462,7 @@ fun PreviewMediaSelectorSummaryAutoSelecting() {
     ProvideCompositionLocalsForPreview {
         var state: MediaSelectorSummary by remember {
             mutableStateOf(
-                createAutoSelecting(),
+                createTestMediaSelectorSummaryAutoSelecting(),
             )
         }
         MediaSelectorSummaryCard(
@@ -488,7 +488,7 @@ fun PreviewMediaSelectorSummaryAutoSelectingQuickComplete() {
     ProvideCompositionLocalsForPreview {
         var state: MediaSelectorSummary by remember {
             mutableStateOf(
-                createAutoSelecting(),
+                createTestMediaSelectorSummaryAutoSelecting(),
             )
         }
         MediaSelectorSummaryCard(
@@ -510,13 +510,14 @@ fun PreviewMediaSelectorSummaryAutoSelectingQuickComplete() {
 private val TestMediaTitle
     get() = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
 
-private fun createRequiresManualSelection(sources: List<QueriedSourcePresentation>) =
+@TestOnly
+fun createTestMediaSelectorSummaryRequiresManualSelection(sources: List<QueriedSourcePresentation>) =
     MediaSelectorSummary.RequiresManualSelection(
         queriedSources = sources,
     )
 
 @TestOnly
-private fun createAutoSelecting() = MediaSelectorSummary.AutoSelecting(
+fun createTestMediaSelectorSummaryAutoSelecting() = MediaSelectorSummary.AutoSelecting(
     queriedSources = TestQueriedSources,
     estimate = 5.seconds,
 )

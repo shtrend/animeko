@@ -33,6 +33,8 @@ import me.him188.ani.app.domain.player.VideoLoadingState
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.domain.session.TestAuthState
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.mediaselect.summary.MediaSelectorSummary
+import me.him188.ani.app.ui.mediaselect.summary.createTestMediaSelectorSummaryAutoSelecting
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.components.rememberTestEditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.createTestAiringLabelState
@@ -182,6 +184,7 @@ private fun PreviewEpisodeDetailsImpl(
 ) {
     Scaffold {
         EpisodeDetails(
+            mediaSelectorSummary = createTestMediaSelectorSummaryAutoSelecting(),
             state,
             episodeCarouselState = remember {
                 EpisodeCarouselState(
