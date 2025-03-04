@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.ui.subject.episode.details
 
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -32,7 +31,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Dataset
 import androidx.compose.material.icons.outlined.ExpandCircleDown
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -57,21 +55,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.Flow
-import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.domain.danmaku.DanmakuLoadingState
 import me.him188.ani.app.domain.session.AuthState
-import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
-import me.him188.ani.app.ui.media.renderProperties
+import me.him188.ani.app.ui.mediaselect.summary.MediaSelectorSummary
+import me.him188.ani.app.ui.mediaselect.summary.MediaSelectorSummaryCard
 import me.him188.ani.app.ui.subject.AiringLabel
 import me.him188.ani.app.ui.subject.AiringLabelState
 import me.him188.ani.app.ui.subject.collection.SubjectCollectionTypeSuggestions
@@ -83,18 +79,13 @@ import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateLoader
 import me.him188.ani.app.ui.subject.episode.details.components.DanmakuMatchInfoGrid
 import me.him188.ani.app.ui.subject.episode.details.components.DanmakuSourceCard
 import me.him188.ani.app.ui.subject.episode.details.components.DanmakuSourceSettingsDropdown
-import me.him188.ani.app.ui.subject.episode.details.components.EpisodeWatchStatusButton
-import me.him188.ani.app.ui.subject.episode.details.components.PlayingEpisodeItem
-import me.him188.ani.app.ui.subject.episode.details.components.PlayingEpisodeItemDefaults
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultPresentation
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuMatchInfoSummaryRow
-import me.him188.ani.app.ui.subject.episode.statistics.VideoLoadingSummary
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics
 import me.him188.ani.app.ui.subject.episode.video.DanmakuStatistics
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
-import me.him188.ani.datasources.api.topic.isDoneOrDropped
 import me.him188.ani.datasources.api.unwrapCached
 import me.him188.ani.utils.platform.isDesktop
 
@@ -122,6 +113,7 @@ class EpisodeDetailsState(
  */
 @Composable
 fun EpisodeDetails(
+    mediaSelectorSummary: MediaSelectorSummary,
     state: EpisodeDetailsState,
     episodeCarouselState: EpisodeCarouselState,
     editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState,
@@ -222,101 +214,31 @@ fun EpisodeDetails(
             }
         },
         exposedEpisodeItem = { innerPadding ->
-            val originalMedia by remember {
-                derivedStateOf {
-                    videoStatistics.playingMedia?.unwrapCached() // 显示原始来源
-                }
-            }
-            val mediaSelected by remember {
-                derivedStateOf {
-                    originalMedia != null
-                }
-            }
-            episodeCarouselState.playingEpisode?.let { episode ->
-                Card(
-                    Modifier.padding(innerPadding).animateContentSize(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                        contentColor = contentColorFor(MaterialTheme.colorScheme.surfaceContainer),
-                    ),
+            var showMediaSelector by rememberSaveable { mutableStateOf(false) }
+            if (showMediaSelector) {
+                ModalBottomSheet(
+                    { showMediaSelector = false },
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = LocalPlatform.current.isDesktop()),
+                    modifier = Modifier.desktopTitleBarPadding().statusBarsPadding(),
+                    contentWindowInsets = { BottomSheetDefaults.windowInsets.add(WindowInsets.desktopTitleBar()) },
                 ) {
-                    PlayingEpisodeItem(
-                        episodeSort = { Text(episode.episodeInfo.sort.toString()) },
-                        title = { Text(episode.episodeInfo.displayName) },
-                        watchStatus = {
-                            if (authState.isKnownLoggedIn) {
-                                EpisodeWatchStatusButton(
-                                    episode.collectionType.isDoneOrDropped(),
-                                    onUnmark = {
-                                        episodeCarouselState.setCollectionType(
-                                            episode,
-                                            UnifiedCollectionType.NOT_COLLECTED,
-                                        )
-                                    },
-                                    onMarkAsDone = {
-                                        episodeCarouselState.setCollectionType(
-                                            episode,
-                                            UnifiedCollectionType.DONE,
-                                        )
-                                    },
-                                    enabled = !episodeCarouselState.isSettingCollectionType.collectAsStateWithLifecycle().value,
-                                )
-                            }
-                        },
-                        mediaSelected = mediaSelected,
-                        mediaLabels = {
-                            val mediaPropertiesText by remember {
-                                derivedStateOf {
-                                    originalMedia?.renderProperties()
-                                }
-                            }
-                            SelectionContainer { Text(mediaPropertiesText ?: "") }
-                        },
-                        filename = {
-                            videoStatistics.playingFilename?.let {
-                                SelectionContainer {
-                                    Text(it, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                                }
-                            }
-                        },
-                        videoLoadingSummary = {
-                            VideoLoadingSummary(videoStatistics.videoLoadingState)
-                        },
-                        mediaSource = {
-                            var showMediaSelector by rememberSaveable { mutableStateOf(false) }
-                            PlayingEpisodeItemDefaults.MediaSource(
-                                media = originalMedia,
-                                mediaSourceInfo = videoStatistics.playingMediaSourceInfo,
-                                isLoading = videoStatistics.mediaSourceLoading,
-                                onClick = { showMediaSelector = !showMediaSelector },
-                            )
-                            if (showMediaSelector) {
-                                ModalBottomSheet(
-                                    { showMediaSelector = false },
-                                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = LocalPlatform.current.isDesktop()),
-                                    modifier = Modifier.desktopTitleBarPadding().statusBarsPadding(),
-                                    contentWindowInsets = { BottomSheetDefaults.windowInsets.add(WindowInsets.desktopTitleBar()) },
-                                ) {
-                                    EpisodePlayMediaSelector(
-                                        mediaSelectorState,
-                                        mediaSourceResultListPresentation,
-                                        onDismissRequest = { showMediaSelector = false },
-                                        onRefresh = onRefreshMediaSources,
-                                        onRestartSource = onRestartSource,
-                                        onSelected = { showMediaSelector = false },
-                                        stickyHeaderBackgroundColor = BottomSheetDefaults.ContainerColor,
-                                    )
-                                }
-                            }
-                        },
-                        actions = {
-                            val navigator = LocalNavigator.current
-                            PlayingEpisodeItemDefaults.ActionShare(videoStatistics.playingMedia)
-                            PlayingEpisodeItemDefaults.ActionCache({ navigator.navigateSubjectCaches(state.subjectId) })
-                        },
+                    EpisodePlayMediaSelector(
+                        mediaSelectorState,
+                        mediaSourceResultListPresentation,
+                        onDismissRequest = { showMediaSelector = false },
+                        onRefresh = onRefreshMediaSources,
+                        onRestartSource = onRestartSource,
+                        onSelected = { showMediaSelector = false },
+                        stickyHeaderBackgroundColor = BottomSheetDefaults.ContainerColor,
                     )
                 }
             }
+
+            MediaSelectorSummaryCard(
+                mediaSelectorSummary,
+                onClickManualSelect = { showMediaSelector = true },
+                Modifier.fillMaxWidth().padding(innerPadding),
+            )
         },
         danmakuStatisticsSummary = {
             DanmakuMatchInfoSummaryRow(

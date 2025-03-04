@@ -107,7 +107,6 @@ import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.isHeightCompact
-import me.him188.ani.app.ui.foundation.layout.isSystemInFullscreen
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastExpanded
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.isWidthCompact
@@ -404,6 +403,7 @@ private fun EpisodeScreenTabletVeryWide(
                             val pageState by vm.pageState.collectAsStateWithLifecycle()
                             pageState?.let { page ->
                                 EpisodeDetails(
+                                    page.mediaSelectorSummary,
                                     vm.episodeDetailsState,
                                     vm.episodeCarouselState,
                                     vm.editableSubjectCollectionTypeState,
@@ -521,6 +521,7 @@ private fun EpisodeScreenContentPhone(
             val pageState by vm.pageState.collectAsStateWithLifecycle()
             pageState?.let { page ->
                 EpisodeDetails(
+                    page.mediaSelectorSummary,
                     vm.episodeDetailsState,
                     vm.episodeCarouselState,
                     vm.editableSubjectCollectionTypeState,

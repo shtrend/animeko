@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
@@ -43,6 +44,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.data.models.episode.renderEpisodeEp
 import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
 import me.him188.ani.app.data.models.subject.SubjectInfo
@@ -92,10 +94,13 @@ import me.him188.ani.app.ui.comment.CommentMapperContext.parseToUIComment
 import me.him188.ani.app.ui.comment.CommentState
 import me.him188.ani.app.ui.comment.EditCommentSticker
 import me.him188.ani.app.ui.danmaku.UIDanmakuEvent
+import me.him188.ani.app.ui.episode.PlayingEpisodeSummary
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.foundation.HasBackgroundScope
 import me.him188.ani.app.ui.foundation.launchInBackground
 import me.him188.ani.app.ui.foundation.stateOf
+import me.him188.ani.app.ui.mediaselect.summary.MediaSelectorSummary
+import me.him188.ani.app.ui.mediaselect.summary.QueriedSourcePresentation
 import me.him188.ani.app.ui.settings.danmaku.DanmakuRegexFilterState
 import me.him188.ani.app.ui.subject.AiringLabelState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
@@ -120,6 +125,8 @@ import me.him188.ani.danmaku.api.DanmakuEvent
 import me.him188.ani.danmaku.api.DanmakuPresentation
 import me.him188.ani.danmaku.ui.DanmakuConfig
 import me.him188.ani.datasources.api.PackedDate
+import me.him188.ani.datasources.api.source.MediaSourceInfo
+import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.topic.isDoneOrDropped
 import me.him188.ani.utils.coroutines.flows.FlowRestarter
 import me.him188.ani.utils.coroutines.flows.flowOfEmptyList
@@ -134,6 +141,7 @@ import org.openani.mediamp.MediampPlayer
 import org.openani.mediamp.MediampPlayerFactory
 import org.openani.mediamp.features.chapters
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 
 @Stable
@@ -149,6 +157,8 @@ data class EpisodePageState(
     val isLoading: Boolean = false,
     val loadError: LoadError? = null,
     val isPlaceholder: Boolean = false,
+    val playingEpisodeSummary: PlayingEpisodeSummary?, // null means placeholder TODO: should distinguish placeholder
+    val mediaSelectorSummary: MediaSelectorSummary,
 )
 
 /**
@@ -551,7 +561,61 @@ class EpisodeViewModel(
                 }
             },
             mediaSourceResultsFlow.map { MediaSourceResultListPresentation(it) },
-        ) { authState, subjectEpisodeBundle, loadError, fetchSelect, danmakuStatistics, danmakuEnabled, danmakuConfig, mediaSelectorState, mediaSourceResultsPresentation ->
+            combineTransform(
+                episodeSession.fetchSelectFlow.map { fetchSelect ->
+                    fetchSelect?.mediaSelector
+                },
+                mediaSourceResultsFlow,
+                settingsRepository.mediaSelectorSettings.flow,
+            ) { mediaSelectorState, mediaSourceResultPresentations, mediaSelectorSettings ->
+                val queriedSourcesFlow = combine(
+                    mediaSourceResultPresentations.map {
+                        mediaSourceInfoProvider.getSourceInfoFlow(it.mediaSourceId)
+                    },
+                ) { mediaSourceInfos ->
+                    mediaSourceInfos.filterNotNull()
+                        .map {
+                            it.toQueriedSourcePresentation()
+                        }
+                }
+
+                if (mediaSelectorState == null) {
+                    // still loading
+                    emit(MediaSelectorSummary.AutoSelecting(listOf(), estimate = 10.seconds))
+                } else {
+                    emitAll(
+                        combine(queriedSourcesFlow, mediaSelectorState.selected) { queriedSources, selected ->
+                            when {
+                                selected != null -> {
+                                    MediaSelectorSummary.Selected(
+                                        mediaSourceInfoProvider.getSourceInfoFlow(selected.mediaSourceId).first()
+                                            ?.toQueriedSourcePresentation() ?: QueriedSourcePresentation(
+                                            sourceName = selected.mediaSourceId,
+                                            sourceIconUrl = "",
+                                        ),
+                                        selected.originalTitle,
+                                    )
+                                }
+
+                                mediaSelectorSettings.preferKind == MediaSourceKind.WEB -> {
+                                    MediaSelectorSummary.AutoSelecting(
+                                        queriedSources = queriedSources,
+                                        estimate = if (mediaSelectorSettings.fastSelectWebKind) mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay
+                                        else 10.seconds,
+                                    )
+                                }
+
+                                else -> {
+                                    MediaSelectorSummary.RequiresManualSelection(
+                                        queriedSources = queriedSources,
+                                    )
+                                }
+                            }
+                        },
+                    )
+                }
+            },
+        ) { authState, subjectEpisodeBundle, loadError, fetchSelect, danmakuStatistics, danmakuEnabled, danmakuConfig, mediaSelectorState, mediaSourceResultsPresentation, mediaSelectorSummary ->
 
             val (subject, episode) = if (subjectEpisodeBundle == null) {
                 SubjectPresentation.Placeholder to EpisodePresentation.Placeholder
@@ -577,9 +641,29 @@ class EpisodeViewModel(
                 danmakuConfig = danmakuConfig,
                 isLoading = subjectEpisodeBundle == null,
                 loadError = loadError,
+                playingEpisodeSummary = if (subjectEpisodeBundle == null) {
+                    null
+                } else {
+                    PlayingEpisodeSummary(
+                        episodeSort = subjectEpisodeBundle.episodeInfo.sort,
+                        episodeName = subjectEpisodeBundle.episodeInfo.displayName,
+                        subjectName = subjectEpisodeBundle.subjectInfo.displayName,
+                        subjectTags = listOf(), // todo: tags, see figma
+                        subjectCoverUrl = subjectEpisodeBundle.subjectInfo.imageLarge,
+                        rating = subjectEpisodeBundle.subjectInfo.ratingInfo,
+                        selfRatingInfo = subjectEpisodeBundle.subjectCollectionInfo.selfRatingInfo,
+                    )
+                },
+                mediaSelectorSummary = mediaSelectorSummary,
             )
         }
     }
+
+    private fun MediaSourceInfo.toQueriedSourcePresentation() =
+        QueriedSourcePresentation(
+            displayName,
+            iconUrl ?: "",
+        )
 
     suspend fun switchEpisode(episodeId: Int) {
         // 关闭弹窗
