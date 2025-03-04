@@ -13,8 +13,12 @@ import android.content.Context
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
+import java.util.UUID
 
-class AnalyticsImpl(config: AnalyticsConfig) : CommonAnalyticsImpl(config), IAnalytics {
+class AnalyticsImpl(
+    config: AnalyticsConfig,
+    private val userId: String, // anonymous id
+) : CommonAnalyticsImpl(config), IAnalytics {
     fun init(
         context: Context,
         apiKey: String,
@@ -23,17 +27,19 @@ class AnalyticsImpl(config: AnalyticsConfig) : CommonAnalyticsImpl(config), IAna
         val config = PostHogAndroidConfig(
             apiKey = apiKey,
             host = host,
-        ).apply { 
+        ).apply {
             debug = config.debugLogging
+            this.getAnonymousId = { UUID.fromString(userId) }
         }
         PostHogAndroid.setup(context, config)
     }
 
-    override fun recordEventImpl(event: AnalyticsEvent, properties: Map<String, Any?>) {
+    override fun recordEventImpl(event: AnalyticsEvent, properties: Map<String, Any>) {
         PostHog.capture(event = event.event)
     }
 
     override fun onAppStart() {
+        PostHog.identify(userId, userProperties = intrinsicProperties)
     }
 }
 

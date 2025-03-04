@@ -15,7 +15,7 @@ class AnalyticsImpl(config: AnalyticsConfig) : IAnalytics, CommonAnalyticsImpl(c
 
     }
 
-    override fun recordEventImpl(event: AnalyticsEvent, properties: Map<String, Any?>) {
+    override fun recordEventImpl(event: AnalyticsEvent, properties: Map<String, Any>) {
         // TODO: ios analytics
     }
 }

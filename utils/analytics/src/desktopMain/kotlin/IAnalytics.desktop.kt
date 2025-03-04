@@ -31,7 +31,7 @@ class AnalyticsImpl(
     }
 
     private val logger = logger<AnalyticsImpl>()
-    override fun recordEventImpl(event: AnalyticsEvent, properties: Map<String, Any?>) {
+    override fun recordEventImpl(event: AnalyticsEvent, properties: Map<String, Any>) {
         postHog.capture(UUID.randomUUID().toString(), event.event, properties)
     }
 

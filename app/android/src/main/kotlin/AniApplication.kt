@@ -143,6 +143,7 @@ class AniApplication : Application() {
                 AnalyticsHolder.init(
                     AnalyticsImpl(
                         AnalyticsConfig.create(),
+                        userId = settings.userId,
                     ).apply {
                         init(
                             this@AniApplication,
