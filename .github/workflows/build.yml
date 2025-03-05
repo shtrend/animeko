@@ -100,7 +100,7 @@ jobs:
       name: 'Check'
       uses: 'nick-fields/retry@v3'
       with:
-        timeout_minutes: '60'
+        timeout_minutes: '120'
         max_attempts: '2'
         command: './gradlew check "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" "-DBoost_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "--parallel" "-Pani.android.abis=x86_64"'
   build_github-windows-2019:
@@ -198,7 +198,7 @@ jobs:
       name: 'Check'
       uses: 'nick-fields/retry@v3'
       with:
-        timeout_minutes: '60'
+        timeout_minutes: '120'
         max_attempts: '2'
         command: './gradlew check "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake" "-DBoost_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include" "-Dorg.gradle.jvmargs=-Xmx4g" "-Dkotlin.daemon.jvm.options=-Xmx4g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "--parallel" "-Pani.android.abis=x86_64"'
   build_github-macos-13:
@@ -393,7 +393,7 @@ jobs:
       name: 'Check'
       uses: 'nick-fields/retry@v3'
       with:
-        timeout_minutes: '60'
+        timeout_minutes: '120'
         max_attempts: '2'
         command: './gradlew check "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}"'
   build_self-hosted-macos-15:
@@ -502,7 +502,7 @@ jobs:
       name: 'Check'
       uses: 'nick-fields/retry@v3'
       with:
-        timeout_minutes: '60'
+        timeout_minutes: '120'
         max_attempts: '2'
         command: './gradlew check "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx4g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "--parallel" "-Pani.android.abis=arm64-v8a"'
     - id: 'step-13'

@@ -1267,7 +1267,7 @@ class WithMatrix(
                 name = "Check",
                 tasks = ["check"],
                 maxAttempts = 2,
-                timeoutMinutes = 60,
+                timeoutMinutes = 120,
             )
         }
     }
