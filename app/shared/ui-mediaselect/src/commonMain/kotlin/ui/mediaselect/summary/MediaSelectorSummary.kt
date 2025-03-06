@@ -10,6 +10,12 @@
 package me.him188.ani.app.ui.mediaselect.summary
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -72,22 +78,33 @@ import kotlin.time.Duration.Companion.seconds
 
 @Immutable
 sealed class MediaSelectorSummary {
+    /**
+     * 用于 UI 比较, 如果 [MediaSelectorSummary] 变了但是 [typeId] 相同就不会有 animation.
+     */
+    abstract val typeId: Int
+
     @Immutable
     data class AutoSelecting(
         val queriedSources: List<QueriedSourcePresentation>,
         val estimate: Duration
-    ) : MediaSelectorSummary()
+    ) : MediaSelectorSummary() {
+        override val typeId get() = 1
+    }
 
     @Immutable
     data class RequiresManualSelection(
         val queriedSources: List<QueriedSourcePresentation>,
-    ) : MediaSelectorSummary()
+    ) : MediaSelectorSummary() {
+        override val typeId get() = 2
+    }
 
     @Immutable
     data class Selected(
         val source: QueriedSourcePresentation,
         val mediaTitle: String,
-    ) : MediaSelectorSummary()
+    ) : MediaSelectorSummary() {
+        override val typeId get() = 3
+    }
 }
 
 /**
@@ -104,7 +121,19 @@ fun MediaSelectorSummaryCard(
     val summaryUpdated by rememberUpdatedState(summary)
 
     val motionScheme = LocalAniMotionScheme.current
-    val transitionSpec = motionScheme.animatedContent.standard
+    val transitionSpec: AnimatedContentTransitionScope<MediaSelectorSummary>.() -> ContentTransform = {
+        val default = motionScheme.animatedContent.standard(this)
+        if (initialState.typeId == targetState.typeId) {
+            // 如果 typeId 相同, 不会有动画
+            ContentTransform(
+                EnterTransition.None,
+                ExitTransition.None,
+                sizeTransform = default.sizeTransform
+            )
+        } else {
+            default
+        }
+    }
 
     val progressIndicatorState = rememberEstimatedProgressIndicatorState()
     val animationState = remember(progressIndicatorState) {

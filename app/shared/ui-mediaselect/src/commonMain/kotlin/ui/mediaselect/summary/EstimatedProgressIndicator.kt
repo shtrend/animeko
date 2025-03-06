@@ -85,7 +85,7 @@ class EstimatedProgressIndicatorState private constructor(
 
             // animate progress
             animate(
-                initialValue = 0f,
+                initialValue = progress,
                 targetValue = 0.99f,
                 initialVelocity = velocity,
                 animationSpec = tween(durationMillis, easing = LinearEasing),

@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
@@ -40,6 +39,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
@@ -73,9 +73,11 @@ import me.him188.ani.app.domain.episode.mediaSelectorFlow
 import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.domain.media.cache.EpisodeCacheStatus
 import me.him188.ani.app.domain.media.cache.MediaCacheManager
+import me.him188.ani.app.domain.media.fetch.MediaSourceFetchState
 import me.him188.ani.app.domain.media.fetch.MediaSourceManager
 import me.him188.ani.app.domain.media.fetch.MediaSourceResultsFilterer
 import me.him188.ani.app.domain.media.resolver.MediaResolver
+import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.domain.player.CacheProgressProvider
 import me.him188.ani.app.domain.player.extension.AutoSelectExtension
 import me.him188.ani.app.domain.player.extension.MarkAsWatchedExtension
@@ -112,6 +114,7 @@ import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceInfoProvider
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresenter
+import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.createTestMediaSelectorState
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatisticsCollector
@@ -134,6 +137,7 @@ import me.him188.ani.utils.coroutines.flows.restartable
 import me.him188.ani.utils.coroutines.sampleWithInitial
 import me.him188.ani.utils.logging.warn
 import me.him188.ani.utils.platform.annotations.TestOnly
+import me.him188.ani.utils.platform.collections.tupleOf
 import org.koin.core.Koin
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -535,7 +539,7 @@ class EpisodeViewModel(
                 flowScope = this,
             ).filteredSourceResults,
             flowScope = this,
-        ).presentationFlow
+        ).presentationFlow.sample(200.milliseconds)
         return me.him188.ani.utils.coroutines.flows.combine(
             authStateProvider.state,
             episodeSession.infoBundleFlow.distinctUntilChanged().onStart { emit(null) },
@@ -561,60 +565,12 @@ class EpisodeViewModel(
                 }
             },
             mediaSourceResultsFlow.map { MediaSourceResultListPresentation(it) },
-            combineTransform(
-                episodeSession.fetchSelectFlow.map { fetchSelect ->
+            mediaSelectorSummaryFlow(
+                mediaSelectorFlow = episodeSession.fetchSelectFlow.map { fetchSelect ->
                     fetchSelect?.mediaSelector
                 },
                 mediaSourceResultsFlow,
-                settingsRepository.mediaSelectorSettings.flow,
-            ) { mediaSelectorState, mediaSourceResultPresentations, mediaSelectorSettings ->
-                val queriedSourcesFlow = combine(
-                    mediaSourceResultPresentations.map {
-                        mediaSourceInfoProvider.getSourceInfoFlow(it.mediaSourceId)
-                    },
-                ) { mediaSourceInfos ->
-                    mediaSourceInfos.filterNotNull()
-                        .map {
-                            it.toQueriedSourcePresentation()
-                        }
-                }
-
-                if (mediaSelectorState == null) {
-                    // still loading
-                    emit(MediaSelectorSummary.AutoSelecting(listOf(), estimate = 10.seconds))
-                } else {
-                    emitAll(
-                        combine(queriedSourcesFlow, mediaSelectorState.selected) { queriedSources, selected ->
-                            when {
-                                selected != null -> {
-                                    MediaSelectorSummary.Selected(
-                                        mediaSourceInfoProvider.getSourceInfoFlow(selected.mediaSourceId).first()
-                                            ?.toQueriedSourcePresentation() ?: QueriedSourcePresentation(
-                                            sourceName = selected.mediaSourceId,
-                                            sourceIconUrl = "",
-                                        ),
-                                        selected.originalTitle,
-                                    )
-                                }
-
-                                mediaSelectorSettings.preferKind == MediaSourceKind.WEB -> {
-                                    MediaSelectorSummary.AutoSelecting(
-                                        queriedSources = queriedSources,
-                                        estimate = if (mediaSelectorSettings.fastSelectWebKind) mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay
-                                        else 10.seconds,
-                                    )
-                                }
-
-                                else -> {
-                                    MediaSelectorSummary.RequiresManualSelection(
-                                        queriedSources = queriedSources,
-                                    )
-                                }
-                            }
-                        },
-                    )
-                }
-            },
+            ),
         ) { authState, subjectEpisodeBundle, loadError, fetchSelect, danmakuStatistics, danmakuEnabled, danmakuConfig, mediaSelectorState, mediaSourceResultsPresentation, mediaSelectorSummary ->
 
             val (subject, episode) = if (subjectEpisodeBundle == null) {
@@ -658,6 +614,69 @@ class EpisodeViewModel(
             )
         }
     }
+
+    private fun mediaSelectorSummaryFlow(
+        mediaSelectorFlow: Flow<MediaSelector?>,
+        mediaSourceResultsFlow: Flow<List<MediaSourceResultPresentation>>,
+    ) = combine(
+        mediaSelectorFlow,
+        mediaSourceResultsFlow,
+        settingsRepository.mediaSelectorSettings.flow,
+        mediaSourceManager.allInstances,
+    ) { mediaSelectorState, mediaSourceResultPresentations, mediaSelectorSettings, mediaSourceInstancesSorted ->
+        val queriedSources = mediaSourceResultPresentations
+            .asSequence()
+            .filter { !it.info.isSpecial }
+            .filter { it.kind == MediaSourceKind.WEB } // FIXME: BT 的图标是 iconResourceId 展示的, 目前 UI 还没支持, 所以这里只显示 WEB 的
+            .filter { it.state is MediaSourceFetchState.Completed }
+            .sortedWith(
+                compareBy { source ->
+                    mediaSourceInstancesSorted.indexOfFirst { it.instanceId == source.instanceId }
+                },
+            )
+            .map {
+                it.info.toQueriedSourcePresentation()
+            }
+            .toList()
+
+        tupleOf(mediaSelectorState, queriedSources, mediaSelectorSettings)
+    }.transformLatest { (mediaSelectorState, queriedSources, mediaSelectorSettings) ->
+        if (mediaSelectorState == null) {
+            // still loading
+            emit(MediaSelectorSummary.AutoSelecting(listOf(), estimate = 10.seconds))
+        } else {
+            emitAll(
+                mediaSelectorState.selected.map { selected ->
+                    when {
+                        selected != null -> {
+                            MediaSelectorSummary.Selected(
+                                mediaSourceInfoProvider.getSourceInfoFlow(selected.mediaSourceId).first()
+                                    ?.toQueriedSourcePresentation() ?: QueriedSourcePresentation(
+                                    sourceName = selected.mediaSourceId,
+                                    sourceIconUrl = "",
+                                ),
+                                selected.originalTitle,
+                            )
+                        }
+
+                        mediaSelectorSettings.preferKind == MediaSourceKind.WEB -> {
+                            MediaSelectorSummary.AutoSelecting(
+                                queriedSources = queriedSources,
+                                estimate = if (mediaSelectorSettings.fastSelectWebKind) mediaSelectorSettings.fastSelectWebKindAllowNonPreferredDelay
+                                else 10.seconds,
+                            )
+                        }
+
+                        else -> {
+                            MediaSelectorSummary.RequiresManualSelection(
+                                queriedSources = queriedSources,
+                            )
+                        }
+                    }
+                },
+            )
+        }
+    }.distinctUntilChanged()
 
     private fun MediaSourceInfo.toQueriedSourcePresentation() =
         QueriedSourcePresentation(
