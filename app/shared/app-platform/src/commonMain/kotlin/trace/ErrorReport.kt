@@ -38,7 +38,7 @@ object ErrorReport {
 
     inline fun captureException(
         throwable: Throwable,
-        level: SentryLevel = SentryLevel.ERROR,
+        level: SentryLevel = SentryLevel.WARNING,
         crossinline config: Scope.() -> Unit = {}
     ): SentryId {
         return if (Sentry.isEnabled()) {
