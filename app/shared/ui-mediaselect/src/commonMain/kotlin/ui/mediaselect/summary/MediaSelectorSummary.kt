@@ -146,6 +146,7 @@ fun MediaSelectorSummaryCard(
     MediaSelectorSummaryLayout(
         header = {
             val commonModifiers = Modifier.heightIn(min = MediaSelectorSummaryDefaults.headerHeight)
+                .fillMaxWidth()
 
             val listItemColors = ListItemDefaults.colors(
                 containerColor = colors.headerContainerColor,
@@ -237,7 +238,7 @@ fun MediaSelectorSummaryCard(
                             is MediaSelectorSummary.Selected -> error("not reachable")
                         }
 
-                        Column {
+                        Column(Modifier.fillMaxWidth()) {
                             EstimatedLinearProgressIndictorBox(
                                 progressIndicatorState,
                                 Modifier.height(8.dp)
@@ -260,7 +261,7 @@ fun MediaSelectorSummaryCard(
 
                     is MediaSelectorSummary.Selected -> {
                         Box(
-                            Modifier.padding(all = MediaSelectorSummaryDefaults.bodyContentPadding),
+                            Modifier.fillMaxWidth().padding(all = MediaSelectorSummaryDefaults.bodyContentPadding),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text(
