@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -94,9 +94,9 @@ fun EpisodeVideoLoadingIndicator(
             when (state) {
                 VideoLoadingState.Initial -> {
                     if (optimizeForFullscreen) {
-                        TextWithBorder("正在自动选择数据源。若几秒后仍未选择，请在右上角选择数据源")
+                        TextWithBorder("正在自动选择数据源，请稍候")
                     } else {
-                        TextWithBorder("正在自动选择数据源。若几秒后仍未选择，请选择数据源")
+                        TextWithBorder("正在自动选择数据源，请稍候")
                     }
                 }
 
