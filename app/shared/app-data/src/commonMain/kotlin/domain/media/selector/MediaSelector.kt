@@ -32,10 +32,12 @@ import me.him188.ani.app.domain.mediasource.MediaListFilter
 import me.him188.ani.app.domain.mediasource.MediaListFilterContext
 import me.him188.ani.app.domain.mediasource.MediaListFilters
 import me.him188.ani.app.domain.mediasource.StringMatcher
+import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.source.MediaSourceLocation
 import me.him188.ani.datasources.api.topic.EpisodeRange
+import me.him188.ani.datasources.api.topic.contains
 import me.him188.ani.datasources.api.topic.hasSeason
 import me.him188.ani.datasources.api.topic.isSingleEpisode
 import kotlin.coroutines.CoroutineContext
@@ -391,7 +393,7 @@ class DefaultMediaSelector(
                         }
                     },
             )
-    }.flowOn(flowCoroutineContext)
+    }.cached()
 
     override val filteredCandidatesMedia: Flow<List<Media>> = filteredCandidates.map { list ->
         list.mapNotNull { it.result }
@@ -420,18 +422,21 @@ class DefaultMediaSelector(
             )
         } else null
 
-
         return list.fastMap filter@{ media ->
             val mediaSubjectName = media.properties.subjectName ?: media.originalTitle
-            val contextSubjectNames = context.subjectInfo?.allNames.orEmpty().asSequence() + sequenceOfEmptyString
+            val contextSubjectNames = context.subjectInfo?.allNames.orEmpty().asSequence()
 
             // 由下面实现调用, 方便创建 MaybeExcludedMedia
             fun include(): MaybeExcludedMedia {
                 return MaybeExcludedMedia.Included(
                     media,
-                    similarity = contextSubjectNames
-                        .map { StringMatcher.calculateMatchRate(it, mediaSubjectName) }
-                        .max(),
+                    metadata = calculateMatchMetadata(
+                        contextSubjectNames,
+                        mediaSubjectName,
+                        media.episodeRange,
+                        context.episodeInfo?.sort,
+                        context.episodeInfo?.ep,
+                    ),
                 )
             }
 
@@ -471,7 +476,7 @@ class DefaultMediaSelector(
                 }
             }
 
-            media.properties.subjectName?.let{ subjectName ->
+            media.properties.subjectName?.let { subjectName ->
                 context.subjectSeriesInfo?.seriesSubjectNamesWithoutSelf?.forEach { name ->
                     if (MediaListFilters.specialEquals(subjectName, name)) {
                         // 精确匹配到了是其他季度的名称. 这里只有用精确匹配才安全. 
@@ -511,6 +516,44 @@ class DefaultMediaSelector(
         }
 
     }
+
+    private fun calculateMatchMetadata(
+        contextSubjectNames: Sequence<String>,
+        mediaSubjectName: String,
+        mediaEpisodeRange: EpisodeRange?,
+        contextEpisodeSort: EpisodeSort?,
+        contextEpisodeEp: EpisodeSort?
+    ) = MatchMetadata(
+        subjectMatchKind = if (
+            contextSubjectNames.any {
+                MediaListFilters.specialEquals(mediaSubjectName, it)
+            }
+        ) {
+            MatchMetadata.SubjectMatchKind.EXACT
+        } else {
+            MatchMetadata.SubjectMatchKind.FUZZY
+        },
+        episodeMatchKind = if (mediaEpisodeRange != null) {
+            when {
+                contextEpisodeSort != null && contextEpisodeSort in mediaEpisodeRange -> {
+                    MatchMetadata.EpisodeMatchKind.SORT
+                }
+
+                contextEpisodeEp != null && contextEpisodeEp in mediaEpisodeRange -> {
+                    MatchMetadata.EpisodeMatchKind.EP
+                }
+
+                else -> {
+                    MatchMetadata.EpisodeMatchKind.NONE
+                }
+            }
+        } else {
+            MatchMetadata.EpisodeMatchKind.NONE
+        },
+        similarity = (contextSubjectNames + sequenceOfEmptyString)
+            .map { StringMatcher.calculateMatchRate(it, mediaSubjectName) }
+            .max(),
+    )
 
     private val savedUserPreferenceNotCached = savedUserPreference
     private val savedUserPreference: Flow<MediaPreference> = savedUserPreference.cached()

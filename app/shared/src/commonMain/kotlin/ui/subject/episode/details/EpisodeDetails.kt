@@ -39,6 +39,8 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.SheetState
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -126,7 +128,7 @@ fun EpisodeDetails(
     authState: AuthState,
     onSwitchEpisode: (episodeId: Int) -> Unit,
     onRefreshMediaSources: () -> Unit,
-    onRestartSource: (MediaSourceResultPresentation) -> Unit,
+    onRestartSource: (instanceId: String) -> Unit,
     onSetDanmakuSourceEnabled: (providerId: String, enabled: Boolean) -> Unit,
     onClickLogin: () -> Unit,
     modifier: Modifier = Modifier,
@@ -234,9 +236,11 @@ fun EpisodeDetails(
         exposedEpisodeItem = { innerPadding ->
             var showMediaSelector by rememberSaveable { mutableStateOf(false) }
             if (showMediaSelector) {
+                val sheetState =
+                    rememberModalBottomSheetState(skipPartiallyExpanded = LocalPlatform.current.isDesktop())
                 ModalBottomSheet(
                     { showMediaSelector = false },
-                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = LocalPlatform.current.isDesktop()),
+                    sheetState = sheetState,
                     modifier = Modifier.desktopTitleBarPadding().statusBarsPadding(),
                     contentWindowInsets = { BottomSheetDefaults.windowInsets.add(WindowInsets.desktopTitleBar()) },
                 ) {
@@ -248,6 +252,7 @@ fun EpisodeDetails(
                         onRestartSource = onRestartSource,
                         onSelected = { showMediaSelector = false },
                         stickyHeaderBackgroundColor = BottomSheetDefaults.ContainerColor,
+                        scrollable = sheetState.targetValue == SheetValue.Expanded,
                     )
                 }
             }

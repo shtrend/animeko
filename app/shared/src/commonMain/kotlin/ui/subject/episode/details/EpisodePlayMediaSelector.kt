@@ -34,10 +34,11 @@ fun EpisodePlayMediaSelector(
     sourceResults: () -> MediaSourceResultListPresentation,
     onDismissRequest: () -> Unit,
     onRefresh: () -> Unit,
-    onRestartSource: (MediaSourceResultPresentation) -> Unit,
+    onRestartSource: (instanceId: String) -> Unit,
     modifier: Modifier = Modifier,
     stickyHeaderBackgroundColor: Color = Color.Unspecified,
     onSelected: (Media) -> Unit = {},
+    scrollable: Boolean = true,
 ) {
     MediaSelectorView(
         mediaSelector,
@@ -48,6 +49,7 @@ fun EpisodePlayMediaSelector(
                 onRestartSource = onRestartSource,
             )
         },
+        onRestartSource,
         modifier.padding(vertical = 12.dp, horizontal = 16.dp)
             .fillMaxWidth()
             .navigationBarsPadding(),
@@ -62,5 +64,6 @@ fun EpisodePlayMediaSelector(
                 Text("取消")
             }
         },
+        scrollable = scrollable,
     )
 }

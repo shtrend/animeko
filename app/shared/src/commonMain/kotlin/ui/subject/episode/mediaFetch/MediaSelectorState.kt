@@ -21,28 +21,47 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.domain.media.TestMediaList
+import me.him188.ani.app.domain.media.fetch.MediaSourceFetchResult
+import me.him188.ani.app.domain.media.fetch.MediaSourceFetchState
+import me.him188.ani.app.domain.media.fetch.isFailedOrAbandoned
+import me.him188.ani.app.domain.media.fetch.isWorking
 import me.him188.ani.app.domain.media.selector.DefaultMediaSelector
+import me.him188.ani.app.domain.media.selector.GetPreferredMediaSourceSortingUseCase
+import me.him188.ani.app.domain.media.selector.MatchMetadata
 import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
 import me.him188.ani.app.domain.media.selector.MediaPreferenceItem
 import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.domain.media.selector.MediaSelectorContext
+import me.him188.ani.app.domain.usecase.GlobalKoin
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.foundation.rememberBackgroundScope
+import me.him188.ani.app.ui.mediaselect.selector.WebSource
+import me.him188.ani.app.ui.mediaselect.selector.WebSourceChannel
 import me.him188.ani.datasources.api.Media
+import me.him188.ani.datasources.api.source.MediaSourceKind
+import me.him188.ani.utils.coroutines.flows.flowOfEmptyList
 import me.him188.ani.utils.platform.annotations.TestOnly
+import me.him188.ani.utils.platform.collections.tupleOf
 
+// todo: shit
 @Composable
 fun rememberMediaSelectorState(
     mediaSourceInfoProvider: MediaSourceInfoProvider,
+    filteredResults: Flow<List<MediaSourceFetchResult>>,
     mediaSelector: () -> MediaSelector,// lambda remembered
 ): MediaSelectorState {
     val scope = rememberBackgroundScope()
@@ -50,7 +69,14 @@ fun rememberMediaSelectorState(
         derivedStateOf(mediaSelector)
     }
     return remember {
-        MediaSelectorState(selector, mediaSourceInfoProvider, scope.backgroundScope)
+        MediaSelectorState(
+            selector,
+            filteredResults,
+            mediaSourceInfoProvider,
+            scope.backgroundScope,
+            // todo: shit
+            GlobalKoin.get(),
+        )
     }
 }
 
@@ -118,8 +144,10 @@ fun <T : Any> MediaPreferenceItemState<T>.preferOrRemove(value: T?): Job {
 @Stable
 class MediaSelectorState(
     private val mediaSelector: MediaSelector,
+    private val mediaSourceFetchResults: Flow<List<MediaSourceFetchResult>>,
     val mediaSourceInfoProvider: MediaSourceInfoProvider,
     private val backgroundScope: CoroutineScope,
+    getPreferredMediaSourceSortingUseCase: GetPreferredMediaSourceSortingUseCase,
 ) {
     @Immutable
     data class Presentation(
@@ -132,6 +160,10 @@ class MediaSelectorState(
         val resolution: MediaPreferenceItemState.Presentation<String>,
         val subtitleLanguageId: MediaPreferenceItemState.Presentation<String>,
         val mediaSource: MediaPreferenceItemState.Presentation<String>,
+        // New MS
+        val webSources: List<WebSource>,
+        val selectedWebSource: WebSource?,
+        val selectedWebSourceChannel: WebSourceChannel?,
         val isPlaceholder: Boolean = false,
     )
 
@@ -160,7 +192,8 @@ class MediaSelectorState(
         resolution.presentationFlow,
         subtitleLanguageId.presentationFlow,
         mediaSource.presentationFlow,
-    ) { filteredCandidatesMedia, preferredCandidates, selected, alliance, resolution, subtitleLanguageId, mediaSource ->
+        createWebSourcesFlow(getPreferredMediaSourceSortingUseCase),
+    ) { filteredCandidatesMedia, preferredCandidates, selected, alliance, resolution, subtitleLanguageId, mediaSource, webSources ->
         val (groupsExcluded, groupsIncluded) = MediaGrouper.buildGroups(preferredCandidates).partition { it.isExcluded }
         Presentation(
             filteredCandidatesMedia,
@@ -169,6 +202,9 @@ class MediaSelectorState(
             groupsExcluded,
             selected,
             alliance, resolution, subtitleLanguageId, mediaSource,
+            webSources,
+            selectedWebSource = webSources.find { source -> source.channels.any { it.original == selected } },
+            selectedWebSourceChannel = webSources.firstNotNullOfOrNull { source -> source.channels.find { it.original == selected } },
         )
     }.stateIn(
         backgroundScope,
@@ -179,9 +215,130 @@ class MediaSelectorState(
             resolution = MediaPreferenceItemState.Presentation.placeholder(),
             subtitleLanguageId = MediaPreferenceItemState.Presentation.placeholder(),
             mediaSource = MediaPreferenceItemState.Presentation.placeholder(),
+            webSources = emptyList(),
+            selectedWebSource = null,
+            selectedWebSourceChannel = null,
             isPlaceholder = true,
         ),
     )
+
+    private fun createWebSourcesFlow(
+        getPreferredMediaSourceSortingUseCase: GetPreferredMediaSourceSortingUseCase,
+    ): Flow<List<WebSource>> {
+        // 第一次 collect 时不 delay, 尽快 emit, 否则 UI 会一直是 placeholder.
+        // 见 createWebSourceFlow 里的注释.
+        var isFirstCollect = true
+
+        val sortedResultsFlow = combine(
+            mediaSourceFetchResults,
+            getPreferredMediaSourceSortingUseCase(),
+        ) { results, desiredInstanceIdOrder ->
+            tupleOf(results, desiredInstanceIdOrder)
+        }.flatMapLatest { (results, desiredInstanceIdOrder) ->
+            if (results.isEmpty()) return@flatMapLatest flowOfEmptyList()
+
+            // 按顺序排序
+            val sorted = results
+                .filter { it.kind == MediaSourceKind.WEB } // 只使用 WEB
+                .sortedBy {
+                    desiredInstanceIdOrder.indexOf(it.instanceId)
+                }
+
+            // 监控状态, 把错误的放到最后
+            combine(results.map { it.state }) { states ->
+                sorted.sortedBy {
+                    val state = states.getOrNull(results.indexOf(it))
+                        ?: return@sortedBy 0 // should not happen. Just defensive
+                    if (state is MediaSourceFetchState.Failed) {
+                        1 // 错误的放后面
+                    } else {
+                        -1
+                    }
+                }
+            }
+        }
+
+        return combine(
+            sortedResultsFlow.distinctUntilChanged(),
+            mediaSelector.filteredCandidates,
+        ) { sources, mediaList ->
+            tupleOf(sources, mediaList)
+        }.flatMapLatest { (sources, allMediaList) ->
+            val showWebSources = sources.map { source ->
+
+                // 属于这个数据源的 medias
+                val myMediaList = allMediaList
+                    .asSequence()
+                    .filter {
+                        // Filter medias that are from this source
+                        it.result?.mediaSourceId == source.mediaSourceId // null result gives `false` and is hence excluded
+                    }
+                    .filter {
+                        // Take only exact matches
+                        when (it) {
+                            is MaybeExcludedMedia.Excluded -> false
+                            is MaybeExcludedMedia.Included -> {
+                                it.metadata.subjectMatchKind == MatchMetadata.SubjectMatchKind.EXACT
+                                        && it.metadata.episodeMatchKind >= MatchMetadata.EpisodeMatchKind.EP
+                            }
+                        }
+                    }
+                    .mapNotNull { it.result }
+
+                createWebSourceFlow(source, myMediaList, delayToOvercomeCacheIssue = isFirstCollect).also {
+                    isFirstCollect = false
+                }
+            }
+            if (showWebSources.isEmpty()) {
+                flowOfEmptyList()
+            } else {
+                combine(
+                    showWebSources,
+                ) {
+                    it.filterNotNull()
+                }
+            }
+        }
+    }
+
+    private fun createWebSourceFlow(
+        source: MediaSourceFetchResult,
+        myMediaList: Sequence<Media>,
+        delayToOvercomeCacheIssue: Boolean,
+    ) = source.state.map { state ->
+        val channels = myMediaList.map { media ->
+            WebSourceChannel(media.properties.alliance, original = media)
+        }.toList()
+
+        when {
+            state is MediaSourceFetchState.Disabled -> {
+                // 禁用的数据源一直排除. TODO: 考虑增加某种方法临时启用数据源
+                null
+            }
+
+            channels.isEmpty() && state is MediaSourceFetchState.Succeed -> {
+                // MediaSelector 的 filteredCandidates 有 cache, 而 MediaSourceFetchResult.state 没有.
+                // 当 state 为 Succeed 后, 我们可能仍然看到的是旧的 filteredCandidates, 导致 channels 为 empty.
+                // 这里延迟一下可以非常轻易地解决问题.
+                if (delayToOvercomeCacheIssue) {
+                    delay(1000)
+                }
+                null // 查询成功, 0 条, 隐藏
+            }
+
+            else -> {
+                WebSource(
+                    instanceId = source.instanceId,
+                    mediaSourceId = source.mediaSourceId,
+                    iconUrl = source.sourceInfo.iconUrl ?: "",
+                    name = source.sourceInfo.displayName,
+                    channels = channels,
+                    isLoading = state.isWorking,
+                    isError = state.isFailedOrAbandoned,
+                )
+            }
+        }
+    }
 
     /**
      * @see MediaSelector.select
@@ -227,7 +384,9 @@ fun createTestMediaSelectorState(backgroundScope: CoroutineScope) =
             savedDefaultPreference = flowOf(MediaPreference.Empty),
             mediaSelectorSettings = flowOf(MediaSelectorSettings.Default),
         ),
+        mediaSourceFetchResults = createTestMediaSourceResultsFilterer(backgroundScope).filteredSourceResults,
         createTestMediaSourceInfoProvider(),
         backgroundScope,
+        getPreferredMediaSourceSortingUseCase = { flowOf(listOf()) },
     )
 
