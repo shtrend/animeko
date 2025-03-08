@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.ContextualFlowRow
 import androidx.compose.foundation.layout.ContextualFlowRowOverflow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -65,7 +64,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
-import me.him188.ani.app.ui.foundation.ifThen
+import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import kotlin.random.Random
@@ -259,17 +258,22 @@ fun MediaSelectorSummaryCard(
                     is MediaSelectorSummary.Selected -> {
                         if (!state.isPerfectMatch) { // 只在匹配到可能错误的时候才显示标题
                             Box(
-                                Modifier.fillMaxWidth().padding(all = MediaSelectorSummaryDefaults.bodyContentPadding),
+                                Modifier.fillMaxWidth()
+                                    .heightIn(min = 64.dp)
+                                    .padding(all = MediaSelectorSummaryDefaults.bodyContentPadding),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                Text(
-                                    state.mediaTitle,
-                                    softWrap = true,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                                ProvideTextStyleContentColor(
+                                    MaterialTheme.typography.bodySmall,
+                                    MaterialTheme.colorScheme.onSurfaceVariant,
+                                ) {
+                                    Text(
+                                        state.mediaTitle,
+                                        softWrap = true,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                    )
+                                }
                             }
                         }
                     }
