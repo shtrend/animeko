@@ -270,7 +270,7 @@ fun MediaSelectorSummaryCard(
                                     Text(
                                         state.mediaTitle,
                                         softWrap = true,
-                                        maxLines = 2,
+                                        maxLines = 3,
                                         overflow = TextOverflow.Ellipsis,
                                     )
                                 }
