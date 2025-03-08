@@ -14,7 +14,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.ContentTransform
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
-import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
@@ -303,22 +303,33 @@ private class MediaSelectorSummaryState(
         private set
 
     suspend fun collectSummaryChanges(flow: Flow<MediaSelectorSummary>) {
-        flow.collectLatest { state ->
-            when (state) {
-                is MediaSelectorSummary.AutoSelecting -> {
-                    currentSummary = state
-                    progressIndicatorState.animateWithoutFinish(
-                        durationMillis = state.estimate.inWholeMilliseconds.toInt(),
-                    )
-                }
+        flow
+            .distinctUntilChangedBy { summary ->
+                // 仅当 typeId 或者 AutoSelecting 的 estimate 变更时, 才重启协程 (动画). 
+                // 如果状态里的 queriedSources 属性变了, 不要重启协程 (动画), 否则可能会有轻微的不连贯.
+                intArrayOf(
+                    summary.typeId,
+                    // AutoSelecting.estimate ?: 0
+                    (summary as? MediaSelectorSummary.AutoSelecting)?.estimate?.inWholeMilliseconds?.toInt() ?: 0,
+                    // No boxing here.
+                )
+            }
+            .collectLatest { state ->
+                when (state) {
+                    is MediaSelectorSummary.AutoSelecting -> {
+                        currentSummary = state
+                        progressIndicatorState.animateWithoutFinish(
+                            durationMillis = state.estimate.inWholeMilliseconds.toInt(),
+                        )
+                    }
 
-                is MediaSelectorSummary.RequiresManualSelection,
-                is MediaSelectorSummary.Selected -> {
-                    progressIndicatorState.finish()
-                    currentSummary = state
+                    is MediaSelectorSummary.RequiresManualSelection,
+                    is MediaSelectorSummary.Selected -> {
+                        progressIndicatorState.finish()
+                        currentSummary = state
+                    }
                 }
             }
-        }
     }
 }
 
