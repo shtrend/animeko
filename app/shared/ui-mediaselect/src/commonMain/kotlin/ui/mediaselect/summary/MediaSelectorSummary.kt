@@ -239,7 +239,7 @@ fun MediaSelectorSummaryCard(
                         Column(Modifier.fillMaxWidth()) {
                             EstimatedLinearProgressIndictorBox(
                                 progressIndicatorState,
-                                Modifier.height(8.dp)
+                                Modifier.requiredHeight(8.dp)
                                     .padding(horizontal = MediaSelectorSummaryDefaults.bodyContentPadding),
                                 contentAlignment = Alignment.Center,
                             ) {
