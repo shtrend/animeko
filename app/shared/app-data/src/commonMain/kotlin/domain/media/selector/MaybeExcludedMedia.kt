@@ -161,3 +161,11 @@ val TestMatchMetadata
         90,
     )
 
+
+fun MaybeExcludedMedia.isPerfectMatch() = when (this) {
+    is MaybeExcludedMedia.Excluded -> false
+    is MaybeExcludedMedia.Included -> {
+        metadata.subjectMatchKind == MatchMetadata.SubjectMatchKind.EXACT
+                && metadata.episodeMatchKind >= MatchMetadata.EpisodeMatchKind.EP
+    }
+}

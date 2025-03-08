@@ -39,7 +39,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.sample
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
@@ -77,7 +76,10 @@ import me.him188.ani.app.domain.media.fetch.MediaSourceFetchState
 import me.him188.ani.app.domain.media.fetch.MediaSourceManager
 import me.him188.ani.app.domain.media.fetch.MediaSourceResultsFilterer
 import me.him188.ani.app.domain.media.resolver.MediaResolver
+import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
 import me.him188.ani.app.domain.media.selector.MediaSelector
+import me.him188.ani.app.domain.media.selector.UnsafeOriginalMediaAccess
+import me.him188.ani.app.domain.media.selector.isPerfectMatch
 import me.him188.ani.app.domain.player.CacheProgressProvider
 import me.him188.ani.app.domain.player.extension.AutoSelectExtension
 import me.him188.ani.app.domain.player.extension.MarkAsWatchedExtension
@@ -620,6 +622,7 @@ class EpisodeViewModel(
         }
     }
 
+    @OptIn(UnsafeOriginalMediaAccess::class)
     private fun mediaSelectorSummaryFlow(
         mediaSelectorFlow: Flow<MediaSelector?>,
         mediaSourceResultsFlow: Flow<List<MediaSourceResultPresentation>>,
@@ -652,6 +655,13 @@ class EpisodeViewModel(
         } else {
             emitAll(
                 mediaSelectorState.selected.map { selected ->
+                    val selectedIncludedMedia = if (selected == null) {
+                        null
+                    } else {
+                        mediaSelectorState.filteredCandidates.first()
+                            .firstOrNull { it.original === selected } // identity check is enough and fast
+                                as? MaybeExcludedMedia.Included
+                    }
                     when {
                         selected != null -> {
                             MediaSelectorSummary.Selected(
@@ -661,6 +671,7 @@ class EpisodeViewModel(
                                     sourceIconUrl = "",
                                 ),
                                 selected.originalTitle,
+                                isPerfectMatch = selectedIncludedMedia?.isPerfectMatch() == true,
                             )
                         }
 

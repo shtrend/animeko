@@ -46,6 +46,7 @@ import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
 import me.him188.ani.app.domain.media.selector.MediaPreferenceItem
 import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.domain.media.selector.MediaSelectorContext
+import me.him188.ani.app.domain.media.selector.isPerfectMatch
 import me.him188.ani.app.domain.usecase.GlobalKoin
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.foundation.rememberBackgroundScope
@@ -275,13 +276,7 @@ class MediaSelectorState(
                     }
                     .filter {
                         // Take only exact matches
-                        when (it) {
-                            is MaybeExcludedMedia.Excluded -> false
-                            is MaybeExcludedMedia.Included -> {
-                                it.metadata.subjectMatchKind == MatchMetadata.SubjectMatchKind.EXACT
-                                        && it.metadata.episodeMatchKind >= MatchMetadata.EpisodeMatchKind.EP
-                            }
-                        }
+                        it.isPerfectMatch()
                     }
                     .mapNotNull { it.result }
 

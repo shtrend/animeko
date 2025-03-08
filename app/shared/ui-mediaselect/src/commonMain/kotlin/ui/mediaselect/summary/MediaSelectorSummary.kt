@@ -65,8 +65,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
+import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.random.Random
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -96,6 +98,7 @@ sealed class MediaSelectorSummary {
     data class Selected(
         val source: QueriedSourcePresentation,
         val mediaTitle: String,
+        val isPerfectMatch: Boolean,
     ) : MediaSelectorSummary() {
         override val typeId get() = 3
     }
@@ -217,7 +220,7 @@ fun MediaSelectorSummaryCard(
             }
         },
         headerContainerColor = colors.headerContainerColor,
-        modifier = modifier.defaultMinSize(minHeight = 144.dp),
+        modifier = modifier,
         content = {
             AnimatedContent(
                 animationState.currentSummary,
@@ -254,18 +257,20 @@ fun MediaSelectorSummaryCard(
                     }
 
                     is MediaSelectorSummary.Selected -> {
-                        Box(
-                            Modifier.fillMaxWidth().padding(all = MediaSelectorSummaryDefaults.bodyContentPadding),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(
-                                state.mediaTitle,
-                                softWrap = true,
-                                maxLines = 2,
-                                overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
+                        if (!state.isPerfectMatch) { // 只在匹配到可能错误的时候才显示标题
+                            Box(
+                                Modifier.fillMaxWidth().padding(all = MediaSelectorSummaryDefaults.bodyContentPadding),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    state.mediaTitle,
+                                    softWrap = true,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
                         }
                     }
                 }
@@ -398,7 +403,7 @@ private fun MediaSelectorSummaryLayout(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    Card(modifier.heightIn(min = 168.dp)) {
+    Card(modifier) {
         Surface(
             color = headerContainerColor,
         ) {
@@ -415,7 +420,7 @@ private fun MediaSelectorSummaryLayout(
             }
         }
 
-        Box(Modifier.fillMaxWidth().heightIn(96.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
             content()
         }
     }
@@ -465,12 +470,29 @@ private data class MediaSelectorColors(
 @OptIn(TestOnly::class)
 @Composable
 @Preview
+private fun PreviewMediaSelectorSummarySelectedPerfect() {
+    ProvideCompositionLocalsForPreview {
+        MediaSelectorSummaryCard(
+            summary = MediaSelectorSummary.Selected(
+                source = TestQueriedSources[0],
+                mediaTitle = TestMediaTitle,
+                isPerfectMatch = true,
+            ),
+            onClickManualSelect = {},
+        )
+    }
+}
+
+@OptIn(TestOnly::class)
+@Composable
+@Preview
 private fun PreviewMediaSelectorSummarySelected() {
     ProvideCompositionLocalsForPreview {
         MediaSelectorSummaryCard(
             summary = MediaSelectorSummary.Selected(
                 source = TestQueriedSources[0],
                 mediaTitle = TestMediaTitle,
+                isPerfectMatch = false,
             ),
             onClickManualSelect = {},
         )
@@ -497,6 +519,7 @@ fun PreviewMediaSelectorSummaryAutoSelecting() {
             state = MediaSelectorSummary.Selected(
                 TestQueriedSources[0],
                 mediaTitle = TestMediaTitle,
+                isPerfectMatch = false,
             )
         }
 
@@ -523,6 +546,7 @@ fun PreviewMediaSelectorSummaryAutoSelectingQuickComplete() {
             state = MediaSelectorSummary.Selected(
                 TestQueriedSources[0],
                 mediaTitle = TestMediaTitle,
+                isPerfectMatch = Random.nextBoolean(),
             )
         }
 
