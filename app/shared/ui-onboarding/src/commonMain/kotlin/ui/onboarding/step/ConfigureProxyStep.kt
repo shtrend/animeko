@@ -321,7 +321,7 @@ private fun SettingsScope.ProxyConfigGroup(
 
                         ProxyUIMode.CUSTOM -> {
                             // workaround for re-use CustomProxyConfig: Settings UI has no data layer of UI.
-                            val workaroundDataConfig = remember(currentConfig.value) {
+                            val workaroundDataConfig = remember(currentConfig) {
                                 SettingsState(
                                     valueState = derivedStateOf { currentConfig.value.toDataSettings() },
                                     onUpdate = { currentConfig.update(it.toUIConfig()) },
