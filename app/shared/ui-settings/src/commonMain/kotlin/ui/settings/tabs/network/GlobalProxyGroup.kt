@@ -127,14 +127,20 @@ fun SettingsScope.SystemProxyConfig(
     TextItem(
         title = { Text("自动检测结果") },
         description = {
-            when (proxyConfig) {
-                is SystemProxyPresentation.Detected -> Text(proxyConfig.proxyConfig.url)
-                SystemProxyPresentation.Detecting -> Text("正在检测")
-                SystemProxyPresentation.NotDetected -> Text("未检测到系统代理")
-            }
+            Text(renderSystemProxyPresentation(proxyConfig))
         },
     )
 }
+
+@Composable
+fun renderSystemProxyPresentation(systemProxy: SystemProxyPresentation): String {
+    return when (systemProxy) {
+        is SystemProxyPresentation.Detected -> systemProxy.proxyConfig.url
+        SystemProxyPresentation.Detecting -> "正在检测"
+        SystemProxyPresentation.NotDetected -> "未检测到系统代理"
+    }
+}
+
 
 @Composable
 fun SettingsScope.CustomProxyConfig(

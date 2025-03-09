@@ -60,6 +60,7 @@ import me.him188.ani.app.ui.settings.framework.components.TextItem
 import me.him188.ani.app.ui.settings.tabs.network.CustomProxyConfig
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyConfig
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyPresentation
+import me.him188.ani.app.ui.settings.tabs.network.renderSystemProxyPresentation
 
 @Composable
 internal fun ConfigureProxyStep(
@@ -210,15 +211,6 @@ private fun renderProxyConfigModeName(mode: ProxyUIMode): String {
         ProxyUIMode.DISABLED -> "不使用代理"
         ProxyUIMode.SYSTEM -> "系统代理"
         ProxyUIMode.CUSTOM -> "自定义代理"
-    }
-}
-
-@Composable
-private fun renderSystemProxyPresentation(systemProxy: SystemProxyPresentation): String {
-    return when (systemProxy) {
-        is SystemProxyPresentation.Detected -> systemProxy.proxyConfig.url
-        SystemProxyPresentation.Detecting -> "正在检测"
-        SystemProxyPresentation.NotDetected -> "未检测到系统代理"
     }
 }
 
