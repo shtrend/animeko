@@ -23,8 +23,8 @@ import me.him188.ani.utils.platform.currentPlatform
 import kotlin.coroutines.cancellation.CancellationException
 
 object AppStartupTasks {
-    fun initializeSentry() {
-        initializeErrorReport()
+    fun initializeSentry(userId: String) {
+        initializeErrorReport(userId = userId)
         ErrorReportHolder.init(SentryErrorReport)
     }
 

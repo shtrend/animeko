@@ -131,13 +131,13 @@ class AniApplication : Application() {
         val analyticsInitializer = scope.launch {
             val settingsRepository = koin.get<SettingsRepository>()
             val settings = settingsRepository.analyticsSettings.flow.first()
-            if (settings.allowAnonymousBugReport) {
-                AppStartupTasks.initializeSentry()
-            }
             if (settings.isInit) {
                 settingsRepository.analyticsSettings.update {
                     copy(isInit = false) // save user id
                 }
+            }
+            if (settings.allowAnonymousBugReport) {
+                AppStartupTasks.initializeSentry(settings.userId)
             }
             if (settings.allowAnonymousAnalytics) {
                 AnalyticsHolder.init(

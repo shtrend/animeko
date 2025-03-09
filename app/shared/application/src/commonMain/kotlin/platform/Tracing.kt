@@ -37,4 +37,4 @@ internal object CommonTracingInitializer {
 /**
  * Initializes [ErrorReport] for the platform.
  */
-internal expect fun initializeErrorReport()
+internal expect fun initializeErrorReport(userId: String)
