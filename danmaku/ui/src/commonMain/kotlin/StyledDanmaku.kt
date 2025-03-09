@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.danmaku.ui
 
 import androidx.compose.runtime.Immutable
@@ -59,9 +68,9 @@ data class StyledDanmaku(
     )
     
     internal var imageBitmap: ImageBitmap? = null
-    
-    override val danmakuWidth: Int = solidTextLayout.size.width
-    override val danmakuHeight: Int = solidTextLayout.size.height
+
+    override val danmakuWidth: Int = solidTextLayout.size.width.coerceAtLeast(1)
+    override val danmakuHeight: Int = solidTextLayout.size.height.coerceAtLeast(1)
     
     internal fun DrawScope.draw(screenPosX: Float, screenPosY: Float) {
         val cachedImage = imageBitmap ?: createDanmakuImageBitmap(solidTextLayout, borderTextLayout)
