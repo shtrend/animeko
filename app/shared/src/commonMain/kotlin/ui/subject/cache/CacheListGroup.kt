@@ -54,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -84,6 +85,7 @@ import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceInfoProvider
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresenter
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultsView
+import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberMediaSelectorState
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -186,8 +188,11 @@ fun SettingsScope.EpisodeCacheListGroup(
             ) {
                 val selectorPresentation =
                     rememberMediaSelectorState(mediaSourceInfoProvider, filteredResults) { task.mediaSelector }
+                val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(ViewKind.BT) }
                 MediaSelectorView(
                     selectorPresentation,
+                    viewKind,
+                    onViewKindChange,
                     sourceResults = {
                         MediaSourceResultsView(
                             sourceResults,

@@ -22,6 +22,7 @@ import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorView
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultsView
+import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.datasources.api.Media
 
 /**
@@ -30,6 +31,8 @@ import me.him188.ani.datasources.api.Media
 @Composable
 fun EpisodePlayMediaSelector(
     mediaSelector: MediaSelectorState,
+    viewKind: ViewKind,
+    onViewKindChange: (ViewKind) -> Unit,
     sourceResults: () -> MediaSourceResultListPresentation,
     onDismissRequest: () -> Unit,
     onRefresh: () -> Unit,
@@ -41,6 +44,8 @@ fun EpisodePlayMediaSelector(
 ) {
     MediaSelectorView(
         mediaSelector,
+        viewKind,
+        onViewKindChange,
         sourceResults = {
             MediaSourceResultsView(
                 sourceResults(), mediaSelector,

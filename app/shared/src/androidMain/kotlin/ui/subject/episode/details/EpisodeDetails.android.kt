@@ -33,7 +33,6 @@ import me.him188.ani.app.domain.player.VideoLoadingState
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.domain.session.TestAuthState
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
-import me.him188.ani.app.ui.mediaselect.summary.MediaSelectorSummary
 import me.him188.ani.app.ui.mediaselect.summary.createTestMediaSelectorSummaryAutoSelecting
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.components.rememberTestEditableSubjectCollectionTypeState
@@ -41,6 +40,7 @@ import me.him188.ani.app.ui.subject.createTestAiringLabelState
 import me.him188.ani.app.ui.subject.details.state.createTestSubjectDetailsLoader
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.TestMediaSourceResultListPresentation
+import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberTestMediaSelectorState
 import me.him188.ani.app.ui.subject.episode.statistics.testPlayerStatisticsState
 import me.him188.ani.app.ui.subject.episode.video.DanmakuStatistics
@@ -186,6 +186,7 @@ private fun PreviewEpisodeDetailsImpl(
         EpisodeDetails(
             mediaSelectorSummary = createTestMediaSelectorSummaryAutoSelecting(),
             state,
+            initialMediaSelectorViewKind = ViewKind.WEB,
             episodeCarouselState = remember {
                 EpisodeCarouselState(
                     mutableStateOf(TestEpisodeCollections),

@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
@@ -30,6 +31,7 @@ import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.preview.PHONE_LANDSCAPE
 import me.him188.ani.app.ui.settings.danmaku.createTestDanmakuRegexFilterState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.TestMediaSourceResultListPresentation
+import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberTestMediaSelectorState
 import me.him188.ani.app.ui.subject.episode.video.components.DanmakuSettingsSheet
 import me.him188.ani.app.ui.subject.episode.video.components.EpisodeVideoSideSheetPage
@@ -177,9 +179,12 @@ private fun PreviewVideoScaffoldImpl(
                     )
                 },
                 mediaSelectorPage = {
+                    val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(ViewKind.WEB) }
                     EpisodeVideoSideSheets.MediaSelectorSheet(
                         mediaSelectorState = rememberTestMediaSelectorState(),
                         mediaSourceResultListPresentation = TestMediaSourceResultListPresentation,
+                        viewKind = viewKind,
+                        onViewKindChange = onViewKindChange,
                         onDismissRequest = { goBack() },
                         onRefresh = {},
                         onRestartSource = {},

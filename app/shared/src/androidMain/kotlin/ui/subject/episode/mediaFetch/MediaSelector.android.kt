@@ -11,8 +11,10 @@ package me.him188.ani.app.ui.subject.episode.mediaFetch
 
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import kotlinx.coroutines.CoroutineScope
@@ -52,8 +54,11 @@ private fun PreviewMediaSelector() {
     val mediaSelector = rememberTestMediaSelectorPresentation(previewMediaList, scope)
     ProvideCompositionLocalsForPreview {
         Surface {
+            val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(ViewKind.WEB) }
             MediaSelectorView(
                 state = mediaSelector,
+                viewKind = viewKind,
+                onViewKindChange = onViewKindChange,
                 sourceResults = {
                     MediaSourceResultsView(
                         TestMediaSourceResultListPresentation,
@@ -63,7 +68,7 @@ private fun PreviewMediaSelector() {
                     )
                 },
                 onRestartSource = {
-                }
+                },
             )
         }
     }
@@ -72,7 +77,10 @@ private fun PreviewMediaSelector() {
 @Composable
 @OptIn(TestOnly::class)
 private fun rememberTestMediaSelectorPresentation(previewMediaList: List<Media>, scope: CoroutineScope) =
-    rememberMediaSelectorState(rememberTestMediaSourceInfoProvider(), createTestMediaSourceResultsFilterer(scope).filteredSourceResults) {
+    rememberMediaSelectorState(
+        rememberTestMediaSourceInfoProvider(),
+        createTestMediaSourceResultsFilterer(scope).filteredSourceResults,
+    ) {
         DefaultMediaSelector(
             mediaSelectorContextNotCached = flowOf(MediaSelectorContext.EmptyForPreview),
             mediaListNotCached = MutableStateFlow(

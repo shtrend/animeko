@@ -39,7 +39,6 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ProvideTextStyle
-import androidx.compose.material3.SheetState
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
@@ -86,7 +85,7 @@ import me.him188.ani.app.ui.subject.episode.details.components.DanmakuSourceSett
 import me.him188.ani.app.ui.subject.episode.details.components.PlayingEpisodeItemDefaults
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultPresentation
+import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuMatchInfoSummaryRow
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics
 import me.him188.ani.app.ui.subject.episode.video.DanmakuStatistics
@@ -119,6 +118,7 @@ class EpisodeDetailsState(
 fun EpisodeDetails(
     mediaSelectorSummary: MediaSelectorSummary,
     state: EpisodeDetailsState,
+    initialMediaSelectorViewKind: ViewKind,
     episodeCarouselState: EpisodeCarouselState,
     editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState,
     danmakuStatistics: DanmakuStatistics,
@@ -244,14 +244,17 @@ fun EpisodeDetails(
                     modifier = Modifier.desktopTitleBarPadding().statusBarsPadding(),
                     contentWindowInsets = { BottomSheetDefaults.windowInsets.add(WindowInsets.desktopTitleBar()) },
                 ) {
+                    val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(initialMediaSelectorViewKind) }
                     EpisodePlayMediaSelector(
                         mediaSelectorState,
+                        viewKind,
+                        onViewKindChange,
                         mediaSourceResultListPresentation,
                         onDismissRequest = { showMediaSelector = false },
                         onRefresh = onRefreshMediaSources,
                         onRestartSource = onRestartSource,
-                        onSelected = { showMediaSelector = false },
                         stickyHeaderBackgroundColor = BottomSheetDefaults.ContainerColor,
+                        onSelected = { showMediaSelector = false },
                         scrollable = sheetState.targetValue == SheetValue.Expanded,
                     )
                 }

@@ -77,6 +77,8 @@ private inline val WINDOW_VERTICAL_PADDING get() = 8.dp
 @Composable
 fun MediaSelectorView(
     state: MediaSelectorState,
+    viewKind: ViewKind,
+    onViewKindChange: (ViewKind) -> Unit,
     sourceResults: @Composable LazyItemScope.() -> Unit,
     onRestartSource: (instanceId: String) -> Unit,
     modifier: Modifier = Modifier,
@@ -95,29 +97,27 @@ fun MediaSelectorView(
         var showExcluded by rememberSaveable { mutableStateOf(false) }
 
         // 切换数据源类型的按钮
-        var selectedViewKind by rememberSaveable { mutableStateOf(ViewKind.WEB) }
         SingleChoiceSegmentedButtonRow(
             Modifier.fillMaxWidth().padding(bottom = 16.dp),
         ) {
-            // TODO: 2025/3/7 如果用户设置是优先选择 BT, 则默认选择 BT
             SegmentedButton(
                 shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                onClick = { selectedViewKind = ViewKind.WEB },
-                selected = selectedViewKind == ViewKind.WEB,
+                onClick = { onViewKindChange(ViewKind.WEB) },
+                selected = viewKind == ViewKind.WEB,
             ) {
                 Text("简单模式", softWrap = false)
             }
             SegmentedButton(
                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                onClick = { selectedViewKind = ViewKind.BT },
-                selected = selectedViewKind == ViewKind.BT,
+                onClick = { onViewKindChange(ViewKind.BT) },
+                selected = viewKind == ViewKind.BT,
             ) {
                 Text("详细模式", softWrap = false)
             }
         }
 
         AnimatedContent(
-            selectedViewKind,
+            viewKind,
             transitionSpec = LocalAniMotionScheme.current.animatedContent.topLevel,
             contentAlignment = Alignment.TopCenter,
         ) { target ->

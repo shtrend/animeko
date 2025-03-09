@@ -405,6 +405,7 @@ private fun EpisodeScreenTabletVeryWide(
                                 EpisodeDetails(
                                     page.mediaSelectorSummary,
                                     vm.episodeDetailsState,
+                                    page.initialMediaSelectorViewKind,
                                     vm.episodeCarouselState,
                                     vm.editableSubjectCollectionTypeState,
                                     page.danmakuStatistics,
@@ -523,6 +524,7 @@ private fun EpisodeScreenContentPhone(
                 EpisodeDetails(
                     page.mediaSelectorSummary,
                     vm.episodeDetailsState,
+                    page.initialMediaSelectorViewKind,
                     vm.episodeCarouselState,
                     vm.editableSubjectCollectionTypeState,
                     page.danmakuStatistics,
@@ -852,9 +854,12 @@ private fun EpisodeVideo(
                 mediaSelectorPage = {
                     val pageState by vm.pageState.collectAsStateWithLifecycle()
                     pageState?.let { page ->
+                        val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(page.initialMediaSelectorViewKind) }
                         EpisodeVideoSideSheets.MediaSelectorSheet(
                             page.mediaSelectorState,
                             page.mediaSourceResultListPresentation,
+                            viewKind,
+                            onViewKindChange,
                             onDismissRequest = { goBack() },
                             onRefresh = { vm.refreshFetch() },
                             onRestartSource = { vm.restartSource(it) },

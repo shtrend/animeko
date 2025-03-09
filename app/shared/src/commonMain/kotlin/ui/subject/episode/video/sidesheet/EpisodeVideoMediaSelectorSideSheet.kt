@@ -27,6 +27,7 @@ import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorView
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultsView
+import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.video.components.EpisodeVideoSideSheets
 import me.him188.ani.app.ui.subject.episode.video.settings.SideSheetLayout
 
@@ -35,6 +36,8 @@ import me.him188.ani.app.ui.subject.episode.video.settings.SideSheetLayout
 fun EpisodeVideoSideSheets.MediaSelectorSheet(
     mediaSelectorState: MediaSelectorState,
     mediaSourceResultListPresentation: MediaSourceResultListPresentation,
+    viewKind: ViewKind,
+    onViewKindChange: (ViewKind) -> Unit,
     onDismissRequest: () -> Unit,
     onRefresh: () -> Unit,
     onRestartSource: (instanceId: String) -> Unit,
@@ -52,6 +55,8 @@ fun EpisodeVideoSideSheets.MediaSelectorSheet(
     ) {
         MediaSelectorView(
             mediaSelectorState,
+            viewKind,
+            onViewKindChange,
             sourceResults = {
                 MediaSourceResultsView(
                     mediaSourceResultListPresentation,

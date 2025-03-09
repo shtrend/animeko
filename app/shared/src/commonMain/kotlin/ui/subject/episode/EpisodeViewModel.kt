@@ -117,6 +117,7 @@ import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceInfoProvider
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresenter
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultPresentation
+import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.mediaFetch.createTestMediaSelectorState
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatisticsCollector
@@ -165,6 +166,7 @@ data class EpisodePageState(
     val isPlaceholder: Boolean = false,
     val playingEpisodeSummary: PlayingEpisodeSummary?, // null means placeholder TODO: should distinguish placeholder
     val mediaSelectorSummary: MediaSelectorSummary,
+    val initialMediaSelectorViewKind: ViewKind,
 )
 
 /**
@@ -314,6 +316,17 @@ class EpisodeViewModel(
 
 
     private val authStateProvider: AniAuthStateProvider by inject()
+
+    private fun initialMediaSelectorViewKindFlow(): Flow<ViewKind> =
+        settingsRepository.mediaSelectorSettings.flow.map { settings ->
+            when (settings.preferKind) {
+                MediaSourceKind.WEB -> ViewKind.WEB
+                MediaSourceKind.BitTorrent -> ViewKind.BT
+                MediaSourceKind.LocalCache -> ViewKind.WEB
+                null -> ViewKind.WEB
+            }
+        }
+       
 
     @OptIn(UnsafeEpisodeSessionApi::class)
     val episodeDetailsState: EpisodeDetailsState = kotlin.run {
@@ -578,7 +591,8 @@ class EpisodeViewModel(
                 },
                 mediaSourceResultsFlow,
             ),
-        ) { authState, subjectEpisodeBundle, loadError, fetchSelect, danmakuStatistics, danmakuEnabled, danmakuConfig, mediaSelectorState, mediaSourceResultsPresentation, mediaSelectorSummary ->
+            initialMediaSelectorViewKindFlow(),
+        ) { authState, subjectEpisodeBundle, loadError, fetchSelect, danmakuStatistics, danmakuEnabled, danmakuConfig, mediaSelectorState, mediaSourceResultsPresentation, mediaSelectorSummary, initialMediaSelectorViewKind ->
 
             val (subject, episode) = if (subjectEpisodeBundle == null) {
                 SubjectPresentation.Placeholder to EpisodePresentation.Placeholder
@@ -618,6 +632,7 @@ class EpisodeViewModel(
                     )
                 },
                 mediaSelectorSummary = mediaSelectorSummary,
+                initialMediaSelectorViewKind = initialMediaSelectorViewKind,
             )
         }
     }

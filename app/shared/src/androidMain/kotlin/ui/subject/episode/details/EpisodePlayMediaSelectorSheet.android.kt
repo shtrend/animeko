@@ -14,18 +14,24 @@ package me.him188.ani.app.ui.subject.episode.details
 import androidx.compose.foundation.background
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.subject.episode.mediaFetch.TestMediaSourceResultListPresentation
+import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberTestMediaSelectorState
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Preview(name = "progress = null")
 @Composable
 private fun PreviewEpisodePlayMediaSelectorSheet() = ProvideCompositionLocalsForPreview {
+    val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(ViewKind.WEB) }
     EpisodePlayMediaSelector(
         rememberTestMediaSelectorState(),
+        viewKind,
+        onViewKindChange,
         { TestMediaSourceResultListPresentation },
         onDismissRequest = {},
         onRefresh = {},
@@ -37,8 +43,11 @@ private fun PreviewEpisodePlayMediaSelectorSheet() = ProvideCompositionLocalsFor
 @Preview(name = "progress = 0.7f")
 @Composable
 private fun PreviewEpisodePlayMediaSelectorSheet2() = ProvideCompositionLocalsForPreview {
+    val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(ViewKind.WEB) }
     EpisodePlayMediaSelector(
         rememberTestMediaSelectorState(),
+        viewKind,
+        onViewKindChange,
         { TestMediaSourceResultListPresentation },
         onDismissRequest = {},
         onRefresh = {},
@@ -50,8 +59,11 @@ private fun PreviewEpisodePlayMediaSelectorSheet2() = ProvideCompositionLocalsFo
 @Preview(name = "progress = 1f")
 @Composable
 private fun PreviewEpisodePlayMediaSelectorSheet3() = ProvideCompositionLocalsForPreview {
+    val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(ViewKind.WEB) }
     EpisodePlayMediaSelector(
         rememberTestMediaSelectorState(),
+        viewKind,
+        onViewKindChange,
         { TestMediaSourceResultListPresentation },
         onDismissRequest = {},
         onRefresh = {},
