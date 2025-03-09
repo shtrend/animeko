@@ -65,7 +65,6 @@ fun EpisodeVideoSideSheets.MediaSelectorSheet(
                 .fillMaxWidth()
                 .navigationBarsPadding(),
             stickyHeaderBackgroundColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            itemProgressBar = {},
             onClickItem = {
                 mediaSelectorState.select(it)
                 onDismissRequest()

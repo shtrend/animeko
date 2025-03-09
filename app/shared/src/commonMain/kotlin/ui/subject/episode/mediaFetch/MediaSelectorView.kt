@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -61,7 +62,6 @@ import me.him188.ani.app.domain.media.selector.UnsafeOriginalMediaAccess
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.ifThen
-import me.him188.ani.app.ui.foundation.widgets.FastLinearProgressIndicator
 import me.him188.ani.app.ui.mediaselect.selector.MediaSelectorWebSourcesColumn
 import me.him188.ani.datasources.api.Media
 
@@ -74,7 +74,6 @@ private inline val WINDOW_VERTICAL_PADDING get() = 8.dp
  *
  * @param bottomActions shown at the bottom
  */
-@OptIn(UnsafeOriginalMediaAccess::class)
 @Composable
 fun MediaSelectorView(
     state: MediaSelectorState,
@@ -82,19 +81,6 @@ fun MediaSelectorView(
     onRestartSource: (instanceId: String) -> Unit,
     modifier: Modifier = Modifier,
     stickyHeaderBackgroundColor: Color = Color.Unspecified,
-    itemProgressBar: @Composable RowScope.(MediaGroup) -> Unit = { group ->
-        val presentation by state.presentationFlow.collectAsStateWithLifecycle()
-        val showIndicator by remember(group) {
-            derivedStateOf {
-                group.list.any { it.original === presentation.selected }
-            }
-        }
-        FastLinearProgressIndicator(
-            showIndicator,
-            Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-            delayMillis = 300,
-        )
-    },
     onClickItem: ((Media) -> Unit) = { state.select(it) },
     bottomActions: (@Composable RowScope.() -> Unit)? = null,
     singleLineFilter: Boolean = false,
@@ -163,7 +149,6 @@ fun MediaSelectorView(
                             singleLineFilter,
                             bringIntoViewRequesters,
                             onClickItem,
-                            itemProgressBar,
                             showExcluded,
                             onShowExcludedChange = { showExcluded = !showExcluded },
                             Modifier.padding(bottom = WINDOW_VERTICAL_PADDING)
@@ -209,7 +194,6 @@ private fun LegacyBTSourceColumn(
     singleLineFilter: Boolean,
     bringIntoViewRequesters: SnapshotStateMap<Media, BringIntoViewRequester>,
     onClickItem: (Media) -> Unit,
-    itemProgressBar: @Composable() (RowScope.(MediaGroup) -> Unit),
     showExcluded: Boolean,
     onShowExcludedChange: () -> Unit,
     modifier: Modifier = Modifier,
@@ -267,7 +251,7 @@ private fun LegacyBTSourceColumn(
         }
 
         items(presentation.groupedMediaListIncluded, key = { it.groupId }) { group ->
-            MediaItemGroup(group, bringIntoViewRequesters, state, presentation, onClickItem, itemProgressBar)
+            MediaItemGroup(group, bringIntoViewRequesters, state, presentation, onClickItem)
         }
 
         if (presentation.groupedMediaListExcluded.isNotEmpty()) {
@@ -288,7 +272,7 @@ private fun LegacyBTSourceColumn(
         }
         if (showExcluded) {
             items(presentation.groupedMediaListExcluded, key = { it.groupId }) { group ->
-                MediaItemGroup(group, bringIntoViewRequesters, state, presentation, onClickItem, itemProgressBar)
+                MediaItemGroup(group, bringIntoViewRequesters, state, presentation, onClickItem)
             }
         }
 
@@ -296,7 +280,7 @@ private fun LegacyBTSourceColumn(
     }
 }
 
-private enum class ViewKind {
+enum class ViewKind {
     WEB,
     BT,
 }
@@ -309,7 +293,6 @@ private fun LazyItemScope.MediaItemGroup(
     state: MediaSelectorState,
     presentation: MediaSelectorState.Presentation,
     onClickItem: (Media) -> Unit,
-    itemProgressBar: @Composable (RowScope.(MediaGroup) -> Unit)
 ) {
     Column {
         val requester = remember { BringIntoViewRequester() }
@@ -340,9 +323,7 @@ private fun LazyItemScope.MediaItemGroup(
                 .fillMaxWidth()
                 .bringIntoViewRequester(requester),
         )
-        Row(Modifier.height(8.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            itemProgressBar(group)
-        }
+        Spacer(Modifier.height(8.dp))
     }
 }
 

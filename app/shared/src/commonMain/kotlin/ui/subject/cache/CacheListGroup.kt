@@ -199,11 +199,11 @@ fun SettingsScope.EpisodeCacheListGroup(
                     onRestartSource = {
                         task.fetchSession.restart(it)
                     },
-                    stickyHeaderBackgroundColor = BottomSheetDefaults.ContainerColor,
                     modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)
                         .navigationBarsPadding()
                         .fillMaxHeight() // 防止添加筛选后数量变少导致 bottom sheet 高度变化
                         .fillMaxWidth(),
+                    stickyHeaderBackgroundColor = BottomSheetDefaults.ContainerColor,
                     onClickItem = {
                         state.selectMedia(it)
                     },

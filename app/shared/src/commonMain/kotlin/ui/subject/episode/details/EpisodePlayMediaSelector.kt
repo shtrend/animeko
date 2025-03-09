@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorView
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultsView
 import me.him188.ani.datasources.api.Media
 
@@ -54,7 +53,6 @@ fun EpisodePlayMediaSelector(
             .fillMaxWidth()
             .navigationBarsPadding(),
         stickyHeaderBackgroundColor = stickyHeaderBackgroundColor,
-        itemProgressBar = {},
         onClickItem = {
             mediaSelector.select(it)
             onSelected(it)
