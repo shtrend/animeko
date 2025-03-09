@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -31,6 +31,8 @@ class SetEpisodeCollectionTypeUseCaseImpl(
     private val episodeCollectionRepository: EpisodeCollectionRepository by koin.inject()
     override suspend fun invoke(subjectId: Int, episodeId: Int, collectionType: UnifiedCollectionType) {
         suspend {
+            // ClientRequestException
+            // Client request(PATCH https://api.bgm.tv/v0/users/-/collections/235128/episodes) invalid: 400 . Text: "{"title":"Bad Request","details":{"path":"/v0/users/-/collections/235128/episodes","method":"PATCH"},"request_id":"****","description":"you need to add subject to your collection first"}
             episodeCollectionRepository.setEpisodeCollectionType(subjectId, episodeId, collectionType)
         }.asFlow().retryWithBackoffDelay(3).first()
     }
