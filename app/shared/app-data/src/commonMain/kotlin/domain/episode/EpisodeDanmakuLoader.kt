@@ -131,9 +131,14 @@ class EpisodeDanmakuLoader(
                         return@flatMap emptySequence()
                     }
 
-                    result.list.map {
-                        it.copy(playTimeMillis = it.playTimeMillis + config.shiftMillis)
-                    }
+                    result.list
+                        .mapNotNull { danmaku ->
+                            val newText = sanitizeDanmakuText(danmaku.text) ?: return@mapNotNull null
+                            danmaku.copy(
+                                playTimeMillis = danmaku.playTimeMillis + config.shiftMillis,
+                                text = newText,
+                            )
+                        }
                 },
             )
         }
@@ -147,7 +152,7 @@ class EpisodeDanmakuLoader(
     }.shareIn(flowScope, started = sharingStarted, replay = 1)
 
     val danmakuLoadingStateFlow: StateFlow<DanmakuLoadingState> = danmakuLoader.danmakuLoadingStateFlow
-    
+
     // this flow must emit a value quickly when started, otherwise it will block ui
     val fetchResults: Flow<List<DanmakuFetchResultWithConfig>> = combine(
         danmakuLoader.fetchResultFlow.onStart { emit(null) },
@@ -188,6 +193,23 @@ class EpisodeDanmakuLoader(
 
     private fun Map<String, DanmakuOriginConfig>.getConfigOrDefault(providerId: String) =
         this[providerId] ?: DanmakuOriginConfig.Default
+
+    private fun sanitizeDanmakuText(text: String): String? {
+        if (text.isEmpty()) {
+            return null
+        }
+        // 全部是空白或者控制字符不行
+        // https://github.com/open-ani/animeko/issues/1643
+        val result = text
+            .trim {
+                it.isWhitespace() || it.isISOControl()
+            }
+            .filterNot { it.isISOControl() }
+        if (result.isEmpty()) {
+            return null
+        }
+        return result
+    }
 
     private companion object {
         private val logger = logger<EpisodeDanmakuLoader>()
