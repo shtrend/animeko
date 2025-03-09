@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ContextualFlowRow
-import androidx.compose.foundation.layout.ContextualFlowRowOverflow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -352,12 +351,13 @@ private fun QueriedSources(
             style = MaterialTheme.typography.labelMedium,
             color = contentColorFor(MaterialTheme.colorScheme.surfaceContainerHigh),
         )
+        @Suppress("DEPRECATION")
         ContextualFlowRow(
             sources.size,
             maxLines = 1,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
-            overflow = ContextualFlowRowOverflow.expandIndicator {
+            overflow = androidx.compose.foundation.layout.ContextualFlowRowOverflow.expandIndicator {
                 val shownItemCount = shownItemCount
                 Box(Modifier.widthIn(min = 24.dp).heightIn(min = 24.dp), contentAlignment = Alignment.Center) {
                     Text(
