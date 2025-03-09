@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.domain.player.extension
 
+import io.ktor.client.plugins.ClientRequestException
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -99,7 +100,11 @@ class MarkAsWatchedExtension(
                 if (max == null || !playback.isPlaying) return@combine
                 if (pos > max.toFloat() * 0.9) {
                     logger.info { "观看到 90%, 标记看过" }
-                    setEpisodeCollectionTypeUseCase(subjectId, episodeId, UnifiedCollectionType.DONE)
+                    try {
+                        setEpisodeCollectionTypeUseCase(subjectId, episodeId, UnifiedCollectionType.DONE)
+                    } catch (e: ClientRequestException) {
+                        logger.warn("Failed to setEpisodeCollectionTypeUseCase, see cause", e)
+                    }
                     cancelScope() // 标记成功一次后就不要再检查了
                 }
             }.collect()
