@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.data.models.preference.ProxySettings
+import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.text.ProvideContentColor
@@ -61,6 +62,7 @@ import me.him188.ani.app.ui.settings.tabs.network.CustomProxyConfig
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyConfig
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyPresentation
 import me.him188.ani.app.ui.settings.tabs.network.renderSystemProxyPresentation
+import me.him188.ani.utils.platform.isAndroid
 
 @Composable
 internal fun ConfigureProxyStep(
@@ -312,7 +314,9 @@ private fun SettingsScope.ProxyConfigGroup(
                     when (mode) {
                         ProxyUIMode.DISABLED -> {}
                         ProxyUIMode.SYSTEM -> {
-                            SystemProxyConfig(state.systemProxy)
+                            if (!LocalPlatform.current.isAndroid()) {
+                                SystemProxyConfig(state.systemProxy)
+                            }
                         }
 
                         ProxyUIMode.CUSTOM -> {
