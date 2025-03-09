@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.utils.io
 
 import kotlinx.io.Sink
@@ -106,6 +115,8 @@ fun SystemPath.exists(): Boolean = SystemFileSystem.exists(path)
 
 /**
  * @see FileSystem.delete
+ * @throws kotlinx.io.files.FileNotFoundException when [this] does not exist and [mustExist] is `true`.
+ * @throws kotlinx.io.IOException if deletion failed.
  */
 fun SystemPath.delete(mustExist: Boolean = false) = SystemFileSystem.delete(path, mustExist)
 

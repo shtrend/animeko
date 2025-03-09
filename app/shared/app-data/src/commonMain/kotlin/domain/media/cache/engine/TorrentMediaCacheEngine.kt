@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -29,6 +29,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
+import kotlinx.io.IOException
+import kotlinx.io.files.FileNotFoundException
 import kotlinx.io.files.Path
 import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.MediaCacheState
@@ -223,7 +225,12 @@ class TorrentMediaCacheEngine(
                 val file = handle.entry.resolveFileMaybeEmptyOrNull() ?: return@withContext
                 if (file.exists()) {
                     logger.info { "Deleting torrent cache: $file" }
-                    file.delete()
+                    try {
+                        file.delete()
+                    } catch (_: FileNotFoundException) {
+                    } catch (e: IOException) {
+                        logger.warn("Failed to delete cache file $file", e)
+                    }
                 } else {
                     logger.info { "Torrent cache does not exist, ignoring: $file" }
                 }
