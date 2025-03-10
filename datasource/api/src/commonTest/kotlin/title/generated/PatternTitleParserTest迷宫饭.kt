@@ -510,7 +510,7 @@ public class PatternTitleParserTest迷宫饭 : PatternBasedTitleParserTestSuite(
   public fun `668060_DBD_Raws_Dungeon_Meshi_01_06TV_BOX1_1080P_BDRip_HEVC_10bit_FLAC_MKV`() {
     val r =
         parse("[DBD-Raws][迷宫饭/Dungeon Meshi/ダンジョン飯][01-06TV+特典映像][BOX1][1080P][BDRip][HEVC-10bit][FLAC][MKV]")
-    assertEquals("01..06+特典映像", r.episodeRange.toString())
+    assertEquals("01..06", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)

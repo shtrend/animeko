@@ -35,7 +35,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   public fun `668596_V2_DBD_Raws_Mirai_Nikki_01_26TV_OVA_1080P_BDRip_HEVC_10bit_FLACx2_MKV`() {
     val r =
         parse("[V2][DBD-Raws][未来日记/Mirai Nikki/未来日記/みらいにっき][01-26TV全集+OVA][1080P][BDRip][HEVC-10bit][简繁外挂][FLACx2][MKV]")
-    assertEquals("01..26", r.episodeRange.toString())
+    assertEquals("01..26+OVA", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -45,7 +45,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   public fun `655726_DBD_Mirai_Nikki_01_26TV_OVA_JPN_Ver_1080P_BDRip_AVC_FLAC_MKV`() {
     val r =
         parse("[DBD製作組][未來日記/Mirai Nikki/未来日記/みらいにっき][01-26TV全集+OVA][日版/JPN.Ver][1080P][BDRip][AVC][繁體內嵌][FLAC][MKV]")
-    assertEquals("01..26", r.episodeRange.toString())
+    assertEquals("01..26+OVA", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EMBEDDED, r.subtitleKind)
@@ -55,7 +55,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   public fun `655723_DBD_Mirai_Nikki_01_26TV_OVA_JPN_Ver_1080P_BDRip_AVC_FLAC_MKV`() {
     val r =
         parse("[DBD制作组][未来日记/Mirai Nikki/未来日記/みらいにっき][01-26TV全集+OVA][日版/JPN.Ver][1080P][BDRip][AVC][简体内嵌][FLAC][MKV]")
-    assertEquals("01..26", r.episodeRange.toString())
+    assertEquals("01..26+OVA", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EMBEDDED, r.subtitleKind)
@@ -65,7 +65,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   public fun `655722_DBD_Mirai_Nikki_01_26TV_OVA_JPN_Ver_1080P_BDRip_HEVC_10bit_FLAC_MKV`() {
     val r =
         parse("[DBD制作组][未来日记/Mirai Nikki/未来日記/みらいにっき][01-26TV全集+OVA][日版/JPN.Ver][1080P][BDRip][HEVC-10bit][简繁外挂][FLAC][MKV]")
-    assertEquals("01..26", r.episodeRange.toString())
+    assertEquals("01..26+OVA", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -75,7 +75,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   public fun `655383_DBD_Raws_Mirai_Nikki_01_26TV_OVA_JPN_Ver_1080P_BDRip_HEVC_10bit_FLAC_MKV`() {
     val r =
         parse("[DBD-Raws][未来日记/Mirai Nikki/未来日記/みらいにっき][01-26TV全集+OVA][日版/JPN.Ver][1080P][BDRip][HEVC-10bit][简繁日双语外挂][FLAC][MKV]")
-    assertEquals("01..26", r.episodeRange.toString())
+    assertEquals("01..26+OVA", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -124,7 +124,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   public fun `567796_DBD_Raws_Mirai_Nikki_01_26_OVA_1080P_BDRip_HEVC_10bit_FLAC_MKV`() {
     val r =
         parse("[DBD-Raws&四魂字幕组][未来日记/Mirai Nikki/みらいにっき][01-26全集+OVA+特典][1080P][BDRip][HEVC-10bit][简繁外挂字幕][FLAC][MKV]")
-    assertEquals("01..26", r.episodeRange.toString())
+    assertEquals("01..26+OVA", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)

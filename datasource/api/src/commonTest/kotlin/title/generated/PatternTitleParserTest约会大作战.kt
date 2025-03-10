@@ -35,7 +35,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   public fun `685031_Fatum_Fatalis_V_Date_a_Live_V_BD_REENCODE_EP01_12_SP_Fin`() {
     val r =
         parse("[Fatum Fatalis] 约会大作战 第五季 / デート・ア・ライブV / Date a Live V (BD REENCODE EP01-12+SP Fin)")
-    assertEquals("01..12+SP Fin", r.episodeRange.toString())
+    assertEquals("01..12+SP", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -75,7 +75,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   public fun `675368_DBD_Raws_Date_a_Live_II_II_01_10TV_OAD_1080P_BDRip_HEVC_10bit_FLAC_MKV`() {
     val r =
         parse("[DBD-Raws][约会大作战 第二季/Date a Live II/デート・ア・ライブ II][01-10TV全集+OAD+特典映像][1080P][BDRip][HEVC-10bit][简繁外挂][FLAC][MKV]")
-    assertEquals("01..10", r.episodeRange.toString())
+    assertEquals("01..10+OAD", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -86,7 +86,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
       fun `675285_DBD_Raws_Date_a_Live_S1_Director_s_Cut_01_12TV_OAD_1080P_BDRip_HEVC_10bit_FLAC_MKV`() {
     val r =
         parse("[DBD-Raws][约会大作战 第一季/Date a Live S1/デート・ア・ライブ][导演剪辑版/Director's Cut/ディレクターズカット版][01-12TV全集+OAD][1080P][BDRip][HEVC-10bit][简繁外挂][FLAC][MKV]")
-    assertEquals("01..12", r.episodeRange.toString())
+    assertEquals("01..12+OAD", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -96,7 +96,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   public fun `675279_DBD_Raws_Date_a_Live_S1_01_12TV_OAD_1080P_BDRip_HEVC_10bit_FLAC_MKV`() {
     val r =
         parse("[DBD-Raws][约会大作战 第一季/Date a Live S1/デート・ア・ライブ][01-12TV全集+OAD][1080P][BDRip][HEVC-10bit][FLAC][MKV]")
-    assertEquals("01..12", r.episodeRange.toString())
+    assertEquals("01..12+OAD", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2906,7 +2906,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   public fun `417427_philosophy_raws_BDRIP_1080p_10bit_TV_01_13_Director_s_cut_Edition_SP`() {
     val r =
         parse("[philosophy-raws][约会大作战][BDRIP][1080p 10bit][TV 01-13+Director's cut Edition+SP][日英双语][英文字幕]")
-    assertEquals("01..13+Director's cut Edition+SP", r.episodeRange.toString())
+    assertEquals("01..13+SP", r.episodeRange.toString())
     assertEquals("ENG, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)

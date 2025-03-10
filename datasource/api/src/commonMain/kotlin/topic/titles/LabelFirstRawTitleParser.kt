@@ -18,6 +18,7 @@ import me.him188.ani.datasources.api.topic.MediaOrigin
 import me.him188.ani.datasources.api.topic.Resolution
 import me.him188.ani.datasources.api.topic.SubtitleLanguage
 import me.him188.ani.datasources.api.topic.isSingleEpisode
+import me.him188.ani.datasources.api.topic.plus
 
 /**
  * 只解析剧集, 分辨率等必要信息, 不解析标题. 拥有更高正确率
@@ -114,7 +115,9 @@ class LabelFirstRawTitleParser : RawTitleParser() {
             anyMatched = anyMatched or word.parseSubtitleLanguages()
             anyMatched = anyMatched or word.parseResolution()
             anyMatched = anyMatched or word.parseFrameRate()
-            anyMatched = anyMatched or word.parseEpisode()
+            anyMatched = anyMatched or (word.parseEpisode()?.also {
+                builder.emitEpisodeRange(it)
+            } != null)
             anyMatched = anyMatched or word.parseMediaOrigin()
 
             return anyMatched
@@ -175,15 +178,14 @@ class LabelFirstRawTitleParser : RawTitleParser() {
             }
         }
 
-        private fun String.parseEpisode(): Boolean {
+        private fun String.parseEpisode(): EpisodeRange? {
             if (this.contains("x264", ignoreCase = true)
                 || this.contains("x265", ignoreCase = true)
-            ) return false
+            ) return null
 
             val str = episodeRemove.fold(this) { acc, regex -> acc.remove(regex) }
             str.toFloatOrNull()?.let {
-                builder.emitEpisodeRange(EpisodeRange.single(str))
-                return true
+                return EpisodeRange.single(str)
             }
 //            collectionPattern.find(str)?.let { result ->
 //                val startGroup = result.groups["start"]
@@ -234,29 +236,31 @@ class LabelFirstRawTitleParser : RawTitleParser() {
                 start.getPrefix()?.let { prefix ->
                     if (!end.startsWith(prefix)) {
                         // "SP1-5"
-                        builder.emitEpisodeRange(EpisodeRange.range(start, prefix + end))
-                        return true
+                        return EpisodeRange.range(start, prefix + end)
                     }
                 }
 
                 if (end.startsWith("0") && !start.startsWith("0")) {
                     // "Hibike! Euphonium 3 - 02"
-                    builder.emitEpisodeRange(EpisodeRange.single(EpisodeSort(end)))
-                    return true
+                    return EpisodeRange.single(EpisodeSort(end))
                 }
 
                 val extra = result.groups["extra"]?.value
-                if (extra != null) {
-                    builder.emitEpisodeRange(
-                        EpisodeRange.combined(
-                            EpisodeRange.range(start, end),
-                            EpisodeRange.single(EpisodeSort(extra.removePrefix("+"))),
-                        ),
+                return if (extra != null) {
+                    EpisodeRange.combined(
+                        EpisodeRange.range(start, end),
+                        extra.split("+").fold(EpisodeRange.empty()) { acc, section ->
+                            acc.plus(
+                                section
+                                    .removeSuffix("Fin")
+                                    .trim()
+                                    .parseEpisode() ?: EpisodeRange.empty(),
+                            )
+                        },
                     )
                 } else {
-                    builder.emitEpisodeRange(EpisodeRange.range(start, end))
+                    EpisodeRange.range(start, end)
                 }
-                return true
             }
             seasonRangePattern.find(str)?.let { result ->
                 val groupValues = result.groupValues
@@ -267,31 +271,23 @@ class LabelFirstRawTitleParser : RawTitleParser() {
                     val start = groupValues[1].seasonStringToIntOrNull()
                     val end = groupValues[2].seasonStringToIntOrNull()
                     if (start != null && end != null) {
-                        builder.emitEpisodeRange(
-                            (start..end).fold(EpisodeRange.empty()) { acc, i ->
-                                EpisodeRange.combined(acc, EpisodeRange.season(i))
-                            },
-                        )
-                        return true
+                        return (start..end).fold(EpisodeRange.empty()) { acc, i ->
+                            EpisodeRange.combined(acc, EpisodeRange.season(i))
+                        }
                     }
                 } else {
-                    builder.emitEpisodeRange(
-                        groupValues.drop(1).mapNotNull {
-                            it.seasonStringToIntOrNull()
-                        }.fold(EpisodeRange.empty()) { acc, i -> EpisodeRange.combined(acc, EpisodeRange.season(i)) },
-                    )
-                    return true
+                    return groupValues.drop(1).mapNotNull {
+                        it.seasonStringToIntOrNull()
+                    }.fold(EpisodeRange.empty()) { acc, i -> EpisodeRange.combined(acc, EpisodeRange.season(i)) }
                 }
             }
             seasonPattern.find(str)?.let { result ->
-                builder.emitEpisodeRange(parseSeason(result))
-                return true
+                return parseSeason(result)
             }
             if (singleSpecialEpisode.matchEntire(str) != null) {
-                builder.emitEpisodeRange(EpisodeRange.single(this))
-                return true
+                return EpisodeRange.single(this)
             }
-            return false
+            return null
         }
 
         private fun parseSeason(result: MatchResult) = EpisodeRange.combined(
@@ -360,7 +356,7 @@ private val brackets =
 
 private val collectionPattern = Regex(
 //    """((?<start>(?:SP)?\d{1,4})\s?(?:-{1,2}|~|～)\s?(?<end>\d{1,4}))?(?:TV|BDrip|BD)?(?<extra>\+.+)*""",
-    """(?<start>(?:SP)?\d{1,4})\s?(?:-{1,2}|~|～)\s?(?<end>\d{1,4})(?:TV|BDrip|BD)?(?<extra>\+.+)?""",
+    """(?<start>(?:SP)?\d{1,4})\s?(?:-{1,2}|~|～)\s?(?<end>\d{1,4})(?:TV|BDrip|BD)?(?<extra>\+?.+)?""",
     RegexOption.IGNORE_CASE,
 )
 

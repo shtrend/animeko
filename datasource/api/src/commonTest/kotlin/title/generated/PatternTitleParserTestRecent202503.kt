@@ -857,7 +857,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690536_VCB_Studio_Sword_Art_Online_10_bit_1080p_HEVC_BDRip_S1_2_EE_Reseed_Fin`() {
     val r =
         parse("[VCB-Studio] 刀剑神域 / Sword Art Online / ソードアート・オンライン 10-bit 1080p HEVC BDRip [S1-2+EE+序列之争 Reseed Fin]")
-    assertEquals("01..02+EE+序列之争 Reseed Fin", r.episodeRange.toString())
+    assertEquals("01..02", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -6121,7 +6121,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
       fun `689817_DBD_Raws_Kono_Subarashii_Sekai_ni_Shukufuku_o_21_2_01_10TV_OVA_1080P_BDRip_HEVC_10bit_FLACx2_MKV__21_2`() {
     val r =
         parse("[DBD-Raws][为美好的世界献上祝福！ 第二季/Kono Subarashii Sekai ni Shukufuku o! 2][01-10TV全集+OVA][1080P][BDRip][HEVC-10bit][简繁外挂][FLACx2][MKV](この素晴らしい世界に祝福を! 2)")
-    assertEquals("01..10", r.episodeRange.toString())
+    assertEquals("01..10+OVA", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -6132,7 +6132,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
       fun `689816_DBD_Raws_Kono_Subarashii_Sekai_ni_Shukufuku_o_21_01_10TV_OVA_1080P_BDRip_HEVC_10bit_FLACx2_MKV__21`() {
     val r =
         parse("[DBD-Raws][为美好的世界献上祝福！ 第一季/Kono Subarashii Sekai ni Shukufuku o!][01-10TV全集+OVA+特典映像][1080P][BDRip][HEVC-10bit][简繁外挂][FLACx2][MKV](この素晴らしい世界に祝福を!)")
-    assertEquals("01..10", r.episodeRange.toString())
+    assertEquals("01..10+OVA", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
