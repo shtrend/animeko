@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
 import me.him188.ani.app.tools.formatDateTime
@@ -32,8 +33,8 @@ import me.him188.ani.app.ui.comment.CommentDefaults
 import me.him188.ani.app.ui.comment.CommentState
 import me.him188.ani.app.ui.comment.UIComment
 import me.him188.ani.app.ui.foundation.layout.ConnectedScrollState
-import me.him188.ani.app.ui.richtext.RichText
 import me.him188.ani.app.ui.rating.FiveRatingStars
+import me.him188.ani.app.ui.richtext.RichText
 
 @Composable
 fun SubjectDetailsDefaults.SubjectCommentColumn(
@@ -82,9 +83,15 @@ fun SubjectComment(
             Text(
                 text = comment.author?.nickname ?: comment.author?.id.toString(),
                 textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
             )
         },
-        secondaryTitle = { Text(formatDateTime(comment.createdAt)) },
+        secondaryTitle = {
+            Text(
+                formatDateTime(comment.createdAt),
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
         content = {
             RichText(
                 elements = comment.content.elements,

@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
 import me.him188.ani.app.tools.formatDateTime
@@ -98,9 +99,15 @@ fun EpisodeComment(
             Text(
                 text = comment.author?.nickname ?: comment.author?.id.toString(),
                 textAlign = TextAlign.Center,
+                overflow = TextOverflow.Ellipsis,
             )
         },
-        secondaryTitle = { Text(formatDateTime(comment.createdAt)) },
+        secondaryTitle = {
+            Text(
+                formatDateTime(comment.createdAt),
+                overflow = TextOverflow.Ellipsis,
+            )
+        },
         content = {
             RichText(
                 elements = comment.content.elements,
