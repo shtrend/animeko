@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -15,6 +15,7 @@ import io.ktor.client.plugins.ServerResponseException
 import io.ktor.http.HttpStatusCode
 import kotlinx.io.IOException
 import me.him188.ani.app.data.repository.RepositoryException.Companion.wrapOrThrowCancellation
+import me.him188.ani.app.trace.ErrorReport
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -34,14 +35,24 @@ sealed class RepositoryException : Exception {
                     HttpStatusCode.Unauthorized -> RepositoryAuthorizationException(cause.response.status.description)
                     HttpStatusCode.Forbidden -> RepositoryAuthorizationException(cause.response.status.description)
                     HttpStatusCode.TooManyRequests -> RepositoryRateLimitedException(cause.response.status.description)
-                    else -> RepositoryUnknownException(cause)
+                    else -> {
+                        createAndReportUnknownException(cause)
+                    }
                 }
             }
 
             is IOException -> RepositoryNetworkException(null, cause)
             is ServerResponseException -> RepositoryServiceUnavailableException(cause.response.status.description)
 
-            else -> RepositoryUnknownException(cause)
+            else -> {
+                createAndReportUnknownException(cause)
+            }
+        }
+
+        private fun createAndReportUnknownException(cause: Throwable): RepositoryUnknownException {
+            return RepositoryUnknownException(cause).also {
+                ErrorReport.captureException(it)
+            }
         }
     }
 }
