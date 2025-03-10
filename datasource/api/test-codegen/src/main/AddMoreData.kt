@@ -18,7 +18,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
 import me.him188.ani.datasources.api.source.DownloadSearchQuery
 import me.him188.ani.datasources.api.test.codegen.json
 import me.him188.ani.datasources.api.topic.Topic
@@ -38,13 +37,7 @@ suspend fun main() {
         ?: File("testData")
 
     val list = listOf(
-        "怪兽8号", // 带数字
-        "無職轉生～到了異世界就拿出真本事～", // 许多季度, 超长名字
-        "樱Trick", // 带英文
-        "终末列车去往何方",
-        "迷宫饭",
-        "吹响吧！上低音号",
-        "间谍过家家",
+        "石纪元",
     )
 
     TopicFetcher(output, "dmhy").run {
