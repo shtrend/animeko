@@ -275,7 +275,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690614_Nichijou_My_Ordinary_Life_TV_OVA_2023_05_13`() {
     val r =
         parse("[整理搬运] 日常 (Nichijou／My Ordinary Life)：TV动画+OVA+漫画+音乐+其他；日语音轨; 外挂简中字幕 (整理时间：2023.05.13)")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("OVA..OVA", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -323,7 +323,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690607_Ai_Yori_Aoshi_TV_2002_2003_OVA_CD_2024_06_30`() {
     val r =
         parse("[整理搬运] 青出于蓝／青蓝姻缘／未婚关系 (藍より青し) (Ai Yori Aoshi)：TV动画 (2002年版、2003年版)+OVA+漫画+CD+其他；日语音轨; 外挂繁中字幕 (整理时间：2024.06.30)")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("OVA..OVA", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -400,7 +400,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690598_Har_Guu_TV_OVA_2023_12_12`() {
     val r =
         parse("[整理搬运] 热带雨林的爆笑生活／哈雷小子 (ジャングルはいつもハレのちグゥ) (Haré+Guu)：TV动画+OVA+漫画+音乐+其他；日语音轨; 外挂简中字幕 (整理时间：2023.12.12)")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("OVA..OVA", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -410,7 +410,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690596_Ai_Yori_Aoshi_TV_2002_2003_OVA_CD_2024_06_30`() {
     val r =
         parse("【归档】[整理搬运] 青出于蓝／青蓝姻缘／未婚关系 (藍より青し) (Ai Yori Aoshi)：TV动画 (2002年版、2003年版)+OVA+漫画+CD+其他；日语音轨; 外挂繁中字幕 (整理时间：2024.06.30)")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("OVA..OVA", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -1058,7 +1058,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `690507_1155_2_WEBRIP_MKV_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第1155集 追踪！侦探出租车2][WEBRIP][简繁日多语MKV][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("1155..1155", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -1067,7 +1067,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `690506_1155_2_WEBRIP_MP4_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第1155集 追蹤！偵探計程車2][WEBRIP][繁日雙語MP4][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("1155..1155", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1076,7 +1076,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `690505_1155_2_WEBRIP_MP4_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第1155集 追踪！侦探出租车2][WEBRIP][简日双语MP4][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("1155..1155", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1271,7 +1271,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `690485_60_WEBRIP_MP4_MP4_MKV_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第60集 插画家杀人事件][WEBRIP][简日双语MP4/繁日雙語MP4/简繁日多语MKV][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("60..60", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -2515,7 +2515,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690328_MagicStar_2024_WEBDL_1080p_U_NEXT`() {
     val r =
         parse("[MagicStar] 蜡笔小新 剧场版 我们的恐龙日记 / 映画クレヨンしんちゃん オラたちの恐竜日記 2024 [WEBDL] [1080p] [U-NEXT]【生】")
-    assertEquals("2024..2024", r.episodeRange.toString())
+    assertEquals("S?", r.episodeRange.toString())
     assertEquals("JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2586,7 +2586,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690319_The_Sea_Prince_and_the_Fire_Child_1981_Movie_1080p`() {
     val r =
         parse("[冷番补完字幕组][天狼星的传说][シリウスの伝説][The Sea Prince and the Fire Child][1981]Movie[1080p][内封中英双语字幕]")
-    assertEquals("1981..1981", r.episodeRange.toString())
+    assertEquals("S?", r.episodeRange.toString())
     assertEquals("ENG", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -3328,7 +3328,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
       fun `690189_VCB_Studio_TenSura_10_bit_1080p_HEVC_BDRip_S1_Reseed_OAD_Reseed_S2_Reseed_MOVIE_WEB_S3`() {
     val r =
         parse("[VCB-Studio] 关于我转生变成史莱姆这档事 / Tensei Shitara Slime Datta Ken / 転生したらスライムだった件 10-bit 1080p HEVC BDRip [S1 Reseed + OAD Reseed + S2 Reseed + MOVIE + WEB + S3]")
-    assertEquals("S1", r.episodeRange.toString())
+    assertEquals("S1+OAD+S2+S?+S3", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -3373,7 +3373,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `690181_GM_Team_Swallowed_Star_2021_159_AVC_GB_1080P`() {
     val r = parse("[GM-Team][国漫][吞噬星空][Swallowed Star][2021][159[AVC][GB][1080P]")
-    assertEquals("2021..2021", r.episodeRange.toString())
+    assertEquals("null", r.episodeRange.toString())
     assertEquals("CHS", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -4400,7 +4400,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `690035_1154_WEBRIP_MKV_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第1154集 屋久岛的山姬（后篇）][WEBRIP][简繁日多语MKV][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("1154..1154", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -4409,7 +4409,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `690034_1154_WEBRIP_MP4_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第1154集 屋久島的山姬（後篇）][WEBRIP][繁日雙語MP4][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("1154..1154", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -4418,7 +4418,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `690033_1154_WEBRIP_MP4_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第1154集 屋久岛的山姬（后篇）][WEBRIP][简日双语MP4][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("1154..1154", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -5007,7 +5007,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `689957_59_WEBRIP_MP4_MP4_MKV_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第59集 首次跑腿杀人事件][WEBRIP][简日双语MP4/繁日雙語MP4/简繁日多语MKV][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("59..59", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -5739,7 +5739,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
       fun `689868_DBD_Raws_Magia_Record_Mahou_Shoujo_Madoka_Magica_Gaiden_S1_01_13TV_1080P_BDRip_HEVC_10bit_FLAC_MKV_S1`() {
     val r =
         parse("[DBD-Raws][魔法纪录 魔法少女小圆外传 第一季/Magia Record Mahou Shoujo Madoka Magica Gaiden S1][01-13TV全集][1080P][BDRip][HEVC-10bit][简繁外挂][FLAC][MKV](マギアレコード 魔法少女まどか☆マギカ外伝 S1)")
-    assertEquals("S1", r.episodeRange.toString())
+    assertEquals("01..13", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -5811,7 +5811,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
       fun `689855_DBD_Raws_Mahouka_Koukou_no_Rettousei_Raihousha_Hen_S2_01_13TV_1080P_BDRip_HEVC_10bit_FLAC_MKV_S2`() {
     val r =
         parse("[DBD-Raws][魔法科高中的劣等生 来访者篇(第二季)/Mahouka Koukou no Rettousei Raihousha Hen(S2)][01-13TV全集+特典映像][1080P][BDRip][HEVC-10bit][简繁外挂][FLAC][MKV](魔法科高校の劣等生 来訪者編(S2))")
-    assertEquals("S2", r.episodeRange.toString())
+    assertEquals("01..13", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -5858,7 +5858,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
       fun `689849_DBD_Raws_Mahouka_Koukou_no_Rettousei_S1_01_26TV_1080P_BDRip_HEVC_10bit_FLAC_MKV_S1`() {
     val r =
         parse("[DBD-Raws][魔法科高中的劣等生 第一季/Mahouka Koukou no Rettousei S1][01-26TV全集+特典映像][1080P][BDRip][HEVC-10bit][简繁外挂][FLAC][MKV](魔法科高校の劣等生 S1)")
-    assertEquals("S1", r.episodeRange.toString())
+    assertEquals("01..26", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -5886,7 +5886,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `689845_VCB_Studio_SPYxFAMILY_10_bit_1080p_HEVC_BDRip_S1_S2_MOVIE_Fin`() {
     val r =
         parse("[喵萌奶茶屋&VCB-Studio] 间谍过家家 / 间谍家家酒 / SPYxFAMILY 10-bit 1080p HEVC BDRip [S1-S2 + MOVIE Fin]")
-    assertEquals("S1+S2", r.episodeRange.toString())
+    assertEquals("S1+S2+S?", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -8050,7 +8050,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `689538_1153_WEBRIP_MKV_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第1153集 屋久岛的山姬（前篇）][WEBRIP][简繁日多语MKV][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("1153..1153", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -8059,7 +8059,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `689537_1153_WEBRIP_MP4_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第1153集 屋久島的山姬（前篇）][WEBRIP][繁日雙語MP4][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("1153..1153", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -8068,7 +8068,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   @Test
   public fun `689536_1153_WEBRIP_MP4_1080P`() {
     val r = parse("[银色子弹字幕组][名侦探柯南][第1153集 屋久岛的山姬（前篇）][WEBRIP][简日双语MP4][1080P]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("1153..1153", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -9032,7 +9032,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
       fun `689416_DBD_Raws_Gekijou_Soushuuhen_Bocchi_the_Rock_21_SP_1080P_BDRip_HEVC_10bit_FLAC_AC3_MKV__21`() {
     val r =
         parse("[DBD-Raws][孤独摇滚！剧场总集篇/Gekijou Soushuuhen Bocchi the Rock!][正片+SP][1080P][BDRip][HEVC-10bit][FLAC+AC3][MKV](劇場総集編ぼっち・ざ・ろっく!)")
-    assertEquals("S?", r.episodeRange.toString())
+    assertEquals("SP..SP", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)

@@ -1325,7 +1325,7 @@ public class PatternTitleParserTest间谍过家家 : PatternBasedTitleParserTest
   public fun `642236_7_ACG_SPY_FAMILY_S01_01_25_BDrip_1080p_x265_FLAC_2_0_repack`() {
     val r =
         parse("[桜都字幕组&7³ACG] 间谍过家家/间谍家家酒/スパイファミリー/SPY×FAMILY S01 | 01-25 [简繁字幕] BDrip 1080p x265 FLAC 2.0 (repack)")
-    assertEquals("02..02", r.episodeRange.toString())
+    assertEquals("01..25", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -1841,7 +1841,7 @@ public class PatternTitleParserTest间谍过家家 : PatternBasedTitleParserTest
   @Test
   public fun `625644_SPY_FAMILY_25___END_1080P_AVC`() {
     val r = parse("[織夢字幕組][間諜過家家 SPY×FAMILY][25集 - END][1080P][AVC][繁日雙語]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("25..25", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1850,7 +1850,7 @@ public class PatternTitleParserTest间谍过家家 : PatternBasedTitleParserTest
   @Test
   public fun `625643_SPY_FAMILY_25___END_720P_AVC`() {
     val r = parse("[織夢字幕組][間諜過家家 SPY×FAMILY][25集 - END][720P][AVC][繁日雙語]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("25..25", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("720P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1859,7 +1859,7 @@ public class PatternTitleParserTest间谍过家家 : PatternBasedTitleParserTest
   @Test
   public fun `625642_SPY_FAMILY_25___END_1080P_AVC`() {
     val r = parse("[织梦字幕组][间谍过家家 SPY×FAMILY][25集 - END][1080P][AVC][简日双语]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("25..25", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1868,7 +1868,7 @@ public class PatternTitleParserTest间谍过家家 : PatternBasedTitleParserTest
   @Test
   public fun `625641_SPY_FAMILY_25___END_720P_AVC`() {
     val r = parse("[织梦字幕组][间谍过家家 SPY×FAMILY][25集 - END][720P][AVC][简日双语]")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("25..25", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("720P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)

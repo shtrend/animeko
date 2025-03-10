@@ -30,6 +30,7 @@ kotlin {
             api(projects.utils.serialization)
             implementation(projects.utils.platform)
             api(libs.ktor.client.auth)
+            implementation(libs.androidx.collection)
             implementation(libs.ktor.client.logging)
             implementation(projects.utils.logging)
         }

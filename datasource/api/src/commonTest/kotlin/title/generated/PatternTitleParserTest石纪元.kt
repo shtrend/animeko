@@ -101,7 +101,7 @@ public class PatternTitleParserTest石纪元 : PatternBasedTitleParserTestSuite(
       fun `689075_DBD_Raws_Stone_Wars_Dr_Stone_Stone_Wars_01_11TV_1080P_BDRip_HEVC_10bit_FLAC_MKV_Dr_Stone_S2_Stone_Wars`() {
     val r =
         parse("[DBD-Raws][新石纪 Stone Wars/Dr. Stone Stone Wars][01-11TV全集][1080P][BDRip][HEVC-10bit][简繁外挂][FLAC][MKV](石纪元 第二季/Dr. Stone S2/ドクターストーン Stone Wars)")
-    assertEquals("S2", r.episodeRange.toString())
+    assertEquals("01..11", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -112,7 +112,7 @@ public class PatternTitleParserTest石纪元 : PatternBasedTitleParserTestSuite(
       fun `688856_DBD_Raws_New_World_Dr_Stone_New_World_01_22TV_SP_1080P_BDRip_HEVC_10bit_FLAC_MKV_Dr_Stone_S3_New_World`() {
     val r =
         parse("[DBD-Raws][新石纪 New World/Dr. Stone New World][01-22TV全集+SP][1080P][BDRip][HEVC-10bit][简繁外挂][FLAC][MKV](石纪元 第三季/Dr. Stone S3/ドクターストーン New World)")
-    assertEquals("S3", r.episodeRange.toString())
+    assertEquals("01..22+SP", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)

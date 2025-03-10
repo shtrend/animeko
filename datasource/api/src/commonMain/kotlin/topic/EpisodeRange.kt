@@ -38,10 +38,17 @@ sealed class EpisodeRange {
      */
     abstract val knownSorts: Sequence<EpisodeSort>
 
+    /**
+     * 是否肯定为空.
+     */
+    abstract fun isEmpty(): Boolean
+
     @Serializable
-    private data object Empty : EpisodeRange() {
+    internal data object Empty : EpisodeRange() {
         override val knownSorts: Sequence<EpisodeSort>
             get() = emptySequence()
+
+        override fun isEmpty(): Boolean = true
 
         override fun toString(): String = "EpisodeRange(empty)"
     }
@@ -52,6 +59,8 @@ sealed class EpisodeRange {
     ) : EpisodeRange() {
         override val knownSorts: Sequence<EpisodeSort>
             get() = sequenceOf(value)
+
+        override fun isEmpty(): Boolean = false
 
         override fun toString(): String = "$value..$value"
 
@@ -91,6 +100,13 @@ sealed class EpisodeRange {
                 yield(EpisodeSort.Normal(end.number))
             }
 
+        override fun isEmpty(): Boolean {
+            if (start is EpisodeSort.Normal && end is EpisodeSort.Normal) {
+                return end < start
+            }
+            return false
+        }
+
         override fun toString(): String = "$start..$end"
 
         override fun equals(other: Any?): Boolean {
@@ -121,6 +137,8 @@ sealed class EpisodeRange {
                 yieldAll(first.knownSorts)
                 yieldAll(second.knownSorts)
             }
+
+        override fun isEmpty(): Boolean = first.isEmpty() && second.isEmpty()
 
         override fun toString(): String = buildString {
             if (first is Single) append(first.value) else append(first)
@@ -179,6 +197,7 @@ sealed class EpisodeRange {
         val numberOrNull: Int? get() = if (rawNumber == -1) null else rawNumber
 
         override val knownSorts: Sequence<EpisodeSort> get() = emptySequence()
+        override fun isEmpty(): Boolean = false
         override val isKnown: Boolean get() = false
         override fun toString(): String = if (rawNumber != -1) "S$rawNumber" else "S?"
     }

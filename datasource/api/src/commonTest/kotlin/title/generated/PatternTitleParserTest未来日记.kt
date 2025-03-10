@@ -114,7 +114,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `613473_VCB_Studio_Mirai_Nikki_10_bit_1080p_HEVC_BDRip_TV_OVA_Fin`() {
     val r = parse("[VCB-Studio] 未来日记 / Mirai Nikki / 未来日記 10-bit 1080p HEVC BDRip [TV + OVA Fin]")
-    assertEquals("S?", r.episodeRange.toString())
+    assertEquals("OVA..OVA", r.episodeRange.toString())
     assertEquals("JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -133,7 +133,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `539339_Snow_Raws_Mirai_Nikki_2011_2011_BD_1920x1080_HEVC_YUV420P10_FLAC`() {
     val r = parse("[Snow-Raws] 未来日记/Mirai Nikki 2011/未来日記 2011 (BD 1920x1080 HEVC-YUV420P10 FLAC)")
-    assertEquals("2011..2011", r.episodeRange.toString())
+    assertEquals("S?", r.episodeRange.toString())
     assertEquals("JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -679,7 +679,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `251286_DHR_Sakura_Cafe_Mirai_nikki_26_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][26(完)][848 × 480][繁體](人員招募中～)")
-    assertEquals("26..26", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -913,7 +913,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `250626_DHR_Sakura_Cafe_Mirai_nikki_25_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][25][848 × 480][繁體](人員招募中～)")
-    assertEquals("25..25", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1111,7 +1111,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `249395_DHR_Sakura_Cafe_Mirai_nikki_24_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][24][848 × 480][繁體](人員招募中～)")
-    assertEquals("24..24", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1156,7 +1156,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `249316_DHR_Sakura_Cafe_Mirai_nikki_23_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][23][848 × 480][繁體](人員招募中～)")
-    assertEquals("23..23", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1552,7 +1552,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `247779_DHR_Sakura_Cafe_Mirai_nikki_22_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][22][848 × 480][繁體](請組內人員進來看一下)")
-    assertEquals("22..22", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1723,7 +1723,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `246803_DHR_Sakura_Cafe_Mirai_nikki_21_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][21][848 × 480][繁體](人員招募中～)")
-    assertEquals("21..21", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -1948,7 +1948,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `244874_DHR_Sakura_Cafe_Mirai_nikki_20_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][20][848 × 480][繁體](人員招募中～)")
-    assertEquals("20..20", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2164,7 +2164,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `243876_DHR_Sakura_Cafe_Mirai_nikki_19_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][19][848 × 480][繁體](人員招募中～)")
-    assertEquals("19..19", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2317,7 +2317,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `243217_DHR_Sakura_Cafe_Mirai_nikki_18_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][18][848 × 480][繁體]")
-    assertEquals("18..18", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2587,7 +2587,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `241996_DHR_Sakura_Cafe_Mirai_nikki_17_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][17][848 × 480][繁體]")
-    assertEquals("17..17", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2821,7 +2821,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `240938_DHR_Sakura_Cafe_Mirai_nikki_16_848_480_OP2`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][16][848 × 480][繁體](附上OP2的歌詞解析)")
-    assertEquals("16..16", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -3046,7 +3046,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `240205_DHR_Sakura_Cafe_Mirai_nikki_15_848_480_OP2`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][15][848 × 480][繁體](補上OP2的歌詞)")
-    assertEquals("15..15", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -3209,7 +3209,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   public fun `239383_DHR_Sakura_Cafe_Mirai_nikki_14_848_480_OP2_TV_SIZE`() {
     val r =
         parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][14][848 × 480][繁體](附OP2的TV-SIZE 內詳)")
-    assertEquals("14..14", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -3506,7 +3506,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `238324_DHR_Sakura_Cafe_Mirai_nikki_13_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][13][848 × 480][繁體]（人員招募中）")
-    assertEquals("13..13", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -3704,7 +3704,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `237093_DHR_Sakura_Cafe_Mirai_nikki_12_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][12][848 × 480][繁體]（人員招募中）")
-    assertEquals("12..12", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -3929,7 +3929,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `236248_DHR_Sakura_Cafe_Mirai_nikki_11_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][11][848 × 480][繁體]")
-    assertEquals("11..11", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -4155,7 +4155,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   public fun `235429_DHR_Sakura_Cafe_Mirai_nikki_10_848_480`() {
     val r =
         parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][10][848 × 480][繁體]（未來日記 之 我的九姊哪有這麼萌！）")
-    assertEquals("10..10", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -4407,7 +4407,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `234783_DHR_Sakura_Cafe_Mirai_nikki_09_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][09][848 × 480][繁體]")
-    assertEquals("09..09", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -4614,7 +4614,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `233835_DHR_Sakura_Cafe_Mirai_nikki_08_848_480_FB_G`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][08][848 × 480][繁體]（千夏成立FB和G+分部囉！）")
-    assertEquals("08..08", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -4848,7 +4848,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `232875_DHR_Sakura_Cafe_Mirai_nikki_07_848_480_FB_G`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][07][848 × 480][繁體]（千夏成立FB和G+分部囉！）")
-    assertEquals("07..07", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -5118,7 +5118,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `231946_DHR_Sakura_Cafe_Mirai_nikki_06_848_480_FB_G`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][06][848 × 480][繁體]（千夏成立FB和G+分部囉！）")
-    assertEquals("06..06", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -5352,7 +5352,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `231115_DHR_Sakura_Cafe_Mirai_nikki_05_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][05][848 × 480][繁體]")
-    assertEquals("05..05", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -5596,7 +5596,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `230145_DHR_Sakura_Cafe_Mirai_nikki_04_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][04][848 × 480][繁體]（內附OP開頭分析）")
-    assertEquals("04..04", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -5884,7 +5884,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `228908_DHR_Sakura_Cafe_Mirai_nikki_03_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][03][848 × 480][繁體]")
-    assertEquals("03..03", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -6091,7 +6091,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `228025_DHR_Sakura_Cafe_Mirai_nikki_02_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][02][848 × 480][繁體]（內詳）")
-    assertEquals("02..02", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -6361,7 +6361,7 @@ public class PatternTitleParserTest未来日记 : PatternBasedTitleParserTestSui
   @Test
   public fun `226922_DHR_Sakura_Cafe_Mirai_nikki_01_848_480`() {
     val r = parse("★御宅千夏&DHR動研&Sakura Cafe★ [未來日記][Mirai_nikki][01][848 × 480][繁體]（內詳）")
-    assertEquals("01..01", r.episodeRange.toString())
+    assertEquals("848+480", r.episodeRange.toString())
     assertEquals("CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(null, r.subtitleKind)

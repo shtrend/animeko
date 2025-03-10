@@ -106,7 +106,7 @@ public class PatternTitleParserTest怪兽8号 : PatternBasedTitleParserTestSuite
   @Test
   public fun `669746_8_Kaijuu_8_Gou_05_1080p_2024_4`() {
     val r = parse("[猎户压制部] 怪兽8号 / Kaijuu 8 Gou [05 [1080p] [简日内嵌] [2024年4月番]")
-    assertEquals("08..08", r.episodeRange.toString())
+    assertEquals("05..05", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EMBEDDED, r.subtitleKind)

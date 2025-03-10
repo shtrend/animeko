@@ -9,6 +9,7 @@
 
 package me.him188.ani.datasources.api.topic.titles
 
+import androidx.collection.intSetOf
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.SubtitleKind
@@ -18,6 +19,7 @@ import me.him188.ani.datasources.api.topic.MediaOrigin
 import me.him188.ani.datasources.api.topic.Resolution
 import me.him188.ani.datasources.api.topic.SubtitleLanguage
 import me.him188.ani.datasources.api.topic.isSingleEpisode
+import me.him188.ani.datasources.api.topic.orEmpty
 import me.him188.ani.datasources.api.topic.plus
 
 /**
@@ -115,7 +117,7 @@ class LabelFirstRawTitleParser : RawTitleParser() {
             anyMatched = anyMatched or word.parseSubtitleLanguages()
             anyMatched = anyMatched or word.parseResolution()
             anyMatched = anyMatched or word.parseFrameRate()
-            anyMatched = anyMatched or (word.parseEpisode()?.also {
+            anyMatched = anyMatched or (parseEpisode(word)?.let {
                 builder.emitEpisodeRange(it)
             } != null)
             anyMatched = anyMatched or word.parseMediaOrigin()
@@ -162,30 +164,130 @@ class LabelFirstRawTitleParser : RawTitleParser() {
             } != null
         }
 
+        /**
+         * 1080, 640, etc.
+         */
+        private fun isPossiblyResolution(range: EpisodeRange): Boolean {
+            if (range.isSingleEpisode()) {
+                return (range.knownSorts.first().number?.toInt() ?: 0) in resolutionNumbers
+            }
+            return false
+        }
+
         private fun ParsedTopicTitle.Builder.emitEpisodeRange(
             new: EpisodeRange
         ) {
+
             val oldRange = episodeRange
-            if (oldRange == null) {
-                episodeRange = new
-            } else {
-                if (oldRange.isSingleEpisode() && new is EpisodeRange.Season) {
-                    // ignore
-                    return
-                } else {
-                    episodeRange = new
+            episodeRange = when {
+                oldRange == null -> new
+                isPossiblyResolution(oldRange) -> new
+                isPossiblyResolution(new) -> return
+
+                else -> {
+                    if (oldRange.isSingleEpisode() && new is EpisodeRange.Season) {
+                        // ignore
+                        return
+                    } else {
+                        if (new.knownSorts.count() >= oldRange.knownSorts.count()) {
+                            new
+                        } else {
+                            return
+                        }
+                    }
                 }
             }
         }
 
-        private fun String.parseEpisode(): EpisodeRange? {
-            if (this.contains("x264", ignoreCase = true)
-                || this.contains("x265", ignoreCase = true)
+        /**
+         * 解析一连串剧集文本. 文本首先会被分割为 sections, 然后用 [parseEpisodeSection] 分别解析.
+         *
+         * ## Episode Patterns
+         *
+         * - `01`
+         * - `1`
+         *
+         * ## Season Patterns
+         *
+         * - `S1+S2+Movie`
+         * - `S1E1+S2+Movie`
+         * - `S1E1+S2+SP`
+         * - `S01E01+S2+SP`
+         * - `S01E01+S02+SP`
+         * - `S01E01+S02`
+         * - `S01E01`
+         * - `S01`
+         * - `S1`
+         */
+        private fun parseEpisode(text: String): EpisodeRange? {
+            val split = text.split("+", " ")
+            if (split.isEmpty()) {
+                return null
+            }
+            val result = split.fold(EpisodeRange.empty()) { acc, section ->
+                acc.plus(
+                    parseEpisodeSection(section) ?: EpisodeRange.empty(),
+                )
+            }
+            if (result.isEmpty()) {
+                return null
+            }
+            return result
+        }
+
+        /**
+         * 解析 `S1+S2+Movie` 按 "+" 分割出来的部分
+         */
+        private fun parseEpisodeSection(original: String): EpisodeRange? {
+            if (original.contains("x264", ignoreCase = true)
+                || original.contains("x265", ignoreCase = true)
             ) return null
 
-            val str = episodeRemove.fold(this) { acc, regex -> acc.remove(regex) }
+            if (yearPattern.matchEntire(original) != null) {
+                return null
+            }
+
+            if (original in movieKeywords) {
+                // TODO: 2025/3/10 handle movie
+                return EpisodeRange.unknownSeason()
+            }
+
+            seasonEpisodePattern.matchEntire(original)?.let { result ->
+                // TODO: consider season
+                return EpisodeRange.single(EpisodeSort(result.groupValues[2]))
+            }
+
+            seasonPattern.matchEntire(original)?.let { result ->
+                return parseSeason(result)
+            }
+
+            seasonRangePattern.find(original)?.let { result ->
+                val groupValues = result.groupValues
+
+                fun String.seasonStringToIntOrNull(): Int? = dropWhile { it in "-S" }.toIntOrNull()
+
+                if (groupValues.size == 3) {
+                    val start = groupValues[1].seasonStringToIntOrNull()
+                    val end = groupValues[2].seasonStringToIntOrNull()
+                    if (start != null && end != null) {
+                        return (start..end).fold(EpisodeRange.empty()) { acc, i ->
+                            EpisodeRange.combined(acc, EpisodeRange.season(i))
+                        }
+                    }
+                } else {
+                    return groupValues.drop(1).mapNotNull {
+                        it.seasonStringToIntOrNull()
+                    }.fold(EpisodeRange.empty()) { acc, i -> EpisodeRange.combined(acc, EpisodeRange.season(i)) }
+                }
+            }
+
+            val str = episodeRemove.fold(original) { acc, regex -> acc.remove(regex) }
             str.toFloatOrNull()?.let {
-                return EpisodeRange.single(str)
+                if (it.toInt().toFloat() == it && '.' in str) {
+                    // 没有小数位, 例如 "2.0", 一般不认为这是 EP
+                } else {
+                    return EpisodeRange.single(str)
+                }
             }
 //            collectionPattern.find(str)?.let { result ->
 //                val startGroup = result.groups["start"]
@@ -249,43 +351,14 @@ class LabelFirstRawTitleParser : RawTitleParser() {
                 return if (extra != null) {
                     EpisodeRange.combined(
                         EpisodeRange.range(start, end),
-                        extra.split("+").fold(EpisodeRange.empty()) { acc, section ->
-                            acc.plus(
-                                section
-                                    .removeSuffix("Fin")
-                                    .trim()
-                                    .parseEpisode() ?: EpisodeRange.empty(),
-                            )
-                        },
+                        parseEpisode(extra).orEmpty(),
                     )
                 } else {
                     EpisodeRange.range(start, end)
                 }
             }
-            seasonRangePattern.find(str)?.let { result ->
-                val groupValues = result.groupValues
-
-                fun String.seasonStringToIntOrNull(): Int? = dropWhile { it in "-S" }.toIntOrNull()
-
-                if (groupValues.size == 3) {
-                    val start = groupValues[1].seasonStringToIntOrNull()
-                    val end = groupValues[2].seasonStringToIntOrNull()
-                    if (start != null && end != null) {
-                        return (start..end).fold(EpisodeRange.empty()) { acc, i ->
-                            EpisodeRange.combined(acc, EpisodeRange.season(i))
-                        }
-                    }
-                } else {
-                    return groupValues.drop(1).mapNotNull {
-                        it.seasonStringToIntOrNull()
-                    }.fold(EpisodeRange.empty()) { acc, i -> EpisodeRange.combined(acc, EpisodeRange.season(i)) }
-                }
-            }
-            seasonPattern.find(str)?.let { result ->
-                return parseSeason(result)
-            }
             if (singleSpecialEpisode.matchEntire(str) != null) {
-                return EpisodeRange.single(this)
+                return EpisodeRange.single(original)
             }
             return null
         }
@@ -330,8 +403,14 @@ private val episodeRemove = listOf(
     Regex("""[话集話]"""),
     Regex("""_?v[0-9]""", RegexOption.IGNORE_CASE),
     Regex("""版"""),
+    Regex("""Fin|FIN"""),
 )
 
+// S01E05
+private val seasonEpisodePattern = Regex("""S(\d+)E(\d+)""")
+
+// 1998  2022  需要去除, 否则会被匹配为剧集
+private val yearPattern = Regex("""19[0-9]{2}|20[0-3][0-9]""")
 private val newAnime = Regex("(?:★?|★(.*)?)([0-9]|[一二三四五六七八九十]{0,4}) ?[月年] ?(?:新番|日剧)★?")
 
 // 性能没问题, 测了一般就 100 steps
@@ -361,14 +440,21 @@ private val collectionPattern = Regex(
 )
 
 private val singleSpecialEpisode = Regex(
-    """(SP|Special|Moview|OVA|OAD|小剧场|特别篇?|番外篇?)[0-9]{0,4}""",
+    """(SP|Special|Moview|OVA|OAD|小剧场|特别篇?|番外篇?)[0-9]{0,3}""",
     RegexOption.IGNORE_CASE,
+)
+
+private val movieKeywords = setOf(
+    "Movie",
+    "MOVIE",
+    "剧场版",
+    "电影",
 )
 
 // S1
 // S1+S2
 // S1E5 // ep 5
-private val seasonPattern = Regex("""S\d+(?:E\d+)?(?:\+(?:S\d+(?:E\d+)?|Movie|SP))*""", RegexOption.IGNORE_CASE)
+private val seasonPattern = Regex("""S\d+|第\d+季""", RegexOption.IGNORE_CASE)
 
 private val seasonRangePattern = Regex("""(S\d+)(-S\d+)*""", RegexOption.IGNORE_CASE)
 
@@ -410,3 +496,5 @@ internal fun String.splitWords(vararg delimiters: Char = DEFAULT_SPLIT_WORDS_DEL
         }
     }
 }
+
+private val resolutionNumbers = intSetOf(360, 480, 848, 1080, 1440, 1920, 2160)

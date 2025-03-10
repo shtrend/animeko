@@ -45,7 +45,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   public fun `679848_7_ACG_5_Date_A_Live_S05_01_12_BDrip_1080p_x265_FLAC_2_0`() {
     val r =
         parse("[7³ACG] 约会大作战5/ デート・ア・ライブ Ⅴ/Date A Live S05 | 01-12 [简繁字幕] BDrip 1080p x265 FLAC 2.0")
-    assertEquals("02..02", r.episodeRange.toString())
+    assertEquals("01..12", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -1816,7 +1816,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
       fun `536000_VCB_Studio_Date_A_Live_10_bit_1080p_HEVC_AVC_BDRip_S1_S2_MOVIE_Reseed_V3_Fin`() {
     val r =
         parse("[VCB-Studio] Date A Live / 约会大作战 / デート・ア・ライブ 10-bit 1080p HEVC/AVC BDRip [S1-S2 + MOVIE Reseed V3 Fin]")
-    assertEquals("S1+S2", r.episodeRange.toString())
+    assertEquals("S1+S2+S?", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2470,7 +2470,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   @Test
   public fun `509850_Seed_Raws_2013_2015_Date_a_Live___S1_S2_MOVIE_BD_720p_AVC_MP4`() {
     val r = parse("[Seed-Raws][2013-2015] 約會大作戰 Date a Live - S1+S2+MOVIE [BD][720p][AVC][MP4][補種]")
-    assertEquals("S1+S2+S?", r.episodeRange.toString())
+    assertEquals("2013..2015", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("720P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2601,7 +2601,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   public fun `508095_VCB_Studio_Date_A_Live_10_bit_1080p_AVC_HEVC_BDRip_S1_S2_M1_Fin`() {
     val r =
         parse("[VCB-Studio] Date A Live / 约会大作战 / デート・ア・ライブ 10-bit 1080p AVC/HEVC BDRip [S1(DC)+S2+M1 Reseed Fin]")
-    assertEquals("S1", r.episodeRange.toString())
+    assertEquals("S2", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2611,7 +2611,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   public fun `466903_ANK_Raws_DATE_A_LIVE_TV_01_10Fin_OVA_BDrip_1920x1080_HEVC_YUV420P10_FLAC`() {
     val r =
         parse("[ANK-Raws] デート・ア・ライブⅡ DATE A LIVEⅡ 约会大作战Ⅱ TV 01-10Fin OVA (BDrip 1920x1080 HEVC-YUV420P10 FLAC)")
-    assertEquals("OVA..OVA", r.episodeRange.toString())
+    assertEquals("01..10", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2621,7 +2621,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   public fun `466752_ANK_Raws_DATE_A_LIVE_TV_01_12Fin_OVA_BDrip_1920x1080_HEVC_YUV420P10_FLAC`() {
     val r =
         parse("[ANK-Raws] デート・ア・ライブ DATE A LIVE 约会大作战 TV 01-12Fin OVA (BDrip 1920x1080 HEVC-YUV420P10 FLAC)")
-    assertEquals("OVA..OVA", r.episodeRange.toString())
+    assertEquals("01..12", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -2764,7 +2764,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   public fun `425018_Special_Video_GB_BIG5_BDRip_1080p_x264_8bit_AAC_Go_Summer_Girl_MV_SP_SV`() {
     val r =
         parse("【莳乃汉化组】约会大作战 剧场版：万由里审判 [Special Video][GB+BIG5][BDRip_1080p_x264_8bit][AAC]（诱宵美九:Go☆Summer Girl MV 内嵌）【请注意这个不是SP，是SV】")
-    assertEquals("S?", r.episodeRange.toString())
+    assertEquals("Special..Special", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.EMBEDDED, r.subtitleKind)
@@ -2964,7 +2964,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
       fun `397951_Date_a_Live_BDrip_1920x1080_TV12_OAD_CM10_OPED11_info3_menu14_x264_m4a_10bit`() {
     val r =
         parse("约会大作战 Date a Live[BDrip][1920x1080][TV12+OAD+CM10+OPED11+info3+menu14][x264_m4a][10bit]加刘景长压制")
-    assertEquals("S?", r.episodeRange.toString())
+    assertEquals("OAD..OAD", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -3121,7 +3121,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   @Test
   public fun `373648_Xrip_Date_A_Live_BDrip_Vol_01_06_OVA_1080P_x264_10bit_flac`() {
     val r = parse("【Xrip】[約會大作戰][Date A Live][BDrip][Vol.01_06+OVA][1080P][x264_10bit_flac]")
-    assertEquals("S?", r.episodeRange.toString())
+    assertEquals("OVA..OVA", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)
@@ -4567,7 +4567,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   @Test
   public fun `343090_DATE_A_LIVE_01_12_OAD_BDRIP_720P_x264_AAC`() {
     val r = parse("【千夏字幕組】【約會大作戰_DATE_A_LIVE】[第01～12+OAD話][BDRIP_720P][x264_AAC][繁體內嵌]")
-    assertEquals("01..12+OAD", r.episodeRange.toString())
+    assertEquals("01..12+OAD話", r.episodeRange.toString())
     assertEquals("CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("720P", r.resolution.toString())
     assertEquals(SubtitleKind.EMBEDDED, r.subtitleKind)
@@ -7251,7 +7251,7 @@ public class PatternTitleParserTest约会大作战 : PatternBasedTitleParserTest
   @Test
   public fun `167544_1_Kaitou_Reinya_08_RV10`() {
     val r = parse("【星尘字幕组】1月迷你新番【怪盗丽奈 Kaitou Reinya】【08 诶~丽奈约会大作战】【RV10】")
-    assertEquals("null", r.episodeRange.toString())
+    assertEquals("08..08", r.episodeRange.toString())
     assertEquals("CHS", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EMBEDDED, r.subtitleKind)
