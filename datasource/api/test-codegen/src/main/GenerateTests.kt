@@ -9,6 +9,7 @@
 
 package me.him188.ani.datasources.api.test.codegen.main
 
+import com.squareup.kotlinpoet.FileSpec
 import me.him188.ani.datasources.api.test.codegen.TestGenerator
 import me.him188.ani.datasources.api.test.codegen.json
 import me.him188.ani.datasources.api.topic.titles.PatternBasedRawTitleParser
@@ -21,7 +22,8 @@ import java.io.File
  */
 fun main(args: Array<String>) { // 直接 run 就行
     val inputDir = File(args.getOrNull(0) ?: "testData")
-    val outputDir = File(args.getOrNull(1) ?: "../src/commonTest/kotlin/title/generated")
+    val outputDirSkiko = File(args.getOrNull(1) ?: "../src/skikoTest/kotlin/title/generated")
+    val outputDirAndroid = File(args.getOrNull(1) ?: "../src/androidInstrumentedTest/kotlin/title/generated")
 
     val suites = inputDir.walk().filter { it.extension == "json" }
         .map {
@@ -52,18 +54,23 @@ fun main(args: Array<String>) { // 直接 run 就行
             }
         }
     }
-    outputDir.resolve("dataset.tsv").writeText(output)
+    outputDirSkiko.resolve("dataset.tsv").writeText(output)
 
     TestGenerator(RawTitleParser.getDefault()).run {
         for (data in suites) {
 //            val out = outputDir.resolve(data.kotlinClassName + ".kt")
             println("Generating suite '${data.kotlinClassName}'")
             val suite = createSuite(data)
-            val generated = generateSuite(suite)
-            generated.writeTo(outputDir)
-            outputDir.resolve(generated.name + ".kt").run {
-                writeText("// @formatter:off\n" + readText() + "\n// @formatter:on\n")
-            }
+            generateSuite(suite, chunkSize = 1).generateTo(outputDirSkiko)
+            // 安卓需要把 10 个 test 合并成一个来减少 test 函数数量. 否则 instrumented test 会报错.
+            generateSuite(suite, chunkSize = 10).generateTo(outputDirAndroid)
         }
+    }
+}
+
+private fun FileSpec.generateTo(outputDir: File) {
+    writeTo(outputDir)
+    outputDir.resolve("$name.kt").run {
+        writeText("// @formatter:off\n" + readText() + "\n// @formatter:on\n")
     }
 }

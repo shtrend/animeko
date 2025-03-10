@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.datasources.api.test.codegen
 
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -60,7 +69,10 @@ class TestGenerator(
     }
 
     // 这库真是各种难用
-    fun generateSuite(suite: TestSuite): FileSpec = FileSpec.builder(
+    /**
+     * @param chunkSize Every chunk of [chunkSize] cases are fused into one function.
+     */
+    fun generateSuite(suite: TestSuite, chunkSize: Int = 1): FileSpec = FileSpec.builder(
         "", // 他会创建目录层级
         "PatternTitleParserTest${suite.name}",
     ).apply {
@@ -95,15 +107,22 @@ class TestGenerator(
                 """.trimIndent(),
                 )
                 superclass(ClassName("me.him188.ani.datasources.api.title", "PatternBasedTitleParserTestSuite"))
-                for (case in suite.cases) case.parsed.run {
-                    addFunction(
-                        FunSpec.builder(case.name)
-                            .addAnnotation(ClassName.bestGuess("kotlin.test.Test"))
-                            // 这库会自动 wrap code, 如果不写 %S 就可能出问题
-                            // 他不会自动换行, 必须要有 + "\n"
-                            .addCode(
-                                """val r = parse(%S)""" + "\n", case.title,
-                            )
+                for (chunk in suite.cases.chunked(chunkSize)) {
+                    val functionName = if (chunk.size == 1) {
+                        chunk.single().name
+                    } else {
+                        chunk.joinToString("-") { it.name.substringBefore("_") }
+                    }
+                    val functionBuilder = FunSpec.builder(functionName)
+                        .addAnnotation(ClassName.bestGuess("kotlin.test.Test"))
+
+                    for (case in chunk) with(case.parsed) {
+                        // 这库会自动 wrap code, 如果不写 %S 就可能出问题
+                        // 他不会自动换行, 必须要有 + "\n"
+                        functionBuilder.addCode("kotlin.run {\n")
+                        functionBuilder.addCode(
+                            """val r = parse(%S)""" + "\n", case.title,
+                        )
                             .addCode("assertEquals(%S, r.episodeRange.toString())" + "\n", episodeRange.toString())
                             .addCode(
                                 "assertEquals(%S, r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })" + "\n",
@@ -123,6 +142,11 @@ class TestGenerator(
                                     )
                                 }
                             }
+                        functionBuilder.addCode("}\n")
+                    }
+
+                    addFunction(
+                        functionBuilder
                             .build(),
                     )
                 }

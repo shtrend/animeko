@@ -7,6 +7,8 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
+@file:Suppress("UnstableApiUsage")
+
 plugins {
     kotlin("multiplatform")
     `android-library`
