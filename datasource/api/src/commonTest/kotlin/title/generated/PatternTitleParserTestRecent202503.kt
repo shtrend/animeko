@@ -275,7 +275,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690614_Nichijou_My_Ordinary_Life_TV_OVA_2023_05_13`() {
     val r =
         parse("[整理搬运] 日常 (Nichijou／My Ordinary Life)：TV动画+OVA+漫画+音乐+其他；日语音轨; 外挂简中字幕 (整理时间：2023.05.13)")
-    assertEquals("：TV动画+OVA+漫画+音乐+其他；日语音轨;..：TV动画+OVA+漫画+音乐+其他；日语音轨;", r.episodeRange.toString())
+    assertEquals("null", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -323,7 +323,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690607_Ai_Yori_Aoshi_TV_2002_2003_OVA_CD_2024_06_30`() {
     val r =
         parse("[整理搬运] 青出于蓝／青蓝姻缘／未婚关系 (藍より青し) (Ai Yori Aoshi)：TV动画 (2002年版、2003年版)+OVA+漫画+CD+其他；日语音轨; 外挂繁中字幕 (整理时间：2024.06.30)")
-    assertEquals("+OVA+漫画+CD+其他；日语音轨;..+OVA+漫画+CD+其他；日语音轨;", r.episodeRange.toString())
+    assertEquals("null", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -400,7 +400,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690598_Har_Guu_TV_OVA_2023_12_12`() {
     val r =
         parse("[整理搬运] 热带雨林的爆笑生活／哈雷小子 (ジャングルはいつもハレのちグゥ) (Haré+Guu)：TV动画+OVA+漫画+音乐+其他；日语音轨; 外挂简中字幕 (整理时间：2023.12.12)")
-    assertEquals("：TV动画+OVA+漫画+音乐+其他；日语音轨;..：TV动画+OVA+漫画+音乐+其他；日语音轨;", r.episodeRange.toString())
+    assertEquals("null", r.episodeRange.toString())
     assertEquals("CHS, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -410,7 +410,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690596_Ai_Yori_Aoshi_TV_2002_2003_OVA_CD_2024_06_30`() {
     val r =
         parse("【归档】[整理搬运] 青出于蓝／青蓝姻缘／未婚关系 (藍より青し) (Ai Yori Aoshi)：TV动画 (2002年版、2003年版)+OVA+漫画+CD+其他；日语音轨; 外挂繁中字幕 (整理时间：2024.06.30)")
-    assertEquals("+OVA+漫画+CD+其他；日语音轨;..+OVA+漫画+CD+其他；日语音轨;", r.episodeRange.toString())
+    assertEquals("null", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("null", r.resolution.toString())
     assertEquals(SubtitleKind.EXTERNAL_DISCOVER, r.subtitleKind)
@@ -636,7 +636,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `690565_Dr_STONE_SCIENCE_FUTURE_03_CR_WebRip_1080p_HEVC_AAC_S4`() {
     val r =
         parse("[芝士动物朋友] 石纪元 科学与未来 / Dr.STONE SCIENCE FUTURE [03][CR-WebRip][1080p][HEVC+AAC][简繁内封]（新石纪 第四季 S4）")
-    assertEquals("S4", r.episodeRange.toString())
+    assertEquals("03..03", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -4998,8 +4998,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `689958_WOOO__21_WEBRIP_MP4_MP4_MKV_1080P`() {
     val r =
         parse("[银色子弹字幕组][名侦探柯南][特别篇WOOO 迷侦探!?毛利小五郎&演员优木真央美的烦恼][WEBRIP][简日双语MP4/繁日雙語MP4/简繁日多语MKV][1080P]")
-    assertEquals("特别篇WOOO 迷侦探!?毛利小五郎&演员优木真央美的烦恼..特别篇WOOO 迷侦探!?毛利小五郎&演员优木真央美的烦恼",
-        r.episodeRange.toString())
+    assertEquals("null", r.episodeRange.toString())
     assertEquals("CHS, CHT, JPN", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -5487,7 +5486,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
   public fun `689898_Dr_STONE_SCIENCE_FUTURE_02_CR_WebRip_1080p_HEVC_AAC_S4`() {
     val r =
         parse("[芝士动物朋友] 石纪元 科学与未来 / Dr.STONE SCIENCE FUTURE [02][CR-WebRip][1080p][HEVC+AAC][简繁内封]（新石纪 第四季 S4）")
-    assertEquals("S4", r.episodeRange.toString())
+    assertEquals("02..02", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -9033,7 +9032,7 @@ public class PatternTitleParserTestRecent202503 : PatternBasedTitleParserTestSui
       fun `689416_DBD_Raws_Gekijou_Soushuuhen_Bocchi_the_Rock_21_SP_1080P_BDRip_HEVC_10bit_FLAC_AC3_MKV__21`() {
     val r =
         parse("[DBD-Raws][孤独摇滚！剧场总集篇/Gekijou Soushuuhen Bocchi the Rock!][正片+SP][1080P][BDRip][HEVC-10bit][FLAC+AC3][MKV](劇場総集編ぼっち・ざ・ろっく!)")
-    assertEquals("正片+SP..正片+SP", r.episodeRange.toString())
+    assertEquals("S?", r.episodeRange.toString())
     assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(null, r.subtitleKind)

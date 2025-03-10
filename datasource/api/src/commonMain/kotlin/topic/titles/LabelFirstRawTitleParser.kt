@@ -17,6 +17,7 @@ import me.him188.ani.datasources.api.topic.FrameRate
 import me.him188.ani.datasources.api.topic.MediaOrigin
 import me.him188.ani.datasources.api.topic.Resolution
 import me.him188.ani.datasources.api.topic.SubtitleLanguage
+import me.him188.ani.datasources.api.topic.isSingleEpisode
 
 /**
  * 只解析剧集, 分辨率等必要信息, 不解析标题. 拥有更高正确率
@@ -158,6 +159,22 @@ class LabelFirstRawTitleParser : RawTitleParser() {
             } != null
         }
 
+        private fun ParsedTopicTitle.Builder.emitEpisodeRange(
+            new: EpisodeRange
+        ) {
+            val oldRange = episodeRange
+            if (oldRange == null) {
+                episodeRange = new
+            } else {
+                if (oldRange.isSingleEpisode() && new is EpisodeRange.Season) {
+                    // ignore
+                    return
+                } else {
+                    episodeRange = new
+                }
+            }
+        }
+
         private fun String.parseEpisode(): Boolean {
             if (this.contains("x264", ignoreCase = true)
                 || this.contains("x265", ignoreCase = true)
@@ -165,7 +182,7 @@ class LabelFirstRawTitleParser : RawTitleParser() {
 
             val str = episodeRemove.fold(this) { acc, regex -> acc.remove(regex) }
             str.toFloatOrNull()?.let {
-                builder.episodeRange = EpisodeRange.single(str)
+                builder.emitEpisodeRange(EpisodeRange.single(str))
                 return true
             }
 //            collectionPattern.find(str)?.let { result ->
@@ -217,25 +234,27 @@ class LabelFirstRawTitleParser : RawTitleParser() {
                 start.getPrefix()?.let { prefix ->
                     if (!end.startsWith(prefix)) {
                         // "SP1-5"
-                        builder.episodeRange = EpisodeRange.range(start, prefix + end)
+                        builder.emitEpisodeRange(EpisodeRange.range(start, prefix + end))
                         return true
                     }
                 }
 
                 if (end.startsWith("0") && !start.startsWith("0")) {
                     // "Hibike! Euphonium 3 - 02"
-                    builder.episodeRange = EpisodeRange.single(EpisodeSort(end))
+                    builder.emitEpisodeRange(EpisodeRange.single(EpisodeSort(end)))
                     return true
                 }
 
                 val extra = result.groups["extra"]?.value
                 if (extra != null) {
-                    builder.episodeRange = EpisodeRange.combined(
-                        EpisodeRange.range(start, end),
-                        EpisodeRange.single(EpisodeSort(extra.removePrefix("+"))),
+                    builder.emitEpisodeRange(
+                        EpisodeRange.combined(
+                            EpisodeRange.range(start, end),
+                            EpisodeRange.single(EpisodeSort(extra.removePrefix("+"))),
+                        ),
                     )
                 } else {
-                    builder.episodeRange = EpisodeRange.range(start, end)
+                    builder.emitEpisodeRange(EpisodeRange.range(start, end))
                 }
                 return true
             }
@@ -248,45 +267,43 @@ class LabelFirstRawTitleParser : RawTitleParser() {
                     val start = groupValues[1].seasonStringToIntOrNull()
                     val end = groupValues[2].seasonStringToIntOrNull()
                     if (start != null && end != null) {
-                        builder.episodeRange = (start..end).fold(EpisodeRange.empty()) { acc, i ->
-                            EpisodeRange.combined(acc, EpisodeRange.season(i))
-                        }
+                        builder.emitEpisodeRange(
+                            (start..end).fold(EpisodeRange.empty()) { acc, i ->
+                                EpisodeRange.combined(acc, EpisodeRange.season(i))
+                            },
+                        )
                         return true
                     }
                 } else {
-                    builder.episodeRange = groupValues.drop(1).mapNotNull {
-                        it.seasonStringToIntOrNull()
-                    }.fold(EpisodeRange.empty()) { acc, i -> EpisodeRange.combined(acc, EpisodeRange.season(i)) }
+                    builder.emitEpisodeRange(
+                        groupValues.drop(1).mapNotNull {
+                            it.seasonStringToIntOrNull()
+                        }.fold(EpisodeRange.empty()) { acc, i -> EpisodeRange.combined(acc, EpisodeRange.season(i)) },
+                    )
                     return true
                 }
             }
             seasonPattern.find(str)?.let { result ->
-                builder.episodeRange = parseSeason(result)
+                builder.emitEpisodeRange(parseSeason(result))
                 return true
             }
-            if (str.contains("SP", ignoreCase = true) // 包括 "Special"
-                || str.contains("OVA", ignoreCase = true)
-                || str.contains("小剧场")
-                || str.contains("特别篇")
-                || str.contains("番外篇")
-                || str.contains("OAD", ignoreCase = true)
-            ) {
-                builder.episodeRange = EpisodeRange.single(this)
+            if (singleSpecialEpisode.matchEntire(str) != null) {
+                builder.emitEpisodeRange(EpisodeRange.single(this))
                 return true
             }
             return false
         }
 
         private fun parseSeason(result: MatchResult) = EpisodeRange.combined(
-            result.groups.asSequence().drop(1)
-                // 去除开头 "+"
-                .mapNotNull { group ->
-                    group?.value?.removePrefix("+")?.takeIf { it.isNotBlank() }
-                }
+            result.value.split("+")
                 .map {
                     // expecting "S1" or "S1E5"
                     if (it.startsWith("SP", ignoreCase = true)) {
                         return@map EpisodeRange.single(it)
+                    }
+                    if (it.startsWith("Movie", ignoreCase = true)) {
+                        // TODO: handle movie
+                        return@map EpisodeRange.unknownSeason()
                     }
                     if (it.contains("E", ignoreCase = true)) {
                         val episode = it.substringAfter("E").toIntOrNull()
@@ -347,10 +364,15 @@ private val collectionPattern = Regex(
     RegexOption.IGNORE_CASE,
 )
 
+private val singleSpecialEpisode = Regex(
+    """(SP|Special|Moview|OVA|OAD|小剧场|特别篇?|番外篇?)[0-9]{0,4}""",
+    RegexOption.IGNORE_CASE,
+)
+
 // S1
 // S1+S2
 // S1E5 // ep 5
-private val seasonPattern = Regex("""(S\d+(?:E\d+)?)(?:(\+S\d+(?:E\d+)?)|(\+S\w)|(\+\w+))*""", RegexOption.IGNORE_CASE)
+private val seasonPattern = Regex("""S\d+(?:E\d+)?(?:\+(?:S\d+(?:E\d+)?|Movie|SP))*""", RegexOption.IGNORE_CASE)
 
 private val seasonRangePattern = Regex("""(S\d+)(-S\d+)*""", RegexOption.IGNORE_CASE)
 

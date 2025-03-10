@@ -53,7 +53,7 @@ public class PatternTitleParserTest石纪元 : PatternBasedTitleParserTestSuite(
   public fun `690565_Dr_STONE_SCIENCE_FUTURE_03_CR_WebRip_1080p_HEVC_AAC_S4`() {
     val r =
         parse("[芝士动物朋友] 石纪元 科学与未来 / Dr.STONE SCIENCE FUTURE [03][CR-WebRip][1080p][HEVC+AAC][简繁内封]（新石纪 第四季 S4）")
-    assertEquals("S4", r.episodeRange.toString())
+    assertEquals("03..03", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -90,7 +90,7 @@ public class PatternTitleParserTest石纪元 : PatternBasedTitleParserTestSuite(
   public fun `689898_Dr_STONE_SCIENCE_FUTURE_02_CR_WebRip_1080p_HEVC_AAC_S4`() {
     val r =
         parse("[芝士动物朋友] 石纪元 科学与未来 / Dr.STONE SCIENCE FUTURE [02][CR-WebRip][1080p][HEVC+AAC][简繁内封]（新石纪 第四季 S4）")
-    assertEquals("S4", r.episodeRange.toString())
+    assertEquals("02..02", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
@@ -122,7 +122,7 @@ public class PatternTitleParserTest石纪元 : PatternBasedTitleParserTestSuite(
   public fun `688817_Dr_STONE_SCIENCE_FUTURE_01_CR_WebRip_1080p_HEVC_AAC_S4`() {
     val r =
         parse("[芝士动物朋友] 石纪元 科学与未来 / Dr.STONE SCIENCE FUTURE [01][CR-WebRip][1080p][HEVC+AAC][简繁内封]（新石纪 第四季 S4）")
-    assertEquals("S4", r.episodeRange.toString())
+    assertEquals("01..01", r.episodeRange.toString())
     assertEquals("CHS, CHT", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
     assertEquals("1080P", r.resolution.toString())
     assertEquals(SubtitleKind.CLOSED, r.subtitleKind)
