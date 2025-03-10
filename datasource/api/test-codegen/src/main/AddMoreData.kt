@@ -9,6 +9,7 @@
 
 package me.him188.ani.datasources.api.test.codegen.main
 
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.UserAgent
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
@@ -37,7 +38,7 @@ suspend fun main() {
         ?: File("testData")
 
     val list = listOf(
-        "石纪元",
+        "约会大作战",
     )
 
     TopicFetcher(output, "dmhy").run {
@@ -57,7 +58,11 @@ class TopicFetcher(
             install(UserAgent) {
                 agent = "open-ani/ani/3.0.0-beta01 (debug) (https://github.com/open-ani/ani)"
             }
-
+            install(HttpTimeout) {
+                connectTimeoutMillis = 30_000
+                socketTimeoutMillis = 30_000
+                requestTimeoutMillis = 30_000
+            }
         }.use { http ->
             var count = 0
             val topics = DmhyPagedSourceImpl(
