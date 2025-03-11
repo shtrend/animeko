@@ -13,7 +13,6 @@ import com.posthog.java.PostHog
 import com.posthog.java.PostHogLogger
 import me.him188.ani.utils.logging.Logger
 import me.him188.ani.utils.logging.logger
-import java.util.UUID
 
 class AnalyticsImpl(
     config: AnalyticsConfig,
@@ -32,7 +31,7 @@ class AnalyticsImpl(
 
     private val logger = logger<AnalyticsImpl>()
     override fun recordEventImpl(event: AnalyticsEvent, properties: Map<String, Any>) {
-        postHog.capture(UUID.randomUUID().toString(), event.event, properties)
+        postHog.capture(userId, event.event, properties)
     }
 
     private fun Logger.asPosthogLogger() = object : PostHogLogger {
