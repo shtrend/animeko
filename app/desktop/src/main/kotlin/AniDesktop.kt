@@ -342,16 +342,20 @@ object AniDesktop {
 
         // Initialize CEF application.
         coroutineScope.launch {
+            logger.info { "[JCEF init] waiting for anitorrent load" }
             try {
                 loadAnitorrentJob.join()
             } catch (_: Throwable) {
             }
+            logger.info { "[JCEF init] anitorrent loaded" }
             // Load anitorrent libraries before JCEF, so they won't load at the same time.
             // We suspect concurrent loading of native libraries may cause some issues #1121.
 
             val proxySettings = koin.koin.get<ProxyProvider>()
                 .proxy.first()
 
+            logger.info { "[JCEF init] Calling AniCefApp.initialize" }
+            
             AniCefApp.initialize(
                 logDir = dataDir.toFile().resolve("logs"),
                 cacheDir = cacheDir.toFile().resolve("jcef-cache"),
@@ -360,12 +364,16 @@ object AniDesktop {
                 proxyAuthPassword = proxySettings?.authorization?.password,
             )
 
+            logger.info { "[JCEF init] Initialize done, now prepare VLC libraries" }
+
             // 预先加载 VLC, https://github.com/open-ani/ani/issues/618
             kotlin.runCatching {
                 VlcMediampPlayer.prepareLibraries()
             }.onFailure {
                 logger.error(it) { "Failed to prepare VLC" }
             }
+
+            logger.info { "[JCEF init] VLC libraries prepared." }
         }
 
         coroutineScope.launch {
