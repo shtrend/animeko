@@ -13,7 +13,7 @@ import com.posthog.java.PostHog
 import com.posthog.java.PostHogLogger
 import me.him188.ani.utils.logging.Logger
 import me.him188.ani.utils.logging.logger
-import java.util.*
+import java.util.UUID
 
 class AnalyticsImpl(
     config: AnalyticsConfig,
@@ -59,7 +59,7 @@ class AnalyticsImpl(
     }
 
     override fun onAppStart() {
-        postHog.identify(userId, intrinsicProperties)
+//        postHog.identify(userId, intrinsicProperties)
     }
 }
 

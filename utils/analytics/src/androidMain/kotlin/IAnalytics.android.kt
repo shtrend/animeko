@@ -29,6 +29,7 @@ class AnalyticsImpl(
             host = host,
         ).apply {
             debug = config.debugLogging
+            this.captureApplicationLifecycleEvents = false
             this.getAnonymousId = { UUID.fromString(userId) }
         }
         PostHogAndroid.setup(context, config)
@@ -39,7 +40,7 @@ class AnalyticsImpl(
     }
 
     override fun onAppStart() {
-        PostHog.identify(userId, userProperties = intrinsicProperties)
+//        PostHog.identify(userId, userProperties = intrinsicProperties)
     }
 }
 
