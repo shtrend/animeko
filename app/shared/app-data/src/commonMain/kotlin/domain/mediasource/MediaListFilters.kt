@@ -10,7 +10,7 @@
 package me.him188.ani.app.domain.mediasource
 
 import androidx.collection.IntSet
-import androidx.collection.mutableIntSetOf
+import androidx.collection.MutableIntSet
 import me.him188.ani.app.domain.mediasource.MediaListFilters.charsToDelete
 import me.him188.ani.app.domain.mediasource.MediaListFilters.charsToReplaceWithWhitespace
 import me.him188.ani.app.domain.mediasource.MediaListFilters.keepWords
@@ -270,7 +270,7 @@ object MediaListFilters {
 
 private fun String.toCharCodeIntSet(): IntSet {
     val chars = toCharArray()
-    return mutableIntSetOf(chars.size).apply {
+    return MutableIntSet(chars.size).apply {
         chars.forEach { add(it.code) }
     }
 }
