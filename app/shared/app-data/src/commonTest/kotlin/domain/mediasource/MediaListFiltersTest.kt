@@ -9,13 +9,24 @@
 
 package me.him188.ani.app.domain.mediasource
 
+import me.him188.ani.app.data.network.toIntArray
+import me.him188.ani.app.domain.mediasource.MediaListFilters.charsToDelete
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.topic.EpisodeRange
 import me.him188.ani.test.TestFactory
 import me.him188.ani.test.runDynamicTests
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class MediaListFiltersTest {
+    @Test
+    fun `charsToDelete does not contains space`() {
+        // 不能意外地删除空格
+
+        assertEquals(-1, charsToDelete.toIntArray().indexOf(' '.code))
+        assertEquals(-1, charsToDelete.toIntArray().indexOf('\t'.code))
+    }
+
     @TestFactory
     fun `removeSpecials removes spaces`() = runDynamicTests {
         add("when removeWhitespace = true") {
@@ -136,6 +147,11 @@ class MediaListFiltersTest {
             removeWhitespace = true,
         )
         case(
+            "香格里拉 开拓异境 粪作猎手挑战神作",
+            "香格里拉・开拓异境～粪作猎手挑战神作～",
+            removeWhitespace = false,
+        )
+        case(
             "五等分的新娘∬",
             "五等分的新娘∬",
             removeWhitespace = true,
@@ -146,7 +162,7 @@ class MediaListFiltersTest {
             removeWhitespace = true,
         )
         case(
-            "理科生坠入情网故尝试证明 r=1-sinθ ♡",
+            "理科生坠入情网故尝试证明 r=1 sinθ ♡",
             "理科生坠入情网故尝试证明[r=1-sinθ]♡",
             removeWhitespace = false,
         )
@@ -156,17 +172,17 @@ class MediaListFiltersTest {
             removeWhitespace = false,
         )
         case(
-            "博人传-火影次世代-",
+            "博人传 火影次世代",
             "博人传-火影次世代-",
             removeWhitespace = false,
         )
         case(
-            "博人传-火影次世代",
+            "博人传 火影次世代",
             "博人传-火影次世代",
             removeWhitespace = false,
         )
         case(
-            "博人传—火影次世代—",
+            "博人传 火影次世代",
             "博人传—火影次世代—",
             removeWhitespace = false,
         )
