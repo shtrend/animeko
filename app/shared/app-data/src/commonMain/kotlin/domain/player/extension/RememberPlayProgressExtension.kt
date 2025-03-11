@@ -115,7 +115,13 @@ class RememberPlayProgressExtension(
             PlaybackState.PLAYING,
             PlaybackState.PAUSED_BUFFERING -> {
                 val currentPositionMillis = withContext(Dispatchers.Main.immediate) {
-                    player.getCurrentPositionMillis()
+                    try {
+                        player.getCurrentPositionMillis()
+                    } catch (e: Error) {
+                        // Caused by: java.lang.Error: Invalid memory access
+                        // https://github.com/open-ani/animeko/issues/1787
+                        0L
+                    }
                 }
 
                 if (currentPositionMillis <= 0L) {
