@@ -155,6 +155,21 @@ class MediaListFiltersTest {
             "青出于蓝～缘～",
             removeWhitespace = false,
         )
+        case(
+            "博人传-火影次世代-",
+            "博人传-火影次世代-",
+            removeWhitespace = false,
+        )
+        case(
+            "博人传-火影次世代",
+            "博人传-火影次世代",
+            removeWhitespace = false,
+        )
+        case(
+            "博人传—火影次世代—",
+            "博人传—火影次世代—",
+            removeWhitespace = false,
+        )
     }
 
     @TestFactory
