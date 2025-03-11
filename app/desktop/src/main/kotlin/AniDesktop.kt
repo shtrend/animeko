@@ -344,6 +344,7 @@ object AniDesktop {
         coroutineScope.launch {
             logger.info { "[JCEF init] waiting for anitorrent load" }
             try {
+                analyticsInitializer.join()
                 loadAnitorrentJob.join()
             } catch (_: Throwable) {
             }
