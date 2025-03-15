@@ -58,6 +58,7 @@ class AnalyticsImpl(
     }
 
     override fun onAppStart() {
+        postHog.capture(userId, "\$screen", intrinsicProperties)
 //        postHog.identify(userId, intrinsicProperties)
     }
 }
