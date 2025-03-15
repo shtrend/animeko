@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -42,14 +42,14 @@ class TorrentMediaResolver(
         return media.download is ResourceLocation.HttpTorrentFile || media.download is ResourceLocation.MagnetLink
     }
 
-    @Throws(VideoSourceResolutionException::class, CancellationException::class)
+    @Throws(MediaResolutionException::class, CancellationException::class)
     override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*> {
         val downloader = try {
             engine.getDownloader()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            throw VideoSourceResolutionException(ResolutionFailures.ENGINE_ERROR, e)
+            throw MediaResolutionException(ResolutionFailures.ENGINE_ERROR, e)
         }
 
         return when (val location = media.download) {
@@ -64,13 +64,13 @@ class TorrentMediaResolver(
                         extraFiles = media.extraFiles.toMediampMediaExtraFiles(),
                     )
                 } catch (e: FetchTorrentTimeoutException) {
-                    throw VideoSourceResolutionException(ResolutionFailures.FETCH_TIMEOUT)
+                    throw MediaResolutionException(ResolutionFailures.FETCH_TIMEOUT)
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: IOException) {
-                    throw VideoSourceResolutionException(ResolutionFailures.NETWORK_ERROR, e)
+                    throw MediaResolutionException(ResolutionFailures.NETWORK_ERROR, e)
                 } catch (e: Exception) {
-                    throw VideoSourceResolutionException(ResolutionFailures.ENGINE_ERROR, e)
+                    throw MediaResolutionException(ResolutionFailures.ENGINE_ERROR, e)
                 }
             }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -48,11 +48,11 @@ interface MediaResolver {
      *
      * @throws UnsupportedMediaException if the media cannot be resolved.
      * Use [supports] to check if the media can be resolved.
-     * @throws VideoSourceResolutionException 当遇到已知原因的解析错误时抛出
+     * @throws MediaResolutionException 当遇到已知原因的解析错误时抛出
      * @throws CancellationException 当协程被取消时抛出
      * @throws Exception 所有抛出的其他异常都属于 bug
      */
-    @Throws(VideoSourceResolutionException::class, CancellationException::class)
+    @Throws(MediaResolutionException::class, CancellationException::class)
     suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*>
 
     companion object {
@@ -85,7 +85,7 @@ class UnsupportedMediaException(
 
 /**
  * 已知的解析错误
- * @see VideoSourceResolutionException
+ * @see MediaResolutionException
  */
 enum class ResolutionFailures {
     /**
@@ -110,7 +110,7 @@ enum class ResolutionFailures {
  * 解析资源失败时抛出的异常.
  * @see MediaResolver.resolve
  */
-class VideoSourceResolutionException(
+class MediaResolutionException(
     val reason: ResolutionFailures,
     override val cause: Throwable? = null,
 ) : Exception("Failed to resolve video source: $reason", cause)

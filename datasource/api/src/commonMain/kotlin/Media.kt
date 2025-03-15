@@ -65,7 +65,7 @@ sealed interface Media {
     /**
      * 描述如何下载这个资源
      */
-    val download: ResourceLocation // 有关具体下载过程, 参考 app `VideoSourceResolver`, 以及 `MediaCacheEngine`
+    val download: ResourceLocation // 有关具体下载过程, 参考 app `MediaResolver`, 以及 `MediaCacheEngine`
 
     /**
      * 该资源包含的剧集列表.
