@@ -21,6 +21,7 @@ import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectSeriesInfo
 import me.him188.ani.app.domain.media.SOURCE_DMHY
 import me.him188.ani.app.domain.media.TestMediaList
+import me.him188.ani.app.domain.media.cache.TestMediaCache
 import me.him188.ani.app.domain.media.cache.storage.TestMediaCacheStorage
 import me.him188.ani.app.domain.media.createTestDefaultMedia
 import me.him188.ani.app.domain.media.createTestMediaProperties
