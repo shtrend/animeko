@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -11,6 +11,7 @@ package me.him188.ani.app.domain.media.cache.engine
 
 import kotlinx.coroutines.flow.Flow
 import me.him188.ani.app.domain.media.cache.MediaCache
+import me.him188.ani.app.domain.media.cache.storage.MediaCacheStorage
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.MediaCacheMetadata
 import kotlin.coroutines.CoroutineContext
@@ -59,7 +60,7 @@ interface MediaCacheEngine {
         origin: Media,
         metadata: MediaCacheMetadata,
         parentContext: CoroutineContext
-    ): _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache?
+    ): MediaCache?
 
     /**
      * 创建一个新的返回
@@ -69,11 +70,11 @@ interface MediaCacheEngine {
         origin: Media,
         metadata: MediaCacheMetadata,
         parentContext: CoroutineContext
-    ): _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache
+    ): MediaCache
 
     /**
      * 删除所有未在 [all] 中找到对应 [MediaCache] 的文件. 这通常包括在线播放的视频. 不会包括通过缓存功能创建的.
      */
-    suspend fun deleteUnusedCaches(all: List<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache>)
+    suspend fun deleteUnusedCaches(all: List<MediaCache>)
 }
 

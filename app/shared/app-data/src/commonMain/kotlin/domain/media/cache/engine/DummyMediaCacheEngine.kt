@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -38,15 +38,15 @@ class DummyMediaCacheEngine(
         origin: Media,
         metadata: MediaCacheMetadata,
         parentContext: CoroutineContext
-    ): _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache = DummyMediaCache(origin, metadata, mediaSourceId, location)
+    ): MediaCache = DummyMediaCache(origin, metadata, mediaSourceId, location)
 
     override suspend fun createCache(
         origin: Media,
         metadata: MediaCacheMetadata,
         parentContext: CoroutineContext
-    ): _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache = DummyMediaCache(origin, metadata, mediaSourceId, location)
+    ): MediaCache = DummyMediaCache(origin, metadata, mediaSourceId, location)
 
-    override suspend fun deleteUnusedCaches(all: List<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache>) {
+    override suspend fun deleteUnusedCaches(all: List<MediaCache>) {
     }
 }
 
@@ -55,12 +55,13 @@ class DummyMediaCache(
     override val metadata: MediaCacheMetadata,
     val mediaSourceId: String,
     val location: MediaSourceLocation = MediaSourceLocation.Local,
-) : _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache {
+) : MediaCache {
     private val cachedMedia by lazy {
         CachedMedia(origin, mediaSourceId, origin.download, location)
     }
-    override val state: MutableStateFlow<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState> = MutableStateFlow(
-        _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCacheState.IN_PROGRESS)
+    override val state: MutableStateFlow<MediaCacheState> = MutableStateFlow(
+        MediaCacheState.IN_PROGRESS,
+    )
 
     override suspend fun getCachedMedia(): CachedMedia = cachedMedia
 
@@ -68,11 +69,11 @@ class DummyMediaCache(
     private var isValid = true
     override fun isValid(): Boolean = isValid
 
-    override val fileStats: Flow<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.FileStats> =
-        flowOf(_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.FileStats(300.megaBytes, 100.megaBytes))
-    override val sessionStats: Flow<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.SessionStats> =
+    override val fileStats: Flow<MediaCache.FileStats> =
+        flowOf(MediaCache.FileStats(300.megaBytes, 100.megaBytes))
+    override val sessionStats: Flow<MediaCache.SessionStats> =
         flowOf(
-            _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache.SessionStats(
+            MediaCache.SessionStats(
                 0.megaBytes,
                 0.megaBytes,
                 0.megaBytes,

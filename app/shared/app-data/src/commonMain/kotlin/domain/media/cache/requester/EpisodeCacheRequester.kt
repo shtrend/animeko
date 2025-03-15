@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -18,6 +18,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.requester.CacheRequestStage.MediaSelected
 import me.him188.ani.app.domain.media.cache.storage.MediaCacheStorage
 import me.him188.ani.app.domain.media.cache.storage.contains
@@ -149,8 +150,8 @@ class EpisodeCacheRequesterImpl(
             }
         }
 
-        override suspend fun tryAutoSelectByCachedSeason(existingCaches: List<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache>): MediaSelected? {
-            val existing: _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache
+        override suspend fun tryAutoSelectByCachedSeason(existingCaches: List<MediaCache>): MediaSelected? {
+            val existing: MediaCache
             return stageLock.withLock {
                 checkStageLocked()
 
@@ -240,7 +241,7 @@ class EpisodeCacheRequesterImpl(
             }
         }
 
-        override suspend fun trySelectByCache(mediaCache: _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache): CacheRequestStage.Done? {
+        override suspend fun trySelectByCache(mediaCache: MediaCache): CacheRequestStage.Done? {
             stageLock.withLock {
                 checkStageLocked()
                 try {

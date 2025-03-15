@@ -98,7 +98,7 @@ class DirectoryMediaCacheStorage(
         }
 
         metadataDir.useDirectoryEntries { files ->
-            val allRecovered = mutableListOf<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache>()
+            val allRecovered = mutableListOf<MediaCache>()
             val semaphore = Semaphore(8)
             supervisorScope {
                 for (file in files) {
@@ -123,7 +123,7 @@ class DirectoryMediaCacheStorage(
 
     private suspend fun restoreFile(
         file: SystemPath,
-        reportRecovered: suspend (_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache) -> Unit,
+        reportRecovered: suspend (MediaCache) -> Unit,
     ) = withContext(Dispatchers.IO) {
         if (file.extension != METADATA_FILE_EXTENSION) return@withContext
 
@@ -161,7 +161,7 @@ class DirectoryMediaCacheStorage(
         }
     }
 
-    override val listFlow: MutableStateFlow<List<_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache>> = MutableStateFlow(emptyList())
+    override val listFlow: MutableStateFlow<List<MediaCache>> = MutableStateFlow(emptyList())
 
     override val cacheMediaSource: MediaSource by lazy {
         MediaCacheStorageSource(this, MediaSourceLocation.Local)
@@ -180,7 +180,7 @@ class DirectoryMediaCacheStorage(
      */
     private val lock = Mutex()
 
-    override suspend fun cache(media: Media, metadata: MediaCacheMetadata, resume: Boolean): _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache {
+    override suspend fun cache(media: Media, metadata: MediaCacheMetadata, resume: Boolean): MediaCache {
         @Suppress("NAME_SHADOWING")
         val metadata = metadata.withExtra(
             mapOf(
@@ -218,12 +218,12 @@ class DirectoryMediaCacheStorage(
     }
 
     private fun cacheEquals(
-        it: _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache,
+        it: MediaCache,
         media: Media,
         metadata: MediaCacheMetadata = it.metadata
     ) = it.origin.mediaId == media.mediaId && it.metadata.episodeSort == metadata.episodeSort
 
-    override suspend fun deleteFirst(predicate: (_root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache) -> Boolean): Boolean {
+    override suspend fun deleteFirst(predicate: (MediaCache) -> Boolean): Boolean {
         lock.withLock {
             val cache = listFlow.value.firstOrNull(predicate) ?: return false
             listFlow.value -= cache
@@ -235,7 +235,7 @@ class DirectoryMediaCacheStorage(
         }
     }
 
-    private fun getSaveFilename(cache: _root_ide_package_.me.him188.ani.app.domain.media.cache.MediaCache) = "${cache.cacheId}.$METADATA_FILE_EXTENSION"
+    private fun getSaveFilename(cache: MediaCache) = "${cache.cacheId}.$METADATA_FILE_EXTENSION"
 
     override fun close() {
         if (engine is AutoCloseable) {
