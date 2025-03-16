@@ -60,9 +60,6 @@ class EstimatedProgressIndicatorState private constructor(
     private var velocity by mutableFloatStateOf(0f)
     private val singleTaskExecutor = SingleTaskExecutor()
 
-    private val isVisible: Boolean
-        get() = progress > 0f
-
     /**
      * Animate the progress from 0 to 0.99f
      */
@@ -70,7 +67,7 @@ class EstimatedProgressIndicatorState private constructor(
         durationMillis: Int,
     ) {
         coroutineScope {
-            if (!isVisible) {
+            if (heightScale < 1f) {
                 launch {
                     // animate height expand
                     animate(
