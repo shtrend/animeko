@@ -23,7 +23,6 @@ import me.him188.ani.app.data.models.subject.SubjectSeriesInfoBuilder
 import me.him188.ani.app.data.models.subject.toBuilder
 import me.him188.ani.app.domain.media.createTestDefaultMedia
 import me.him188.ani.app.domain.media.createTestMediaProperties
-import me.him188.ani.app.domain.mediasource.codec.MediaSourceTier
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.MediaExtraFiles
