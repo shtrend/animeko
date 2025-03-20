@@ -89,6 +89,7 @@ val optInAnnotations = arrayOf(
 )
 
 val testLanguageFeatures: List<String> = listOf(
+    "ContextParameters",
 //    "ContextReceivers" // causes segfault on ios
 )
 
