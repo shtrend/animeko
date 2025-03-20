@@ -12,6 +12,8 @@ package me.him188.ani.app.domain.media.selector
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
@@ -21,17 +23,25 @@ import me.him188.ani.app.data.models.subject.SubjectSeriesInfoBuilder
 import me.him188.ani.app.data.models.subject.toBuilder
 import me.him188.ani.app.domain.media.createTestDefaultMedia
 import me.him188.ani.app.domain.media.createTestMediaProperties
+import me.him188.ani.app.domain.mediasource.codec.MediaSourceTier
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.MediaExtraFiles
 import me.him188.ani.datasources.api.SubtitleKind
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.source.MediaSourceLocation
-import me.him188.ani.datasources.api.topic.*
+import me.him188.ani.datasources.api.topic.EpisodeRange
+import me.him188.ani.datasources.api.topic.FileSize
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
+import me.him188.ani.datasources.api.topic.Resolution
+import me.him188.ani.datasources.api.topic.ResourceLocation
+import me.him188.ani.datasources.api.topic.SubtitleLanguage
 import me.him188.ani.test.DynamicTestsBuilder
 import me.him188.ani.utils.platform.collections.copyPut
 import me.him188.ani.utils.platform.collections.toImmutable
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
@@ -39,6 +49,8 @@ import kotlin.test.fail
  * DSL for testing [DefaultMediaSelector].
  */
 class MediaSelectorTestSuite {
+    private val random = Random(42)
+
     val initApi = InitApi()
     val mediaApi = MediaApi()
     val preferenceApi = PreferenceApi()
@@ -81,7 +93,7 @@ class MediaSelectorTestSuite {
 
     inline fun initSubject(
         subjectName: String,
-        block: InitApi.() -> Unit
+        block: InitApi.() -> Unit = {}
     ) {
         val init = initApi.apply(block)
         init.subjectName = subjectName
@@ -105,6 +117,15 @@ class MediaSelectorTestSuite {
 
         fun addMedia(vararg media: DefaultMedia) {
             mediaList.value.addAll(media)
+        }
+
+        fun addMedia(media: DefaultMedia): DefaultMedia {
+            mediaList.value.add(media)
+            return media
+        }
+
+        fun shuffle() {
+            mediaList.value.shuffle(random)
         }
 
         fun addSimpleWebMedia(
@@ -151,6 +172,12 @@ class MediaSelectorTestSuite {
                 MediaSelectorSubtitlePreferences(
                     getCurrentSubtitlePreferences().values.copyPut(key, value).toImmutable(),
                 ),
+            )
+        }
+
+        fun preferKind(kind: MediaSourceKind?) {
+            mediaSelectorSettings.value = mediaSelectorSettings.value.copy(
+                preferKind = kind,
             )
         }
     }
@@ -368,13 +395,24 @@ class MediaSelectorTestSuite {
     }
 }
 
+///////////////////////////////////////////////////////////////////////////
+// DSL Runners
+///////////////////////////////////////////////////////////////////////////
+
 inline fun buildMediaSelectorTestSuite(block: MediaSelectorTestSuite.() -> Unit): MediaSelectorTestSuite {
     return MediaSelectorTestSuite().apply(block)
 }
 
+fun runMediaSelectorTestSuite(
+    buildTest: MediaSelectorTestSuite.() -> Unit = {},
+    thenCheck: suspend MediaSelectorTestSuite.() -> Unit
+): TestResult = runTest {
+    buildMediaSelectorTestSuite(buildTest).thenCheck()
+}
+
 inline fun DynamicTestsBuilder.addMediaSelectorTest(
     name: String? = null,
-    crossinline buildTest: MediaSelectorTestSuite.() -> Unit,
+    crossinline buildTest: MediaSelectorTestSuite.() -> Unit = {},
     crossinline runTest: suspend MediaSelectorTestSuite.() -> Unit,
 ) {
     val suite = buildMediaSelectorTestSuite(buildTest)
@@ -383,4 +421,9 @@ inline fun DynamicTestsBuilder.addMediaSelectorTest(
             runTest(suite)
         }
     }
+}
+
+suspend inline fun MediaSelectorTestSuite.assertMedias(block: MaybeExcludedMediaAssertions.() -> Unit) {
+    contract { callsInPlace(block, InvocationKind.EXACTLY_ONCE) }
+    selector.filteredCandidates.first().assert(block)
 }
