@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.preference.MediaPreference
@@ -40,6 +41,7 @@ import me.him188.ani.utils.platform.collections.copyPut
 import me.him188.ani.utils.platform.collections.toImmutable
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
+import kotlin.coroutines.ContinuationInterceptor
 import kotlin.random.Random
 
 /**
@@ -287,6 +289,46 @@ class SimpleMediaSelectorTestSuite : MediaSelectorTestSuite() {
     )
 }
 
+/**
+ * @see buildTestMediaFetchSession
+ */
+class FetchMediaSelectorTestSuite : MediaSelectorTestSuite() {
+    private lateinit var fetchSession: TestMediaFetchSession<*>
+
+    context(testScope: TestScope)
+    fun <R> configureFetchSession(block: TestMediaFetchSessionBuilder.() -> R): TestMediaFetchSession<R> {
+        return buildTestMediaFetchSession(
+            dispatcher = testScope.coroutineContext[ContinuationInterceptor]!!,
+            block,
+        ).also {
+            fetchSession = it
+        }
+    }
+
+    val selector by lazy {
+        DefaultMediaSelector(
+            mediaSelectorContextNotCached = preferenceApi.mediaSelectorContext,
+            mediaListNotCached = fetchSession.session.cumulativeResults,
+            savedUserPreference = preferenceApi.savedUserPreference,
+            savedDefaultPreference = preferenceApi.savedDefaultPreference,
+            enableCaching = false,
+            mediaSelectorSettings = preferenceApi.mediaSelectorSettings,
+        )
+    }
+
+//
+//    fun createSelector(
+//        fetchSession: MediaFetchSession,
+//    ): DefaultMediaSelector = DefaultMediaSelector(
+//        mediaSelectorContextNotCached = preferenceApi.mediaSelectorContext,
+//        mediaListNotCached = fetchSession.cumulativeResults,
+//        savedUserPreference = preferenceApi.savedUserPreference,
+//        savedDefaultPreference = preferenceApi.savedDefaultPreference,
+//        enableCaching = false,
+//        mediaSelectorSettings = preferenceApi.mediaSelectorSettings,
+//    )
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 // DSL Runners
@@ -294,10 +336,17 @@ class SimpleMediaSelectorTestSuite : MediaSelectorTestSuite() {
 
 
 fun runSimpleMediaSelectorTestSuite(
-    buildTest: MediaSelectorTestSuite.() -> Unit = {},
-    thenCheck: suspend MediaSelectorTestSuite.() -> Unit
+    buildTest: SimpleMediaSelectorTestSuite.() -> Unit = {},
+    thenCheck: suspend SimpleMediaSelectorTestSuite.() -> Unit
 ): TestResult = runTest {
     SimpleMediaSelectorTestSuite().apply(buildTest).thenCheck()
+}
+
+fun runFetchMediaSelectorTestSuite(
+    buildTest: context(TestScope) FetchMediaSelectorTestSuite.() -> Unit = {},
+    thenCheck: suspend context(TestScope) FetchMediaSelectorTestSuite.() -> Unit
+): TestResult = runTest {
+    FetchMediaSelectorTestSuite().apply { buildTest() }.thenCheck()
 }
 
 inline fun DynamicTestsBuilder.addSimpleMediaSelectorTest(
