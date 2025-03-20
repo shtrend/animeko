@@ -318,6 +318,7 @@ class MediaSourceManagerImpl(
         config: MediaSourceConfig,
         client: ScopedHttpClient,
     ): MediaSource {
+        @Suppress("DEPRECATION") 
         val mediaSourceConfig = config.copy(
             proxy = config.proxy ?: proxyConfig?.toClientProxyConfig(),
             userAgent = getAniUserAgent(),

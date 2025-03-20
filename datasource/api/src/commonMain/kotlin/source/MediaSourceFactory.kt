@@ -9,7 +9,6 @@
 
 package me.him188.ani.datasources.api.source
 
-import io.ktor.client.HttpClientConfig
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationStrategy
@@ -19,8 +18,6 @@ import me.him188.ani.datasources.api.source.parameter.MediaSourceParameter
 import me.him188.ani.datasources.api.source.parameter.MediaSourceParameters
 import me.him188.ani.utils.ktor.ClientProxyConfig
 import me.him188.ani.utils.ktor.ScopedHttpClient
-import me.him188.ani.utils.ktor.proxy
-import me.him188.ani.utils.ktor.userAgent
 import kotlin.jvm.JvmInline
 
 @JvmInline
@@ -79,7 +76,9 @@ interface MediaSourceFactory { // SPI service load
  */
 @Serializable
 data class MediaSourceConfig(
+    @Deprecated("unused anymore. MediaSources now accept ScopedHttpClient instances instead of maintaining clients on their own.")
     val proxy: ClientProxyConfig? = null,
+    @Deprecated("unused anymore. MediaSources now accept ScopedHttpClient instances instead of maintaining clients on their own.")
     val userAgent: String? = null,
     /**
      * 用户为数据源配置的参数列表. 一定包含 [MediaSourceFactory.parameters] 中的所有参数, 但如果数据源更新了更多参数, 则可能不会包含.
@@ -107,13 +106,6 @@ data class MediaSourceConfig(
 
 operator fun <T> MediaSourceConfig.get(parameter: MediaSourceParameter<T>): T =
     arguments[parameter.name]?.let { parameter.parseFromString(it) } ?: parameter.default()
-
-fun HttpClientConfig<*>.applyMediaSourceConfig(
-    config: MediaSourceConfig,
-) {
-    config.proxy?.let { proxy(it) }
-    config.userAgent?.let { userAgent(it) }
-}
 
 
 private val parametersJson = Json {
