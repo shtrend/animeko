@@ -41,27 +41,15 @@ import me.him188.ani.utils.platform.collections.toImmutable
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.random.Random
-import kotlin.test.assertEquals
-import kotlin.test.fail
 
 /**
  * DSL for testing [DefaultMediaSelector].
  */
-class MediaSelectorTestSuite {
-    private val random = Random(42)
+sealed class MediaSelectorTestSuite {
+    val random = Random(42)
 
     val initApi = InitApi()
-    val mediaApi = MediaApi()
     val preferenceApi = PreferenceApi()
-
-    val selector = DefaultMediaSelector(
-        mediaSelectorContextNotCached = preferenceApi.mediaSelectorContext,
-        mediaListNotCached = mediaApi.mediaList,
-        savedUserPreference = preferenceApi.savedUserPreference,
-        savedDefaultPreference = preferenceApi.savedDefaultPreference,
-        enableCaching = false,
-        mediaSelectorSettings = preferenceApi.mediaSelectorSettings,
-    )
 
     /**
      * initializes [mediaSelectorContext].
@@ -111,39 +99,6 @@ class MediaSelectorTestSuite {
         preferenceApi.savedDefaultPreference.value = DEFAULT_PREFERENCE
     }
 
-    inner class MediaApi {
-        val mediaList: MutableStateFlow<MutableList<DefaultMedia>> = MutableStateFlow(mutableListOf())
-
-        fun addMedia(vararg media: DefaultMedia) {
-            mediaList.value.addAll(media)
-        }
-
-        fun addMedia(media: DefaultMedia): DefaultMedia {
-            mediaList.value.add(media)
-            return media
-        }
-
-        fun shuffle() {
-            mediaList.value.shuffle(random)
-        }
-
-        fun addSimpleWebMedia(
-            subjectName: String,
-            episodeSort: EpisodeSort = EpisodeSort(1),
-        ) {
-            addMedia(
-                media(
-                    // kept
-                    alliance = "简中",
-                    episodeRange = EpisodeRange.single(episodeSort), kind = MediaSourceKind.WEB,
-                    subjectName = subjectName,
-                    originalTitle = "$subjectName $episodeSort",
-                    subtitleLanguages = listOf(SubtitleLanguage.ChineseSimplified.id),
-                ),
-            )
-        }
-    }
-
     inner class PreferenceApi {
         val savedUserPreference = MutableStateFlow(DEFAULT_PREFERENCE)
         val savedDefaultPreference = MutableStateFlow(DEFAULT_PREFERENCE)
@@ -179,118 +134,6 @@ class MediaSelectorTestSuite {
                 preferKind = kind,
             )
         }
-    }
-
-    inner class SubjectExclusionApi {
-        private val checks = mutableListOf<Pair<String, MediaExclusionReason?>>()
-
-        fun expect(subjectName: String, exclusionReason: MediaExclusionReason? = null) {
-            mediaApi.addSimpleWebMedia(subjectName)
-            checks.add(subjectName to exclusionReason)
-        }
-
-        fun expect(vararg pairs: Pair<String, MediaExclusionReason?>) {
-            pairs.forEach { (subjectName, exclusionReason) ->
-                expect(subjectName, exclusionReason)
-            }
-        }
-
-        /**
-         * 特殊标记, 用于标注该值是错误的, 但是目前算法没法做到区分这个.
-         * @param current 目前算法的结果
-         * @param actual 未来修复算法后, 应当得到的结果
-         */
-        fun <T> tentatively(current: T, @Suppress("UNUSED_PARAMETER") actual: T): T = current
-
-        @OptIn(UnsafeOriginalMediaAccess::class)
-        internal suspend fun checkAll() {
-            if (checks.isNotEmpty()) {
-                selector.filteredCandidates.first().forEach { media ->
-                    val assertion = checks.singleOrNull { it.first == media.original.properties.subjectName }
-                        ?: fail("Cannot find assertion for ${media.original.properties.subjectName}")
-
-                    assertEquals(
-                        assertion.second, media.exclusionReason,
-                        message = "\"${assertion.first}\" should be ${assertion.second}, but was ${media.exclusionReason}",
-                    )
-                }
-            }
-        }
-    }
-
-    /**
-     * DSL for verifying the [MatchMetadata] of included media.
-     */
-    inner class MatchMetadataApi {
-        private val checks = mutableListOf<MatchCheck>()
-
-        fun expect(
-            mediaSubjectName: String,
-            episodeRange: EpisodeRange?,
-            subjectMatchKind: MatchMetadata.SubjectMatchKind,
-            episodeMatchKind: MatchMetadata.EpisodeMatchKind,
-        ) {
-            val media = media(
-                subjectName = mediaSubjectName,
-                episodeRange = episodeRange ?: EpisodeRange.single(EpisodeSort(1)),
-                kind = MediaSourceKind.WEB,
-            )
-            mediaApi.addMedia(
-                media,
-            )
-            checks += MatchCheck(
-                media.mediaId,
-                mediaSubjectName,
-                episodeRange ?: EpisodeRange.single(EpisodeSort(1)),
-                subjectMatchKind,
-                episodeMatchKind,
-            )
-        }
-
-        @OptIn(UnsafeOriginalMediaAccess::class)
-        suspend fun checkAll() {
-            if (checks.isEmpty()) return
-            val allIncluded = selector.filteredCandidates.first().filterIsInstance<MaybeExcludedMedia.Included>()
-            checks.forEach { check ->
-                val found = allIncluded.firstOrNull { included ->
-                    included.original.mediaId == check.mediaId
-                } ?: fail(
-                    "Expected included media with subjectName='${check.mediaSubjectName}' and episodeRange=${check.episodeRange}, " +
-                            "but none found in the included list. Possibly it got excluded? ",
-                )
-
-                assertEquals(
-                    check.expectedSubjectMatchKind,
-                    found.metadata.subjectMatchKind,
-                    message = "Media subjectName='${found.original.properties.subjectName}'",
-                )
-                assertEquals(
-                    check.expectedEpisodeMatchKind,
-                    found.metadata.episodeMatchKind,
-                    message = "Media subjectName='${found.original.properties.subjectName}'",
-                )
-            }
-        }
-    }
-
-    private data class MatchCheck(
-        // Target info:
-        val mediaId: String,
-        val mediaSubjectName: String,
-        val episodeRange: EpisodeRange,
-
-        // Assertions:
-        val expectedSubjectMatchKind: MatchMetadata.SubjectMatchKind,
-        val expectedEpisodeMatchKind: MatchMetadata.EpisodeMatchKind,
-    )
-
-
-    suspend fun checkSubjectExclusion(block: SubjectExclusionApi.() -> Unit) {
-        SubjectExclusionApi().apply(block).checkAll()
-    }
-
-    suspend inline fun checkMatchMetadata(block: MatchMetadataApi.() -> Unit) {
-        MatchMetadataApi().apply(block).checkAll()
     }
 
 
@@ -394,27 +237,75 @@ class MediaSelectorTestSuite {
     }
 }
 
+
+/**
+ * 使用 [List] 存储待选 [me.him188.ani.datasources.api.Media].
+ */
+class SimpleMediaSelectorTestSuite : MediaSelectorTestSuite() {
+    val mediaApi = MediaApi()
+
+    inner class MediaApi {
+        val mediaList: MutableStateFlow<MutableList<DefaultMedia>> = MutableStateFlow(mutableListOf())
+
+        fun addMedia(vararg media: DefaultMedia) {
+            mediaList.value.addAll(media)
+        }
+
+        fun addMedia(media: DefaultMedia): DefaultMedia {
+            mediaList.value.add(media)
+            return media
+        }
+
+        fun shuffle() {
+            mediaList.value.shuffle(random)
+        }
+
+        fun addSimpleWebMedia(
+            subjectName: String,
+            episodeSort: EpisodeSort = EpisodeSort(1),
+        ) {
+            addMedia(
+                media(
+                    // kept
+                    alliance = "简中",
+                    episodeRange = EpisodeRange.single(episodeSort), kind = MediaSourceKind.WEB,
+                    subjectName = subjectName,
+                    originalTitle = "$subjectName $episodeSort",
+                    subtitleLanguages = listOf(SubtitleLanguage.ChineseSimplified.id),
+                ),
+            )
+        }
+    }
+
+    val selector = DefaultMediaSelector(
+        mediaSelectorContextNotCached = preferenceApi.mediaSelectorContext,
+        mediaListNotCached = mediaApi.mediaList,
+        savedUserPreference = preferenceApi.savedUserPreference,
+        savedDefaultPreference = preferenceApi.savedDefaultPreference,
+        enableCaching = false,
+        mediaSelectorSettings = preferenceApi.mediaSelectorSettings,
+    )
+}
+
+
 ///////////////////////////////////////////////////////////////////////////
 // DSL Runners
 ///////////////////////////////////////////////////////////////////////////
 
-inline fun buildMediaSelectorTestSuite(block: MediaSelectorTestSuite.() -> Unit): MediaSelectorTestSuite {
-    return MediaSelectorTestSuite().apply(block)
-}
 
-fun runMediaSelectorTestSuite(
+fun runSimpleMediaSelectorTestSuite(
     buildTest: MediaSelectorTestSuite.() -> Unit = {},
     thenCheck: suspend MediaSelectorTestSuite.() -> Unit
 ): TestResult = runTest {
-    buildMediaSelectorTestSuite(buildTest).thenCheck()
+    SimpleMediaSelectorTestSuite().apply(buildTest).thenCheck()
 }
 
-inline fun DynamicTestsBuilder.addMediaSelectorTest(
+inline fun DynamicTestsBuilder.addSimpleMediaSelectorTest(
     name: String? = null,
-    crossinline buildTest: MediaSelectorTestSuite.() -> Unit = {},
-    crossinline runTest: suspend MediaSelectorTestSuite.() -> Unit,
+    crossinline buildTest: SimpleMediaSelectorTestSuite.() -> Unit = {},
+    crossinline runTest: suspend SimpleMediaSelectorTestSuite.() -> Unit,
 ) {
-    val suite = buildMediaSelectorTestSuite(buildTest)
+    val suite = SimpleMediaSelectorTestSuite().apply(buildTest)
     add(name ?: suite.initApi.subjectName) {
         runBlocking {
             runTest(suite)
@@ -422,7 +313,7 @@ inline fun DynamicTestsBuilder.addMediaSelectorTest(
     }
 }
 
-suspend inline fun MediaSelectorTestSuite.assertMedias(block: MaybeExcludedMediaAssertions.() -> Unit) {
+suspend inline fun SimpleMediaSelectorTestSuite.assertMedias(block: MaybeExcludedMediaAssertions.() -> Unit) {
     contract { callsInPlace(block, InvocationKind.EXACTLY_ONCE) }
     selector.filteredCandidates.first().assert(block)
 }

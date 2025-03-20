@@ -9,19 +9,23 @@
 
 package me.him188.ani.app.domain.media.selector
 
+import kotlinx.coroutines.flow.first
 import me.him188.ani.app.domain.media.selector.MatchMetadata.EpisodeMatchKind
 import me.him188.ani.app.domain.media.selector.MatchMetadata.SubjectMatchKind
 import me.him188.ani.datasources.api.EpisodeSort
+import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.topic.EpisodeRange
 import me.him188.ani.test.TestContainer
 import me.him188.ani.test.TestFactory
 import me.him188.ani.test.runDynamicTests
+import kotlin.test.assertEquals
+import kotlin.test.fail
 
 @TestContainer
 class DefaultMediaSelectorMatchMetadataTest {
     @TestFactory
     fun `subjectMatchKind EXACT vs FUZZY`() = runDynamicTests {
-        addMediaSelectorTest(
+        addSimpleMediaSelectorTest(
             "subject match kind tests",
             {
                 initSubject("Bocchi The Rock") {}
@@ -46,7 +50,7 @@ class DefaultMediaSelectorMatchMetadataTest {
 
     @TestFactory
     fun `episodeMatchKind for sorts`() = runDynamicTests {
-        addMediaSelectorTest(
+        addSimpleMediaSelectorTest(
             "episode match kind - sorts",
             {
                 initSubject(
@@ -76,7 +80,7 @@ class DefaultMediaSelectorMatchMetadataTest {
 
     @TestFactory
     fun `episodeMatchKind for ep`() = runDynamicTests {
-        addMediaSelectorTest(
+        addSimpleMediaSelectorTest(
             "episode match kind - ep",
             {
                 initSubject("My OVA") {
@@ -104,7 +108,7 @@ class DefaultMediaSelectorMatchMetadataTest {
 
     @TestFactory
     fun `subject and episode combined test`() = runDynamicTests {
-        addMediaSelectorTest(
+        addSimpleMediaSelectorTest(
             "subject and episode combined test",
             {
                 initSubject("进击的巨人") {
@@ -134,4 +138,78 @@ class DefaultMediaSelectorMatchMetadataTest {
             }
         }
     }
+}
+
+
+/**
+ * DSL for verifying the [MatchMetadata] of included media.
+ */
+class MatchMetadataApi(
+    private val suite: SimpleMediaSelectorTestSuite,
+) {
+    private val checks = mutableListOf<MatchCheck>()
+
+    fun expect(
+        mediaSubjectName: String,
+        episodeRange: EpisodeRange?,
+        subjectMatchKind: MatchMetadata.SubjectMatchKind,
+        episodeMatchKind: MatchMetadata.EpisodeMatchKind,
+    ) {
+        val media = suite.media(
+            subjectName = mediaSubjectName,
+            episodeRange = episodeRange ?: EpisodeRange.single(EpisodeSort(1)),
+            kind = MediaSourceKind.WEB,
+        )
+        suite.mediaApi.addMedia(
+            media,
+        )
+        checks += MatchCheck(
+            media.mediaId,
+            mediaSubjectName,
+            episodeRange ?: EpisodeRange.single(EpisodeSort(1)),
+            subjectMatchKind,
+            episodeMatchKind,
+        )
+    }
+
+    @OptIn(UnsafeOriginalMediaAccess::class)
+    suspend fun checkAll() {
+        if (checks.isEmpty()) return
+        val allIncluded = suite.selector.filteredCandidates.first().filterIsInstance<MaybeExcludedMedia.Included>()
+        checks.forEach { check ->
+            val found = allIncluded.firstOrNull { included ->
+                included.original.mediaId == check.mediaId
+            } ?: fail(
+                "Expected included media with subjectName='${check.mediaSubjectName}' and episodeRange=${check.episodeRange}, " +
+                        "but none found in the included list. Possibly it got excluded? ",
+            )
+
+            assertEquals(
+                check.expectedSubjectMatchKind,
+                found.metadata.subjectMatchKind,
+                message = "Media subjectName='${found.original.properties.subjectName}'",
+            )
+            assertEquals(
+                check.expectedEpisodeMatchKind,
+                found.metadata.episodeMatchKind,
+                message = "Media subjectName='${found.original.properties.subjectName}'",
+            )
+        }
+    }
+}
+
+private data class MatchCheck(
+    // Target info:
+    val mediaId: String,
+    val mediaSubjectName: String,
+    val episodeRange: EpisodeRange,
+
+    // Assertions:
+    val expectedSubjectMatchKind: MatchMetadata.SubjectMatchKind,
+    val expectedEpisodeMatchKind: MatchMetadata.EpisodeMatchKind,
+)
+
+
+suspend inline fun SimpleMediaSelectorTestSuite.checkMatchMetadata(block: MatchMetadataApi.() -> Unit) {
+    return MatchMetadataApi(this).apply(block).checkAll()
 }
