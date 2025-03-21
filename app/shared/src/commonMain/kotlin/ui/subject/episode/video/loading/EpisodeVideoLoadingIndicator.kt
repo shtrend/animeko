@@ -102,7 +102,7 @@ fun EpisodeVideoLoadingIndicator(
 
                 VideoLoadingState.ResolvingSource -> {
                     TextWithBorder(
-                        "正在解析资源链接\n若 30 秒内未完成, 请尝试切换数据源",
+                        "正在解析资源链接\n通常几秒内完成，否则请切换数据源",
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -112,7 +112,7 @@ fun EpisodeVideoLoadingIndicator(
                         if (!state.isBt) {
                             "资源解析成功, 正在准备视频"
                         } else {
-                            "正在解析磁力链或查询元数据\n若 15 秒内未完成, 请尝试切换数据源或先缓存再看"
+                            "正在解析磁力链或查询元数据\n通常几秒内完成, 请尝试切换数据源或先缓存再看"
                         },
                         textAlign = TextAlign.Center,
                     )
