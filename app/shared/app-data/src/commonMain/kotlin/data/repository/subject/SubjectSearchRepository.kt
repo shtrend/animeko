@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -18,11 +18,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import me.him188.ani.app.data.models.schedule.AnimeSeasonId
+import me.him188.ani.app.data.models.schedule.yearMonths
+import me.him188.ani.app.data.network.BangumiSearchFilters
 import me.him188.ani.app.data.network.BangumiSubjectSearchService
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.domain.search.RatingRange
 import me.him188.ani.app.domain.search.SubjectSearchQuery
 import me.him188.ani.app.domain.search.SubjectType
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectType
@@ -58,6 +62,7 @@ class SubjectSearchRepository(
         private val useNewApi: suspend () -> Boolean,
         private val searchQuery: SubjectSearchQuery
     ) : PagingSource<Int, BatchSubjectDetails>() {
+        private val filters = searchQuery.toBangumiSearchFilters()
         override fun getRefreshKey(state: PagingState<Int, BatchSubjectDetails>): Int? = null
         override suspend fun load(
             params: LoadParams<Int>
@@ -66,10 +71,11 @@ class SubjectSearchRepository(
                 ?: return@withContext LoadResult.Error(IllegalArgumentException("Key is null"))
             return@withContext try {
                 val res = bangumiSubjectSearchService.searchSubjectIds(
-                    searchQuery.keyword,
+                    searchQuery.keywords,
                     useNewApi = useNewApi(),
                     offset = offset,
                     limit = params.loadSize,
+                    filters = filters,
                 )
 
                 val subjectInfos = subjectService.batchGetSubjectDetails(res)
@@ -84,6 +90,31 @@ class SubjectSearchRepository(
             } catch (e: Exception) {
                 LoadResult.Error(RepositoryException.wrapOrThrowCancellation(e))
             }
+        }
+
+        private fun SubjectSearchQuery.toBangumiSearchFilters(): BangumiSearchFilters {
+            return BangumiSearchFilters(
+                tags,
+                airDates = season?.toBangumiAirDates(),
+                ratings = rating?.toBangumiRatings(),
+                nsfw = nsfw,
+            )
+        }
+
+        private fun AnimeSeasonId.toBangumiAirDates(): List<String> {
+            val (begin, _, end) = this.yearMonths
+            return listOf(
+                ">=${begin.first}-${begin.second}-01",
+                "<${end.first}-${end.second}-31",
+            )
+        }
+
+        private fun RatingRange.toBangumiRatings(): List<String> {
+            val range = this
+            return listOfNotNull(
+                range.min?.let { ">=${it}" },
+                range.max?.let { "<${it}" },
+            )
         }
     }
 

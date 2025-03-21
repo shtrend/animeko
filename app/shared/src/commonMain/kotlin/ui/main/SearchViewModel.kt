@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.subject.BangumiSubjectSearchCompletionRepository
@@ -48,15 +49,17 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
 
     private val nsfwSettingFlow = settingsRepository.uiSettings.flow.map { it.searchSettings.nsfwMode }
 
-    private val queryFlow = MutableStateFlow("")
+    private val queryFlow = MutableStateFlow(SubjectSearchQuery(""))
 
     val searchPageState: SearchPageState = SearchPageState(
         searchHistoryPager = searchHistoryRepository.getHistoryPager(),
         suggestionsPager = queryFlow.debounce(200.milliseconds).flatMapLatest {
-            bangumiSubjectSearchCompletionRepository.completionsFlow(it)
+            bangumiSubjectSearchCompletionRepository.completionsFlow(it.keywords)
         },
-        queryFlow = queryFlow,
-        setQuery = { queryFlow.value = it },
+        queryFlow = queryFlow.map { it.keywords },
+        setQuery = { newQuery ->
+            queryFlow.update { it.copy(keywords = newQuery) }
+        },
         onRequestPlay = { info ->
             episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(info.subjectId).first().firstOrNull()?.let {
                 SearchPageState.EpisodeTarget(info.subjectId, it.episodeInfo.episodeId)
@@ -65,10 +68,13 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
         searchState = PagingSearchState(
             createPager = {
                 // 搜索总是会包含 NSFW
+                val query = queryFlow.value
                 subjectSearchRepository.searchSubjects(
-                    SubjectSearchQuery(keyword = queryFlow.value),
+                    query,
                     useNewApi = {
-                        settingsRepository.uiSettings.flow.map { it.searchSettings.enableNewSearchSubjectApi }.first()
+                        query.hasFilters() ||
+                                settingsRepository.uiSettings.flow.map { it.searchSettings.enableNewSearchSubjectApi }
+                                    .first()
                     },
                 ).combine(nsfwSettingFlow) { data, nsfwMode ->
                     // 当 settings 变更时, 会重新计算所有的 SubjectPreviewItemInfo 以更新其显示状态, 但不会重新搜索.

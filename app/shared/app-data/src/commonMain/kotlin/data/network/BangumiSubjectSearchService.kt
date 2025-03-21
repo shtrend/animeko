@@ -18,12 +18,21 @@ import me.him188.ani.datasources.bangumi.BangumiRateLimitedException
 import me.him188.ani.datasources.bangumi.BangumiSearchSubjectNewApi
 import me.him188.ani.datasources.bangumi.client.BangumiSearchApi
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectType
+import me.him188.ani.datasources.bangumi.models.search.BangumiSort
 import me.him188.ani.datasources.bangumi.models.subjects.BangumiLegacySubject
 import me.him188.ani.datasources.bangumi.models.subjects.BangumiSubjectImageSize
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.platform.collections.mapToIntList
 import kotlin.coroutines.CoroutineContext
+
+data class BangumiSearchFilters(
+    val tags: List<String>? = null, // "童年", "原创"
+    val airDates: List<String>? = null, // YYYY-MM-DD
+    val ratings: List<String>? = null, // ">=6", "<8"
+    val ranks: List<String>? = null,
+    val nsfw: Boolean? = null,
+)
 
 class BangumiSubjectSearchService(
     private val searchApi: ApiInvoker<BangumiSearchApi>,
@@ -34,8 +43,11 @@ class BangumiSubjectSearchService(
         useNewApi: Boolean,
         offset: Int? = null,
         limit: Int? = null,
+
+        sort: BangumiSort? = null,
+        filters: BangumiSearchFilters? = null,
     ): IntList = withContext(ioDispatcher) {
-        searchImpl(sanitizeKeyword(keyword), useNewApi, offset, limit).fold(
+        searchImpl(sanitizeKeyword(keyword), useNewApi, offset, limit, sort, filters).fold(
             left = { list ->
                 list.orEmpty().mapToIntList {
                     it.id
@@ -79,6 +91,9 @@ class BangumiSubjectSearchService(
         useNewApi: Boolean,
         offset: Int? = null,
         limit: Int? = null,
+
+        sort: BangumiSort? = null,
+        filters: BangumiSearchFilters? = null,
     ): Either<List<BangumiSearchSubjectNewApi>?, List<BangumiLegacySubject>> = searchApi {
         if (useNewApi) {
             Either.Left(
@@ -87,6 +102,12 @@ class BangumiSubjectSearchService(
                     offset = offset,
                     limit = limit,
                     types = listOf(BangumiSubjectType.Anime),
+                    sort = sort,
+                    tags = filters?.tags,
+                    airDates = filters?.airDates,
+                    ratings = filters?.ratings,
+                    ranks = filters?.ranks,
+                    nsfw = filters?.nsfw,
                 ),
             )
         } else {

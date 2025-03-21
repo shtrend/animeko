@@ -12,6 +12,7 @@ package me.him188.ani.app.data.models.schedule
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import me.him188.ani.app.data.models.subject.SubjectRecurrence
+import me.him188.ani.utils.platform.collections.tupleOf
 
 data class AnimeScheduleInfo(
     val seasonId: AnimeSeasonId,
@@ -107,8 +108,8 @@ data class AnimeSeasonId(
 val AnimeSeasonId.yearMonths
     get() = when (season) {
         // 2024 年 1 月新番, 是从 2023 年 12 月末开播, 播到 2024 年 3 月.
-        AnimeSeason.WINTER -> listOf(year - 1 to 12, year to 1, year to 2)
-        AnimeSeason.SPRING -> listOf(year to 3, year to 4, year to 5)
-        AnimeSeason.SUMMER -> listOf(year to 6, year to 7, year to 8)
-        AnimeSeason.AUTUMN -> listOf(year to 9, year to 10, year to 11)
+        AnimeSeason.WINTER -> tupleOf(year - 1 to 12, year to 1, year to 2)
+        AnimeSeason.SPRING -> tupleOf(year to 3, year to 4, year to 5)
+        AnimeSeason.SUMMER -> tupleOf(year to 6, year to 7, year to 8)
+        AnimeSeason.AUTUMN -> tupleOf(year to 9, year to 10, year to 11)
     }
