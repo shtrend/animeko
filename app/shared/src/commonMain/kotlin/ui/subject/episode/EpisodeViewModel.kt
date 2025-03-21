@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.subject.episode
 
+import androidx.annotation.UiThread
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
@@ -772,6 +773,15 @@ class EpisodeViewModel(
         fetchPlayState.onUIReady()
     }
 
+    @UiThread
+    suspend fun collectDanmakuConfig() {
+        pageState
+            .filterNotNull()
+            .collect { state ->
+                danmakuConfigState.value = state.danmakuConfig
+            }
+    }
+
     init {
         // 跳过 OP 和 ED
         launchInBackground {
@@ -793,16 +803,6 @@ class EpisodeViewModel(
                         if (collections.size > 1 && collections.getOrNull(0)?.episodeId == id) return@combine
                         playerSkipOpEdState.update(pos)
                     }.collect()
-                }
-        }
-
-        launchInBackground {
-            pageState
-                .filterNotNull()
-                .collect { state ->
-                    withContext(Dispatchers.Main) {
-                        danmakuConfigState.value = state.danmakuConfig
-                    }
                 }
         }
     }

@@ -258,6 +258,10 @@ private fun EpisodeScreenContent(
             }
 
             else -> {
+                LaunchedEffect(Unit) {
+                    vm.collectDanmakuConfig()
+                }
+
                 val danmakuEditorState = remember(scope) {
                     DanmakuEditorState(
                         onPost = { vm.postDanmaku(it) },
