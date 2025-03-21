@@ -229,9 +229,9 @@ class SubjectItemLayoutParameters(
         @Composable
         @Stable
         fun calculate(windowSizeClass: WindowSizeClass): SubjectItemLayoutParameters {
-            if (windowSizeClass.isWidthAtLeastMedium && windowSizeClass.isHeightAtLeastMedium) {
-                return MEDIUM
-            }
+//            if (windowSizeClass.isWidthAtLeastMedium && windowSizeClass.isHeightAtLeastMedium) {
+//                return MEDIUM
+//            }
             return COMPACT
         }
     }
