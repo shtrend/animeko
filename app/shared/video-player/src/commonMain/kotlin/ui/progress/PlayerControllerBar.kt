@@ -99,6 +99,7 @@ import me.him188.ani.app.ui.foundation.effects.onKey
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.theme.slightlyWeaken
 import me.him188.ani.app.ui.foundation.theme.stronglyWeaken
+import me.him188.ani.app.videoplayer.ui.PlaybackSpeedControllerState
 import me.him188.ani.app.videoplayer.ui.PlayerControllerState
 import me.him188.ani.app.videoplayer.ui.top.needWorkaroundForFocusManager
 import kotlin.math.roundToInt
@@ -469,18 +470,19 @@ object PlayerControllerDefaults {
      */
     @Composable
     fun SpeedSwitcher(
-        value: Float,
-        onValueChange: (Float) -> Unit,
+        playbackSpeedControllerState: PlaybackSpeedControllerState,
         modifier: Modifier = Modifier,
-        optionsProvider: () -> List<Float> = { listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f, 3f) },
         onExpandedChanged: (expanded: Boolean) -> Unit = {},
     ) {
         return OptionsSwitcher(
-            value = value,
-            onValueChange = onValueChange,
-            optionsProvider = optionsProvider,
-            renderValue = { Text(remember(it) { "${it}x" }) },
-            renderValueExposed = { Text(remember(it) { if (it == 1.0f) "倍速" else """${it}x""" }) },
+            value = playbackSpeedControllerState.currentIndex,
+            onValueChange = { playbackSpeedControllerState.setSpeed(it) },
+            optionsProvider = { playbackSpeedControllerState.speedList.indices.toList() },
+            renderValue = { Text(remember(it) { "${playbackSpeedControllerState.speedList[it]}x" }) },
+            renderValueExposed = {
+                val speedValue = playbackSpeedControllerState.speedList[it]
+                Text(remember(speedValue) { if (speedValue == 1.0f) "倍速" else """${speedValue}x""" })
+            },
             modifier,
             properties = PlatformPopupProperties(
                 clippingEnabled = false,

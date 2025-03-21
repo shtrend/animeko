@@ -56,6 +56,7 @@ import me.him188.ani.app.ui.foundation.theme.AniTheme
 import me.him188.ani.app.ui.subject.episode.video.components.EpisodeVideoSideSheetPage
 import me.him188.ani.app.ui.subject.episode.video.components.rememberStatusBarHeightAsState
 import me.him188.ani.app.ui.subject.episode.video.loading.EpisodeVideoLoadingIndicator
+import me.him188.ani.app.videoplayer.ui.PlaybackSpeedControllerState
 import me.him188.ani.app.videoplayer.ui.PlayerControllerState
 import me.him188.ani.app.videoplayer.ui.VideoPlayer
 import me.him188.ani.app.videoplayer.ui.VideoScaffold
@@ -83,7 +84,6 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 import me.him188.ani.utils.platform.isDesktop
 import org.openani.mediamp.MediampPlayer
 import org.openani.mediamp.features.AudioLevelController
-import org.openani.mediamp.features.PlaybackSpeed
 import org.openani.mediamp.features.audioTracks
 import org.openani.mediamp.features.subtitleTracks
 import org.openani.mediamp.features.toggleMute
@@ -126,6 +126,7 @@ internal fun EpisodeVideoImpl(
     cacheProgressInfoFlow: Flow<MediaCacheProgressInfo>,
     audioController: LevelController,
     brightnessController: LevelController,
+    playbackSpeedControllerState: PlaybackSpeedControllerState?,
     leftBottomTips: @Composable () -> Unit,
     fullscreenSwitchButton: @Composable () -> Unit,
     sideSheets: @Composable (controller: VideoSideSheetsController<EpisodeVideoSideSheetPage>) -> Unit,
@@ -250,6 +251,7 @@ internal fun EpisodeVideoImpl(
                     enableSwipeToSeek = enableSwipeToSeek,
                     audioController = audioController,
                     brightnessController = brightnessController,
+                    playbackSpeedControllerState,
                     Modifier,
                     onTogglePauseResume = {
                         if (playerState.playbackState.value.isPlaying) {
@@ -263,10 +265,9 @@ internal fun EpisodeVideoImpl(
                         }
                         playerState.togglePause()
                     },
-                    onToggleFullscreen = {
-                        onClickFullScreen()
-                    },
+                    onToggleFullscreen = onClickFullScreen,
                     onExitFullscreen = onExitFullscreen,
+                    onToggleDanmaku = onToggleDanmaku,
                     family = gestureFamily,
                     indicatorState,
                 )
@@ -376,21 +377,16 @@ internal fun EpisodeVideoImpl(
                                 PlayerControllerDefaults.SubtitleSwitcher(it)
                             }
 
-                            val playbackSpeed = playerState.features.getOrFail(PlaybackSpeed)
-                            val speed by playbackSpeed.valueFlow.collectAsStateWithLifecycle(1f)
                             val alwaysOnRequester = rememberAlwaysOnRequester(playerControllerState, "speedSwitcher")
-                            SpeedSwitcher(
-                                speed,
-                                { playbackSpeed.set(it) },
-                                onExpandedChanged = {
+                            playbackSpeedControllerState?.also { controller ->
+                                SpeedSwitcher(controller) {
                                     if (it) {
                                         alwaysOnRequester.request()
                                     } else {
                                         alwaysOnRequester.cancelRequest()
                                     }
-                                },
-                            )
-
+                                }
+                            }
                         }
                         PlayerControllerDefaults.FullscreenIcon(
                             expanded,

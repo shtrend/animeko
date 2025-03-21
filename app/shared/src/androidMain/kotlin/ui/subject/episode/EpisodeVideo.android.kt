@@ -44,6 +44,8 @@ import me.him188.ani.app.ui.subject.episode.video.sidesheet.MediaSelectorSheet
 import me.him188.ani.app.ui.subject.episode.video.sidesheet.rememberTestEpisodeSelectorState
 import me.him188.ani.app.ui.subject.episode.video.topbar.EpisodePlayerTitle
 import me.him188.ani.app.videoplayer.ui.ControllerVisibility
+import me.him188.ani.app.videoplayer.ui.NoOpPlaybackSpeedController
+import me.him188.ani.app.videoplayer.ui.PlaybackSpeedControllerState
 import me.him188.ani.app.videoplayer.ui.gesture.NoOpLevelController
 import me.him188.ani.app.videoplayer.ui.progress.PlayerControllerDefaults
 import me.him188.ani.app.videoplayer.ui.progress.rememberMediaProgressSliderState
@@ -149,6 +151,9 @@ private fun PreviewVideoScaffoldImpl(
         cacheProgressInfoFlow = cacheProgressInfoFlow,
         audioController = NoOpLevelController,
         brightnessController = NoOpLevelController,
+        playbackSpeedControllerState = remember {
+            PlaybackSpeedControllerState(NoOpPlaybackSpeedController, scope = scope)
+        },
         leftBottomTips = {
             PlayerControllerDefaults.LeftBottomTips(onClick = {})
         },

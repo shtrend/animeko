@@ -92,6 +92,7 @@ import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.isSystemInFullscreen
 import me.him188.ani.app.utils.fixToString
 import me.him188.ani.app.videoplayer.ui.ControllerVisibility
+import me.him188.ani.app.videoplayer.ui.PlaybackSpeedControllerState
 import me.him188.ani.app.videoplayer.ui.PlayerControllerState
 import me.him188.ani.app.videoplayer.ui.gesture.GestureIndicatorState.State.BRIGHTNESS
 import me.him188.ani.app.videoplayer.ui.gesture.GestureIndicatorState.State.FAST_BACKWARD
@@ -390,7 +391,9 @@ enum class GestureFamily(
     val keyboardUpDownForVolume: Boolean = true,
     val keyboardLeftRightToSeek: Boolean = true,
     val mouseHoverForController: Boolean = true, // not supported on mobile
-    val escToExitFullscreen: Boolean = true,
+    val keyboardControlFullscreen: Boolean = true,
+    val keyboardControlSpeed: Boolean = true,
+    val keyboardToggleDanmaku: Boolean = true,
 ) {
     TOUCH(
         useDesktopGestureLayoutWorkaround = false,
@@ -435,11 +438,13 @@ fun PlayerGestureHost(
     enableSwipeToSeek: Boolean,
     audioController: LevelController,
     brightnessController: LevelController,
+    playbackSpeedControllerState: PlaybackSpeedControllerState?,
     modifier: Modifier = Modifier,
     family: GestureFamily = LocalPlatform.current.mouseFamily,
     onTogglePauseResume: () -> Unit = {},
     onToggleFullscreen: () -> Unit = {},
     onExitFullscreen: () -> Unit = {},
+    onToggleDanmaku: () -> Unit = {},
 ) {
     val onTogglePauseResumeState by rememberUpdatedState(onTogglePauseResume)
 
@@ -546,14 +551,29 @@ fun PlayerGestureHost(
                             }
                         }
                     }
-                    .ifThen(family.escToExitFullscreen) {
+                    .ifThen(family.keyboardControlFullscreen) {
                         onKey(ComposeKey.Escape) {
                             if (needWorkaroundForFocusManager) {
                                 manager.clearFocus()
                             }
                             onExitFullscreen()
+                        }.onKey(ComposeKey.F) {
+                            if (needWorkaroundForFocusManager) {
+                                manager.clearFocus()
+                            }
+                            onToggleFullscreen()
                         }
-                    }.ifThen(family.scrollForVolume && audioLevelController != null) {
+                    }
+                    .ifThen(family.keyboardControlSpeed && playbackSpeedControllerState != null) {
+                        if (playbackSpeedControllerState == null) return@ifThen this
+                        onKey(ComposeKey.A) { playbackSpeedControllerState.speedDown() }
+                            .onKey(ComposeKey.D) { playbackSpeedControllerState.speedUp() }
+                            .onKey(ComposeKey.S) { playbackSpeedControllerState.reset() }
+                    }
+                    .ifThen(family.keyboardToggleDanmaku) {
+                        onKey(ComposeKey.B, onToggleDanmaku)
+                    }
+                    .ifThen(family.scrollForVolume && audioLevelController != null) {
                         if (audioLevelController == null) return@ifThen this
                         onPointerEventMultiplatform(PointerEventType.Scroll) { event ->
                             event.changes.firstOrNull()?.scrollDelta?.y?.run {

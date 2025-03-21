@@ -35,6 +35,7 @@ import kotlinx.coroutines.delay
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.theme.slightlyWeaken
 import me.him188.ani.app.videoplayer.ui.ControllerVisibility
+import me.him188.ani.app.videoplayer.ui.PlaybackSpeedControllerState
 import me.him188.ani.app.videoplayer.ui.PlayerControllerState
 import me.him188.ani.app.videoplayer.ui.progress.PlayerProgressSliderState
 import org.openani.mediamp.MediampPlayer
@@ -141,10 +142,12 @@ fun LockableVideoGestureHost(
     enableSwipeToSeek: Boolean,
     audioController: LevelController,
     brightnessController: LevelController,
+    playbackSpeedControllerState: PlaybackSpeedControllerState?,
     modifier: Modifier = Modifier,
     onTogglePauseResume: () -> Unit = {},
     onToggleFullscreen: () -> Unit = {},
     onExitFullscreen: () -> Unit = {},
+    onToggleDanmaku: () -> Unit = {},
     family: GestureFamily = LocalPlatform.current.mouseFamily,
     gestureIndicatorState: GestureIndicatorState = rememberGestureIndicatorState(),
     fastSkipState: FastSkipState = rememberPlayerFastSkipState(
@@ -169,10 +172,12 @@ fun LockableVideoGestureHost(
             enableSwipeToSeek,
             audioController,
             brightnessController,
+            playbackSpeedControllerState,
             modifier,
             onTogglePauseResume = onTogglePauseResume,
             onToggleFullscreen = onToggleFullscreen,
             onExitFullscreen = onExitFullscreen,
+            onToggleDanmaku = onToggleDanmaku,
             family = family,
         )
     }
