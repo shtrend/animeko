@@ -130,6 +130,8 @@ import me.him188.ani.danmaku.api.Danmaku
 import me.him188.ani.danmaku.api.DanmakuEvent
 import me.him188.ani.danmaku.api.DanmakuPresentation
 import me.him188.ani.danmaku.ui.DanmakuConfig
+import me.him188.ani.danmaku.ui.DanmakuHostState
+import me.him188.ani.danmaku.ui.DanmakuTrackProperties
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.source.MediaSourceInfo
 import me.him188.ani.datasources.api.source.MediaSourceKind
@@ -326,7 +328,7 @@ class EpisodeViewModel(
                 null -> ViewKind.WEB
             }
         }
-       
+
 
     @OptIn(UnsafeEpisodeSessionApi::class)
     val episodeDetailsState: EpisodeDetailsState = kotlin.run {
@@ -543,6 +545,9 @@ class EpisodeViewModel(
             awaitCancellation()
         }
     }.stateIn(backgroundScope, started = SharingStarted.WhileSubscribed(5_000), null)
+
+    private val danmakuConfigState = mutableStateOf(DanmakuConfig.Default)
+    val danmakuHostState = DanmakuHostState(danmakuConfigState, DanmakuTrackProperties.Default)
 
     private fun CoroutineScope.createPageStateFlow(episodeSession: EpisodeSession): Flow<EpisodePageState> {
         val filteredSourceResults = MediaSourceResultsFilterer(
@@ -788,6 +793,16 @@ class EpisodeViewModel(
                         if (collections.size > 1 && collections.getOrNull(0)?.episodeId == id) return@combine
                         playerSkipOpEdState.update(pos)
                     }.collect()
+                }
+        }
+
+        launchInBackground {
+            pageState
+                .filterNotNull()
+                .collect { state ->
+                    withContext(Dispatchers.Main) {
+                        danmakuConfigState.value = state.danmakuConfig
+                    }
                 }
         }
     }

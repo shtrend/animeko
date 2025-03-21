@@ -140,7 +140,6 @@ import me.him188.ani.app.videoplayer.ui.progress.PlayerControllerDefaults.random
 import me.him188.ani.app.videoplayer.ui.progress.rememberMediaProgressSliderState
 import me.him188.ani.danmaku.api.DanmakuPresentation
 import me.him188.ani.danmaku.ui.DanmakuHostState
-import me.him188.ani.danmaku.ui.DanmakuTrackProperties
 import me.him188.ani.utils.platform.isDesktop
 import me.him188.ani.utils.platform.isMobile
 import org.openani.mediamp.features.PlaybackSpeed
@@ -259,12 +258,6 @@ private fun EpisodeScreenContent(
             }
 
             else -> {
-                val danmakuConfigState = rememberUpdatedState(page.danmakuConfig)
-                // ui state
-                val danmakuHostState: DanmakuHostState = remember {
-                    DanmakuHostState(danmakuConfigState, DanmakuTrackProperties.Default)
-                }
-
                 val danmakuEditorState = remember(scope) {
                     DanmakuEditorState(
                         onPost = { vm.postDanmaku(it) },
@@ -272,7 +265,7 @@ private fun EpisodeScreenContent(
                             vm.playerControllerState.toggleFullVisible(false)
                             scope.launch {
                                 // May suspend for a while
-                                danmakuHostState.send(DanmakuPresentation(danmaku, isSelf = true))
+                                vm.danmakuHostState.send(DanmakuPresentation(danmaku, isSelf = true))
                             }
                         },
                         scope,
@@ -285,7 +278,7 @@ private fun EpisodeScreenContent(
                             EpisodeScreenTabletVeryWide(
                                 vm,
                                 page,
-                                danmakuHostState,
+                                vm.danmakuHostState,
                                 danmakuEditorState,
                                 modifier = Modifier.fillMaxSize(),
                                 pauseOnPlaying = pauseOnPlaying,
@@ -297,7 +290,7 @@ private fun EpisodeScreenContent(
                         else -> EpisodeScreenContentPhone(
                             vm,
                             page,
-                            danmakuHostState,
+                            vm.danmakuHostState,
                             danmakuEditorState,
                             Modifier.fillMaxSize(),
                             pauseOnPlaying = pauseOnPlaying,
