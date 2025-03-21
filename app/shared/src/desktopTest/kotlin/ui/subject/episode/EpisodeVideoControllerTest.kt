@@ -60,6 +60,8 @@ import me.him188.ani.app.ui.subject.episode.video.sidesheet.EpisodeSelectorSheet
 import me.him188.ani.app.ui.subject.episode.video.sidesheet.MediaSelectorSheet
 import me.him188.ani.app.ui.subject.episode.video.sidesheet.rememberTestEpisodeSelectorState
 import me.him188.ani.app.videoplayer.ui.ControllerVisibility
+import me.him188.ani.app.videoplayer.ui.NoOpPlaybackSpeedController
+import me.him188.ani.app.videoplayer.ui.PlaybackSpeedControllerState
 import me.him188.ani.app.videoplayer.ui.PlayerControllerState
 import me.him188.ani.app.videoplayer.ui.gesture.GestureFamily
 import me.him188.ani.app.videoplayer.ui.gesture.NoOpLevelController
@@ -205,6 +207,9 @@ class EpisodeVideoControllerTest {
                 cacheProgressInfoFlow = cacheProgressInfoFlow,
                 audioController = NoOpLevelController,
                 brightnessController = NoOpLevelController,
+                playbackSpeedControllerState = remember {
+                    PlaybackSpeedControllerState(NoOpPlaybackSpeedController, scope = scope)
+                },
                 leftBottomTips = {},
                 fullscreenSwitchButton = {
                     EpisodeVideoDefaults.FloatingFullscreenSwitchButton(
