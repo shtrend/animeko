@@ -862,7 +862,7 @@ sealed interface SubjectDetailsUIState {
 private fun renderSubjectDetailsTab(tab: SubjectDetailsTab): String {
     return when (tab) {
         SubjectDetailsTab.DETAILS -> "详情"
-        SubjectDetailsTab.COMMENTS -> "评论"
+        SubjectDetailsTab.COMMENTS -> "评价"
         SubjectDetailsTab.DISCUSSIONS -> "讨论"
     }
 }
