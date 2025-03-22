@@ -123,6 +123,7 @@ fun SearchPage(
                         )
                     }
                 },
+                highlightSelected = !isSinglePane,
                 state = state.gridState,
             )
         },

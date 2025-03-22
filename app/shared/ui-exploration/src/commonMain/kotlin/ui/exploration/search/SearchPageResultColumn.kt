@@ -62,6 +62,7 @@ internal fun SearchPageResultColumn(
     selectedItemIndex: () -> Int,
     onSelect: (index: Int) -> Unit,
     onPlay: (info: SubjectPreviewItemInfo) -> Unit,
+    highlightSelected: Boolean,
     modifier: Modifier = Modifier,
     headers: LazyStaggeredGridScope.() -> Unit = {},
     state: LazyStaggeredGridState = rememberLazyStaggeredGridState()
@@ -136,7 +137,7 @@ internal fun SearchPageResultColumn(
                     shape = nsfwBlurShape,
                 ) {
                     SubjectPreviewItem(
-                        selected = index == selectedItemIndex(),
+                        selected = highlightSelected && index == selectedItemIndex(),
                         onClick = { onSelect(index) },
                         onPlay = { onPlay(info) },
                         info = info,
