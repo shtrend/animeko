@@ -83,7 +83,7 @@ fun SearchPage(
                                 && !state.suggestionSearchBarState.expanded,
                     ) { Modifier.padding(horizontal = 8.dp) } // from 16 to 24
                     .padding(bottom = 16.dp),
-                placeholder = { Text("关键词（可留空）") },
+                placeholder = { Text("关键词") },
                 windowInsets = contentWindowInsets.only(WindowInsetsSides.Horizontal),
             )
         },
