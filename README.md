@@ -81,51 +81,26 @@ Animeko 采用语义化版本号, 简单来说就是 `4.x.y` 的格式. 有以�
 
 ## 功能截图
 
-### 管理追番
+### 手机端
 
-- 多端同步 [Bangumi][Bangumi] 收藏, 记录观看进度
+|            <img src=".readme/images/portrait/0_Onboarding_portrait.png" alt="Onboarding Screen Portrait" />             |  <img src=".readme/images/portrait/1_MainScreen_Exploration_portrait.png" alt="Main Screen Exploration Portrait" />  |      <img src=".readme/images/portrait/2_MainScreen_Collection_portrait.png" alt="Main Screen Collection Portrait"  />       | <img src=".readme/images/portrait/3_MainScreen_CacheManagement_portrait.png" alt="Main Screen Cache Management Portrait"  />  |            <img src=".readme/images/portrait/4_SubjectDetailsPage_portrait.png" alt="Subject Details Page Portrait"  />            | 
+|:-----------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------:|
+| <img src=".readme/images/portrait/5_EpisodePage_selected_web_portrait.png" alt="Episode Page Selected Web Portrait"  /> | <img src=".readme/images/portrait/6_EpisodePage_selected_bt_portrait.png" alt="Episode Page Selected BT Portrait" /> | <img src=".readme/images/portrait/7_EpisodePage_selector_simple_portrait.png" alt="Episode Page Selector Simple Portrait" /> | <img src=".readme/images/portrait/8_EpisodePage_selector_detail_portrait.png" alt="Episode Page Selector Detail Portrait"  /> | <img src=".readme/images/portrait/11_SettingsPage_media_preference_portrait.png" alt="Settings Page Media Preference Portrait"  /> |
 
-<img width="270" src=".readme/images/collection/collection-dark.png" alt="collection-dark"/> <img width="270" src=".readme/images/subject/subject-dark.png" alt="subject-dark"/> 
+| <img src=".readme/images/portrait/9_EpisodePage_fullscreen_android.png" alt="Episode Page Fullscreen Android Portrait"  /> | <img src=".readme/images/portrait/10_EpisodePage_fullscreen_danmaku_settings_android.png" alt="Episode Page Fullscreen Danmaku Settings Android Portrait"  /> | 
+|:--------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|                                                                                                                            |                                                                                                                                                               |
 
-<img width="600" src=".readme/images/collection/exploration-desktop.png" alt="exploration-desktop"/>
+### PC 端
 
-### 多数据源聚合
+|               <img src=".readme/images/landscape/0_Onboarding_landscape.png" alt="Onboarding Screen Landscape" />                |   <img src=".readme/images/landscape/1_MainScreen_Exploration_landscape.png" alt="Main Screen Exploration Landscape" />   |         <img src=".readme/images/landscape/2_MainScreen_Collection_landscape.png" alt="Main Screen Collection Landscape"  />          | <img src=".readme/images/landscape/3_MainScreen_CacheManagement_landscape.png" alt="Main Screen Cache Management Landscape"  />  |
+|:--------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------:|
+|         <img src=".readme/images/landscape/4_SubjectDetailsPage_landscape.png" alt="Subject Details Page Landscape"  />          | <img src=".readme/images/landscape/5_EpisodePage_selected_web_landscape.png" alt="Episode Page Selected Web Landscape" /> |        <img src=".readme/images/landscape/6_EpisodePage_selected_bt_landscape.png" alt="Episode Page Selected BT Landscape" />        | <img src=".readme/images/landscape/7_EpisodePage_selector_simple_landscape.png" alt="Episode Page Selector Simple Landscape"  /> |
+| <img src=".readme/images/landscape/8_EpisodePage_selector_detail_landscape.png" alt="Episode Page Selector Detail Landscape"  /> |     <img src=".readme/images/landscape/9_EpisodePage_theater_landscape.png" alt="Episode Page Theater Landscape"  />      | <img src=".readme/images/landscape/12_SettingsPage_media_preference_landscape.png" alt="Settings Page Media Preference Landscape"  /> |               <img src=".readme/images/landscape/13_EpisodePage_macos.png" alt="Episode Page macOS Landscape"  />                |
 
-总有一个源有你想看的番和喜欢的字幕组
-
-- 全自动整合多个 BT 数据源与在线数据源, 兼顾资源质量与速度
-- 智能选择算法避免找资源的麻烦
-
-<img width="270" src=".readme/images/episode/episode-player-loading.jpg" alt="episode-player-loading"/> <img width="270" src=".readme/images/episode/episode-stats.jpg" alt="episode-stats"/> <img width="270" src=".readme/images/episode/episode-media.jpg" alt="episode-media"/> 
-
-### 视频弹幕
-
-- 多弹幕数据源
-- 高效弹幕引擎, 自定义样式
-- 发送弹幕到 Animeko 公益弹幕服务器
-
-<img width="600" src=".readme/images/episode/player-controller.png" alt="player-controller"/>
-
-<img width="600" src=".readme/images/episode/player-danmaku.png" alt="player-danmaku"/>
-
-<img width="600" src=".readme/images/episode/player-settings.png" alt="player-settings"/>
-
-<img width="600" src=".readme/images/episode/episode-play-desktop.png" alt="episode-play-desktop"/>
-
-<img width="600" src=".readme/images/episode/player-gesture.jpeg" alt="episode-gesture"/>
-
-### 高度自定义
-
-- 设置全局优先选择的字幕组, 字幕语言等设置
-- 在观看时修改过滤可自动记忆并应用到下次播放和自动缓存
-
-<img width="270" src=".readme/images/settings/settings.png"  alt="settings"/> <img width="270" src=".readme/images/settings/settings-media.png"  alt="settings-media"/>  
-
-### 缓存
-
-- 支持离线播放
-
-<img width="270" src=".readme/images/settings/cache.png"  alt="cache"/> <img width="270" src=".readme/images/settings/global-caches.png"  alt="global-caches"/> 
+| <img src=".readme/images/landscape/10_EpisodePage_fullscreen_windows.png" alt="Episode Page Fullscreen Windows Landscape" /> | <img src=".readme/images/landscape/11_EpisodePage_fullscreen_danmaku_settings_windows.jpg" alt="Episode Page Fullscreen Danmaku Settings Windows Landscape" /> |
+|:----------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|                                                                                                                              |                                                                                                                                                                |
 
 ### 完全免费无广告且开放源代码
 
