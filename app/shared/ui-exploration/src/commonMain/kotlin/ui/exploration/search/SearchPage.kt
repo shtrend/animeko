@@ -189,8 +189,8 @@ internal fun SearchPageResultColumn(
             .keyboardDirectionToSelectItem(
                 selectedItemIndex,
             ) {
-                state.animateScrollToItem(it)
                 onSelect(it)
+                state.animateScrollToItem(it)
             }
             .keyboardPageToScroll({ height.toFloat() }) {
                 state.animateScrollBy(it)
