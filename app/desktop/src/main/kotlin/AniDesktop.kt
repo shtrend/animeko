@@ -550,7 +550,7 @@ private fun WindowStateRecorder(
 ) {
     // 记录窗口大小
     DisposableEffect(Unit) {
-        if (saved != null) {
+        if (saved != null && !saved.hasUnspecified()) {
             val savedWindowState = WindowState(
                 position = WindowPosition(
                     x = saved.x,
