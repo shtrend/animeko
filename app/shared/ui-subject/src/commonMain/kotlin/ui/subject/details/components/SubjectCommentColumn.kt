@@ -15,9 +15,9 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -50,7 +50,9 @@ fun SubjectDetailsDefaults.SubjectCommentColumn(
         CommentColumn(
             state.list.collectAsLazyPagingItemsWithLifecycle(),
             modifier = Modifier
-                .widthIn(max = BottomSheetDefaults.SheetMaxWidth)
+                .fillMaxWidth()
+                .wrapContentWidth(align = Alignment.CenterHorizontally)
+                .widthIn(max = SubjectDetailsDefaults.MaximumContentWidth)
                 .fillMaxHeight(),
             contentPadding = contentPadding,
             lazyStaggeredGridState = lazyStaggeredGridState,

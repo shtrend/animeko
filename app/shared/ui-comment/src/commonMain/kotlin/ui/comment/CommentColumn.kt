@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemScope
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DividerDefaults
@@ -77,6 +78,7 @@ fun CommentColumn(
                 ),
             lazyStaggeredGridState = lazyStaggeredGridState,
             contentPadding = contentPadding,
+            cells = StaggeredGridCells.Fixed(1),
         ) {
             item("spacer header") { Spacer(Modifier.height(1.dp)) }
 

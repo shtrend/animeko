@@ -56,7 +56,7 @@ fun <T : Any> SearchResultLazyVerticalStaggeredGrid(
     items: LazyPagingItems<T>,
     error: @Composable (error: LoadError?) -> Unit,
     modifier: Modifier = Modifier,
-    cells: StaggeredGridCells.Adaptive = StaggeredGridCells.Adaptive(300.dp),
+    cells: StaggeredGridCells = StaggeredGridCells.Adaptive(300.dp),
     lazyStaggeredGridState: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
     listItemColors: ListItemColors = ListItemDefaults.colors(containerColor = Color.Transparent),
     horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(0.dp),
