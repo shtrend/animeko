@@ -13,6 +13,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.HttpClientCall
 import io.ktor.client.plugins.BrowserUserAgent
+import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.HttpSend
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.SendCountExceedException
@@ -240,9 +241,12 @@ data class ServerListFeatureHandler(
                 execute(request) // if `expectSuccess` is true, this will throw on failure, otherwise return the call
             } catch (e: CancellationException) {
                 throw e // don't prevent cancellation
-            } catch (e: ResponseException) {
-                continue // try next server
-            } catch (e: IOException) {
+            } catch (e: ClientRequestException) {
+                // client error, don't retry
+                throw e
+            } catch (_: ResponseException) {
+                continue // server error try next server
+            } catch (_: IOException) {
                 continue // try next server
             }
             lastCall = thisCall
