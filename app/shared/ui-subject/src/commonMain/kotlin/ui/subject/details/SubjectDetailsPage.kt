@@ -32,6 +32,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -109,6 +110,8 @@ import me.him188.ani.app.ui.foundation.theme.LocalThemeSettings
 import me.him188.ani.app.ui.foundation.theme.MaterialThemeFromImage
 import me.him188.ani.app.ui.foundation.toComposeImageBitmap
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.rating.EditableRating
+import me.him188.ani.app.ui.rating.EditableRatingState
 import me.him188.ani.app.ui.richtext.RichTextDefaults
 import me.him188.ani.app.ui.search.LoadErrorCard
 import me.him188.ani.app.ui.subject.AiringLabelState
@@ -121,11 +124,10 @@ import me.him188.ani.app.ui.subject.details.components.SelectEpisodeButtons
 import me.him188.ani.app.ui.subject.details.components.SubjectBlurredBackground
 import me.him188.ani.app.ui.subject.details.components.SubjectCommentColumn
 import me.him188.ani.app.ui.subject.details.components.SubjectDetailsDefaults
+import me.him188.ani.app.ui.subject.details.components.SubjectDetailsDefaults.MaximumContentWidth
 import me.him188.ani.app.ui.subject.details.components.SubjectDetailsHeader
 import me.him188.ani.app.ui.subject.details.state.SubjectDetailsState
 import me.him188.ani.app.ui.subject.episode.list.EpisodeListDialog
-import me.him188.ani.app.ui.rating.EditableRating
-import me.him188.ani.app.ui.rating.EditableRatingState
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.utils.platform.isMobile
 
@@ -349,6 +351,10 @@ private fun SubjectDetailsPage(
                         }
                     }
                 },
+                Modifier
+                    .fillMaxWidth()
+                    .wrapContentWidth(align = Alignment.CenterHorizontally)
+                    .widthIn(max = MaximumContentWidth),
             )
         }
     }
@@ -549,7 +555,7 @@ fun SubjectDetailsLayout(
             Modifier.fillMaxSize(),
             contentAlignment = Alignment.TopCenter,
         ) {
-            Column(Modifier.widthIn(max = 1300.dp).fillMaxHeight()) {
+            Column(Modifier.fillMaxHeight()) {
                 Box(Modifier.connectedScrollContainer(connectedScrollState)) {
                     // 虚化渐变背景, 需要绘制到 scaffoldPadding 以外区域
                     if (showBlurredBackground) {
@@ -577,6 +583,9 @@ fun SubjectDetailsLayout(
                             selectEpisodeButton = selectEpisodeButton,
                             rating = rating,
                             modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(align = Alignment.CenterHorizontally)
+                                .widthIn(max = MaximumContentWidth)
                                 .connectedScrollTarget(connectedScrollState)
                                 .fillMaxWidth()
                                 .ifThen(!showTopBar) { padding(top = windowSizeClass.paneVerticalPadding) }
@@ -606,6 +615,7 @@ private fun SubjectDetailsContentPager(
     detailsTab: @Composable (contentPadding: PaddingValues) -> Unit,
     commentsTab: @Composable (contentPadding: PaddingValues) -> Unit,
     discussionsTab: @Composable (contentPadding: PaddingValues) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val backgroundColor = AniThemeDefaults.pageContentBackgroundColor
     val stickyTopBarColor = AniThemeDefaults.navigationContainerColor
@@ -617,7 +627,7 @@ private fun SubjectDetailsContentPager(
     )
 
     Column(
-        Modifier
+        modifier
             .fillMaxHeight()
             .padding(paddingValues)
             .consumeWindowInsets(paddingValues),
