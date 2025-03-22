@@ -105,4 +105,12 @@ class TitleParserTest : PatternBasedTitleParserTestSuite() {
         assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
         assertEquals("1080P", r.resolution.toString())
     }
+
+    @Test
+    fun `S01E01-`() {
+        val r = parse("Mahou Shoujo ni Akogarete S01E01-[1080p][BDRIP][x265.FLAC].mkv")
+        assertEquals("S?", r.episodeRange.toString())
+        assertEquals("", r.subtitleLanguages.sortedBy { it.id }.joinToString { it.id })
+        assertEquals("1080P", r.resolution.toString())
+    }
 }
