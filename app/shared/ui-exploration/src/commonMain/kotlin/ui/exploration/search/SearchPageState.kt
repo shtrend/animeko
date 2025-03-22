@@ -92,7 +92,7 @@ class SearchPageState(
 
     val items = searchState.launchAsItemsIn(backgroundScope)
 
-    var selectedItemIndex: Int by mutableIntStateOf(0)
+    var selectedItemIndex: Int by mutableIntStateOf(-1)
 
     val playTasker = MonoTasker(backgroundScope)
     var playingItem: SubjectPreviewItemInfo? by mutableStateOf(null)
