@@ -161,8 +161,11 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
                     @OptIn(OpaqueSession::class)
                     sessionManager.unverifiedAccessToken,
                     onRefresh = {
-                        logger.info("Ktor believes Bangumi token is invalid. Refreshing.")
-                        sessionManager.retry()
+                        val before = sessionManager.finalState.first()
+                        logger.info("Ktor believes Bangumi token is invalid. Refreshing. Current state: $before")
+                        if (before !is SessionStatus.Expired) {
+                            sessionManager.retry()
+                        }
                         logger.info("Retry started. Now waiting for session to be verified.")
                         // `finalState.first()` wait for `retry` to complete.
                         // If `retry` succeeds, `finalState` will receive SessionStatus.Verified with a valid token.
