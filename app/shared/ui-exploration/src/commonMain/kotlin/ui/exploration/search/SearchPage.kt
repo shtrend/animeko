@@ -44,10 +44,7 @@ import me.him188.ani.app.ui.adaptive.AniListDetailPaneScaffold
 import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.PaneScope
 import me.him188.ani.app.ui.foundation.LocalPlatform
-import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
-import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
-import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.search.collectHasQueryAsState
@@ -77,12 +74,7 @@ fun SearchPage(
         searchBar = {
             SuggestionSearchBar(
                 state.suggestionSearchBarState,
-                Modifier
-                    .ifThen(
-                        currentWindowAdaptiveInfo1().windowSizeClass.isWidthAtLeastMedium
-                                && !state.suggestionSearchBarState.expanded,
-                    ) { Modifier.padding(horizontal = 8.dp) } // from 16 to 24
-                    .padding(bottom = 16.dp),
+                Modifier.padding(bottom = 16.dp),
                 placeholder = { Text("关键词") },
                 windowInsets = contentWindowInsets.only(WindowInsetsSides.Horizontal),
             )
