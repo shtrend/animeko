@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -16,8 +16,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.json.Json
 import me.him188.ani.app.data.models.preference.MediaPreference
+import me.him188.ani.app.data.persistent.DataStoreJson
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -39,9 +39,7 @@ class EpisodePreferencesRepositoryImpl(
         .get<SettingsRepository>().defaultMediaPreference.flow
 ) : EpisodePreferencesRepository, KoinComponent {
     private val logger = logger<EpisodePreferencesRepositoryImpl>()
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
+    private val json = DataStoreJson
 
     override fun mediaPreferenceFlow(subjectId: Int): Flow<MediaPreference> {
         return store.data.map {

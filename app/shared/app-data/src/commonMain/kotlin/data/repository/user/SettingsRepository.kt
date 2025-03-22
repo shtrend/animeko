@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
 import me.him188.ani.app.data.models.danmaku.DanmakuConfigSerializer
 import me.him188.ani.app.data.models.danmaku.DanmakuFilterConfig
 import me.him188.ani.app.data.models.preference.AnalyticsSettings
@@ -39,6 +38,7 @@ import me.him188.ani.app.data.models.preference.UISettings
 import me.him188.ani.app.data.models.preference.UpdateSettings
 import me.him188.ani.app.data.models.preference.VideoResolverSettings
 import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
+import me.him188.ani.app.data.persistent.DataStoreJson
 import me.him188.ani.danmaku.ui.DanmakuConfig
 import me.him188.ani.utils.logging.debug
 import me.him188.ani.utils.logging.error
@@ -93,9 +93,7 @@ interface Settings<T> {
 class PreferencesRepositoryImpl(
     private val preferences: DataStore<Preferences>,
 ) : SettingsRepository {
-    private val format = Json {
-        ignoreUnknownKeys = true
-    }
+    private val format get() = DataStoreJson
 
     inner class BooleanPreference(
         val name: String,

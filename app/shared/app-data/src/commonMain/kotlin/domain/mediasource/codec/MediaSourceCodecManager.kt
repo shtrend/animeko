@@ -119,6 +119,7 @@ class MediaSourceCodecManager(
         val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
+            allowSpecialFloatingPointValues = true
         }
     }
 }
