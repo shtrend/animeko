@@ -220,7 +220,7 @@ class LabelFirstRawTitleParser : RawTitleParser() {
          * - `S1`
          */
         private fun parseEpisode(text: String): EpisodeRange? {
-            val split = text.split("+", " ")
+            val split = text.removeSuffix("-").split("+", " ")
             if (split.isEmpty()) {
                 return null
             }

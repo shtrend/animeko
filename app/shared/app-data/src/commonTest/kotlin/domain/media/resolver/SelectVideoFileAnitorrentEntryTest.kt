@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -197,6 +197,56 @@ class SelectVideoFileAnitorrentEntryTest {
                 )
                 assertEquals(
                     "[DBD-Raws][未来日记][SP][1080P][BDRip][HEVC-10bit][FLAC].mkv",
+                    selected,
+                    message = list.toString(),
+                )
+            }
+        },
+    )
+
+    @TestFactory
+    fun `select S01E01-`() = runDynamicTests(
+        // [桜都字幕组&7^ACG] 憧憬成为魔法少女/魔法少女にあこがれて/Mahou Shoujo ni Akogarete S01 | 01 [简繁字幕] BDrip 1080p x265 FLAC 2.0.mkv
+        listOf(
+            "Mahou Shoujo ni Akogarete S01E01-[1080p][BDRIP][x265.FLAC].mkv",
+            "Mahou Shoujo ni Akogarete S01E02-[1080p][BDRIP][x265.FLAC].mkv",
+            "Mahou Shoujo ni Akogarete S01E03-[1080p][BDRIP][x265.FLAC].mkv",
+        ).permuted().mapIndexed { index, list ->
+            dynamicTest(index.toString()) {
+                val selected = TorrentMediaResolver.selectVideoFileEntry(
+                    list,
+                    { this },
+                    episodeTitles = listOf("梦想成为魔法少女"),
+                    episodeSort = EpisodeSort("01"),
+                    episodeEp = null,
+                )
+                assertEquals(
+                    "Mahou Shoujo ni Akogarete S01E01-[1080p][BDRIP][x265.FLAC].mkv",
+                    selected,
+                    message = list.toString(),
+                )
+            }
+        },
+    )
+
+    @TestFactory
+    fun `select S01E01- 2`() = runDynamicTests(
+        // [桜都字幕组&7^ACG] 憧憬成为魔法少女/魔法少女にあこがれて/Mahou Shoujo ni Akogarete S01 | 01 [简繁字幕] BDrip 1080p x265 FLAC 2.0.mkv
+        listOf(
+            "Mahou Shoujo ni Akogarete S01E01-[1080p][BDRIP][x265.FLAC].mkv",
+            "Mahou Shoujo ni Akogarete S01E02-[1080p][BDRIP][x265.FLAC].mkv",
+            "Mahou Shoujo ni Akogarete S01E03-[1080p][BDRIP][x265.FLAC].mkv",
+        ).permuted().mapIndexed { index, list ->
+            dynamicTest(index.toString()) {
+                val selected = TorrentMediaResolver.selectVideoFileEntry(
+                    list,
+                    { this },
+                    episodeTitles = listOf("梦想成为魔法少女"),
+                    episodeSort = EpisodeSort("02"),
+                    episodeEp = null,
+                )
+                assertEquals(
+                    "Mahou Shoujo ni Akogarete S01E02-[1080p][BDRIP][x265.FLAC].mkv",
                     selected,
                     message = list.toString(),
                 )
