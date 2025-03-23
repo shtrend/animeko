@@ -57,5 +57,8 @@ data class AniOnAirAnimeInfo(
 
     @SerialName(value = "recurrence") val recurrence: AniAnimeRecurrence? = null
 
-)
+) {
+
+
+}
 

@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 /**
  *
  * Please note:
@@ -25,11 +34,11 @@ import kotlinx.serialization.Serializable
  *
  * @param id 
  * @param type `0` 本篇，`1` SP，`2` OP，`3` ED
- * @param name
+ * @param name 
  * @param nameCn 
  * @param sort 同类条目的排序和集数
  * @param airdate
- * @param comment
+ * @param comment 
  * @param duration 
  * @param desc 简介
  * @param disc 音乐曲目的碟片数
@@ -69,5 +78,8 @@ data class BangumiEpisodeDetail(
     /* 条目内的集数, 从`1`开始。非本篇剧集的此字段无意义 */
     @SerialName(value = "ep") val ep: @Serializable(me.him188.ani.utils.serialization.BigNumAsDoubleStringSerializer::class) me.him188.ani.utils.serialization.BigNum? = null
 
-)
+) {
+
+
+}
 

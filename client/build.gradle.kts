@@ -33,7 +33,7 @@ plugins {
     kotlin("plugin.serialization")
     idea
     `ani-mpp-lib-targets`
-    id("org.openapi.generator") version "7.6.0"
+    alias(libs.plugins.openapi.generator)
 }
 
 android {

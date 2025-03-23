@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 /**
  *
  * Please note:
@@ -27,7 +36,7 @@ import kotlinx.serialization.Serializable
  * @param name
  * @param nameCn
  * @param summary
- * @param nsfw
+ * @param nsfw 
  * @param locked 
  * @param platform TV, Web, 欧美剧, PS4...
  * @param images 
@@ -35,7 +44,7 @@ import kotlinx.serialization.Serializable
  * @param eps 由旧服务端从wiki中解析，对于书籍条目为`话数`
  * @param totalEpisodes 数据库中的章节数量
  * @param rating
- * @param collection
+ * @param collection 
  * @param tags 
  * @param date air date in `YYYY-MM-DD` format
  * @param infobox 
@@ -83,5 +92,8 @@ data class BangumiSubject(
 
     @SerialName(value = "infobox") val infobox: kotlin.collections.List<BangumiItem>? = null
 
-)
+) {
+
+
+}
 

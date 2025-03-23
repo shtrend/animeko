@@ -46,5 +46,8 @@ data class AniTrendingSubject(
 
     @SerialName(value = "nameCn") @Required val nameCn: kotlin.String
 
-)
+) {
+
+
+}
 

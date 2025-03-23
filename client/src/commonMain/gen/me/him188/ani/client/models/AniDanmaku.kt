@@ -45,5 +45,8 @@ data class AniDanmaku(
 
     @SerialName(value = "senderId") @Required val senderId: kotlin.String
 
-)
+) {
+
+
+}
 

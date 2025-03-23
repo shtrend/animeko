@@ -48,5 +48,8 @@ data class AniDanmakuInfo(
 
     @SerialName(value = "text") @Required val text: kotlin.String
 
-)
+) {
+
+
+}
 

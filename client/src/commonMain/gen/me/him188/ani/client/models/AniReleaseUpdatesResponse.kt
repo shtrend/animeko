@@ -40,5 +40,8 @@ data class AniReleaseUpdatesResponse(
 
     @SerialName(value = "versions") @Required val versions: kotlin.collections.List<kotlin.String>
 
-)
+) {
+
+
+}
 

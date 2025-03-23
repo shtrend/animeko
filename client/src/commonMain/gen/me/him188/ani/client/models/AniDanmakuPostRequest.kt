@@ -39,5 +39,8 @@ data class AniDanmakuPostRequest(
 
     @SerialName(value = "danmakuInfo") @Required val danmakuInfo: AniDanmakuInfo
 
-)
+) {
+
+
+}
 

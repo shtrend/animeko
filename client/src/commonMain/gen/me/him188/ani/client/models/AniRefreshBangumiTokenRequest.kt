@@ -40,5 +40,8 @@ data class AniRefreshBangumiTokenRequest(
 
     @SerialName(value = "refreshToken") @Required val refreshToken: kotlin.String
 
-)
+) {
+
+
+}
 

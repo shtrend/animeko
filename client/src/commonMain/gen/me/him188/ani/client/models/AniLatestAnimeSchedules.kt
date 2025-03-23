@@ -29,9 +29,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
+ * 
  *
- *
- * @param list
+ * @param list 
  */
 @Serializable
 
@@ -39,5 +39,8 @@ data class AniLatestAnimeSchedules(
 
     @SerialName(value = "list") @Required val list: kotlin.collections.List<AniAnimeSchedule>
 
-)
+) {
+
+
+}
 

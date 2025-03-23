@@ -25,9 +25,9 @@
 package me.him188.ani.client.models
 
 
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.Required
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
@@ -64,5 +64,8 @@ data class AniAniUser(
 
     @SerialName(value = "clientVersion") val clientVersion: kotlin.String? = null
 
-)
+) {
+
+
+}
 

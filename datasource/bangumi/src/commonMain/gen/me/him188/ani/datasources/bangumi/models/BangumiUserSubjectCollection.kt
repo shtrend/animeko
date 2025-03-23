@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 /**
  *
  * Please note:
@@ -27,11 +36,11 @@ import kotlinx.serialization.Serializable
  * @param rate
  * @param type
  * @param tags
- * @param epStatus
+ * @param epStatus 
  * @param volStatus 
  * @param updatedAt 本时间并不代表条目的收藏时间。修改评分，评价，章节观看状态等收藏信息时未更新此时间是一个 bug。请不要依赖此特性
  * @param `private`
- * @param comment
+ * @param comment 
  * @param subject 
  */
 @Serializable
@@ -61,5 +70,8 @@ data class BangumiUserSubjectCollection(
 
     @SerialName(value = "subject") val subject: BangumiSlimSubject? = null
 
-)
+) {
+
+
+}
 

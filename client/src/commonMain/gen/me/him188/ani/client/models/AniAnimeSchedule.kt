@@ -24,17 +24,14 @@
 
 package me.him188.ani.client.models
 
-import me.him188.ani.client.models.AniAnimeSeasonId
-import me.him188.ani.client.models.AniOnAirAnimeInfo
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.Required
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
  *
- * @param list
+ * @param list 
  * @param seasonId 
  */
 @Serializable
@@ -45,5 +42,8 @@ data class AniAnimeSchedule(
 
     @SerialName(value = "seasonId") @Required val seasonId: AniAnimeSeasonId
 
-)
+) {
+
+
+}
 

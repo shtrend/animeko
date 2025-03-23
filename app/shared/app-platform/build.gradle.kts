@@ -7,8 +7,6 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
 
 plugins {
@@ -33,7 +31,7 @@ kotlin {
 
         api(libs.coil.compose.core)
         api(libs.coil.svg)
-        api(libs.coil.network.ktor2)
+        api(libs.coil.network.ktor3)
 
         api(libs.compose.lifecycle.viewmodel.compose)
         api(libs.compose.lifecycle.runtime.compose)

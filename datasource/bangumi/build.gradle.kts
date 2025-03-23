@@ -33,7 +33,7 @@ plugins {
     kotlin("plugin.serialization")
     idea
     `ani-mpp-lib-targets`
-    id("org.openapi.generator") version "7.6.0"
+    alias(libs.plugins.openapi.generator)
 }
 
 android {
@@ -160,7 +160,7 @@ private fun stripP1Api(path: String): File {
         "CommentBase",
         "CreateReply",
         "TurnstileToken",
-        
+
         "CollectionType",
         "SubjectInterestComment",
         "Reaction",
@@ -168,10 +168,14 @@ private fun stripP1Api(path: String): File {
         "SlimUser",
         "Avatar",
         "SimpleUser",
-        
+
         "EpisodeCollectionStatus",
         "SlimSubject",
-        "EpisodeType"
+        "EpisodeType",
+        "SubjectRating",
+        "SubjectType",
+        "SubjectImages",
+        "SlimSubjectInterest",
     )
     val schemas = components["schemas"].cast<Map<String, *>>().toMutableMap()
     val keepSchemas = schemas.filter { (component, _) -> component in keepSchemaKeys }
@@ -194,7 +198,7 @@ val fixGeneratedOpenApi = tasks.register("fixGeneratedOpenApi") {
     val models =
         layout.buildDirectory.file("$generatedRoot/src/commonMain/kotlin/me/him188/ani/datasources/bangumi/models/")
             .get().asFile
-    
+
 
 //    inputs.file(file)
 //    outputs.file(file)

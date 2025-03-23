@@ -39,5 +39,8 @@ data class AniTrends(
 
     @SerialName(value = "trendingSubjects") @Required val trendingSubjects: kotlin.collections.List<AniTrendingSubject>
 
-)
+) {
+
+
+}
 

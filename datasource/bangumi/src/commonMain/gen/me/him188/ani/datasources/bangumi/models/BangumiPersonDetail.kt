@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 /**
  *
  * Please note:
@@ -22,11 +31,11 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param id
+ * @param id 
  * @param name 
  * @param type `1`, `2`, `3` 表示 `个人`, `公司`, `组合`
  * @param career
- * @param summary
+ * @param summary 
  * @param locked 
  * @param lastModified currently it's latest user comment time, it will be replaced by wiki modified date in the future
  * @param stat 
@@ -81,5 +90,8 @@ data class BangumiPersonDetail(
     /* parsed from wiki, maybe `null` */
     @SerialName(value = "birth_day") val birthDay: kotlin.Int? = null
 
-)
+) {
+
+
+}
 

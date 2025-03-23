@@ -22,45 +22,49 @@
     "UnusedImport",
 )
 
-package me.him188.ani.datasources.bangumi.models
+package me.him188.ani.datasources.bangumi.next.models
 
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param id 
- * @param name 
- * @param type 角色，机体，舰船，组织...
- * @param subjectId
- * @param subjectName 
- * @param subjectNameCn 
- * @param images object with some size of images, this object maybe `null`
- * @param staff 
+ *
+ * @param id
+ * @param info
+ * @param locked
+ * @param name
+ * @param nameCN
+ * @param nsfw
+ * @param rating
+ * @param type
+ * @param images
+ * @param interest
  */
 @Serializable
 
-data class BangumiCharacterPerson(
+data class BangumiNextSlimSubject(
 
     @SerialName(value = "id") @Required val id: kotlin.Int,
 
+    @SerialName(value = "info") @Required val info: kotlin.String,
+
+    @SerialName(value = "locked") @Required val locked: kotlin.Boolean,
+
     @SerialName(value = "name") @Required val name: kotlin.String,
 
-    /* 角色，机体，舰船，组织... */
-    @SerialName(value = "type") @Required val type: BangumiCharacterType,
+    @SerialName(value = "nameCN") @Required val nameCN: kotlin.String,
 
-    @SerialName(value = "subject_id") @Required val subjectId: kotlin.Int,
+    @SerialName(value = "nsfw") @Required val nsfw: kotlin.Boolean,
 
-    @SerialName(value = "subject_name") @Required val subjectName: kotlin.String,
+    @SerialName(value = "rating") @Required val rating: BangumiNextSubjectRating,
 
-    @SerialName(value = "subject_name_cn") @Required val subjectNameCn: kotlin.String,
+    @SerialName(value = "type") @Required val type: BangumiNextSubjectType,
 
-    /* object with some size of images, this object maybe `null` */
-    @SerialName(value = "images") val images: BangumiPersonImages? = null,
+    @SerialName(value = "images") val images: BangumiNextSubjectImages? = null,
 
-    @SerialName(value = "staff") val staff: kotlin.String? = null
+    @SerialName(value = "interest") val interest: BangumiNextSlimSubjectInterest? = null
 
 ) {
 

@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 /**
  *
  * Please note:
@@ -15,13 +24,27 @@
 
 package me.him188.ani.datasources.bangumi.apis
 
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.HttpClientEngine
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
+import me.him188.ani.datasources.bangumi.infrastructure.ApiClient
+import me.him188.ani.datasources.bangumi.infrastructure.HttpResponse
+import me.him188.ani.datasources.bangumi.infrastructure.RequestConfig
+import me.him188.ani.datasources.bangumi.infrastructure.RequestMethod
+import me.him188.ani.datasources.bangumi.infrastructure.map
+import me.him188.ani.datasources.bangumi.infrastructure.wrap
 import me.him188.ani.datasources.bangumi.models.BangumiCharacterDetail
 import me.him188.ani.datasources.bangumi.models.BangumiCharacterPerson
 import me.him188.ani.datasources.bangumi.models.BangumiCharacterRevision
 import me.him188.ani.datasources.bangumi.models.BangumiDetailedRevision
 import me.him188.ani.datasources.bangumi.models.BangumiEpType
 import me.him188.ani.datasources.bangumi.models.BangumiEpisodeDetail
-import me.him188.ani.datasources.bangumi.models.BangumiErrorDetail
 import me.him188.ani.datasources.bangumi.models.BangumiGetUserSubjectEpisodeCollection200Response
 import me.him188.ani.datasources.bangumi.models.BangumiIndex
 import me.him188.ani.datasources.bangumi.models.BangumiIndexBasicInfo
@@ -49,17 +72,6 @@ import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollection
 import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollectionModifyPayload
 import me.him188.ani.datasources.bangumi.models.BangumiV0RelatedSubject
 import me.him188.ani.datasources.bangumi.models.BangumiV0SubjectRelation
-
-import me.him188.ani.datasources.bangumi.infrastructure.*
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.request.forms.formData
-import io.ktor.client.engine.HttpClientEngine
-import kotlinx.serialization.json.Json
-import io.ktor.http.ParametersBuilder
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
 
 open class DefaultApi : ApiClient {
 
@@ -844,8 +856,8 @@ open class DefaultApi : ApiClient {
             private val serializer: KSerializer<List<BangumiPersonCharacter>> =
                 serializer<List<BangumiPersonCharacter>>()
             override val descriptor = serializer.descriptor
-            override fun serialize(encoder: Encoder, obj: GetRelatedCharactersByPersonIdResponse) =
-                serializer.serialize(encoder, obj.value)
+            override fun serialize(encoder: Encoder, value: GetRelatedCharactersByPersonIdResponse) =
+                serializer.serialize(encoder, value.value)
 
             override fun deserialize(decoder: Decoder) =
                 GetRelatedCharactersByPersonIdResponse(serializer.deserialize(decoder))
@@ -890,8 +902,8 @@ open class DefaultApi : ApiClient {
             private val serializer: KSerializer<List<BangumiRelatedCharacter>> =
                 serializer<List<BangumiRelatedCharacter>>()
             override val descriptor = serializer.descriptor
-            override fun serialize(encoder: Encoder, obj: GetRelatedCharactersBySubjectIdResponse) =
-                serializer.serialize(encoder, obj.value)
+            override fun serialize(encoder: Encoder, value: GetRelatedCharactersBySubjectIdResponse) =
+                serializer.serialize(encoder, value.value)
 
             override fun deserialize(decoder: Decoder) =
                 GetRelatedCharactersBySubjectIdResponse(serializer.deserialize(decoder))
@@ -936,8 +948,8 @@ open class DefaultApi : ApiClient {
             private val serializer: KSerializer<List<BangumiCharacterPerson>> =
                 serializer<List<BangumiCharacterPerson>>()
             override val descriptor = serializer.descriptor
-            override fun serialize(encoder: Encoder, obj: GetRelatedPersonsByCharacterIdResponse) =
-                serializer.serialize(encoder, obj.value)
+            override fun serialize(encoder: Encoder, value: GetRelatedPersonsByCharacterIdResponse) =
+                serializer.serialize(encoder, value.value)
 
             override fun deserialize(decoder: Decoder) =
                 GetRelatedPersonsByCharacterIdResponse(serializer.deserialize(decoder))
@@ -981,8 +993,8 @@ open class DefaultApi : ApiClient {
         companion object : KSerializer<GetRelatedPersonsBySubjectIdResponse> {
             private val serializer: KSerializer<List<BangumiRelatedPerson>> = serializer<List<BangumiRelatedPerson>>()
             override val descriptor = serializer.descriptor
-            override fun serialize(encoder: Encoder, obj: GetRelatedPersonsBySubjectIdResponse) =
-                serializer.serialize(encoder, obj.value)
+            override fun serialize(encoder: Encoder, value: GetRelatedPersonsBySubjectIdResponse) =
+                serializer.serialize(encoder, value.value)
 
             override fun deserialize(decoder: Decoder) =
                 GetRelatedPersonsBySubjectIdResponse(serializer.deserialize(decoder))
@@ -1027,8 +1039,8 @@ open class DefaultApi : ApiClient {
             private val serializer: KSerializer<List<BangumiV0RelatedSubject>> =
                 serializer<List<BangumiV0RelatedSubject>>()
             override val descriptor = serializer.descriptor
-            override fun serialize(encoder: Encoder, obj: GetRelatedSubjectsByCharacterIdResponse) =
-                serializer.serialize(encoder, obj.value)
+            override fun serialize(encoder: Encoder, value: GetRelatedSubjectsByCharacterIdResponse) =
+                serializer.serialize(encoder, value.value)
 
             override fun deserialize(decoder: Decoder) =
                 GetRelatedSubjectsByCharacterIdResponse(serializer.deserialize(decoder))
@@ -1073,8 +1085,8 @@ open class DefaultApi : ApiClient {
             private val serializer: KSerializer<List<BangumiV0RelatedSubject>> =
                 serializer<List<BangumiV0RelatedSubject>>()
             override val descriptor = serializer.descriptor
-            override fun serialize(encoder: Encoder, obj: GetRelatedSubjectsByPersonIdResponse) =
-                serializer.serialize(encoder, obj.value)
+            override fun serialize(encoder: Encoder, value: GetRelatedSubjectsByPersonIdResponse) =
+                serializer.serialize(encoder, value.value)
 
             override fun deserialize(decoder: Decoder) =
                 GetRelatedSubjectsByPersonIdResponse(serializer.deserialize(decoder))
@@ -1119,8 +1131,8 @@ open class DefaultApi : ApiClient {
             private val serializer: KSerializer<List<BangumiV0SubjectRelation>> =
                 serializer<List<BangumiV0SubjectRelation>>()
             override val descriptor = serializer.descriptor
-            override fun serialize(encoder: Encoder, obj: GetRelatedSubjectsBySubjectIdResponse) =
-                serializer.serialize(encoder, obj.value)
+            override fun serialize(encoder: Encoder, value: GetRelatedSubjectsBySubjectIdResponse) =
+                serializer.serialize(encoder, value.value)
 
             override fun deserialize(decoder: Decoder) =
                 GetRelatedSubjectsBySubjectIdResponse(serializer.deserialize(decoder))
@@ -1671,6 +1683,7 @@ open class DefaultApi : ApiClient {
             localVariableAuthNames,
         ).wrap()
     }
+
 
 
     /**

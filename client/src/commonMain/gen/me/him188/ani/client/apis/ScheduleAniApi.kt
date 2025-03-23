@@ -24,21 +24,20 @@
 
 package me.him188.ani.client.apis
 
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.engine.HttpClientEngine
+import kotlinx.serialization.json.Json
+import me.him188.ani.client.infrastructure.ApiClient
+import me.him188.ani.client.infrastructure.HttpResponse
+import me.him188.ani.client.infrastructure.RequestConfig
+import me.him188.ani.client.infrastructure.RequestMethod
+import me.him188.ani.client.infrastructure.toMultiValue
+import me.him188.ani.client.infrastructure.wrap
 import me.him188.ani.client.models.AniAnimeSchedule
 import me.him188.ani.client.models.AniAnimeSeasonIdList
 import me.him188.ani.client.models.AniBatchGetSubjectRecurrenceResponse
 import me.him188.ani.client.models.AniLatestAnimeSchedules
-
-import me.him188.ani.client.infrastructure.*
-import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
-import io.ktor.client.request.forms.formData
-import io.ktor.client.engine.HttpClientEngine
-import kotlinx.serialization.json.Json
-import io.ktor.http.ParametersBuilder
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
 
 open class ScheduleAniApi : ApiClient {
 
@@ -134,7 +133,7 @@ open class ScheduleAniApi : ApiClient {
 
         val localVariableAuthNames = listOf<String>()
 
-        val localVariableBody =
+        val localVariableBody = 
             io.ktor.client.utils.EmptyContent
 
         val localVariableQuery = mutableMapOf<String, List<String>>()

@@ -22,31 +22,32 @@
     "UnusedImport",
 )
 
-package me.him188.ani.datasources.bangumi.models
+package me.him188.ani.datasources.bangumi.next.models
+
 
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
+ *
+ * @param count
  * @param rank
+ * @param score
  * @param total
- * @param count 
- * @param score 
  */
 @Serializable
 
-data class BangumiRating(
+data class BangumiNextSubjectRating(
+
+    @SerialName(value = "count") @Required val count: kotlin.collections.List<kotlin.Int>,
 
     @SerialName(value = "rank") @Required val rank: kotlin.Int,
 
-    @SerialName(value = "total") @Required val total: kotlin.Int,
+    @SerialName(value = "score") @Required val score: @Serializable(me.him188.ani.utils.serialization.BigNumAsDoubleStringSerializer::class) me.him188.ani.utils.serialization.BigNum,
 
-    @SerialName(value = "count") @Required val count: BangumiCount,
-
-    @SerialName(value = "score") @Required val score: @Serializable(me.him188.ani.utils.serialization.BigNumAsDoubleStringSerializer::class) me.him188.ani.utils.serialization.BigNum
+    @SerialName(value = "total") @Required val total: kotlin.Int
 
 ) {
 

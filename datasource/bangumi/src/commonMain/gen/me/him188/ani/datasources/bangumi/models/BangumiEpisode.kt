@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 /**
  *
  * Please note:
@@ -25,10 +34,10 @@ import kotlinx.serialization.Serializable
  *
  * @param id 
  * @param type `0` 本篇，`1` SP，`2` OP，`3` ED
- * @param name
+ * @param name 
  * @param nameCn 
  * @param sort 同类条目的排序和集数
- * @param airdate
+ * @param airdate 
  * @param comment 
  * @param duration 维基人填写的原始时长
  * @param desc 简介
@@ -71,5 +80,8 @@ data class BangumiEpisode(
     /* 服务器解析的时长，无法解析时为 `0` */
     @SerialName(value = "duration_seconds") val durationSeconds: kotlin.Int? = null
 
-)
+) {
+
+
+}
 

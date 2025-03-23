@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 /**
  *
  * Please note:
@@ -15,23 +24,18 @@
 
 package me.him188.ani.datasources.bangumi.models
 
-import me.him188.ani.datasources.bangumi.models.BangumiBloodType
-import me.him188.ani.datasources.bangumi.models.BangumiCharacterType
-import me.him188.ani.datasources.bangumi.models.BangumiPersonImages
-import me.him188.ani.datasources.bangumi.models.BangumiStat
-
-import kotlinx.serialization.*
-import kotlinx.serialization.descriptors.*
-import kotlinx.serialization.encoding.*
+import kotlinx.serialization.Required
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
  *
- * @param id
+ * @param id 
  * @param name 
  * @param type 角色，机体，舰船，组织...
  * @param summary
- * @param locked
+ * @param locked 
  * @param stat 
  * @param images object with some size of images, this object maybe `null`
  * @param infobox server parsed infobox, a map from key to string or tuple null if server infobox is not valid
@@ -79,5 +83,8 @@ data class BangumiCharacterDetail(
     /* parsed from wiki, maybe `null` */
     @SerialName(value = "birth_day") val birthDay: kotlin.Int? = null
 
-)
+) {
+
+
+}
 

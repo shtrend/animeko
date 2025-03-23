@@ -39,5 +39,8 @@ data class AniReleaseUpdatesDetailedResponse(
 
     @SerialName(value = "updates") @Required val updates: kotlin.collections.List<AniUpdateInfo>
 
-)
+) {
+
+
+}
 

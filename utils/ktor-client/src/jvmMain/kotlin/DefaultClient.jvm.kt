@@ -23,7 +23,6 @@ import io.ktor.utils.io.jvm.javaio.toInputStream
 import io.ktor.utils.io.streams.asInput
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import java.nio.charset.Charset
 
 actual fun getPlatformKtorEngine(): HttpClientEngineFactory<*> = OkHttp
 
@@ -32,8 +31,15 @@ suspend inline fun HttpResponse.bodyAsDocument(): Document = body()
 internal actual fun getXmlConverter(): ContentConverter = XmlConverter
 
 private object XmlConverter : ContentConverter {
+    override suspend fun serialize(
+        contentType: ContentType,
+        charset: io.ktor.utils.io.charsets.Charset,
+        typeInfo: TypeInfo,
+        value: Any?
+    ): OutgoingContent? = null
+
     override suspend fun deserialize(
-        charset: Charset,
+        charset: io.ktor.utils.io.charsets.Charset,
         typeInfo: TypeInfo,
         content: ByteReadChannel
     ): Any? {
@@ -42,14 +48,5 @@ private object XmlConverter : ContentConverter {
         val decoder = Charsets.UTF_8.newDecoder()
         val string = decoder.decode(content.toInputStream().asInput())
         return Jsoup.parse(string, charset.name())
-    }
-
-    override suspend fun serializeNullable(
-        contentType: ContentType,
-        charset: Charset,
-        typeInfo: TypeInfo,
-        value: Any?
-    ): OutgoingContent? {
-        return null
     }
 }

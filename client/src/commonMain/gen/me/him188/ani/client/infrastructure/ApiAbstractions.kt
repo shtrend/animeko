@@ -11,7 +11,7 @@ package me.him188.ani.client.infrastructure
 
 typealias MultiValueMap = MutableMap<String, List<String>>
 
-fun collectionDelimiter(collectionFormat: String) = when (collectionFormat) {
+fun collectionDelimiter(collectionFormat: String): String = when (collectionFormat) {
     "csv" -> ","
     "tsv" -> "\t"
     "pipe" -> "|"
@@ -25,7 +25,7 @@ fun <T : Any?> toMultiValue(
     items: Array<T>,
     collectionFormat: String,
     map: (item: T) -> String = defaultMultiValueConverter
-) = toMultiValue(items.asIterable(), collectionFormat, map)
+): List<String> = toMultiValue(items.asIterable(), collectionFormat, map)
 
 fun <T : Any?> toMultiValue(
     items: Iterable<T>,

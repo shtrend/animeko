@@ -22,31 +22,34 @@
     "UnusedImport",
 )
 
-package me.him188.ani.client.models
+package me.him188.ani.datasources.bangumi.next.models
 
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
+ * 条目类型   - 1 = 书籍   - 2 = 动画   - 3 = 音乐   - 4 = 游戏   - 6 = 三次元    没有 5
  *
- * Values: WINTER,SPRING,SUMMER,AUTUMN
+ * Values: Book,Anime,Music,Game,Real
  */
 @Serializable
-enum class AniAnimeSeason(val value: kotlin.String) {
+enum class BangumiNextSubjectType(val value: kotlin.Int) {
 
-    @SerialName(value = "WINTER")
-    WINTER("WINTER"),
+    @SerialName(value = "1")
+    Book(1),
 
-    @SerialName(value = "SPRING")
-    SPRING("SPRING"),
+    @SerialName(value = "2")
+    Anime(2),
 
-    @SerialName(value = "SUMMER")
-    SUMMER("SUMMER"),
+    @SerialName(value = "3")
+    Music(3),
 
-    @SerialName(value = "AUTUMN")
-    AUTUMN("AUTUMN");
+    @SerialName(value = "4")
+    Game(4),
+
+    @SerialName(value = "6")
+    Real(6);
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use
@@ -55,18 +58,18 @@ enum class AniAnimeSeason(val value: kotlin.String) {
      * This solves a problem when the variable name and its value are different, and ensures that
      * the client sends the correct enum values to the server always.
      */
-    override fun toString(): kotlin.String = value
+    override fun toString(): kotlin.String = value.toString()
 
     companion object {
         /**
          * Converts the provided [data] to a [String] on success, null otherwise.
          */
-        fun encode(data: kotlin.Any?): kotlin.String? = if (data is AniAnimeSeason) "$data" else null
+        fun encode(data: kotlin.Any?): kotlin.String? = if (data is BangumiNextSubjectType) "$data" else null
 
         /**
-         * Returns a valid [AniAnimeSeason] for [data], null otherwise.
+         * Returns a valid [BangumiNextSubjectType] for [data], null otherwise.
          */
-        fun decode(data: kotlin.Any?): AniAnimeSeason? = data?.let {
+        fun decode(data: kotlin.Any?): BangumiNextSubjectType? = data?.let {
             val normalizedData = "$it".lowercase()
             values().firstOrNull { value ->
                 it == value || normalizedData == "$value".lowercase()

@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 /**
  *
  * Please note:
@@ -17,6 +26,7 @@ package me.him188.ani.datasources.bangumi.next.apis
 
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextCreateEpisodeComment200Response
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextCreateEpisodeCommentRequest
+import me.him188.ani.datasources.bangumi.next.models.BangumiNextEpisode
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextErrorResponse
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextGetEpisodeComments200ResponseInner
 import me.him188.ani.datasources.bangumi.next.models.BangumiNextUpdateContent
@@ -114,6 +124,39 @@ open class EpisodeBangumiNextApi : ApiClient {
 
 
     /**
+     * 获取剧集信息
+     *
+     * @param episodeID
+     * @return BangumiNextEpisode
+     */
+    @Suppress("UNCHECKED_CAST")
+    open suspend fun getEpisode(episodeID: kotlin.Int): HttpResponse<BangumiNextEpisode> {
+
+        val localVariableAuthNames = listOf<String>()
+
+        val localVariableBody =
+            io.ktor.client.utils.EmptyContent
+
+        val localVariableQuery = mutableMapOf<String, List<String>>()
+        val localVariableHeaders = mutableMapOf<String, String>()
+
+        val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.GET,
+            "/p1/episodes/{episodeID}".replace("{" + "episodeID" + "}", "$episodeID"),
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = false,
+        )
+
+        return request(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames,
+        ).wrap()
+    }
+
+
+    /**
      * 获取条目的剧集吐槽箱
      * 
      * @param episodeID 
@@ -150,7 +193,8 @@ open class EpisodeBangumiNextApi : ApiClient {
         companion object : KSerializer<GetEpisodeCommentsResponse> {
             private val serializer: KSerializer<List<BangumiNextGetEpisodeComments200ResponseInner>> = serializer<List<BangumiNextGetEpisodeComments200ResponseInner>>()
             override val descriptor = serializer.descriptor
-            override fun serialize(encoder: Encoder, obj: GetEpisodeCommentsResponse) = serializer.serialize(encoder, obj.value)
+            override fun serialize(encoder: Encoder, value: GetEpisodeCommentsResponse) =
+                serializer.serialize(encoder, value.value)
             override fun deserialize(decoder: Decoder) = GetEpisodeCommentsResponse(serializer.deserialize(decoder))
         }
     }

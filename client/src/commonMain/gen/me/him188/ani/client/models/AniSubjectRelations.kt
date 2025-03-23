@@ -46,5 +46,8 @@ data class AniSubjectRelations(
 
     @SerialName(value = "subjectId") @Required val subjectId: kotlin.Int
 
-)
+) {
+
+
+}
 

@@ -17,7 +17,7 @@ import coil3.network.NetworkRequest
 import coil3.network.NetworkRequestBody
 import coil3.network.NetworkResponse
 import coil3.network.NetworkResponseBody
-import coil3.network.ktor2.internal.writeTo
+import coil3.network.ktor3.internal.writeTo
 import io.ktor.client.HttpClient
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.prepareRequest
@@ -38,7 +38,7 @@ import okio.Path
 import kotlin.jvm.JvmInline
 
 /**
- * Copied from [coil3.network.ktor2.internal.KtorNetworkClient],
+ * Copied from [coil3.network.ktor3.internal.KtorNetworkClient],
  * but with support for [scopedClient]
  */
 class ScopedHttpClientNetworkFetcher(

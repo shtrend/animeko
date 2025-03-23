@@ -39,5 +39,8 @@ data class AniDanmakuGetResponse(
 
     @SerialName(value = "danmakuList") @Required val danmakuList: kotlin.collections.List<AniDanmaku>
 
-)
+) {
+
+
+}
 

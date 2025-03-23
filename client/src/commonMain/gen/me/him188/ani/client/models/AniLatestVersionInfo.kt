@@ -49,5 +49,8 @@ data class AniLatestVersionInfo(
 
     @SerialName(value = "version") @Required val version: kotlin.String
 
-)
+) {
+
+
+}
 

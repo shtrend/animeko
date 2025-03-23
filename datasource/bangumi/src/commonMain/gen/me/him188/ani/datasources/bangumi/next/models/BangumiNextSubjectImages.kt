@@ -22,31 +22,35 @@
     "UnusedImport",
 )
 
-package me.him188.ani.datasources.bangumi.models
+package me.him188.ani.datasources.bangumi.next.models
+
 
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param rank
- * @param total
- * @param count 
- * @param score 
+ *
+ * @param common
+ * @param grid
+ * @param large
+ * @param medium
+ * @param small
  */
 @Serializable
 
-data class BangumiRating(
+data class BangumiNextSubjectImages(
 
-    @SerialName(value = "rank") @Required val rank: kotlin.Int,
+    @SerialName(value = "common") @Required val common: kotlin.String,
 
-    @SerialName(value = "total") @Required val total: kotlin.Int,
+    @SerialName(value = "grid") @Required val grid: kotlin.String,
 
-    @SerialName(value = "count") @Required val count: BangumiCount,
+    @SerialName(value = "large") @Required val large: kotlin.String,
 
-    @SerialName(value = "score") @Required val score: @Serializable(me.him188.ani.utils.serialization.BigNumAsDoubleStringSerializer::class) me.him188.ani.utils.serialization.BigNum
+    @SerialName(value = "medium") @Required val medium: kotlin.String,
+
+    @SerialName(value = "small") @Required val small: kotlin.String
 
 ) {
 
