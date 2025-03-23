@@ -150,6 +150,10 @@ class RssMediaSource(
 
             val result = engine.search(searchConfig, query, page, mediaSourceId)
 
+            result.error?.let {
+                throw IllegalStateException("Failed to fetch RSS from ${mediaSourceId}, see cause", it)
+            }
+
             // 404 Not Found
             val channel = result.channel ?: return@PageBasedPagedSource null
             val topics = result.matchedMediaList ?: return@PageBasedPagedSource null
