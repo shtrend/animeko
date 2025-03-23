@@ -210,6 +210,13 @@ class DefaultRssMediaSourceEngine(
             }
 
             val channel = parser.parse(document)
+                ?: return Result(
+                    finalUrl,
+                    query,
+                    document,
+                    null,
+                    matchedMediaList = null,
+                )
 
             val filters = config.createFilters()
 

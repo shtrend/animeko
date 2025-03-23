@@ -78,7 +78,7 @@ internal object TestRssMediaSourceEngine : RssMediaSourceEngine() {
                 query,
                 parsed,
                 channel,
-                channel.items.mapNotNull { convertItemToMedia(it, mediaSourceId) },
+                channel?.items?.mapNotNull { convertItemToMedia(it, mediaSourceId) },
             )
         } catch (e: Exception) {
             throw RepositoryException.wrapOrThrowCancellation(e)
