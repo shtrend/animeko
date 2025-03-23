@@ -48,9 +48,9 @@ tasks.named("processResources") {
 sourceSets {
     main {
         resources.srcDirs(
-            projects.app.shared.dependencyProject.layout.buildDirectory
+            project(projects.app.shared.path).layout.buildDirectory
                 .file("processedResources/desktop/main"),
-            projects.app.shared.uiFoundation.dependencyProject.layout.buildDirectory
+            project(projects.app.shared.uiFoundation.path).layout.buildDirectory
                 .file("processedResources/desktop/main"),
         )
     }
