@@ -329,6 +329,6 @@ tasks.register<ComposeHotRun>("runHot") {
     )
     systemProperty("org.slf4j.simpleLogger.defaultLogLevel", "TRACE")
     systemProperty("kotlinx.coroutines.debug", "on")
-    systemProperty("ani.debug", "on")
+    systemProperty("ani.debug", "true")
     workingDir(file("test-sandbox"))
 }
