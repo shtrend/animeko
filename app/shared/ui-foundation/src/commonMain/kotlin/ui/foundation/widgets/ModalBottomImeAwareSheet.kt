@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.ui.foundation.widgets
 
 import androidx.compose.animation.core.animateFloatAsState
@@ -39,6 +48,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupPositionProvider
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
@@ -142,7 +152,7 @@ fun ModalBottomImeAwareSheet(
             }
             Surface(
                 modifier = Modifier
-                    .widthIn(max = sheetMaxWidth)
+                    .widthIn(max = sheetMaxWidth.coerceAtLeast(128.dp))
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
                     .graphicsLayer { translationY = sheetOffset },
