@@ -123,6 +123,7 @@ import me.him188.ani.utils.io.toKtPath
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.platform.currentPlatform
 import me.him188.ani.utils.platform.isWindows
 import org.jetbrains.compose.reload.DevelopmentEntryPoint
 import org.jetbrains.compose.resources.painterResource
@@ -167,7 +168,11 @@ object AniDesktop {
     }
 
     private fun isRunningUnderWine(): Boolean {
-        return Advapi32Util.registryKeyExists(WinReg.HKEY_LOCAL_MACHINE, "Software\\Wine")
+        return if (currentPlatform().isWindows()) {
+            Advapi32Util.registryKeyExists(WinReg.HKEY_LOCAL_MACHINE, "Software\\Wine")
+        } else {
+            false
+        }
     }
 
     @JvmStatic
