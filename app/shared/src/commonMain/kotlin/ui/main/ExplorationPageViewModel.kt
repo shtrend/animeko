@@ -67,7 +67,7 @@ class ExplorationPageViewModel : AbstractViewModel(), KoinComponent {
         ) { nsfwMode, subjects ->
             if (nsfwMode != NsfwMode.HIDE) return@combine subjects
             subjects.filter { !it.subjectInfo.nsfw }
-        },
+        }.cachedIn(backgroundScope),
         horizontalScrollTipFlow = horizontalScrollTipFlow,
         onSetDisableHorizontalScrollTip = {
             backgroundScope.launch {
