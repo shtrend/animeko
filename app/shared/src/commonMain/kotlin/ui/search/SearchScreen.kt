@@ -9,7 +9,10 @@
 
 package me.him188.ani.app.ui.search
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
@@ -17,22 +20,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.ui.exploration.search.SearchPage
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.main.SearchViewModel
 import me.him188.ani.app.ui.subject.details.SubjectDetailsScene
 
 @Composable
 fun SearchScreen(
+    vm: SearchViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToEpisodeDetails: (subjectId: Int, episodeId: Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    windowInsets: WindowInsets = AniWindowInsets.forPageContent()
 ) {
-    val vm = viewModel { SearchViewModel() }
     val listDetailNavigator = rememberListDetailPaneScaffoldNavigator()
     val coroutineScope = rememberCoroutineScope()
     SearchPage(
@@ -41,6 +45,7 @@ fun SearchScreen(
             val subjectDetailsState by vm.subjectDetailsStateLoader.state
                 .collectAsStateWithLifecycle(null)
             val authState by vm.authState.collectAsStateWithLifecycle(AuthState.NotAuthed)
+
             SubjectDetailsScene(
                 subjectDetailsState,
                 authState,
@@ -63,9 +68,11 @@ fun SearchScreen(
                         )
                     }
                 },
+                windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Right),
             )
         },
         modifier.fillMaxSize(),
+        contentWindowInsets = windowInsets,
         onSelect = { index, item ->
             vm.searchPageState.selectedItemIndex = index
             vm.viewSubjectDetails(item)

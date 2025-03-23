@@ -279,13 +279,17 @@ private fun AniAppContentImpl(
                 popExitTransition = popExitTransition,
             ) {
                 val navigator = LocalNavigator.current
+                val vm = viewModel { SearchViewModel() }
+
                 SearchScreen(
+                    vm,
                     onNavigateBack = {
                         aniNavigator.popBackStack()
                     },
                     onNavigateToEpisodeDetails = { subjectId, episodeId ->
                         navigator.navigateEpisodeDetails(subjectId, episodeId)
                     },
+                    windowInsets = windowInsets,
                 )
             }
             composable<NavRoutes.BangumiAuthorize>(
