@@ -37,6 +37,16 @@ class UrlHelpersTest {
 
         case(
             "https://example.com/relative",
+            "https://example.com/index.html", "relative",
+        )
+
+        case(
+            "https://example.com/a.b/relative",
+            "https://example.com/a.b/", "relative",
+        )
+
+        case(
+            "https://example.com/relative",
             "https://example.com", "/relative",
         )
 
