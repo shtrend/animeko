@@ -390,7 +390,6 @@ open class KtorHttpDownloader(
                     entry.job.cancelAndJoin()
                 }
             }
-            // If we want to remove them entirely:
             _downloadStatesFlow.value = emptyMap()
         }
         scope.cancel()
@@ -402,12 +401,18 @@ open class KtorHttpDownloader(
 
     protected data class DownloadEntry(val job: Job?, val state: DownloadState)
 
-    protected fun createSegmentCacheDir(outputPath: Path, downloadId: DownloadId): Path {
+    /**
+     * Create and return the directory in which segment files will be stored.
+     */
+    protected suspend fun createSegmentCacheDir(
+        outputPath: Path,
+        downloadId: DownloadId,
+    ): Path = withContext(ioDispatcher) {
         val cacheDirName = outputPath.name + "_segments_" + downloadId.value
         val parentDir = outputPath.parent ?: Path(".")
         val cacheDir = parentDir.resolve(cacheDirName)
         fileSystem.createDirectories(cacheDir)
-        return cacheDir
+        cacheDir
     }
 
     /**
@@ -454,12 +459,11 @@ open class KtorHttpDownloader(
     ): List<SegmentInfo> {
         val cacheDir = Path(getState(downloadId)?.segmentCacheDir ?: error("Cache dir not found"))
         // We’ll try to figure out whether the server supports partial downloads and also get total size.
-        val rangeProbe = probeRangeSupport(url, options) // NEW
+        val rangeProbe = probeRangeSupport(url, options)
 
         // If the probe fails or the server doesn't support range => single segment
         val (contentLength, rangeSupported) = rangeProbe
-            ?: // single segment for entire file, because partial isn’t supported or unknown size
-            return listOf(
+            ?: return listOf(
                 SegmentInfo(
                     index = 0,
                     url = url,
@@ -510,7 +514,7 @@ open class KtorHttpDownloader(
             val end = (start + segmentSize - 1).coerceAtMost(contentLength - 1)
             segments.add(
                 SegmentInfo(
-                    index = index++,
+                    index = index,
                     url = url,
                     isDownloaded = false,
                     // The byteSize is an *intended* size; actual might differ slightly if the server
@@ -522,6 +526,7 @@ open class KtorHttpDownloader(
                 )
             )
             start = end + 1
+            index++
         }
 
         return segments
@@ -535,7 +540,6 @@ open class KtorHttpDownloader(
         url: String,
         options: DownloadOptions,
     ): Pair<Long, Boolean>? {
-        // We'll add a Range header to request just 1 byte
         val rangeOptions = options.copy(
             headers = options.headers + ("Range" to "bytes=0-0")
         )
@@ -544,32 +548,24 @@ open class KtorHttpDownloader(
                 prepareGet(url) {
                     rangeOptions.headers.forEach { (k, v) -> header(k, v) }
                 }.execute { response ->
-                    // If we do NOT get Partial Content => no range support
                     when (response.status.value) {
                         206 -> {
-                            // Usually the header looks like: Content-Range: bytes 0-0/10485760
-                            val contentRange = response.headers[io.ktor.http.HttpHeaders.ContentRange]
-                                ?: return@execute null
-                            // parse the last part after the slash
+                            val contentRange =
+                                response.headers[io.ktor.http.HttpHeaders.ContentRange] ?: return@execute null
                             val totalSize = contentRange.substringAfter('/').toLongOrNull() ?: return@execute null
-                            return@execute totalSize to true // (size, range supported)
+                            totalSize to true // (size, range supported)
                         }
 
                         200 -> {
-                            // Probably no range support => fallback
                             val length = response.headers[io.ktor.http.HttpHeaders.ContentLength]?.toLongOrNull() ?: -1L
-                            return@execute (length to false)
+                            length to false
                         }
 
-                        else -> {
-                            // 404 or something => return null so caller does single-segment
-                            null
-                        }
+                        else -> null
                     }
                 }
             }
-        } catch (e: Throwable) {
-            // If anything goes wrong, fallback to single-segment
+        } catch (_: Throwable) {
             null
         }
     }
@@ -593,9 +589,11 @@ open class KtorHttpDownloader(
             val channel = response.bodyAsChannel()
 
             val segmentPath = Path(segmentInfo.tempFilePath)
-            fileSystem.createDirectories(
-                segmentPath.parent ?: error("Parent dir not found for segmentInfo: $segmentInfo")
-            )
+            withContext(ioDispatcher) {
+                fileSystem.createDirectories(
+                    segmentPath.parent ?: error("Parent dir not found for segmentInfo: $segmentInfo")
+                )
+            }
 
             copyChannelToFile(channel, segmentPath)
         }
@@ -655,10 +653,11 @@ open class KtorHttpDownloader(
         emitProgress(downloadId)
     }
 
-    protected suspend fun mergeSegments(downloadId: DownloadId) {
-        val st = getState(downloadId) ?: return
+    protected suspend fun mergeSegments(downloadId: DownloadId) = withContext(ioDispatcher) {
+        val st = getState(downloadId) ?: return@withContext
         val cacheDir = Path(st.segmentCacheDir)
         val finalOutput = Path(st.outputPath)
+
         fileSystem.sink(finalOutput).buffered().use { out ->
             st.segments.sortedBy { it.index }.forEach { seg ->
                 fileSystem.source(Path(seg.tempFilePath)).buffered().use { input ->
@@ -666,6 +665,7 @@ open class KtorHttpDownloader(
                 }
             }
         }
+
         // remove segment files
         st.segments.forEach { seg ->
             fileSystem.delete(Path(seg.tempFilePath))
@@ -682,7 +682,7 @@ open class KtorHttpDownloader(
 
     private fun createProgress(st: DownloadState): DownloadProgress {
         val downloadedSegments = st.segments.count { it.isDownloaded }
-        val progress = DownloadProgress(
+        return DownloadProgress(
             downloadId = st.downloadId,
             url = st.url,
             totalSegments = st.totalSegments,
@@ -693,7 +693,6 @@ open class KtorHttpDownloader(
             status = st.status,
             error = st.error,
         )
-        return progress
     }
 
     protected suspend inline fun <R> httpGet(url: String, options: DownloadOptions, block: (HttpStatement) -> R): R {
