@@ -99,7 +99,7 @@ import me.him188.ani.app.domain.media.cache.MediaCacheManager
 import me.him188.ani.app.domain.media.cache.MediaCacheManagerImpl
 import me.him188.ani.app.domain.media.cache.createWithKoin
 import me.him188.ani.app.domain.media.cache.engine.DummyMediaCacheEngine
-import me.him188.ani.app.domain.media.cache.engine.M3u8MediaCacheEngine
+import me.him188.ani.app.domain.media.cache.engine.HttpMediaCacheEngine
 import me.him188.ani.app.domain.media.cache.engine.TorrentMediaCacheEngine
 import me.him188.ani.app.domain.media.cache.storage.DirectoryMediaCacheStorage
 import me.him188.ani.app.domain.media.fetch.MediaSourceManager
@@ -134,8 +134,8 @@ import me.him188.ani.datasources.bangumi.turnstileBaseUrl
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.coroutines.childScopeContext
-import me.him188.ani.utils.httpdownloader.KtorPersistentM3u8Downloader
-import me.him188.ani.utils.httpdownloader.M3u8Downloader
+import me.him188.ani.utils.httpdownloader.HttpDownloader
+import me.him188.ani.utils.httpdownloader.KtorPersistentHttpDownloader
 import me.him188.ani.utils.io.resolve
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
@@ -380,8 +380,8 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
             .build()
     }
 
-    single<M3u8Downloader> {
-        KtorPersistentM3u8Downloader(
+    single<HttpDownloader> {
+        KtorPersistentHttpDownloader(
             dataStore = getContext().dataStores.m3u8DownloaderStore,
             get<HttpClientProvider>().get(),
             fileSystem = SystemFileSystem,
@@ -428,9 +428,9 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
                     DirectoryMediaCacheStorage(
                         mediaSourceId = id,
                         metadataDir = getMediaMetadataDir("web-m3u"),
-                        engine = M3u8MediaCacheEngine(
+                        engine = HttpMediaCacheEngine(
                             mediaSourceId = id,
-                            downloader = get<M3u8Downloader>(),
+                            downloader = get<HttpDownloader>(),
                             dataDir = getContext().files.dataDir.resolve("web-m3u-cache").path,
                             mediaResolver = get<MediaResolver>(),
                         ),
@@ -507,7 +507,7 @@ fun KoinApplication.startCommonKoinModule(coroutineScope: CoroutineScope): KoinA
     // Now, the proxy settings is ready. Other components can use http clients.
 
     coroutineScope.launch {
-        koin.get<M3u8Downloader>().init() // 这涉及读取 DownloadState, 需要在加载 storage metadata 前调用.
+        koin.get<HttpDownloader>().init() // 这涉及读取 DownloadState, 需要在加载 storage metadata 前调用.
 
         val manager = koin.get<MediaCacheManager>()
         for (storage in manager.storages) {

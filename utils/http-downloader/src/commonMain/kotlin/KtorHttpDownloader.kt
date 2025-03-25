@@ -9,51 +9,26 @@
 
 package me.him188.ani.utils.httpdownloader
 
-import io.ktor.client.request.header
-import io.ktor.client.request.prepareGet
-import io.ktor.client.statement.HttpResponse
-import io.ktor.client.statement.HttpStatement
-import io.ktor.client.statement.bodyAsChannel
-import io.ktor.utils.io.readAvailable
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.utils.io.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.io.buffered
 import kotlinx.io.files.FileSystem
 import kotlinx.io.files.Path
 import me.him188.ani.utils.coroutines.IO_
-import me.him188.ani.utils.httpdownloader.DownloadStatus.CANCELED
-import me.him188.ani.utils.httpdownloader.DownloadStatus.COMPLETED
-import me.him188.ani.utils.httpdownloader.DownloadStatus.DOWNLOADING
-import me.him188.ani.utils.httpdownloader.DownloadStatus.FAILED
-import me.him188.ani.utils.httpdownloader.DownloadStatus.INITIALIZING
-import me.him188.ani.utils.httpdownloader.DownloadStatus.MERGING
-import me.him188.ani.utils.httpdownloader.DownloadStatus.PAUSED
+import me.him188.ani.utils.httpdownloader.DownloadStatus.*
 import me.him188.ani.utils.httpdownloader.m3u.DefaultM3u8Parser
 import me.him188.ani.utils.httpdownloader.m3u.M3u8Parser
 import me.him188.ani.utils.httpdownloader.m3u.M3u8Playlist
+import me.him188.ani.utils.io.DEFAULT_BUFFER_SIZE
 import me.him188.ani.utils.io.copyTo
 import me.him188.ani.utils.io.resolve
 import me.him188.ani.utils.ktor.ScopedHttpClient
@@ -63,16 +38,17 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.coroutines.CoroutineContext
 
 /**
- * A simple implementation of [M3u8Downloader] that uses Ktor and coroutines.
+ * A simple implementation of [HttpDownloader] that uses Ktor and coroutines.
+ * Supports both M3u8 streams and regular media files.
  */
-open class KtorM3u8Downloader(
+open class KtorHttpDownloader(
     protected val client: ScopedHttpClient,
     private val fileSystem: FileSystem,
     computeDispatcher: CoroutineContext = Dispatchers.Default,
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
     val clock: Clock = Clock.System,
     private val m3u8Parser: M3u8Parser = DefaultM3u8Parser,
-) : M3u8Downloader {
+) : HttpDownloader {
 
     protected val scope = CoroutineScope(SupervisorJob() + computeDispatcher)
 
@@ -107,23 +83,37 @@ open class KtorM3u8Downloader(
     override suspend fun download(
         url: String,
         outputPath: Path,
-        options: DownloadOptions
+        options: DownloadOptions,
     ): DownloadId {
         val downloadId = DownloadId(value = generateDownloadId(url))
         downloadWithId(downloadId, url, outputPath, options)
         return downloadId
     }
 
+    protected fun getMediaTypeFromUrl(url: String): MediaType? {
+        return when {
+            url.endsWith(".m3u8", ignoreCase = true) -> MediaType.M3U8
+            url.endsWith(".mp4", ignoreCase = true) -> MediaType.MP4
+            url.endsWith(".mkv", ignoreCase = true) -> MediaType.MKV
+            else -> null
+        }
+    }
+
+    protected enum class MediaType {
+        M3U8, MP4, MKV
+    }
+
     override suspend fun downloadWithId(
         downloadId: DownloadId,
         url: String,
         outputPath: Path,
-        options: DownloadOptions
+        options: DownloadOptions,
     ) {
         stateMutex.withLock {
             val currentMap = _downloadStatesFlow.value.toMutableMap()
             val existing = currentMap[downloadId]
             if (existing != null) {
+                // If there's already a state for this downloadId in COMPLETED, do nothing
                 return
             }
             val segmentCacheDir = createSegmentCacheDir(outputPath, downloadId)
@@ -144,17 +134,54 @@ open class KtorM3u8Downloader(
 
         emitProgress(downloadId)
 
+        // -----------------------------------------------------------
+        // (1) Create segments *before* launching the job so that
+        //     the test sees them in the state right away.
+        // -----------------------------------------------------------
+        val mediaType = getMediaTypeFromUrl(url)
+        val segments: List<SegmentInfo> = try {
+            when (mediaType) {
+                MediaType.M3U8 -> {
+                    val playlist = resolveM3u8MediaPlaylist(url, options)
+                    playlist.toSegments(Path(getState(downloadId)?.segmentCacheDir ?: return))
+                }
+
+                MediaType.MP4, MediaType.MKV, null -> {
+                    createRangeSegments(downloadId, url, options)
+                }
+            }
+        } catch (e: Throwable) {
+            // If segment creation fails (404, parse error, etc.), mark FAILED
+            updateState(downloadId) {
+                it.copy(
+                    status = FAILED,
+                    error = DownloadError(
+                        code = if (e is M3u8Exception) e.errorCode else DownloadErrorCode.UNEXPECTED_ERROR,
+                        technicalMessage = e.message,
+                    ),
+                    timestamp = clock.now().toEpochMilliseconds()
+                )
+            }
+            emitProgress(downloadId)
+            return
+        }
+
+        // Update the state with segments + set status=DOWNLOADING
+        updateState(downloadId) {
+            it.copy(
+                segments = segments,
+                totalSegments = segments.size,
+                status = DOWNLOADING
+            )
+        }
+        emitProgress(downloadId)
+
+        // -----------------------------------------------------------
+        // (2) Launch the coroutine that *uses* those segments
+        // -----------------------------------------------------------
         val job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             try {
-                val playlist = resolveM3u8MediaPlaylist(url, options)
-                val segments = playlist.toSegments(Path(getState(downloadId)?.segmentCacheDir ?: return@launch))
-                val totalSegments = segments.size
-
-                updateState(downloadId) {
-                    it.copy(segments = segments, totalSegments = totalSegments, status = DOWNLOADING)
-                }
-                emitProgress(downloadId)
-
+                // Actually download the segments
                 downloadSegments(downloadId, options)
 
                 updateState(downloadId) {
@@ -168,9 +195,12 @@ open class KtorM3u8Downloader(
                     it.copy(status = COMPLETED, timestamp = clock.now().toEpochMilliseconds())
                 }
                 emitProgress(downloadId)
+
             } catch (e: CancellationException) {
+                // Normal cancellation
                 throw e
             } catch (e: Throwable) {
+                // Mark FAILED
                 updateState(downloadId) {
                     it.copy(
                         status = FAILED,
@@ -185,7 +215,7 @@ open class KtorM3u8Downloader(
             }
         }
 
-        // store the job
+        // Store the newly-created job
         stateMutex.withLock {
             val currentMap = _downloadStatesFlow.value.toMutableMap()
             val entry = currentMap[downloadId]
@@ -386,7 +416,7 @@ open class KtorM3u8Downloader(
     private suspend fun resolveM3u8MediaPlaylist(
         url: String,
         options: DownloadOptions,
-        depth: Int = 0
+        depth: Int = 0,
     ): M3u8Playlist.MediaPlaylist {
         if (depth >= 5) {
             throw M3u8Exception(DownloadErrorCode.NO_MEDIA_LIST)
@@ -417,31 +447,181 @@ open class KtorM3u8Downloader(
     }
 
     @OptIn(ExperimentalAtomicApi::class)
-    protected suspend fun downloadSingleSegment(
+    protected suspend fun createRangeSegments(
         downloadId: DownloadId,
-        segmentInfo: SegmentInfo,
-        options: DownloadOptions
-    ): Long {
-        httpGet(segmentInfo.url, options) {
-            val channel = it.body<HttpResponse>().bodyAsChannel()
+        url: String,
+        options: DownloadOptions,
+    ): List<SegmentInfo> {
+        val cacheDir = Path(getState(downloadId)?.segmentCacheDir ?: error("Cache dir not found"))
+        // We’ll try to figure out whether the server supports partial downloads and also get total size.
+        val rangeProbe = probeRangeSupport(url, options) // NEW
 
-            val segmentPath = Path(segmentInfo.tempFilePath)
-            fileSystem.createDirectories(segmentPath.parent ?: Path("."))
+        // If the probe fails or the server doesn't support range => single segment
+        val (contentLength, rangeSupported) = rangeProbe
+            ?: // single segment for entire file, because partial isn’t supported or unknown size
+            return listOf(
+                SegmentInfo(
+                    index = 0,
+                    url = url,
+                    isDownloaded = false,
+                    byteSize = -1,
+                    tempFilePath = cacheDir.resolve("0.part").toString(),
+                    rangeStart = null,
+                    rangeEnd = null,
+                )
+            )
 
-            val totalBytes = AtomicLong(0L)
-            fileSystem.sink(segmentPath).buffered().use { sink ->
-                val ktorBuffer = ByteArray(8 * 1024)
-                withContext(ioDispatcher) {
-                    while (true) {
-                        val bytesRead = channel.readAvailable(ktorBuffer, 0, ktorBuffer.size)
-                        if (bytesRead == -1) break
-                        sink.write(ktorBuffer, startIndex = 0, endIndex = bytesRead)
-                        totalBytes.fetchAndAdd(bytesRead.toLong())
+        if (!rangeSupported) {
+            // The server doesn’t accept range requests => single segment
+            return listOf(
+                SegmentInfo(
+                    index = 0,
+                    url = url,
+                    isDownloaded = false,
+                    byteSize = contentLength, // might be -1 if unknown
+                    tempFilePath = cacheDir.resolve("0.part").toString(),
+                    rangeStart = null,
+                    rangeEnd = null,
+                )
+            )
+        }
+
+        // If the file is smaller than or equal to segmentSize => single segment
+        val segmentSize = 5 * 1024 * 1024L // 5MB
+        if (contentLength <= segmentSize) {
+            return listOf(
+                SegmentInfo(
+                    index = 0,
+                    url = url,
+                    isDownloaded = false,
+                    byteSize = contentLength,
+                    tempFilePath = cacheDir.resolve("0.part").toString(),
+                    rangeStart = 0,
+                    rangeEnd = contentLength - 1,
+                )
+            )
+        }
+
+        // Otherwise, break into multiple segments to cover the content length exactly.
+        val segments = mutableListOf<SegmentInfo>()
+        var start = 0L
+        var index = 0
+        while (start < contentLength) {
+            val end = (start + segmentSize - 1).coerceAtMost(contentLength - 1)
+            segments.add(
+                SegmentInfo(
+                    index = index++,
+                    url = url,
+                    isDownloaded = false,
+                    // The byteSize is an *intended* size; actual might differ slightly if the server
+                    // modifies the response. But the tests rely on matching exactly.
+                    byteSize = (end - start + 1),
+                    tempFilePath = cacheDir.resolve("$index.part").toString(),
+                    rangeStart = start,
+                    rangeEnd = end,
+                )
+            )
+            start = end + 1
+        }
+
+        return segments
+    }
+
+    /**
+     * Attempt a small GET with Range=0-0 to detect whether partial content is supported
+     * and to parse the total file size from 'Content-Range: bytes 0-0/<size>'.
+     */
+    private suspend fun probeRangeSupport(
+        url: String,
+        options: DownloadOptions,
+    ): Pair<Long, Boolean>? {
+        // We'll add a Range header to request just 1 byte
+        val rangeOptions = options.copy(
+            headers = options.headers + ("Range" to "bytes=0-0")
+        )
+        return try {
+            client.use {
+                prepareGet(url) {
+                    rangeOptions.headers.forEach { (k, v) -> header(k, v) }
+                }.execute { response ->
+                    // If we do NOT get Partial Content => no range support
+                    when (response.status.value) {
+                        206 -> {
+                            // Usually the header looks like: Content-Range: bytes 0-0/10485760
+                            val contentRange = response.headers[io.ktor.http.HttpHeaders.ContentRange]
+                                ?: return@execute null
+                            // parse the last part after the slash
+                            val totalSize = contentRange.substringAfter('/').toLongOrNull() ?: return@execute null
+                            return@execute totalSize to true // (size, range supported)
+                        }
+
+                        200 -> {
+                            // Probably no range support => fallback
+                            val length = response.headers[io.ktor.http.HttpHeaders.ContentLength]?.toLongOrNull() ?: -1L
+                            return@execute (length to false)
+                        }
+
+                        else -> {
+                            // 404 or something => return null so caller does single-segment
+                            null
+                        }
                     }
                 }
             }
-            return totalBytes.load()
+        } catch (e: Throwable) {
+            // If anything goes wrong, fallback to single-segment
+            null
         }
+    }
+
+    @OptIn(ExperimentalAtomicApi::class)
+    protected suspend fun downloadSingleSegment(
+        segmentInfo: SegmentInfo,
+        options: DownloadOptions,
+    ): Long {
+        // If we have a range, add it to the request headers.
+        val finalOptions = if (segmentInfo.rangeStart != null && segmentInfo.rangeEnd != null) {
+            options.copy(
+                headers = options.headers + ("Range" to "bytes=${segmentInfo.rangeStart}-${segmentInfo.rangeEnd}")
+            )
+        } else {
+            options
+        }
+
+        return httpGet(segmentInfo.url, finalOptions) { statement ->
+            val response = statement.execute()
+            val channel = response.bodyAsChannel()
+
+            val segmentPath = Path(segmentInfo.tempFilePath)
+            fileSystem.createDirectories(
+                segmentPath.parent ?: error("Parent dir not found for segmentInfo: $segmentInfo")
+            )
+
+            copyChannelToFile(channel, segmentPath)
+        }
+    }
+
+    /**
+     * Reads from [channel] and writes to [filePath], returning the total bytes downloaded.
+     */
+    @OptIn(ExperimentalAtomicApi::class)
+    private suspend fun copyChannelToFile(
+        channel: ByteReadChannel,
+        filePath: Path,
+    ): Long {
+        val totalBytes = AtomicLong(0L)
+        fileSystem.sink(filePath).buffered().use { sink ->
+            val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+            withContext(ioDispatcher) {
+                while (true) {
+                    val bytesRead = channel.readAvailable(buffer, 0, buffer.size)
+                    if (bytesRead == -1) break
+                    sink.write(buffer, startIndex = 0, endIndex = bytesRead)
+                    totalBytes.fetchAndAdd(bytesRead.toLong())
+                }
+            }
+        }
+        return totalBytes.load()
     }
 
     protected suspend fun downloadSegments(downloadId: DownloadId, options: DownloadOptions) {
@@ -452,10 +632,10 @@ open class KtorM3u8Downloader(
         coroutineScope {
             snapshot.segments.forEach { seg ->
                 if (seg.isDownloaded) return@forEach
-                launch(ioDispatcher) {
-                    semaphore.acquire()
+                semaphore.acquire()
+                launch(ioDispatcher, start = CoroutineStart.ATOMIC) {
                     try {
-                        val newSize = downloadSingleSegment(downloadId, seg, options)
+                        val newSize = downloadSingleSegment(seg, options)
                         markSegmentDownloaded(downloadId, seg.index, newSize)
                     } finally {
                         semaphore.release()

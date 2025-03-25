@@ -41,7 +41,7 @@ import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.utils.httpdownloader.DownloadId
 import me.him188.ani.utils.httpdownloader.DownloadOptions
 import me.him188.ani.utils.httpdownloader.DownloadStatus
-import me.him188.ani.utils.httpdownloader.M3u8Downloader
+import me.him188.ani.utils.httpdownloader.HttpDownloader
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.actualSize
 import me.him188.ani.utils.io.deleteRecursively
@@ -55,8 +55,8 @@ import org.openani.mediamp.source.SeekableInputMediaData
 import org.openani.mediamp.source.UriMediaData
 import kotlin.coroutines.CoroutineContext
 
-class M3u8MediaCacheEngine(
-    private val downloader: M3u8Downloader,
+class HttpMediaCacheEngine(
+    private val downloader: HttpDownloader,
     private val dataDir: Path,
     private val mediaResolver: MediaResolver,
     private val mediaSourceId: String,
@@ -124,7 +124,7 @@ class M3u8MediaCacheEngine(
             downloader.resume(downloadId) // ignore result.
             // Task already exists
             logger.info { "Resumed download $downloadId" }
-            return M3u8MediaCache(mediaSourceId, downloader, downloadId, origin, metadata)
+            return HttpMediaCache(mediaSourceId, downloader, downloadId, origin, metadata)
         }
 
         logger.info { "Download not found, recreating $downloadId" }
@@ -134,7 +134,7 @@ class M3u8MediaCacheEngine(
             outputPath = Path(outputPath),
             options = DownloadOptions(headers = headers),
         )
-        return M3u8MediaCache(mediaSourceId, downloader, downloadId, origin, metadata)
+        return HttpMediaCache(mediaSourceId, downloader, downloadId, origin, metadata)
     }
 
     override suspend fun createCache(
@@ -161,7 +161,7 @@ class M3u8MediaCacheEngine(
                     outputPath = outputPath,
                     options = DownloadOptions(headers = mediaData.headers),
                 )
-                return M3u8MediaCache(
+                return HttpMediaCache(
                     mediaSourceId,
                     downloader,
                     downloadId,
@@ -184,7 +184,7 @@ class M3u8MediaCacheEngine(
 
 
         val allowedAbsolute = buildSet {
-            for (mediaCache in all.filterIsInstance<M3u8MediaCache>()) {
+            for (mediaCache in all.filterIsInstance<HttpMediaCache>()) {
                 mediaCache.metadata.extra[EXTRA_OUTPUT_PATH]?.let {
                     add(it) // 上次记录的位置
                 }
@@ -214,13 +214,13 @@ class M3u8MediaCacheEngine(
         val EXTRA_OUTPUT_PATH = MetadataKey("outputPath")
         val EXTRA_HEADERS = MetadataKey("headers")
 
-        private val logger = logger<M3u8MediaCacheEngine>()
+        private val logger = logger<HttpMediaCacheEngine>()
     }
 }
 
-class M3u8MediaCache(
+class HttpMediaCache(
     private val mediaSourceId: String,
-    private val downloader: M3u8Downloader,
+    private val downloader: HttpDownloader,
     internal val downloadId: DownloadId,
     override val origin: Media,
     override val metadata: MediaCacheMetadata,

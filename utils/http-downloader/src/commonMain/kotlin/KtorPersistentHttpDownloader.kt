@@ -29,11 +29,11 @@ import me.him188.ani.utils.logging.logger
 import kotlin.coroutines.CoroutineContext
 
 /**
- * A persistent version of [KtorM3u8Downloader] that automatically:
+ * A persistent version of [KtorHttpDownloader] that automatically:
  * - Loads saved download states from [dataStore] on construction.
  * - Saves new/updated states whenever [_downloadStatesFlow] changes.
  */
-class KtorPersistentM3u8Downloader(
+class KtorPersistentHttpDownloader(
     private val dataStore: DataStore<List<DownloadState>>,
     client: ScopedHttpClient,
     fileSystem: FileSystem,
@@ -41,7 +41,7 @@ class KtorPersistentM3u8Downloader(
     ioDispatcher: CoroutineContext = Dispatchers.IO_,
     clock: Clock = Clock.System,
     m3u8Parser: M3u8Parser = DefaultM3u8Parser,
-) : KtorM3u8Downloader(
+) : KtorHttpDownloader(
     client = client,
     fileSystem = fileSystem,
     computeDispatcher = computeDispatcher,
@@ -52,7 +52,7 @@ class KtorPersistentM3u8Downloader(
     override suspend fun init() {
         super.init()
         scope.launch(
-            CoroutineName("KtorPersistentM3u8Downloader.saver"),
+            CoroutineName("KtorPersistentHttpDownloader.saver"),
             start = CoroutineStart.UNDISPATCHED, // register job now
         ) {
             downloadStatesFlow.buffer(
@@ -67,7 +67,7 @@ class KtorPersistentM3u8Downloader(
 
     /**
      * Replaces the current in-memory map with data loaded from [dataStore], but does not resume them.
-     * To resume downloads, call [KtorM3u8Downloader.resume] for each entry in the restored map.
+     * To resume downloads, call [KtorHttpDownloader.resume] for each entry in the restored map.
      */
     private suspend fun restoreStates() {
         val savedList: List<DownloadState> = dataStore.data.first()
@@ -98,6 +98,6 @@ class KtorPersistentM3u8Downloader(
     }
 
     private companion object {
-        private val logger = logger<KtorPersistentM3u8Downloader>()
+        private val logger = logger<KtorPersistentHttpDownloader>()
     }
 }

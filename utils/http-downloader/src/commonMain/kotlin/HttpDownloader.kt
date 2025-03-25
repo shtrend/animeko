@@ -15,15 +15,15 @@ import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 /**
- * Interface for downloading multiple HLS (m3u8) streams concurrently.
+ * Interface for downloading HTTP media files, including HLS (m3u8) streams and regular media files (.mp4, .mkv, etc.).
  *
  * This interface handles:
- * - Management of multiple concurrent m3u8 downloads
+ * - Management of multiple concurrent downloads
  * - Progress reporting via Flow for all downloads
  * - Pause/resume/cancel functionality for individual downloads
- * - (Now removed manual save/load functions in favor of automatic persistence.)
+ * - Support for both HLS streams and regular media files using HTTP range requests
  */
-interface M3u8Downloader : AutoCloseable {
+interface HttpDownloader : AutoCloseable {
     /**
      * Flow of progress updates for all downloads.
      */
@@ -176,6 +176,8 @@ data class SegmentInfo(
     val isDownloaded: Boolean,
     val byteSize: Long = -1,
     val tempFilePath: String,
+    val rangeStart: Long? = null,
+    val rangeEnd: Long? = null,
 )
 
 @Serializable
