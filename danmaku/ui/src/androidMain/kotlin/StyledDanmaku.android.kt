@@ -14,22 +14,23 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.TextLayoutResult
+import kotlin.math.max
 import android.graphics.Canvas as AndroidCanvas
 
 // create a gpu-accelerated bitmap
 internal actual fun createDanmakuImageBitmap(
     solidTextLayout: TextLayoutResult,
-    borderTextLayout: TextLayoutResult,
+    borderTextLayout: TextLayoutResult?,
 ): ImageBitmap {
     // We must ensure the size is at least 1x1, otherwise there may be an exception, see #1838.
     val destBitmap = Bitmap.createBitmap(
-        borderTextLayout.size.width.coerceAtLeast(1),
-        borderTextLayout.size.height.coerceAtLeast(1),
+        max(borderTextLayout?.size?.width ?: 0, solidTextLayout.size.width).coerceAtLeast(1),
+        max(borderTextLayout?.size?.height ?: 0, solidTextLayout.size.height).coerceAtLeast(1),
         Bitmap.Config.ARGB_8888,
     )
     val destCanvas = Canvas(AndroidCanvas(destBitmap))
 
-    destCanvas.paintIfNotEmpty(borderTextLayout)
+    borderTextLayout?.let { destCanvas.paintIfNotEmpty(it) }
     destCanvas.paintIfNotEmpty(solidTextLayout)
 
     return destBitmap.asImageBitmap().apply {

@@ -14,19 +14,20 @@ import androidx.compose.ui.graphics.asComposeCanvas
 import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.text.TextLayoutResult
 import org.jetbrains.skia.Surface
+import kotlin.math.max
 
 internal actual fun createDanmakuImageBitmap(
     solidTextLayout: TextLayoutResult,
-    borderTextLayout: TextLayoutResult,
+    borderTextLayout: TextLayoutResult?,
 ): ImageBitmap {
     // We must ensure the size is at least 1x1, otherwise there may be an exception, see #1838.
     val destSurface = Surface.makeRasterN32Premul(
-        width = solidTextLayout.size.width.coerceAtLeast(1),
-        height = solidTextLayout.size.height.coerceAtLeast(1),
+        max(borderTextLayout?.size?.width ?: 0, solidTextLayout.size.width).coerceAtLeast(1),
+        max(borderTextLayout?.size?.height ?: 0, solidTextLayout.size.height).coerceAtLeast(1),
     )
     val destCanvas = destSurface.canvas.asComposeCanvas()
 
-    destCanvas.paintIfNotEmpty(borderTextLayout)
+    borderTextLayout?.let { destCanvas.paintIfNotEmpty(it) }
     destCanvas.paintIfNotEmpty(solidTextLayout)
 
     return destSurface.makeImageSnapshot().toComposeImageBitmap().apply {
