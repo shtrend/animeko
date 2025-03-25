@@ -100,6 +100,11 @@ sealed class ResourceLocation {
              *  MPEG Transport Stream
              */
             MPTS,
+
+            /**
+             * Contained in a container format, such as MKV, MP4, etc.
+             */
+            CONTAINED,
         }
     }
 }

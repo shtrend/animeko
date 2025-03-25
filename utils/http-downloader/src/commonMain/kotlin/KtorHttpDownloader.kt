@@ -99,16 +99,13 @@ open class KtorHttpDownloader(
         }
     }
 
-    protected enum class MediaType {
-        M3U8, MP4, MKV
-    }
-
     override suspend fun downloadWithId(
         downloadId: DownloadId,
         url: String,
         outputPath: Path,
         options: DownloadOptions,
     ) {
+        val mediaType = getMediaTypeFromUrl(url) ?: MediaType.M3U8
         stateMutex.withLock {
             val currentMap = _downloadStatesFlow.value.toMutableMap()
             val existing = currentMap[downloadId]
@@ -127,6 +124,7 @@ open class KtorHttpDownloader(
                 timestamp = clock.now().toEpochMilliseconds(),
                 status = INITIALIZING,
                 segmentCacheDir = segmentCacheDir.toString(),
+                mediaType = mediaType,
             )
             currentMap[downloadId] = DownloadEntry(job = null, state = initialState)
             _downloadStatesFlow.value = currentMap
@@ -138,7 +136,6 @@ open class KtorHttpDownloader(
         // (1) Create segments *before* launching the job so that
         //     the test sees them in the state right away.
         // -----------------------------------------------------------
-        val mediaType = getMediaTypeFromUrl(url)
         val segments: List<SegmentInfo> = try {
             when (mediaType) {
                 MediaType.M3U8 -> {
@@ -146,7 +143,7 @@ open class KtorHttpDownloader(
                     playlist.toSegments(Path(getState(downloadId)?.segmentCacheDir ?: return))
                 }
 
-                MediaType.MP4, MediaType.MKV, null -> {
+                MediaType.MP4, MediaType.MKV -> {
                     createRangeSegments(downloadId, url, options)
                 }
             }

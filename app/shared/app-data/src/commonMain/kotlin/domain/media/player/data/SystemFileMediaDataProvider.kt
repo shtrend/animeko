@@ -43,6 +43,10 @@ class SystemFileMediaDataProvider internal constructor(
                         ":avformat-options=probesize=524288000,analyzeduration=10000000",
                     )
                 }
+
+                ResourceLocation.LocalFile.FileType.CONTAINED -> {
+                    emptyList()
+                }
             }
         }
 

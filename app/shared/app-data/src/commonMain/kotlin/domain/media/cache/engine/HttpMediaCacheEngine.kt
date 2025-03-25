@@ -42,6 +42,7 @@ import me.him188.ani.utils.httpdownloader.DownloadId
 import me.him188.ani.utils.httpdownloader.DownloadOptions
 import me.him188.ani.utils.httpdownloader.DownloadStatus
 import me.him188.ani.utils.httpdownloader.HttpDownloader
+import me.him188.ani.utils.httpdownloader.MediaType
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.actualSize
 import me.him188.ani.utils.io.deleteRecursively
@@ -291,7 +292,10 @@ class HttpMediaCache(
                 CachedMedia(
                     origin,
                     cacheMediaSourceId = mediaSourceId,
-                    download = ResourceLocation.LocalFile(state.outputPath, ResourceLocation.LocalFile.FileType.MPTS),
+                    download = ResourceLocation.LocalFile(
+                        state.outputPath,
+                        state.mediaType.toFileType(),
+                    ),
                 )
             }
 
@@ -330,5 +334,13 @@ class HttpMediaCache(
             downloader.cancel(downloadId)
             isDeleted.value = true
         }
+    }
+}
+
+private fun MediaType.toFileType(): ResourceLocation.LocalFile.FileType? {
+    return when (this) {
+        MediaType.M3U8 -> ResourceLocation.LocalFile.FileType.MPTS
+        MediaType.MP4,
+        MediaType.MKV -> ResourceLocation.LocalFile.FileType.CONTAINED
     }
 }

@@ -54,7 +54,7 @@ interface HttpDownloader : AutoCloseable {
     suspend fun download(
         url: String,
         outputPath: Path,
-        options: DownloadOptions = DownloadOptions()
+        options: DownloadOptions = DownloadOptions(),
     ): DownloadId
 
     /**
@@ -64,7 +64,7 @@ interface HttpDownloader : AutoCloseable {
         downloadId: DownloadId,
         url: String,
         outputPath: Path,
-        options: DownloadOptions = DownloadOptions()
+        options: DownloadOptions = DownloadOptions(),
     )
 
     /**
@@ -129,7 +129,7 @@ enum class DownloadErrorCode {
 data class DownloadError(
     val code: DownloadErrorCode,
     val params: Map<String, String> = emptyMap(),
-    val technicalMessage: String? = null
+    val technicalMessage: String? = null,
 )
 
 @Serializable
@@ -141,7 +141,7 @@ data class DownloadProgress(
     val downloadedBytes: Long,
     val totalBytes: Long, // -1 for unknown
     val status: DownloadStatus,
-    val error: DownloadError? = null
+    val error: DownloadError? = null,
 )
 
 @Serializable
@@ -167,7 +167,12 @@ data class DownloadState(
     val status: DownloadStatus,
     val error: DownloadError? = null,
     val segmentCacheDir: String,
+    val mediaType: MediaType,
 )
+
+enum class MediaType {
+    M3U8, MP4, MKV
+}
 
 @Serializable
 data class SegmentInfo(
@@ -187,5 +192,5 @@ data class DownloadOptions(
     val connectTimeoutMs: Long = 30_000,
     val readTimeoutMs: Long = 30_000,
     val autoSaveIntervalMs: Long = 5_000,
-    val headers: Map<String, String> = emptyMap()
+    val headers: Map<String, String> = emptyMap(),
 )
