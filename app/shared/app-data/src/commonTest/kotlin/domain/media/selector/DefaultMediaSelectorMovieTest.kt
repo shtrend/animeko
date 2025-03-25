@@ -45,7 +45,7 @@ class DefaultMediaSelectorMovieTest {
         ) {
             checkSubjectExclusion {
                 expect(
-                    "玉子市场" to FromSeriesSeason,
+                    "玉子市场" to null,
                     "玉子市场 剧场版" to FromSeriesSeason,
                     "玉子爱情故事" to FromSeriesSeason,
                     "Tamako Market" to null,
@@ -82,7 +82,7 @@ class DefaultMediaSelectorMovieTest {
             checkSubjectExclusion {
                 expect(
                     "玉子市场" to FromSeriesSeason,
-                    "玉子市场 剧场版" to FromSeriesSeason,
+                    "玉子市场 剧场版" to null,
                     "玉子爱情故事" to null,
                     "Tamako Market" to FromSeriesSeason,
                     "Tamako Love Story" to null,
