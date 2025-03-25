@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -87,6 +88,12 @@ internal expect fun createDanmakuImageBitmap(
     solidTextLayout: TextLayoutResult,
     borderTextLayout: TextLayoutResult,
 ): ImageBitmap
+
+internal fun Canvas.paintIfNotEmpty(layout: TextLayoutResult) {
+    if (layout.size.width != 0 && layout.size.height != 0) {
+        TextPainter.paint(this, layout)
+    }
+}
 
 internal fun dummyDanmaku(
     measurer: TextMeasurer,
