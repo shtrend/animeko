@@ -9,13 +9,15 @@
 
 package me.him188.ani.app.platform.features
 
-import me.him188.ani.app.platform.Context
+import kotlinx.io.files.Path
+import me.him188.ani.utils.io.SystemPath
+import me.him188.ani.utils.io.inSystem
 
-actual fun getComponentAccessorsImpl(context: Context): PlatformComponentAccessors = DesktopPlatformComponentAccessors()
+interface FileRevealer {
+    suspend fun revealFile(file: SystemPath): Boolean
 
-private class DesktopPlatformComponentAccessors : PlatformComponentAccessors {
-    override val audioManager: AudioManager?
-        get() = null
-    override val fileRevealer: FileRevealer
-        get() = DesktopFileRevealer
+    /**
+     * 在 Windows 资源管理器或 macOS Finder 中打开文件所在目录, 并高亮该文件
+     */
+    suspend fun revealFile(file: Path): Boolean = revealFile(file.inSystem)
 }

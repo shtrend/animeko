@@ -11,7 +11,7 @@ package me.him188.ani.app.tools.update
 
 import me.him188.ani.app.platform.ContextMP
 import me.him188.ani.app.platform.ExecutableDirectoryDetector
-import me.him188.ani.app.platform.FileOpener
+import me.him188.ani.app.platform.features.DesktopFileRevealer
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.toFile
@@ -24,8 +24,8 @@ import java.io.File
 import kotlin.system.exitProcess
 
 interface DesktopUpdateInstaller : UpdateInstaller {
-    override fun openForManualInstallation(file: SystemPath, context: ContextMP) {
-        FileOpener.openInFileBrowser(file)
+    override suspend fun openForManualInstallation(file: SystemPath, context: ContextMP): Boolean {
+        return DesktopFileRevealer.revealFile(file)
     }
 
     fun deleteOldUpdater()

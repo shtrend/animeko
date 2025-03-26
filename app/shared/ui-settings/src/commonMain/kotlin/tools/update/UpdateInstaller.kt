@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.tools.update
 
 import me.him188.ani.app.platform.ContextMP
@@ -14,7 +23,7 @@ interface UpdateInstaller {
     /**
      * 如果 [install] 可能返回 [InstallationResult.Failed], 则需实现
      */
-    fun openForManualInstallation(file: SystemPath, context: ContextMP) {}
+    suspend fun openForManualInstallation(file: SystemPath, context: ContextMP): Boolean = false
 
     fun install(file: SystemPath, context: ContextMP): InstallationResult
 }

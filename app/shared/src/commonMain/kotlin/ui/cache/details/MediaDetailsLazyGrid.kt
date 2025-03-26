@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -41,10 +42,12 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.ktor.http.Url
-import io.ktor.http.encodeURLPath
+import kotlinx.coroutines.launch
+import kotlinx.io.files.Path
 import me.him188.ani.app.domain.media.TestMediaList
+import me.him188.ani.app.platform.LocalContext
+import me.him188.ani.app.platform.features.getComponentAccessors
 import me.him188.ani.app.tools.formatDateTime
-import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.media.MediaDetailsRenderer
 import me.him188.ani.app.ui.settings.rendering.MediaSourceIcon
@@ -59,8 +62,9 @@ import me.him188.ani.datasources.api.topic.FileSize
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.datasources.api.topic.isSingleEpisode
 import me.him188.ani.datasources.mikan.MikanCNMediaSource
+import me.him188.ani.utils.io.absolutePath
+import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.platform.annotations.TestOnly
-import me.him188.ani.utils.platform.isMobile
 
 @Immutable
 data class MediaDetails(
@@ -83,7 +87,7 @@ data class MediaDetails(
     /**
      * 如果此资源已缓存, 则为本地路径
      */
-    val localCacheFilePath: String?,
+    val localCacheFilePath: Path?,
     val extraFiles: MediaExtraFiles,
     val totalSegments: Int? = null,
     val downloaderStatus: String? = null,
@@ -121,7 +125,7 @@ data class MediaDetails(
                 null -> null
             }
             val localCacheFilePath = when (val download = cachedMedia?.download) {
-                is ResourceLocation.LocalFile -> download.filePath
+                is ResourceLocation.LocalFile -> Path(download.filePath)
                 is ResourceLocation.HttpStreamingFile,
                 is ResourceLocation.HttpTorrentFile,
                 is ResourceLocation.MagnetLink,
@@ -158,7 +162,8 @@ fun MediaDetailsLazyGrid(
 ) {
     val uriHandler = LocalUriHandler.current
     val clipboard = LocalClipboardManager.current
-
+    val fileRevealer = LocalContext.current.getComponentAccessors().fileRevealer
+    val scope = rememberCoroutineScope()
 
     val toaster = LocalToaster.current
     LazyVerticalGrid(
@@ -189,17 +194,16 @@ fun MediaDetailsLazyGrid(
                 Icon(Icons.Rounded.ArrowOutward, contentDescription = "打开链接")
             }
         }
-        val browseFile = @Composable { url: String ->
-            if (LocalPlatform.current.isMobile()) {
+        val browseFile = @Composable { url: Path ->
+            if (fileRevealer == null) {
                 // noop
             } else {
                 IconButton(
                     {
-                        if (runCatching { Url(url) }.isSuccess) {
-                            uriHandler.openUri(url)
-                        } else {
-                            clipboard.setText(AnnotatedString(url))
-                            toaster.toast("已复制")
+                        scope.launch {
+                            if (!fileRevealer.revealFile(url)) {
+                                toaster.toast("打开文件失败 ${url.inSystem.absolutePath}")
+                            }
                         }
                     },
                 ) {
@@ -369,11 +373,11 @@ fun MediaDetailsLazyGrid(
                     leadingContent = { Icon(Icons.Rounded.VideoFile, contentDescription = null) },
                     supportingContent = {
                         SelectionContainer {
-                            Text(details.localCacheFilePath, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Text(details.localCacheFilePath.toString(), maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     },
                     trailingContent = {
-                        browseFile("file://${details.localCacheFilePath.encodeURLPath()}")
+                        browseFile(details.localCacheFilePath)
                     },
                 )
             }
