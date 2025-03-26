@@ -86,6 +86,10 @@ sealed class ResourceLocation {
          * `null` for unknown.
          */
         val fileType: FileType? = null,
+        /**
+         * m3u8 原始地址.
+         */
+        val originalUri: String? = null,
     ) : ResourceLocation() {
         /**
          * `file://`

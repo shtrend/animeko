@@ -482,7 +482,7 @@ private fun AniAppContentImpl(
                         },
                         mediaDetailsColumn = { media ->
                             MediaDetailsLazyGrid(
-                                MediaDetails.from(media, null),
+                                MediaDetails.from(media, null, null),
                                 Modifier.fillMaxSize(),
                                 showSourceInfo = false,
                             )

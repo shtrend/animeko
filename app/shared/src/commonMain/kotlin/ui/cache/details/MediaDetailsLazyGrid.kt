@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.cache.details
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.rounded.ArrowOutward
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Event
+import androidx.compose.material.icons.rounded.FileOpen
 import androidx.compose.material.icons.rounded.FilePresent
 import androidx.compose.material.icons.rounded.Hd
 import androidx.compose.material.icons.rounded.Layers
@@ -29,7 +31,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -40,11 +41,14 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.ktor.http.Url
+import io.ktor.http.encodeURLPath
 import me.him188.ani.app.domain.media.TestMediaList
 import me.him188.ani.app.tools.formatDateTime
+import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.media.MediaDetailsRenderer
 import me.him188.ani.app.ui.settings.rendering.MediaSourceIcon
+import me.him188.ani.datasources.api.CachedMedia
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.MediaExtraFiles
 import me.him188.ani.datasources.api.MediaProperties
@@ -56,6 +60,7 @@ import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.datasources.api.topic.isSingleEpisode
 import me.him188.ani.datasources.mikan.MikanCNMediaSource
 import me.him188.ani.utils.platform.annotations.TestOnly
+import me.him188.ani.utils.platform.isMobile
 
 @Immutable
 data class MediaDetails(
@@ -64,9 +69,24 @@ data class MediaDetails(
     val kind: MediaSourceKind,
     val originalUrl: String,
     val properties: MediaProperties,
+    val fileSize: FileSize,
     val publishedTimeMillis: Long,
-    val download: ResourceLocation,
+    /**
+     * 来源地址, 如 HTML 页面
+     */
+    val contentOriginalUri: String,
+    val fileType: ResourceLocation.LocalFile.FileType?,
+    /**
+     * 实际下载连接, 如 m3u8
+     */
+    val contentDownloadUri: String?,
+    /**
+     * 如果此资源已缓存, 则为本地路径
+     */
+    val localCacheFilePath: String?,
     val extraFiles: MediaExtraFiles,
+    val totalSegments: Int? = null,
+    val downloaderStatus: String? = null,
     val sourceInfo: MediaSourceInfo?,
 ) {
     val isUrlLegal = originalUrl.startsWith("http://", ignoreCase = true)
@@ -74,19 +94,57 @@ data class MediaDetails(
 
     companion object {
         fun from(
-            media: Media,
+            originalMedia: Media,
             sourceInfo: MediaSourceInfo?,
+            cachedMedia: CachedMedia?,
         ): MediaDetails {
+            val originalUri = when (val download = originalMedia.download) {
+                is ResourceLocation.HttpStreamingFile -> download.uri
+                is ResourceLocation.HttpTorrentFile -> download.uri
+                is ResourceLocation.LocalFile -> download.filePath
+                is ResourceLocation.MagnetLink -> download.uri
+                is ResourceLocation.WebVideo -> download.uri
+            }
+            val fileType = when (val download = cachedMedia?.download ?: originalMedia.download) {
+                is ResourceLocation.HttpStreamingFile -> null
+                is ResourceLocation.HttpTorrentFile -> null
+                is ResourceLocation.LocalFile -> download.fileType
+                is ResourceLocation.MagnetLink -> null
+                is ResourceLocation.WebVideo -> null
+            }
+            val contentDownloadUri = when (val download = cachedMedia?.download) {
+                is ResourceLocation.LocalFile -> download.originalUri
+                is ResourceLocation.HttpStreamingFile,
+                is ResourceLocation.HttpTorrentFile,
+                is ResourceLocation.MagnetLink,
+                is ResourceLocation.WebVideo,
+                null -> null
+            }
+            val localCacheFilePath = when (val download = cachedMedia?.download) {
+                is ResourceLocation.LocalFile -> download.filePath
+                is ResourceLocation.HttpStreamingFile,
+                is ResourceLocation.HttpTorrentFile,
+                is ResourceLocation.MagnetLink,
+                is ResourceLocation.WebVideo,
+                null -> null
+            }
+
             return MediaDetails(
-                media.originalTitle,
-                media.episodeRange,
-                media.kind,
-                media.originalUrl,
-                media.properties,
-                media.publishedTime,
-                media.download,
-                media.extraFiles,
-                sourceInfo,
+                originalTitle = originalMedia.originalTitle,
+                episodeRange = originalMedia.episodeRange,
+                kind = originalMedia.kind,
+                originalUrl = originalMedia.originalUrl,
+                properties = originalMedia.properties,
+                fileSize = cachedMedia?.properties?.size ?: originalMedia.properties.size,
+                publishedTimeMillis = originalMedia.publishedTime,
+                contentOriginalUri = originalUri,
+                fileType = fileType,
+                contentDownloadUri = contentDownloadUri,
+                localCacheFilePath = localCacheFilePath,
+                extraFiles = originalMedia.extraFiles,
+                totalSegments = cachedMedia?.cacheProperties?.totalSegments,
+                downloaderStatus = cachedMedia?.cacheProperties?.httpDownloaderStatus,
+                sourceInfo = sourceInfo,
             )
         }
     }
@@ -98,7 +156,7 @@ fun MediaDetailsLazyGrid(
     modifier: Modifier = Modifier,
     showSourceInfo: Boolean = true,
 ) {
-    val browser = LocalUriHandler.current
+    val uriHandler = LocalUriHandler.current
     val clipboard = LocalClipboardManager.current
 
 
@@ -121,7 +179,7 @@ fun MediaDetailsLazyGrid(
             IconButton(
                 {
                     if (runCatching { Url(url) }.isSuccess) {
-                        browser.openUri(url)
+                        uriHandler.openUri(url)
                     } else {
                         clipboard.setText(AnnotatedString(url))
                         toaster.toast("已复制")
@@ -131,6 +189,25 @@ fun MediaDetailsLazyGrid(
                 Icon(Icons.Rounded.ArrowOutward, contentDescription = "打开链接")
             }
         }
+        val browseFile = @Composable { url: String ->
+            if (LocalPlatform.current.isMobile()) {
+                // noop
+            } else {
+                IconButton(
+                    {
+                        if (runCatching { Url(url) }.isSuccess) {
+                            uriHandler.openUri(url)
+                        } else {
+                            clipboard.setText(AnnotatedString(url))
+                            toaster.toast("已复制")
+                        }
+                    },
+                ) {
+                    Icon(Icons.Rounded.FileOpen, contentDescription = "浏览文件")
+                }
+            }
+        }
+        val placeholderLeadingContent = @Composable { Spacer(Modifier.size(24.dp)) }
 
         item {
             ListItem(
@@ -230,10 +307,10 @@ fun MediaDetailsLazyGrid(
                 leadingContent = { Icon(Icons.Rounded.Description, contentDescription = null) },
                 supportingContent = {
                     SelectionContainer {
-                        if (details.properties.size == FileSize.Unspecified) {
+                        if (details.fileSize == FileSize.Unspecified) {
                             Text("未知")
                         } else {
-                            Text(details.properties.size.toString())
+                            Text(details.fileSize.toString())
                         }
                     }
                 },
@@ -241,15 +318,87 @@ fun MediaDetailsLazyGrid(
         }
         item {
             ListItem(
-                headlineContent = { Text("原始下载方式") },
-                leadingContent = { Icon(Icons.Rounded.VideoFile, contentDescription = null) },
+                headlineContent = { Text("原始链接") },
+                leadingContent = placeholderLeadingContent,
                 supportingContent = {
                     SelectionContainer {
-                        Text(details.download.contentUri, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(details.contentOriginalUri, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 },
-                trailingContent = { copyContent { details.download.contentUri } },
+                trailingContent = { copyContent { details.contentOriginalUri } },
             )
+        }
+        if (details.fileType != null) {
+            item {
+                ListItem(
+                    headlineContent = { Text("文件类型") },
+                    leadingContent = placeholderLeadingContent,
+                    supportingContent = {
+                        SelectionContainer {
+                            Text(
+                                when (details.fileType) {
+                                    ResourceLocation.LocalFile.FileType.MPTS -> "MPTS"
+                                    ResourceLocation.LocalFile.FileType.CONTAINED -> "Contained"
+                                },
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                    },
+                )
+            }
+        }
+        if (details.contentDownloadUri != null) {
+            item {
+                ListItem(
+                    headlineContent = { Text("原始下载链接") },
+                    leadingContent = { Icon(Icons.Rounded.VideoFile, contentDescription = null) },
+                    supportingContent = {
+                        SelectionContainer {
+                            Text(details.contentDownloadUri, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                    },
+                    trailingContent = { copyContent { details.contentDownloadUri } },
+                )
+            }
+        }
+        if (details.localCacheFilePath != null) {
+            item {
+                ListItem(
+                    headlineContent = { Text("本地缓存路径") },
+                    leadingContent = { Icon(Icons.Rounded.VideoFile, contentDescription = null) },
+                    supportingContent = {
+                        SelectionContainer {
+                            Text(details.localCacheFilePath, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                    },
+                    trailingContent = {
+                        browseFile("file://${details.localCacheFilePath.encodeURLPath()}")
+                    },
+                )
+            }
+        }
+        if (details.totalSegments != null) {
+            item {
+                ListItem(
+                    headlineContent = { Text("总片段数") },
+                    leadingContent = placeholderLeadingContent,
+                    supportingContent = {
+                        Text(details.totalSegments.toString(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    },
+                )
+            }
+        }
+        if (details.downloaderStatus != null) {
+            item {
+                ListItem(
+                    headlineContent = { Text("下载器内部状态") },
+                    leadingContent = placeholderLeadingContent,
+                    supportingContent = {
+                        Text(details.downloaderStatus, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    },
+                )
+            }
         }
         details.extraFiles.subtitles.forEachIndexed { index, subtitle ->
             item {
@@ -278,20 +427,11 @@ fun MediaDetailsLazyGrid(
     }
 }
 
-@Stable
-private val ResourceLocation.contentUri: String
-    get() = when (this) {
-        is ResourceLocation.HttpStreamingFile -> this.uri
-        is ResourceLocation.HttpTorrentFile -> this.uri
-        is ResourceLocation.LocalFile -> this.filePath
-        is ResourceLocation.MagnetLink -> this.uri
-        is ResourceLocation.WebVideo -> this.uri
-    }
-
 
 @TestOnly
 val TestMediaDetails
     get() = MediaDetails.from(
         TestMediaList[0],
         MikanCNMediaSource.INFO,
+        null,
     )
