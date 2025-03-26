@@ -38,6 +38,9 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
+import androidx.compose.material.icons.rounded.AddComment
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -94,6 +97,7 @@ import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.interaction.nestedScrollWorkaround
 import me.him188.ani.app.ui.foundation.layout.ConnectedScrollState
 import me.him188.ani.app.ui.foundation.layout.PaddingValuesSides
+import me.him188.ani.app.ui.foundation.layout.Zero
 import me.him188.ani.app.ui.foundation.layout.connectedScrollContainer
 import me.him188.ani.app.ui.foundation.layout.connectedScrollTarget
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
@@ -307,6 +311,7 @@ private fun SubjectDetailsPage(
             SubjectDetailsContentPager(
                 paddingValues,
                 connectedScrollState,
+                onClickAddRating = { state.editableRatingState.requestEdit() },
                 detailsTab = { contentPadding ->
                     if (state.info == null) return@SubjectDetailsContentPager
                     SubjectDetailsDefaults.DetailsTab(
@@ -608,10 +613,12 @@ fun SubjectDetailsLayout(
 /**
  * Pager 页面
  */
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun SubjectDetailsContentPager(
     paddingValues: PaddingValues,
     connectedScrollState: ConnectedScrollState,
+    onClickAddRating: () -> Unit,
     detailsTab: @Composable (contentPadding: PaddingValues) -> Unit,
     commentsTab: @Composable (contentPadding: PaddingValues) -> Unit,
     discussionsTab: @Composable (contentPadding: PaddingValues) -> Unit,
@@ -626,64 +633,87 @@ private fun SubjectDetailsContentPager(
         pageCount = { 3 },
     )
 
-    Column(
-        modifier
-            .fillMaxHeight()
-            .padding(paddingValues)
-            .consumeWindowInsets(paddingValues),
-    ) {
-        val tabContainerColor by animateColorAsState(
-            if (connectedScrollState.isScrolledTop) stickyTopBarColor else backgroundColor,
-            tween(),
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(tabContainerColor),
-            contentAlignment = Alignment.Center,
-        ) {
-            TabRow(
-                selectedTabIndex = pagerState.currentPage,
-                modifier = Modifier.widthIn(max = SubjectDetailsDefaults.TabRowWidth),
-                indicator = @Composable { tabPositions ->
-                    TabRowDefaults.PrimaryIndicator(
-                        Modifier.pagerTabIndicatorOffset(pagerState, tabPositions),
-                    )
-                },
-                containerColor = tabContainerColor,
-                contentColor = TabRowDefaults.secondaryContentColor,
-                divider = {},
-            ) {
-                SubjectDetailsTab.entries.forEachIndexed { index, tabId ->
-                    Tab(
-                        selected = pagerState.currentPage == index,
-                        modifier = Modifier.widthIn(max = SubjectDetailsDefaults.TabWidth),
-                        onClick = {
-                            scope.launch { pagerState.animateScrollToPage(index) }
+    Scaffold(
+        Modifier,
+        floatingActionButton = {
+            when (SubjectDetailsTab.entries.getOrNull(pagerState.currentPage)) {
+                SubjectDetailsTab.DETAILS -> {}
+                SubjectDetailsTab.COMMENTS -> {
+                    ExtendedFloatingActionButton(
+                        text = { Text("写评价") },
+                        icon = {
+                            Icon(Icons.Rounded.AddComment, null)
                         },
-                        text = {
-                            Text(text = renderSubjectDetailsTab(tabId))
-                        },
+                        onClickAddRating,
+                        expanded = !connectedScrollState.isScrolledTop,
                     )
                 }
-            }
-        }
 
-        HorizontalPager(
-            state = pagerState,
-            Modifier.fillMaxHeight(),
-            userScrollEnabled = LocalPlatform.current.isMobile(),
-            verticalAlignment = Alignment.Top,
-        ) { index ->
-            val type = SubjectDetailsTab.entries[index]
-            Column(Modifier.padding()) {
-                val panePaddingValues =
-                    PaddingValues(bottom = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding)
-                when (type) {
-                    SubjectDetailsTab.DETAILS -> detailsTab(panePaddingValues)
-                    SubjectDetailsTab.COMMENTS -> commentsTab(panePaddingValues)
-                    SubjectDetailsTab.DISCUSSIONS -> discussionsTab(panePaddingValues)
+                SubjectDetailsTab.DISCUSSIONS -> {}
+                null -> {}
+            }
+        },
+        contentWindowInsets = WindowInsets.Zero,
+    ) { _ ->
+        Column(
+            modifier
+                .fillMaxHeight()
+                .padding(paddingValues)
+                .consumeWindowInsets(paddingValues),
+        ) {
+            val tabContainerColor by animateColorAsState(
+                if (connectedScrollState.isScrolledTop) stickyTopBarColor else backgroundColor,
+                tween(),
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(tabContainerColor),
+                contentAlignment = Alignment.Center,
+            ) {
+                TabRow(
+                    selectedTabIndex = pagerState.currentPage,
+                    modifier = Modifier.widthIn(max = SubjectDetailsDefaults.TabRowWidth),
+                    indicator = @Composable { tabPositions ->
+                        TabRowDefaults.PrimaryIndicator(
+                            Modifier.pagerTabIndicatorOffset(pagerState, tabPositions),
+                        )
+                    },
+                    containerColor = tabContainerColor,
+                    contentColor = TabRowDefaults.secondaryContentColor,
+                    divider = {},
+                ) {
+                    SubjectDetailsTab.entries.forEachIndexed { index, tabId ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
+                            modifier = Modifier.widthIn(max = SubjectDetailsDefaults.TabWidth),
+                            onClick = {
+                                scope.launch { pagerState.animateScrollToPage(index) }
+                            },
+                            text = {
+                                Text(text = renderSubjectDetailsTab(tabId))
+                            },
+                        )
+                    }
+                }
+            }
+
+            HorizontalPager(
+                state = pagerState,
+                Modifier.fillMaxHeight(),
+                userScrollEnabled = LocalPlatform.current.isMobile(),
+                verticalAlignment = Alignment.Top,
+            ) { index ->
+                val type = SubjectDetailsTab.entries[index]
+                Column(Modifier.padding()) {
+                    val panePaddingValues =
+                        PaddingValues(bottom = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding)
+                    when (type) {
+                        SubjectDetailsTab.DETAILS -> detailsTab(panePaddingValues)
+                        SubjectDetailsTab.COMMENTS -> commentsTab(panePaddingValues)
+                        SubjectDetailsTab.DISCUSSIONS -> discussionsTab(panePaddingValues)
+                    }
                 }
             }
         }
