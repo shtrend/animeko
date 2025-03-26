@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
@@ -124,32 +124,29 @@ fun MediaCacheDetailsScreen(
         },
         contentWindowInsets = windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
     ) { paddingValues ->
-        Column(Modifier.fillMaxSize()) {
-            Column(
-                Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .padding(paddingValues)
-                    .widthIn(max = BottomSheetDefaults.SheetMaxWidth),
+        Column(
+            Modifier
+                .fillMaxSize()
+                .wrapContentWidth(align = Alignment.CenterHorizontally)
+                .padding(paddingValues)
+                .widthIn(max = 1200.dp),
+        ) {
+            AniAnimatedVisibility(
+                visible = state.details != null,
+                enter = LocalAniMotionScheme.current.animatedVisibility.screenEnter,
+                exit = LocalAniMotionScheme.current.animatedVisibility.screenExit,
             ) {
-                Surface(Modifier.fillMaxHeight()) {
-                    AniAnimatedVisibility(
-                        visible = state.details != null,
-                        enter = LocalAniMotionScheme.current.animatedVisibility.screenEnter,
-                        exit = LocalAniMotionScheme.current.animatedVisibility.screenExit,
-                    ) {
-                        Surface(
-                            Modifier
-                                .padding(horizontal = 16.dp)
-                                .padding(vertical = 16.dp),
-                            color = ListItemDefaults.containerColor, // fill gap between items
-                        ) {
-                            state.details?.let {
-                                MediaDetailsLazyGrid(
-                                    it,
-                                    Modifier.fillMaxHeight(),
-                                )
-                            }
-                        }
+                Surface(
+                    Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(vertical = 16.dp),
+                    color = ListItemDefaults.containerColor, // fill gap between items
+                ) {
+                    state.details?.let {
+                        MediaDetailsLazyGrid(
+                            it,
+                            Modifier.fillMaxHeight(),
+                        )
                     }
                 }
             }

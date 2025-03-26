@@ -12,6 +12,7 @@ package me.him188.ani.app.ui.cache.details
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.rounded.VideoFile
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -167,7 +169,7 @@ fun MediaDetailsLazyGrid(
 
     val toaster = LocalToaster.current
     LazyVerticalGrid(
-        GridCells.Adaptive(minSize = 300.dp),
+        GridCells.Adaptive(minSize = 500.dp),
         modifier,
     ) {
         val copyContent = @Composable { value: () -> String ->
@@ -213,9 +215,16 @@ fun MediaDetailsLazyGrid(
         }
         val placeholderLeadingContent = @Composable { Spacer(Modifier.size(24.dp)) }
 
-        item {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             ListItem(
-                headlineContent = { SelectionContainer { Text(details.originalTitle) } },
+                headlineContent = {
+                    SelectionContainer {
+                        Text(
+                            details.originalTitle,
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                    }
+                },
                 trailingContent = { copyContent { details.originalTitle } },
             )
         }
