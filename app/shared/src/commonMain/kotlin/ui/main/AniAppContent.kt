@@ -63,6 +63,7 @@ import me.him188.ani.app.ui.cache.CacheManagementScreen
 import me.him188.ani.app.ui.cache.CacheManagementViewModel
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsPageViewModel
 import me.him188.ani.app.ui.cache.details.MediaCacheDetailsScreen
+import me.him188.ani.app.ui.cache.details.MediaDetails
 import me.him188.ani.app.ui.cache.details.MediaDetailsLazyGrid
 import me.him188.ani.app.ui.exploration.schedule.ScheduleScreen
 import me.him188.ani.app.ui.exploration.schedule.ScheduleViewModel
@@ -481,8 +482,7 @@ private fun AniAppContentImpl(
                         },
                         mediaDetailsColumn = { media ->
                             MediaDetailsLazyGrid(
-                                media,
-                                null,
+                                MediaDetails.from(media, null),
                                 Modifier.fillMaxSize(),
                                 showSourceInfo = false,
                             )

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -28,8 +28,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -40,22 +40,61 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.ktor.http.Url
+import me.him188.ani.app.domain.media.TestMediaList
 import me.him188.ani.app.tools.formatDateTime
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.media.MediaDetailsRenderer
 import me.him188.ani.app.ui.settings.rendering.MediaSourceIcon
 import me.him188.ani.datasources.api.Media
+import me.him188.ani.datasources.api.MediaExtraFiles
+import me.him188.ani.datasources.api.MediaProperties
 import me.him188.ani.datasources.api.source.MediaSourceInfo
 import me.him188.ani.datasources.api.source.MediaSourceKind
+import me.him188.ani.datasources.api.topic.EpisodeRange
 import me.him188.ani.datasources.api.topic.FileSize
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.datasources.api.topic.isSingleEpisode
+import me.him188.ani.datasources.mikan.MikanCNMediaSource
+import me.him188.ani.utils.platform.annotations.TestOnly
 
+@Immutable
+data class MediaDetails(
+    val originalTitle: String,
+    val episodeRange: EpisodeRange?,
+    val kind: MediaSourceKind,
+    val originalUrl: String,
+    val properties: MediaProperties,
+    val publishedTimeMillis: Long,
+    val download: ResourceLocation,
+    val extraFiles: MediaExtraFiles,
+    val sourceInfo: MediaSourceInfo?,
+) {
+    val isUrlLegal = originalUrl.startsWith("http://", ignoreCase = true)
+            || originalUrl.startsWith("https://", ignoreCase = true)
+
+    companion object {
+        fun from(
+            media: Media,
+            sourceInfo: MediaSourceInfo?,
+        ): MediaDetails {
+            return MediaDetails(
+                media.originalTitle,
+                media.episodeRange,
+                media.kind,
+                media.originalUrl,
+                media.properties,
+                media.publishedTime,
+                media.download,
+                media.extraFiles,
+                sourceInfo,
+            )
+        }
+    }
+}
 
 @Composable
 fun MediaDetailsLazyGrid(
-    media: Media,
-    sourceInfo: MediaSourceInfo?,
+    details: MediaDetails,
     modifier: Modifier = Modifier,
     showSourceInfo: Boolean = true,
 ) {
@@ -95,8 +134,8 @@ fun MediaDetailsLazyGrid(
 
         item {
             ListItem(
-                headlineContent = { SelectionContainer { Text(media.originalTitle) } },
-                trailingContent = { copyContent { media.originalTitle } },
+                headlineContent = { SelectionContainer { Text(details.originalTitle) } },
+                trailingContent = { copyContent { details.originalTitle } },
             )
         }
         item {
@@ -104,7 +143,7 @@ fun MediaDetailsLazyGrid(
                 headlineContent = { Text("剧集范围") },
                 leadingContent = { Icon(Icons.Rounded.Layers, contentDescription = null) },
                 supportingContent = {
-                    val range = media.episodeRange
+                    val range = details.episodeRange
                     SelectionContainer {
                         Text(
                             when {
@@ -121,24 +160,18 @@ fun MediaDetailsLazyGrid(
             item {
                 ListItem(
                     headlineContent = { Text("数据源") },
-                    leadingContent = { MediaSourceIcon(sourceInfo, Modifier.size(24.dp)) },
+                    leadingContent = { MediaSourceIcon(details.sourceInfo, Modifier.size(24.dp)) },
                     supportingContent = {
-                        val kind = when (media.kind) {
+                        val kind = when (details.kind) {
                             MediaSourceKind.WEB -> "在线"
                             MediaSourceKind.BitTorrent -> "BT"
                             MediaSourceKind.LocalCache -> "本地"
                         }
-                        SelectionContainer { Text("[$kind] ${sourceInfo?.displayName ?: "未知"}") }
+                        SelectionContainer { Text("[$kind] ${details.sourceInfo?.displayName ?: "未知"}") }
                     },
                     trailingContent = kotlin.run {
-                        val originalUrl by rememberUpdatedState(media.originalUrl)
-                        val isUrlLegal by remember {
-                            derivedStateOf {
-                                originalUrl.startsWith("http://", ignoreCase = true)
-                                        || originalUrl.startsWith("https://", ignoreCase = true)
-                            }
-                        }
-                        if (isUrlLegal) {
+                        val originalUrl by rememberUpdatedState(details.originalUrl)
+                        if (details.isUrlLegal) {
                             {
                                 browseContent(originalUrl)
                             }
@@ -155,8 +188,8 @@ fun MediaDetailsLazyGrid(
             ListItem(
                 headlineContent = { Text("字幕组") },
                 leadingContent = { Icon(Icons.Rounded.Subtitles, contentDescription = null) },
-                supportingContent = { SelectionContainer { Text(media.properties.alliance) } },
-                trailingContent = { copyContent { media.properties.alliance } },
+                supportingContent = { SelectionContainer { Text(details.properties.alliance) } },
+                trailingContent = { copyContent { details.properties.alliance } },
             )
         }
         item {
@@ -166,10 +199,10 @@ fun MediaDetailsLazyGrid(
                 supportingContent = {
                     SelectionContainer {
                         Text(
-                            remember(media) {
+                            remember(details) {
                                 MediaDetailsRenderer.renderSubtitleLanguages(
-                                    media.properties.subtitleKind,
-                                    media.properties.subtitleLanguageIds,
+                                    details.properties.subtitleKind,
+                                    details.properties.subtitleLanguageIds,
                                 )
                             },
                         )
@@ -181,14 +214,14 @@ fun MediaDetailsLazyGrid(
             ListItem(
                 headlineContent = { Text("发布时间") },
                 leadingContent = { Icon(Icons.Rounded.Event, contentDescription = null) },
-                supportingContent = { SelectionContainer { Text(formatDateTime(media.publishedTime)) } },
+                supportingContent = { SelectionContainer { Text(formatDateTime(details.publishedTimeMillis)) } },
             )
         }
         item {
             ListItem(
                 headlineContent = { Text("分辨率") },
                 leadingContent = { Icon(Icons.Rounded.Hd, contentDescription = null) },
-                supportingContent = { SelectionContainer { Text(media.properties.resolution) } },
+                supportingContent = { SelectionContainer { Text(details.properties.resolution) } },
             )
         }
         item {
@@ -197,10 +230,10 @@ fun MediaDetailsLazyGrid(
                 leadingContent = { Icon(Icons.Rounded.Description, contentDescription = null) },
                 supportingContent = {
                     SelectionContainer {
-                        if (media.properties.size == FileSize.Unspecified) {
+                        if (details.properties.size == FileSize.Unspecified) {
                             Text("未知")
                         } else {
-                            Text(media.properties.size.toString())
+                            Text(details.properties.size.toString())
                         }
                     }
                 },
@@ -212,13 +245,13 @@ fun MediaDetailsLazyGrid(
                 leadingContent = { Icon(Icons.Rounded.VideoFile, contentDescription = null) },
                 supportingContent = {
                     SelectionContainer {
-                        Text(media.download.contentUri, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(details.download.contentUri, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 },
-                trailingContent = { copyContent { media.download.contentUri } },
+                trailingContent = { copyContent { details.download.contentUri } },
             )
         }
-        media.extraFiles.subtitles.forEachIndexed { index, subtitle ->
+        details.extraFiles.subtitles.forEachIndexed { index, subtitle ->
             item {
                 ListItem(
                     headlineContent = {
@@ -254,3 +287,11 @@ private val ResourceLocation.contentUri: String
         is ResourceLocation.MagnetLink -> this.uri
         is ResourceLocation.WebVideo -> this.uri
     }
+
+
+@TestOnly
+val TestMediaDetails
+    get() = MediaDetails.from(
+        TestMediaList[0],
+        MikanCNMediaSource.INFO,
+    )

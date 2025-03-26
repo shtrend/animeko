@@ -132,8 +132,7 @@ fun MediaCacheDetailsScreen(
                                 color = ListItemDefaults.containerColor, // fill gap between items
                             ) {
                                 MediaDetailsLazyGrid(
-                                    it,
-                                    sourceInfo = sourceInfo,
+                                    MediaDetails.from(it, sourceInfo),
                                     Modifier.fillMaxHeight(),
                                 )
                             }
