@@ -187,7 +187,7 @@ fun SubjectDetailsScene(
 
     when (state) {
         null, is SubjectDetailsUIState.Placeholder -> PlaceholderSubjectDetailsPage(
-            (state as? SubjectDetailsUIState.Placeholder)?.subjectInfo,
+            state?.subjectInfo,
             modifier,
             showTopBar,
             windowInsets,
