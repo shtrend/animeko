@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import me.him188.ani.app.data.models.subject.CanonicalTagKind
+import me.him188.ani.app.domain.search.SearchSort
 import me.him188.ani.app.domain.search.SubjectSearchQuery
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.search.PagingSearchState
@@ -150,6 +151,14 @@ class SearchPageState(
     inline fun updateQuery(block: SubjectSearchQuery.() -> SubjectSearchQuery) {
         setQuery(queryFlow.value.block())
         searchState.startSearch()
+    }
+
+    fun updateSort(
+        sort: SearchSort,
+    ) {
+        updateQuery {
+            copy(sort = sort)
+        }
     }
 }
 

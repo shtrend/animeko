@@ -31,7 +31,6 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.LoadingIndicator
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -111,34 +110,6 @@ fun <T : Any> SearchResultLazyVerticalStaggeredGrid(
 
 @Stable
 object SearchDefaults {
-    @Composable
-    fun SearchSummaryItem(
-        items: LazyPagingItems<*>,
-        modifier: Modifier = Modifier,
-        containerColor: Color = Color.Unspecified,
-    ) {
-        Box(modifier) {
-            when {
-                items.isFinishedAndEmpty -> {
-                    ListItem(
-                        headlineContent = { Text("无搜索结果") },
-                        colors = ListItemDefaults.colors(containerColor = containerColor),
-                    )
-                }
-
-                items.hasFirstPage -> {
-                    ListItem(
-                        headlineContent = { Text("搜索到 ${items.itemCount} 个结果") },
-                        colors = ListItemDefaults.colors(containerColor = containerColor),
-                    )
-                }
-
-                else -> {
-                    Spacer(Modifier.height(Dp.Hairline)) // 如果空白内容, 它可能会有 bug
-                }
-            }
-        }
-    }
 
     @Composable
     fun IconTextButton(

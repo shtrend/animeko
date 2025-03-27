@@ -83,9 +83,17 @@ fun SearchPage(
             val aniNavigator = LocalNavigator.current
 
             val hasQuery by state.searchState.collectHasQueryAsState()
-            SearchPageResultColumn(
+            val query by state.queryFlow.collectAsStateWithLifecycle()
+            SearchResultColumn(
                 items = items,
-                showSummary = { hasQuery },
+                summary = {
+                    if (hasQuery) {
+                        SearchSummary(
+                            query.sort,
+                            onSortChange = { state.updateSort(it) },
+                        )
+                    }
+                },
                 selectedItemIndex = { state.selectedItemIndex },
                 onSelect = { index ->
                     items[index]?.let {
