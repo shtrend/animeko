@@ -49,6 +49,10 @@ class SubjectPreviewItemInfo(
      * 此条目的 NSFW 显示状态
      */
     val nsfwMode: NsfwMode,
+    /**
+     * 隐藏此条目. 用于 workaround bangumi 搜出来不满足条件的条目
+     */
+    val hide: Boolean = false,
 ) {
     companion object {
         /**
@@ -61,6 +65,7 @@ class SubjectPreviewItemInfo(
             relatedPersonList: List<LightRelatedPersonInfo>?,
             characters: List<LightRelatedCharacterInfo>?,
             roleSet: RoleSet = RoleSet.Default,
+            hide: Boolean = false,
         ): SubjectPreviewItemInfo {
             val airingInfo = SubjectAiringInfo.computeFromSubjectInfo(subjectInfo, mainEpisodeCount)
             val tags = buildString {
@@ -138,6 +143,7 @@ class SubjectPreviewItemInfo(
                 rating = subjectInfo.ratingInfo,
                 nsfw = subjectInfo.nsfw,
                 nsfwMode = if (subjectInfo.nsfw) nsfwModeSettings else NsfwMode.DISPLAY,
+                hide = hide,
             )
         }
     }

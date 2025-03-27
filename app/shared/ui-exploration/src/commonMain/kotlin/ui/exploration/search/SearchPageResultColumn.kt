@@ -136,7 +136,7 @@ internal fun SearchResultColumn(
             val info = items[index]
             val requester = remember { BringIntoViewRequester() }
             // 记录 item 对应的 requester
-            if (info != null) {
+            if (info != null && !info.hide) {
                 DisposableEffect(requester) {
                     bringIntoViewRequesters[info.subjectId] = requester
                     onDispose {

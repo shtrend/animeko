@@ -20,11 +20,13 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.subject.BangumiSubjectSearchCompletionRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchHistoryRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchRepository
 import me.him188.ani.app.data.repository.user.SettingsRepository
+import me.him188.ani.app.domain.search.SearchSort
 import me.him188.ani.app.domain.search.SubjectSearchQuery
 import me.him188.ani.app.domain.session.AniAuthStateProvider
 import me.him188.ani.app.ui.exploration.search.SearchPageState
@@ -91,6 +93,7 @@ class SearchViewModel(
                             nsfwMode,
                             subject.lightSubjectRelations.lightRelatedPersonInfoList,
                             subject.lightSubjectRelations.lightRelatedCharacterInfoList,
+                            hide = shouldHide(query, subject),
                         )
                     }
                     // 我们必须保证 data 的数量和 map 后的数量一致, 否则会导致 Pager 搜索下一页时使用的 offset 有误.
@@ -109,6 +112,22 @@ class SearchViewModel(
             }
         },
     )
+
+    private fun shouldHide(query: SubjectSearchQuery, subject: BatchSubjectDetails): Boolean {
+        when (query.sort) {
+            SearchSort.RANK -> {
+                if (subject.subjectInfo.ratingInfo.total < 50) {
+                    return true
+                }
+            }
+
+            SearchSort.MATCH,
+            SearchSort.COLLECTION -> {
+            }
+        }
+
+        return false
+    }
 
     val subjectDetailsStateLoader = SubjectDetailsStateLoader(subjectDetailsStateFactory, backgroundScope)
     private var currentPreviewingSubject: SubjectInfo? = null
