@@ -446,6 +446,7 @@ private fun EpisodeScreenTabletVeryWide(
                                         vm.setDanmakuSourceEnabled(providerId, enabled)
                                     },
                                     onClickLogin = { navigator.navigateBangumiAuthorize() },
+                                    onClickTag = { navigator.navigateSubjectSearch(it.name) },
                                 )
                             }
                         }
@@ -565,6 +566,7 @@ private fun EpisodeScreenContentPhone(
                         vm.setDanmakuSourceEnabled(providerId, enabled)
                     },
                     onClickLogin = { navigator.navigateBangumiAuthorize() },
+                    onClickTag = { navigator.navigateSubjectSearch(it.name) },
                     Modifier.fillMaxSize(),
                 )
             }

@@ -83,6 +83,7 @@ import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionStats
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
+import me.him188.ani.app.data.models.subject.Tag
 import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.domain.media.cache.EpisodeCacheStatus
 import me.him188.ani.app.domain.session.AuthState
@@ -141,6 +142,7 @@ fun SubjectDetailsScreen(
     vm: SubjectDetailsViewModel,
     onPlay: (episodeId: Int) -> Unit,
     onLoadErrorRetry: () -> Unit,
+    onClickTag: (Tag) -> Unit,
     modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
     showBlurredBackground: Boolean = true,
@@ -159,6 +161,7 @@ fun SubjectDetailsScreen(
         authState,
         onPlay = onPlay,
         onLoadErrorRetry,
+        onClickTag,
         modifier,
         showTopBar,
         showBlurredBackground,
@@ -173,6 +176,7 @@ fun SubjectDetailsScreen(
     authState: AuthState,
     onPlay: (episodeId: Int) -> Unit,
     onLoadErrorRetry: () -> Unit,
+    onClickTag: (Tag) -> Unit,
     modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
     showBlurredBackground: Boolean = true,
@@ -200,6 +204,7 @@ fun SubjectDetailsScreen(
             authState,
             onPlay = onPlay,
             onClickLogin = { navigator.navigateBangumiAuthorize() },
+            onClickTag,
             modifier,
             showTopBar,
             showBlurredBackground,
@@ -231,6 +236,7 @@ private fun SubjectDetailsPage(
     authState: AuthState,
     onPlay: (episodeId: Int) -> Unit,
     onClickLogin: () -> Unit,
+    onClickTag: (Tag) -> Unit,
     modifier: Modifier = Modifier,
     showTopBar: Boolean = true,
     showBlurredBackground: Boolean = true,
@@ -315,6 +321,7 @@ private fun SubjectDetailsPage(
                     if (state.info == null) return@SubjectDetailsContentPager
                     SubjectDetailsDefaults.DetailsTab(
                         info = state.info,
+                        onClickTag,
                         staff = state.staffPager.collectAsLazyPagingItemsWithLifecycle(),
                         exposedStaff = state.exposedStaffPager.collectAsLazyPagingItemsWithLifecycle(),
                         totalStaffCount = state.totalStaffCountState.value,

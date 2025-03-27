@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -56,6 +57,7 @@ fun SearchScreen(
                     }
                 },
                 onLoadErrorRetry = { vm.reloadCurrentSubjectDetails() },
+                onClickTag = { vm.searchPageState.updateQuery { copy(tags = listOf(it.name)) } },
                 navigationIcon = {
                     // 只有在单面板模式下才显示返回按钮
                     if (listDetailLayoutParameters.isSinglePane) {
@@ -85,5 +87,7 @@ fun SearchScreen(
             BackNavigationIconButton(onNavigateBack)
         },
     )
-
+    SideEffect {
+        vm.startInitialSearch()
+    }
 }

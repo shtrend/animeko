@@ -65,7 +65,10 @@ sealed class NavRoutes {
     ) : NavRoutes()
 
     @Serializable
-    data object SubjectSearch : NavRoutes()
+    data class SubjectSearch(
+        val keyword: String? = null,
+        val tags: List<String>? = null,
+    ) : NavRoutes()
 
     @Serializable
     data class SubjectDetail(

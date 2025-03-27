@@ -39,7 +39,9 @@ import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.milliseconds
 
 @Stable
-class SearchViewModel : AbstractViewModel(), KoinComponent {
+class SearchViewModel(
+    initialSearchQuery: SubjectSearchQuery,
+) : AbstractViewModel(), KoinComponent {
     private val searchHistoryRepository: SubjectSearchHistoryRepository by inject()
     private val bangumiSubjectSearchCompletionRepository: BangumiSubjectSearchCompletionRepository by inject()
 
@@ -51,7 +53,8 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
 
     private val nsfwSettingFlow = settingsRepository.uiSettings.flow.map { it.searchSettings.nsfwMode }
 
-    private val queryFlow = MutableStateFlow(SubjectSearchQuery(""))
+    private val hasInitialSearchQuery = initialSearchQuery.keywords.isNotEmpty() || initialSearchQuery.hasFilters()
+    private val queryFlow = MutableStateFlow(initialSearchQuery)
 
     val authState = authStateProvider.state
     val searchPageState: SearchPageState = SearchPageState(
@@ -126,6 +129,16 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
     fun reloadCurrentSubjectDetails() {
         val curr = currentPreviewingSubject ?: return
         subjectDetailsStateLoader.reload(curr.subjectId, curr)
+    }
+
+    private var initialSearchQueryStarted = false
+    fun startInitialSearch() {
+        if (initialSearchQueryStarted) return
+        initialSearchQueryStarted = true
+
+        if (hasInitialSearchQuery) {
+            searchPageState.searchState.startSearch()
+        }
     }
 
     override fun onCleared() {

@@ -38,7 +38,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 class SearchPageState(
     searchHistoryPager: Flow<PagingData<String>>,
     suggestionsPager: Flow<PagingData<String>>,
-    private val queryFlow: StateFlow<SubjectSearchQuery>,
+    val queryFlow: StateFlow<SubjectSearchQuery>,
     val setQuery: (SubjectSearchQuery) -> Unit,
     val onRequestPlay: suspend (SubjectPreviewItemInfo) -> EpisodeTarget?,
     val searchState: SearchState<SubjectPreviewItemInfo>,
@@ -68,14 +68,33 @@ class SearchPageState(
     val gridState = LazyStaggeredGridState()
 
     val searchFilterStateFlow = queryFlow.map { it.tags.orEmpty() }.map { selectedTags ->
-        SearchFilterState(
-            chips = tagKinds.map { kind ->
-                SearchFilterChipState(
-                    kind = kind,
-                    values = kind.values,
-                    selected = kind.values.filter { value -> value in selectedTags },
+        val groups = selectedTags.groupBy { tag ->
+            tagKinds.find { kind -> tag in kind.values }
+        }
+        val chips = buildList(capacity = tagKinds.size + 1) {
+            for (kind in tagKinds) {
+                add(
+                    SearchFilterChipState(
+                        kind = kind,
+                        values = kind.values,
+                        selected = groups[kind].orEmpty(),
+                    ),
                 )
-            },
+            }
+
+            // 加入自定义
+            groups[null]?.let { customValues ->
+                add(
+                    SearchFilterChipState(
+                        kind = null,
+                        values = customValues,
+                        selected = customValues,
+                    ),
+                )
+            }
+        }
+        SearchFilterState(
+            chips = chips,
         )
     }.stateIn(
         backgroundScope, started = SharingStarted.WhileSubscribed(),
@@ -110,10 +129,10 @@ class SearchPageState(
         value: String,
         unselectOthersOfSameKind: Boolean,
     ) {
-        val query = queryFlow.value
-        val existingTags = query.tags.orEmpty()
-        setQuery(
-            query.copy(
+        updateQuery {
+            val query = this
+            val existingTags = query.tags.orEmpty()
+            copy(
                 tags = if (value in existingTags) {
                     existingTags - value
                 } else {
@@ -124,8 +143,12 @@ class SearchPageState(
                         existingTags + value
                     }
                 },
-            ),
-        )
+            )
+        }
+    }
+
+    inline fun updateQuery(block: SubjectSearchQuery.() -> SubjectSearchQuery) {
+        setQuery(queryFlow.value.block())
         searchState.startSearch()
     }
 }
