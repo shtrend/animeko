@@ -459,6 +459,7 @@ object AniDesktop {
                         // 防止闪眼
                         window.background = java.awt.Color.BLACK
                         window.contentPane.background = java.awt.Color.BLACK
+                        window.minimumSize = java.awt.Dimension(400, 400)
 
                         logger.info {
                             "renderApi: " + this.window.renderApi
