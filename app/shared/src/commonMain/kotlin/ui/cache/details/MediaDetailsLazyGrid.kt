@@ -50,6 +50,7 @@ import me.him188.ani.app.domain.media.TestMediaList
 import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.platform.features.getComponentAccessors
 import me.him188.ani.app.tools.formatDateTime
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.media.MediaDetailsRenderer
 import me.him188.ani.app.ui.settings.rendering.MediaSourceIcon
@@ -67,6 +68,7 @@ import me.him188.ani.datasources.mikan.MikanCNMediaSource
 import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.platform.annotations.TestOnly
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Immutable
 data class MediaDetails(
@@ -448,3 +450,10 @@ val TestMediaDetails
         MikanCNMediaSource.INFO,
         null,
     )
+
+@OptIn(TestOnly::class)
+@Composable
+@Preview
+private fun PreviewCacheGroupDetailsColumn() = ProvideCompositionLocalsForPreview {
+    MediaDetailsLazyGrid(TestMediaDetails)
+}

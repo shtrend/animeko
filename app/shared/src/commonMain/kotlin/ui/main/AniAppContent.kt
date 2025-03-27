@@ -415,7 +415,11 @@ private fun AniAppContentImpl(
             ) { backStackEntry ->
                 val route = backStackEntry.toRoute<NavRoutes.Caches>()
                 CacheManagementScreen(
-                    viewModel { CacheManagementViewModel() },
+                    vm = viewModel { CacheManagementViewModel() },
+                    onPlay = {
+                        aniNavigator.navigateEpisodeDetails(it.subjectId, it.episodeId)
+                    },
+                    Modifier.fillMaxSize(),
                     navigationIcon = {
                         BackNavigationIconButton(
                             {
@@ -423,7 +427,6 @@ private fun AniAppContentImpl(
                             },
                         )
                     },
-                    Modifier.fillMaxSize(),
                 )
             }
             composable<NavRoutes.CacheDetail>(

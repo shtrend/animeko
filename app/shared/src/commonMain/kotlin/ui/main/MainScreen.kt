@@ -228,8 +228,9 @@ private fun MainScreenContent(
 
                     MainScreenPage.CacheManagement -> CacheManagementScreen(
                         viewModel { CacheManagementViewModel() },
-                        navigationIcon = { },
+                        onPlay = { navigator.navigateEpisodeDetails(it.subjectId, it.episodeId) },
                         Modifier.fillMaxSize(),
+                        navigationIcon = { },
                     )
                 }
             }

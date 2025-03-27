@@ -24,27 +24,28 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.SharingStarted
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.transformLatest
-import kotlinx.coroutines.plus
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
 import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.MediaCacheManager
@@ -62,12 +63,14 @@ import me.him188.ani.app.ui.cache.components.CacheGroupCardLayoutProperties
 import me.him188.ani.app.ui.cache.components.CacheGroupCommonInfo
 import me.him188.ani.app.ui.cache.components.CacheGroupState
 import me.him188.ani.app.ui.cache.components.CacheManagementOverallStats
+import me.him188.ani.app.ui.cache.components.TestCacheGroupSates
+import me.him188.ani.app.ui.cache.components.createTestMediaStats
 import me.him188.ani.app.ui.foundation.AbstractViewModel
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
-import me.him188.ani.app.ui.foundation.produceState
-import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
+import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.datasources.api.creationTimeOrNull
 import me.him188.ani.datasources.api.episodeIdInt
 import me.him188.ani.datasources.api.subjectIdInt
@@ -76,6 +79,8 @@ import me.him188.ani.datasources.api.topic.FileSize.Companion.bytes
 import me.him188.ani.datasources.api.unwrapCached
 import me.him188.ani.utils.coroutines.flows.flowOfEmptyList
 import me.him188.ani.utils.coroutines.sampleWithInitial
+import me.him188.ani.utils.platform.annotations.TestOnly
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
@@ -90,74 +95,115 @@ class CacheManagementViewModel : AbstractViewModel(), KoinComponent {
 
     val lazyGridState: CacheGroupGridLayoutState = LazyStaggeredGridState()
 
-    val state: CacheManagementState = CacheManagementState(
-        overallStats = cacheManager.enabledStorages.flatMapLatest { list ->
-            list.map { it.stats }.sum()
-        }.sampleWithInitial(1.seconds).produceState(MediaStats.Unspecified),
-        groups = cacheManager.enabledStorages.flatMapLatest { storages ->
-            if (storages.isEmpty()) {
-                return@flatMapLatest flowOfEmptyList()
+    val stateFlow = kotlin.run {
+        val overallStatsFlow = cacheManager.enabledStorages
+            .flatMapLatest { list ->
+                list.map { it.stats }.sum()
             }
-            combine(storages.map { it.listFlow }) { it.asSequence().flatten().toList() }
-                .transformLatest { allCaches ->
-                    supervisorScope {
-                        emitAll(flowOf(createCacheGroupStates(allCaches)))
-                    } // supervisorScope won't finish itself
+            .sampleWithInitial(1.seconds)
+            .stateInBackground(MediaStats.Unspecified)
+
+        val groupsFlow = cacheManager.enabledStorages
+            .flatMapLatest { storages ->
+                if (storages.isEmpty()) {
+                    flowOfEmptyList()
+                } else {
+                    combine(storages.map { it.listFlow }) { it.asSequence().flatten().toList() }
+                        .transformLatest { allCaches ->
+                            supervisorScope {
+                                emitAll(createCacheGroupStates(allCaches))
+                            } // supervisorScope won't finish itself
+                        }
                 }
-        }.produceState(emptyList()),
-    )
+            }
+            .shareInBackground()
 
-    private fun CoroutineScope.createCacheGroupStates(allCaches: List<MediaCache>) =
-        allCaches.groupBy { it.origin.unwrapCached().mediaId }.map { (_, episodes) ->
-            check(episodes.isNotEmpty())
+        combine(overallStatsFlow, groupsFlow, ::CacheManagementState)
+            .stateInBackground(CacheManagementState.Placeholder) // has distinctUntilChanged
+    }
 
-            val firstCache = episodes.first()
-            CacheGroupState(
-                media = firstCache.origin.unwrapCached(),
-                commonInfo = subjectCollectionRepository.subjectCollectionFlow(firstCache.metadata.subjectIdInt) // 既会查缓存, 也会查网络, 基本上不会有查不到的情况
-                    .filterNotNull() // TODO: handle subject not found in cache management
-                    .map {
-                        createGroupCommonInfo(
-                            subjectId = it.subjectId,
-                            firstCache = firstCache,
-                            subjectDisplayName = it.subjectInfo.displayName,
-                            imageUrl = it.subjectInfo.imageLarge,
+    private fun createCacheGroupStates(allCaches: List<MediaCache>): Flow<List<CacheGroupState>> {
+        val groupStateFlows = allCaches
+            .groupBy { it.origin.unwrapCached().mediaId }
+            .map { (_, mediaCaches) ->
+                check(mediaCaches.isNotEmpty())
+
+                val firstCache = mediaCaches.first()
+
+                val groupId = firstCache.origin.unwrapCached().mediaId
+                val statsFlow = firstCache.sessionStats
+                    .combine(
+                        firstCache.sessionStats.map { it.downloadedBytes.inBytes }.averageRate(),
+                    ) { stats, downloadSpeed ->
+                        CacheGroupState.Stats(
+                            downloadSpeed = downloadSpeed.bytes,
+                            downloadedSize = stats.downloadedBytes,
+                            uploadSpeed = stats.uploadSpeed,
                         )
                     }
-                    .catch {
+                    .sampleWithInitial(1.seconds)
+                    .onStart {
                         emit(
-                            createGroupCommonInfo(
-                                subjectId = firstCache.metadata.subjectIdInt,
-                                firstCache = firstCache,
-                                subjectDisplayName = firstCache.metadata.subjectNameCN
-                                    ?: firstCache.metadata.subjectNames.firstOrNull()
-                                    ?: firstCache.origin.originalTitle,
-                                imageUrl = null,
+                            CacheGroupState.Stats(
+                                FileSize.Unspecified,
+                                FileSize.Unspecified,
+                                FileSize.Unspecified,
                             ),
                         )
                     }
-                    .produceState(null, this),
-                episodes = episodes.map { mediaCache ->
-                    createCacheEpisode(mediaCache)
-                },
-                stats = firstCache.sessionStats.combine(
-                    firstCache.sessionStats.map { it.downloadedBytes.inBytes }.averageRate(),
-                ) { stats, downloadSpeed ->
-                    CacheGroupState.Stats(
-                        downloadSpeed = downloadSpeed.bytes,
-                        downloadedSize = stats.downloadedBytes,
-                        uploadSpeed = stats.uploadSpeed,
+
+                val commonInfoFlow =
+                    subjectCollectionRepository.subjectCollectionFlow(firstCache.metadata.subjectIdInt) // 既会查缓存, 也会查网络, 基本上不会有查不到的情况
+                        .filterNotNull()
+                        .map {
+                            createGroupCommonInfo(
+                                subjectId = it.subjectId,
+                                firstCache = firstCache,
+                                subjectDisplayName = it.subjectInfo.displayName,
+                                imageUrl = it.subjectInfo.imageLarge,
+                            )
+                        }
+                        .catch {
+                            emit(
+                                createGroupCommonInfo(
+                                    subjectId = firstCache.metadata.subjectIdInt,
+                                    firstCache = firstCache,
+                                    subjectDisplayName = firstCache.metadata.subjectNameCN
+                                        ?: firstCache.metadata.subjectNames.firstOrNull()
+                                        ?: firstCache.origin.originalTitle,
+                                    imageUrl = null,
+                                ),
+                            )
+                        }
+                        .distinctUntilChanged()
+
+                val episodeFlows = mediaCaches.map { mediaCache ->
+                    createCacheEpisodeFlow(mediaCache)
+                }.let { episodeFlows ->
+                    combine(episodeFlows) { it.toList() }
+                }.shareInBackground()
+
+                combine(
+                    statsFlow,
+                    commonInfoFlow,
+                    episodeFlows,
+                ) { stats, commonInfo, episodes ->
+                    CacheGroupState(
+                        id = groupId,
+                        commonInfo = commonInfo,
+                        episodes = episodes,
+                        stats = stats,
                     )
-                }.sampleWithInitial(1.seconds)
-                    .produceState(
-                        CacheGroupState.Stats(FileSize.Unspecified, FileSize.Unspecified, FileSize.Unspecified),
-                        this,
-                    ),
+                }
+            }
+
+        return combine(groupStateFlows) { array ->
+            array.sortedWith(
+                compareByDescending<CacheGroupState> { it.latestCreationTime }
+                    .thenByDescending { it.cacheId }, // 只有旧的缓存会没有时间, 才会走这个
             )
-        }.sortedWith(
-            compareByDescending<CacheGroupState> { it.latestCreationTime }
-                .thenByDescending { it.cacheId }, // 只有旧的缓存会没有时间, 才会走这个
-        )
+        }
+    }
 
     private fun createGroupCommonInfo(
         subjectId: Int,
@@ -172,57 +218,83 @@ class CacheManagementViewModel : AbstractViewModel(), KoinComponent {
         imageUrl = imageUrl,
     )
 
-    private fun CoroutineScope.createCacheEpisode(mediaCache: MediaCache): CacheEpisodeState {
-        val fileStats = mediaCache.fileStats
-            .shareIn(this, started = SharingStarted.Eagerly, replay = 1)
-        return CacheEpisodeState(
-            subjectId = mediaCache.metadata.subjectIdInt,
-            episodeId = mediaCache.metadata.episodeIdInt,
-            cacheId = mediaCache.cacheId,
-            sort = mediaCache.metadata.episodeSort,
-            displayName = mediaCache.metadata.episodeName,
-            //            screenShots = flow {
-            //                if (mediaCache is TorrentMediaCacheEngine.TorrentMediaCache) {
-            //                    mediaCache.lazyFileHandle
-            //                }
-            //                    episodeScreenshotRepository.getScreenshots(mediaCache.metadata.)
-            //            }.produceState(emptyList(), this),
-            creationTime = mediaCache.metadata.creationTimeOrNull,
-            screenShots = stateOf(emptyList()),
-            stats = fileStats.combine(
-                fileStats.map { it.downloadedBytes.inBytes }.averageRate(),
+    private fun createCacheEpisodeFlow(mediaCache: MediaCache): Flow<CacheEpisodeState> {
+        val statsFlow = mediaCache.fileStats
+            .combine(
+                mediaCache.fileStats
+                    .shareInBackground(replay = 1).map { it.downloadedBytes.inBytes }.averageRate(),
             ) { stats, downloadSpeed ->
                 CacheEpisodeState.Stats(
                     downloadSpeed = downloadSpeed.bytes,
                     progress = stats.downloadProgress,
                     totalSize = stats.totalSize,
                 )
-            }.sampleWithInitial(1.seconds)
-                .produceState(CacheEpisodeState.Stats.Unspecified, this),
-            state = mediaCache.state.map {
+            }
+            .sampleWithInitial(1.seconds)
+            .stateInBackground(CacheEpisodeState.Stats.Unspecified)
+        // stateInBackground has distinctUntilChanged
+
+        val stateFlow = mediaCache.state
+            .map {
                 when (it) {
                     MediaCacheState.IN_PROGRESS -> CacheEpisodePaused.IN_PROGRESS
                     MediaCacheState.PAUSED -> CacheEpisodePaused.PAUSED
                 }
-            }.produceState(CacheEpisodePaused.IN_PROGRESS, this),
-            onPause = { mediaCache.pause() },
-            onResume = { mediaCache.resume() },
-            onDelete = { cacheManager.deleteCache(mediaCache) },
-            backgroundScope = this + CoroutineName("CacheEpisode-${mediaCache.metadata.episodeIdInt}"),
-        )
+            }
+            .stateInBackground(CacheEpisodePaused.IN_PROGRESS)
+
+        val metadata = mediaCache.metadata
+        return combine(statsFlow, stateFlow) { stats, state ->
+            CacheEpisodeState(
+                subjectId = metadata.subjectIdInt,
+                episodeId = metadata.episodeIdInt,
+                cacheId = mediaCache.cacheId,
+                sort = metadata.episodeSort,
+                displayName = metadata.episodeName,
+                creationTime = metadata.creationTimeOrNull,
+                screenShots = emptyList(),
+                stats = stats,
+                state = state,
+            )
+        }
+    }
+
+    suspend fun pauseCache(cache: CacheEpisodeState) {
+        withContext(Dispatchers.Default) {
+            cacheManager.findFirstCache { it.cacheId == cache.cacheId }?.pause()
+        }
+    }
+
+    suspend fun resumeCache(cache: CacheEpisodeState) {
+        withContext(Dispatchers.Default) {
+            cacheManager.findFirstCache { it.cacheId == cache.cacheId }?.resume()
+        }
+    }
+
+    suspend fun deleteCache(cache: CacheEpisodeState) {
+        withContext(Dispatchers.Default) {
+            cacheManager.deleteFirstCache { it.cacheId == cache.cacheId }
+        }
     }
 }
 
 /**
  * 全局缓存管理页面状态
  */
-@Stable
-class CacheManagementState(
-    overallStats: State<MediaStats>,
-    groups: State<List<CacheGroupState>>,
+@Immutable
+data class CacheManagementState(
+    val overallStats: MediaStats,
+    val groups: List<CacheGroupState>,
+    val isPlaceholder: Boolean = false,
 ) {
-    val overallStats by overallStats
-    val groups by groups
+    companion object {
+        val Placeholder = CacheManagementState(
+            MediaStats.Unspecified,
+            emptyList(),
+            isPlaceholder = true,
+
+            )
+    }
 }
 
 /**
@@ -231,14 +303,26 @@ class CacheManagementState(
 @Composable
 fun CacheManagementScreen(
     vm: CacheManagementViewModel,
-    navigationIcon: @Composable () -> Unit,
+    onPlay: (CacheEpisodeState) -> Unit,
     modifier: Modifier = Modifier,
+    navigationIcon: @Composable () -> Unit = {},
     contentWindowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
+    val state by vm.stateFlow.collectAsStateWithLifecycle()
     CacheManagementScreen(
-        vm.state,
-        navigationIcon = navigationIcon,
+        state,
+        onPlay,
+        onResume = {
+            vm.resumeCache(it)
+        },
+        onPause = {
+            vm.pauseCache(it)
+        },
+        onDelete = {
+            vm.deleteCache(it)
+        },
         modifier = modifier,
+        navigationIcon = navigationIcon,
         lazyGridState = vm.lazyGridState,
         contentWindowInsets = contentWindowInsets,
     )
@@ -248,8 +332,12 @@ fun CacheManagementScreen(
 @Composable
 fun CacheManagementScreen(
     state: CacheManagementState,
-    navigationIcon: @Composable () -> Unit,
+    onPlay: (CacheEpisodeState) -> Unit,
+    onResume: suspend (CacheEpisodeState) -> Unit,
+    onPause: suspend (CacheEpisodeState) -> Unit,
+    onDelete: suspend (CacheEpisodeState) -> Unit,
     modifier: Modifier = Modifier,
+    navigationIcon: @Composable () -> Unit = {},
     lazyGridState: CacheGroupGridLayoutState = rememberLazyStaggeredGridState(),
     contentWindowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
@@ -285,6 +373,8 @@ fun CacheManagementScreen(
 
             CacheGroupColumn(
                 state,
+                onPlay,
+                onResume, onPause, onDelete,
                 lazyGridState = lazyGridState,
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
             )
@@ -295,6 +385,10 @@ fun CacheManagementScreen(
 @Composable
 fun CacheGroupColumn(
     state: CacheManagementState,
+    onPlay: (CacheEpisodeState) -> Unit,
+    onResume: suspend (CacheEpisodeState) -> Unit,
+    onPause: suspend (CacheEpisodeState) -> Unit,
+    onDelete: suspend (CacheEpisodeState) -> Unit,
     modifier: Modifier = Modifier,
     lazyGridState: CacheGroupGridLayoutState = rememberLazyStaggeredGridState(),
     layoutProperties: CacheGroupCardLayoutProperties = CacheGroupCardDefaults.LayoutProperties,
@@ -308,12 +402,38 @@ fun CacheGroupColumn(
         horizontalArrangement = Arrangement.spacedBy(20.dp),
         contentPadding = contentPadding,
     ) {
-        items(state.groups, key = { it.media.mediaId }) { group ->
+        items(state.groups, key = { it.id }) { group ->
             CacheGroupCard(
                 group,
+                onPlay,
+                onResume,
+                onPause,
+                onDelete,
                 Modifier, // 动画很怪, 等 1.7.0 的 animateItem 再看看
                 layoutProperties,
             )
         }
+    }
+}
+
+
+@OptIn(TestOnly::class)
+@Preview
+@Composable
+private fun PreviewCacheManagementScreen() {
+    ProvideCompositionLocalsForPreview {
+        CacheManagementScreen(
+            state = remember {
+                CacheManagementState(
+                    createTestMediaStats(),
+                    TestCacheGroupSates,
+                )
+            },
+            onPlay = { },
+            onResume = {},
+            onPause = {},
+            onDelete = {},
+            navigationIcon = { BackNavigationIconButton({ }) },
+        )
     }
 }
