@@ -57,7 +57,13 @@ fun SearchScreen(
                     }
                 },
                 onLoadErrorRetry = { vm.reloadCurrentSubjectDetails() },
-                onClickTag = { vm.searchPageState.updateQuery { copy(tags = listOf(it.name)) } },
+                onClickTag = {
+                    vm.searchPageState.updateQuery { copy(tags = listOf(it.name)) }
+                    coroutineScope.launch {
+                        listDetailNavigator.navigateTo(ListDetailPaneScaffoldRole.List)
+                        vm.searchPageState.gridState.animateScrollToItem(0)
+                    }
+                },
                 navigationIcon = {
                     // 只有在单面板模式下才显示返回按钮
                     if (listDetailLayoutParameters.isSinglePane) {
