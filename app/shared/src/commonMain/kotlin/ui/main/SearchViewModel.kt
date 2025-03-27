@@ -69,7 +69,7 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
             }
         },
         searchState = PagingSearchState(
-            createPager = {
+            createPager = { scope ->
                 // 搜索总是会包含 NSFW
                 val query = queryFlow.value
                 subjectSearchRepository.searchSubjects(
@@ -91,8 +91,9 @@ class SearchViewModel : AbstractViewModel(), KoinComponent {
                         )
                     }
                     // 我们必须保证 data 的数量和 map 后的数量一致, 否则会导致 Pager 搜索下一页时使用的 offset 有误.
-                }.cachedIn(backgroundScope)
+                }.cachedIn(scope)
             },
+            backgroundScope,
         ),
         onRemoveHistory = {
             searchHistoryRepository.removeHistory(it)

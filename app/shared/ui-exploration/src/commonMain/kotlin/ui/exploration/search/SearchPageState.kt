@@ -159,9 +159,12 @@ fun createTestSearchPageState(
 
 @TestOnly
 fun createTestInteractiveSubjectSearchState(scope: CoroutineScope): SearchState<SubjectPreviewItemInfo> {
-    return PagingSearchState {
-        MutableStateFlow(PagingData.from(TestSubjectPreviewItemInfos))
-    }
+    return PagingSearchState(
+        {
+            MutableStateFlow(PagingData.from(TestSubjectPreviewItemInfos))
+        },
+        scope,
+    )
 }
 
 @TestOnly
