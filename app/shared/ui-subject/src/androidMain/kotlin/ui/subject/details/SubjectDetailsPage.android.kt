@@ -31,7 +31,7 @@ internal fun PreviewSubjectDetails() = ProvideCompositionLocalsForPreview {
         createTestSubjectDetailsState(scope)
             .let { SubjectDetailsUIState.Ok(it.subjectId, it) }
     }
-    SubjectDetailsScene(
+    SubjectDetailsScreen(
         state,
         TestAuthState,
         onPlay = { },
@@ -48,7 +48,7 @@ internal fun PreviewPlaceholderSubjectDetails() = ProvideCompositionLocalsForPre
     val state = remember {
         SubjectDetailsUIState.Placeholder(TestSubjectInfo.subjectId, TestSubjectInfo)
     }
-    SubjectDetailsScene(
+    SubjectDetailsScreen(
         state,
         TestAuthState,
         onPlay = { },
@@ -66,7 +66,7 @@ internal fun PreviewErrorSubjectDetails() = ProvideCompositionLocalsForPreview {
     val state = remember {
         SubjectDetailsUIState.Err(TestSubjectInfo.subjectId, TestSubjectInfo, LoadError.NetworkError)
     }
-    SubjectDetailsScene(
+    SubjectDetailsScreen(
         state,
         TestAuthState,
         onPlay = { },

@@ -154,7 +154,7 @@ fun SubjectDetailsScreen(
         vm.reload()
     }
 
-    SubjectDetailsScene(
+    SubjectDetailsScreen(
         state,
         authState,
         onPlay = onPlay,
@@ -168,7 +168,7 @@ fun SubjectDetailsScreen(
 }
 
 @Composable
-fun SubjectDetailsScene(
+fun SubjectDetailsScreen(
     state: SubjectDetailsUIState?,
     authState: AuthState,
     onPlay: (episodeId: Int) -> Unit,

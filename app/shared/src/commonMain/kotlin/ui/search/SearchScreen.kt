@@ -27,7 +27,7 @@ import me.him188.ani.app.ui.exploration.search.SearchPage
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.main.SearchViewModel
-import me.him188.ani.app.ui.subject.details.SubjectDetailsScene
+import me.him188.ani.app.ui.subject.details.SubjectDetailsScreen
 
 @Composable
 fun SearchScreen(
@@ -46,7 +46,7 @@ fun SearchScreen(
                 .collectAsStateWithLifecycle(null)
             val authState by vm.authState.collectAsStateWithLifecycle(AuthState.NotAuthed)
 
-            SubjectDetailsScene(
+            SubjectDetailsScreen(
                 subjectDetailsState,
                 authState,
                 onPlay = { episodeId ->
