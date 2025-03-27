@@ -97,7 +97,6 @@ import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.interaction.nestedScrollWorkaround
 import me.him188.ani.app.ui.foundation.layout.ConnectedScrollState
 import me.him188.ani.app.ui.foundation.layout.PaddingValuesSides
-import me.him188.ani.app.ui.foundation.layout.Zero
 import me.him188.ani.app.ui.foundation.layout.connectedScrollContainer
 import me.him188.ani.app.ui.foundation.layout.connectedScrollTarget
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
@@ -653,8 +652,7 @@ private fun SubjectDetailsContentPager(
                 null -> {}
             }
         },
-        contentWindowInsets = WindowInsets.Zero,
-    ) { _ ->
+    ) { _ -> // ignore window insets
         Column(
             modifier
                 .fillMaxHeight()
