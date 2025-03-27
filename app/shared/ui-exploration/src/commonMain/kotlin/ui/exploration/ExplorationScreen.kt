@@ -33,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -41,6 +42,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.paging.PagingData
@@ -64,9 +66,12 @@ import me.him188.ani.app.ui.exploration.followed.FollowedSubjectsDefaults
 import me.him188.ani.app.ui.exploration.followed.FollowedSubjectsLazyRow
 import me.him188.ani.app.ui.exploration.trends.TrendingSubjectsCarousel
 import me.him188.ani.app.ui.foundation.HorizontalScrollControlState
+import me.him188.ani.app.ui.foundation.LocalPlatform
+import me.him188.ani.app.ui.foundation.ifNotNullThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneHorizontalPadding
 import me.him188.ani.app.ui.foundation.rememberHorizontalScrollControlState
@@ -74,6 +79,7 @@ import me.him188.ani.app.ui.foundation.session.SelfAvatar
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.search.isLoadingFirstPageOrRefreshing
+import me.him188.ani.utils.platform.hasScrollingBug
 
 /**
  * @param horizontalScrollTipFlow 探索界面有横向滚动的列表, 是否显示点击辅助滚动按钮后的提示.
@@ -120,6 +126,13 @@ fun ExplorationScreen(
     actions: @Composable () -> Unit = {},
     windowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
+    val isHeightAtLeastMedium = currentWindowAdaptiveInfo1().windowSizeClass.isHeightAtLeastMedium
+    val scrollBehavior = if (LocalPlatform.current.hasScrollingBug() || isHeightAtLeastMedium) {
+        null
+    } else {
+        // 在紧凑高度时收起 Top bar
+        TopAppBarDefaults.enterAlwaysScrollBehavior()
+    }
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = AniThemeDefaults.pageContentBackgroundColor,
@@ -157,6 +170,7 @@ fun ExplorationScreen(
                     }
                 },
                 windowInsets = AniWindowInsets.forTopAppBarWithoutDesktopTitle(),
+                scrollBehavior = scrollBehavior,
             )
         },
         contentWindowInsets = windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
@@ -171,7 +185,13 @@ fun ExplorationScreen(
         val toaster = LocalToaster.current
         val scope = rememberCoroutineScope()
 
-        Column(Modifier.padding(topBarPadding).verticalScroll(state.pageScrollState)) {
+        Column(
+            Modifier.padding(topBarPadding)
+                .ifNotNullThen(scrollBehavior) {
+                    nestedScroll(it.nestedScrollConnection)
+                }
+                .verticalScroll(state.pageScrollState),
+        ) {
             NavTitleHeader(
                 title = { Text("最高热度", softWrap = false) },
                 contentPadding = horizontalContentPadding,
