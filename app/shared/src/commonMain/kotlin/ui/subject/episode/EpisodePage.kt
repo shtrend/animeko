@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
@@ -393,6 +395,19 @@ private fun EpisodeScreenTabletVeryWide(
                     .windowInsetsPadding(windowInsets.only(WindowInsetsSides.Right + WindowInsetsSides.Bottom))
                     .background(MaterialTheme.colorScheme.background), // scrollable background
             ) {
+                // 填充 insets 背景颜色
+                Surface(color = MaterialTheme.colorScheme.surfaceContainerLow) {
+                    Spacer(
+                        Modifier
+                            .fillMaxWidth()
+                            .windowInsetsPadding(
+                                // Consider #1767
+                                WindowInsets.safeContent // Note: this does not include desktop title bar.
+                                    .only(WindowInsetsSides.Top),
+                            ),
+                    )
+                }
+
                 TabRow(
                     pagerState, scope, { vm.episodeCommentState.count }, Modifier.fillMaxWidth(),
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
