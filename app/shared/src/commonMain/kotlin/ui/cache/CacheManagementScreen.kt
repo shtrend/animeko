@@ -17,11 +17,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells.Adaptive
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -31,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
@@ -58,17 +61,19 @@ import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.cache.components.CacheEpisodePaused
 import me.him188.ani.app.ui.cache.components.CacheEpisodeState
 import me.him188.ani.app.ui.cache.components.CacheGroupCard
-import me.him188.ani.app.ui.cache.components.CacheGroupCardDefaults
-import me.him188.ani.app.ui.cache.components.CacheGroupCardLayoutProperties
 import me.him188.ani.app.ui.cache.components.CacheGroupCommonInfo
 import me.him188.ani.app.ui.cache.components.CacheGroupState
 import me.him188.ani.app.ui.cache.components.CacheManagementOverallStats
 import me.him188.ani.app.ui.cache.components.TestCacheGroupSates
 import me.him188.ani.app.ui.cache.components.createTestMediaStats
 import me.him188.ani.app.ui.foundation.AbstractViewModel
+import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.ifNotNullThen
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.datasources.api.creationTimeOrNull
@@ -80,6 +85,7 @@ import me.him188.ani.datasources.api.unwrapCached
 import me.him188.ani.utils.coroutines.flows.flowOfEmptyList
 import me.him188.ani.utils.coroutines.sampleWithInitial
 import me.him188.ani.utils.platform.annotations.TestOnly
+import me.him188.ani.utils.platform.hasScrollingBug
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -349,6 +355,18 @@ fun CacheManagementScreen(
     contentWindowInsets: WindowInsets = AniWindowInsets.forPageContent(),
 ) {
     val appBarColors = AniThemeDefaults.topAppBarColors()
+
+    val isHeightAtLeastMedium = currentWindowAdaptiveInfo1().windowSizeClass.isHeightAtLeastMedium
+    val scrollBehavior = if (LocalPlatform.current.hasScrollingBug()
+        || isHeightAtLeastMedium
+    ) {
+        null
+    } else {
+        // 在紧凑高度时收起 Top bar
+        TopAppBarDefaults.enterAlwaysScrollBehavior()
+    }
+    val stickyHeader = isHeightAtLeastMedium
+
     Scaffold(
         modifier,
         topBar = {
@@ -357,68 +375,67 @@ fun CacheManagementScreen(
                 navigationIcon = navigationIcon,
                 colors = appBarColors,
                 windowInsets = AniWindowInsets.forTopAppBarWithoutDesktopTitle(),
+                scrollBehavior = scrollBehavior,
             )
         },
         containerColor = Color.Unspecified,
         contentWindowInsets = contentWindowInsets,
     ) { paddingValues ->
         Column(Modifier.padding(paddingValues)) {
-            Surface(
-                Modifier.ifThen(lazyGridState.canScrollBackward) {
-                    shadow(2.dp, clip = false)
-                },
-                color = appBarColors.containerColor,
-                contentColor = contentColorFor(appBarColors.containerColor),
-            ) {
-                CacheManagementOverallStats(
-                    { state.overallStats },
-                    Modifier
-                        .padding(horizontal = 16.dp).padding(bottom = 16.dp)
-                        .fillMaxWidth(),
-                )
+            if (stickyHeader) {
+                Surface(
+                    Modifier.ifThen(lazyGridState.canScrollBackward) {
+                        shadow(2.dp, clip = false)
+                    },
+                    color = appBarColors.containerColor,
+                    contentColor = contentColorFor(appBarColors.containerColor),
+                ) {
+                    CacheManagementOverallStats(
+                        { state.overallStats },
+                        Modifier
+                            .padding(horizontal = 16.dp).padding(bottom = 16.dp)
+                            .fillMaxWidth(),
+                    )
+                }
             }
 
-            CacheGroupColumn(
-                state,
-                onPlay,
-                onResume, onPause, onDelete,
-                lazyGridState = lazyGridState,
+            LazyVerticalStaggeredGrid(
+                Adaptive(320.dp),
+                Modifier.ifNotNullThen(scrollBehavior) {
+                    nestedScroll(it.nestedScrollConnection)
+                },
+                state = lazyGridState,
+                verticalItemSpacing = 20.dp,
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-            )
-        }
-    }
-}
+            ) {
+                if (!stickyHeader) {
+                    item(span = StaggeredGridItemSpan.FullLine) {
+                        Surface(
+                            color = appBarColors.containerColor,
+                            contentColor = contentColorFor(appBarColors.containerColor),
+                        ) {
+                            CacheManagementOverallStats(
+                                { state.overallStats },
+                                Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .fillMaxWidth(),
+                            )
+                        }
+                    }
+                }
 
-@Composable
-fun CacheGroupColumn(
-    state: CacheManagementState,
-    onPlay: (CacheEpisodeState) -> Unit,
-    onResume: suspend (CacheEpisodeState) -> Unit,
-    onPause: suspend (CacheEpisodeState) -> Unit,
-    onDelete: suspend (CacheEpisodeState) -> Unit,
-    modifier: Modifier = Modifier,
-    lazyGridState: CacheGroupGridLayoutState = rememberLazyStaggeredGridState(),
-    layoutProperties: CacheGroupCardLayoutProperties = CacheGroupCardDefaults.LayoutProperties,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-) {
-    LazyVerticalStaggeredGrid(
-        StaggeredGridCells.Adaptive(320.dp),
-        modifier,
-        state = lazyGridState,
-        verticalItemSpacing = 20.dp,
-        horizontalArrangement = Arrangement.spacedBy(20.dp),
-        contentPadding = contentPadding,
-    ) {
-        items(state.groups, key = { it.id }) { group ->
-            CacheGroupCard(
-                group,
-                onPlay,
-                onResume,
-                onPause,
-                onDelete,
-                Modifier, // 动画很怪, 等 1.7.0 的 animateItem 再看看
-                layoutProperties,
-            )
+                items(state.groups, key = { it.id }) { group ->
+                    CacheGroupCard(
+                        group,
+                        onPlay,
+                        onResume,
+                        onPause,
+                        onDelete,
+                        Modifier, // 动画很怪, 等 1.7.0 的 animateItem 再看看
+                    )
+                }
+            }
         }
     }
 }
