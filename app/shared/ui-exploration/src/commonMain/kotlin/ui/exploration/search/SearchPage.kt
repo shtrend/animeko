@@ -227,7 +227,7 @@ internal fun SearchPageListDetailScaffold(
         },
         modifier.background(MaterialTheme.colorScheme.surfaceContainerLowest),
         useSharedTransition = false,
-        listPanePreferredWidth = 400.dp,
+        listPanePreferredWidth = 480.dp,
         contentWindowInsets = contentWindowInsets,
     )
 }
