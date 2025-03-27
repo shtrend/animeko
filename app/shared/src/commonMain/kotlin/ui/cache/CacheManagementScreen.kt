@@ -244,10 +244,12 @@ class CacheManagementViewModel : AbstractViewModel(), KoinComponent {
             .stateInBackground(CacheEpisodePaused.IN_PROGRESS)
 
         val metadata = mediaCache.metadata
-        return combine(statsFlow, stateFlow) { stats, state ->
+        return combine(statsFlow, stateFlow, mediaCache.canPlay) { stats, state, canPlay ->
+            val subjectId = metadata.subjectIdInt
+            val episodeId = metadata.episodeIdInt
             CacheEpisodeState(
-                subjectId = metadata.subjectIdInt,
-                episodeId = metadata.episodeIdInt,
+                subjectId = subjectId,
+                episodeId = episodeId,
                 cacheId = mediaCache.cacheId,
                 sort = metadata.episodeSort,
                 displayName = metadata.episodeName,
@@ -255,6 +257,11 @@ class CacheManagementViewModel : AbstractViewModel(), KoinComponent {
                 screenShots = emptyList(),
                 stats = stats,
                 state = state,
+                playability = when {
+                    subjectId == 0 || episodeId == 0 -> CacheEpisodeState.Playability.INVALID_SUBJECT_EPISODE_ID
+                    !canPlay -> CacheEpisodeState.Playability.STREAMING_NOT_SUPPORTED
+                    else -> CacheEpisodeState.Playability.PLAYABLE
+                },
             )
         }
     }

@@ -70,6 +70,7 @@ import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.text.ProvideContentColor
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
+import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.datasources.api.topic.FileSize.Companion.Unspecified
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -294,22 +295,35 @@ private fun Dropdown(
                 )
             }
         }
-        if (state.hasValidSubjectAndEpisodeId) {
-            DropdownMenuItem(
-                text = { Text("播放") },
-                leadingIcon = {
-                    // 这个内容如果太大会导致影响 text
-                    Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
-                        // 这个图标比其他图标小
-                        Icon(Icons.Rounded.PlayArrow, null, Modifier.requiredSize(28.dp))
+
+        val toaster = LocalToaster.current
+        DropdownMenuItem(
+            text = { Text("播放") },
+            leadingIcon = {
+                // 这个内容如果太大会导致影响 text
+                Box(Modifier.size(24.dp), contentAlignment = Alignment.Center) {
+                    // 这个图标比其他图标小
+                    Icon(Icons.Rounded.PlayArrow, null, Modifier.requiredSize(28.dp))
+                }
+            },
+            onClick = {
+                when (state.playability) {
+                    CacheEpisodeState.Playability.PLAYABLE -> {
+                        onPlay()
+                        onDismissRequest()
                     }
-                },
-                onClick = {
-                    onPlay()
-                    onDismissRequest()
-                },
-            )
-        }
+
+                    CacheEpisodeState.Playability.INVALID_SUBJECT_EPISODE_ID -> {
+                        toaster.toast("信息无效，无法播放")
+                    }
+
+                    CacheEpisodeState.Playability.STREAMING_NOT_SUPPORTED -> {
+                        toaster.toast("此资源不支持边下边播，请等待下载完成")
+                    }
+                }
+            },
+        )
+
         ProvideContentColor(MaterialTheme.colorScheme.error) {
             DropdownMenuItem(
                 text = { Text("删除", color = MaterialTheme.colorScheme.error) },

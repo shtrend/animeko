@@ -233,6 +233,11 @@ class HttpMediaCache(
         }
     }
 
+    override val canPlay: Flow<Boolean>
+        get() = downloader.getProgressFlow(downloadId).map {
+            it.status == DownloadStatus.COMPLETED
+        }
+
     override val fileStats: Flow<MediaCache.FileStats> = downloader.getProgressFlow(downloadId).map {
         val totalSize = it.totalBytes
         val downloadedBytes = it.downloadedBytes
@@ -275,7 +280,7 @@ class HttpMediaCache(
             DownloadStatus.MERGING,
             DownloadStatus.PAUSED,
                 -> {
-                TODO("Partial play is not supported")
+                error("Download not completed, cannot get cached media for $downloadId")
             }
 
             DownloadStatus.COMPLETED -> {

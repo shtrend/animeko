@@ -32,7 +32,14 @@ class CacheEpisodeState(
     val screenShots: List<String>, // url
     val stats: Stats,
     val state: CacheEpisodePaused,
+    val playability: Playability = Playability.PLAYABLE,
 ) {
+    enum class Playability {
+        PLAYABLE,
+        INVALID_SUBJECT_EPISODE_ID,
+        STREAMING_NOT_SUPPORTED,
+    }
+
     @Immutable
     data class Stats(
         val downloadSpeed: FileSize,
@@ -44,8 +51,6 @@ class CacheEpisodeState(
                 Stats(FileSize.Companion.Unspecified, Progress.Companion.Unspecified, FileSize.Companion.Unspecified)
         }
     }
-
-    val hasValidSubjectAndEpisodeId get() = subjectId != 0 && episodeId != 0
 
     val progress get() = stats.progress
 
