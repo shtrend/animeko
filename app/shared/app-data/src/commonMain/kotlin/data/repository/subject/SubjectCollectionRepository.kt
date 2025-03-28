@@ -328,7 +328,7 @@ class SubjectCollectionRepositoryImpl(
                 pagingSourceFactory = {
                     subjectCollectionDao.filterByCollectionTypePaging(
                         query.type,
-                        includeNsfw = nsfwModeSettings != NsfwMode.HIDE,
+                        includeNsfw = true, // 查询时都带上, 后面在 UI 里隐藏. 否则会导致 index 不连续, #1809.
                     )
                 },
             ).flow.map { data ->
