@@ -45,12 +45,14 @@ private fun resolveImpl(parent: String, child: String): String {
     return "$parent/$child"
 }
 
+private const val appName = "org.openani.Animeko"
+
 @OptIn(ExperimentalForeignApi::class)
 val SystemDocumentDir by lazy {
     Path(
         NSSearchPathForDirectoriesInDomains(NSDocumentDirectory.convert(), NSUserDomainMask.convert(), true)
             .firstOrNull()?.toString() ?: error("Cannot get SystemDocumentDir"),
-    ).inSystem
+    ).inSystem.resolve(appName)
 }
 
 @OptIn(ExperimentalForeignApi::class)
@@ -58,7 +60,7 @@ val SystemSupportDir by lazy {
     Path(
         NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory.convert(), NSUserDomainMask.convert(), true)
             .firstOrNull()?.toString() ?: error("Cannot get SystemSupportDir"),
-    ).inSystem
+    ).inSystem.resolve(appName)
 }
 
 @OptIn(ExperimentalForeignApi::class)
@@ -66,12 +68,12 @@ val SystemCacheDir by lazy {
     Path(
         NSSearchPathForDirectoriesInDomains(NSCachesDirectory.convert(), NSUserDomainMask.convert(), true)
             .firstOrNull()?.toString() ?: error("Cannot get SystemCacheDir"),
-    ).inSystem
+    ).inSystem.resolve(appName)
 }
 
 actual val SystemPath.absolutePath: String
     get() {
-        return resolveImpl(SystemDocumentDir.toString(), path.toString())
+        return resolveImpl("/", path.toString())
     }
 
 actual fun SystemPaths.createTempDirectory(
