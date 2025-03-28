@@ -9,8 +9,6 @@
 
 @file:Suppress("UnstableApiUsage")
 
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-
 
 plugins {
     kotlin("multiplatform")
@@ -40,22 +38,6 @@ atomicfu {
 val enableIosFramework = enableIos && getPropertyOrNull("ani.build.framework") != "false"
 
 kotlin {
-    if (enableIos) {
-        // Sentry requires cocoapods for its dependencies
-        cocoapods {
-            // https://kotlinlang.org/docs/native-cocoapods.html#configure-existing-project
-            framework {
-                baseName = "AnimekoFramework"
-                isStatic = false
-                // Dependency export
-                // Uncomment and specify another project module if you have one:
-                // export(project(":<your other KMP module>"))
-                @OptIn(ExperimentalKotlinGradlePluginApi::class)
-                transitiveExport = false // This is default.
-            }
-        }
-    }
-
     sourceSets.commonMain.dependencies {
         api(projects.utils.platform)
         api(projects.utils.intellijAnnotations)
