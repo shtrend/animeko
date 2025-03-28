@@ -98,8 +98,12 @@ fun AniTopAppBar(
                 0.dp
             }
         TopAppBar(
-            title,
-            modifier.padding(all = additionalPadding),
+            {
+                Row(Modifier.padding(start = additionalPadding).padding(vertical = additionalPadding)) {
+                    title()
+                }
+            },
+            modifier,
             navigationIcon,
             actions = {
                 val horizontalPadding =
@@ -121,6 +125,7 @@ fun AniTopAppBar(
                 Box(
                     Modifier
                         .minimumInteractiveComponentSize()
+                        .padding(end = additionalPadding)
                         .paddingIfNotEmpty(
                             start = horizontalPadding,
                             end = (horizontalPadding - 4.dp - additionalPadding).coerceAtLeast(0.dp), // `actions` 自带 4

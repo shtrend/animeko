@@ -75,7 +75,6 @@ import me.him188.ani.app.ui.adaptive.ListDetailLayoutParameters
 import me.him188.ani.app.ui.adaptive.PaneScope
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
-import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
@@ -264,7 +263,7 @@ internal fun SettingsPageLayout(
     }
 
     val topAppBarScrollBehavior = if (LocalPlatform.current.hasScrollingBug()) {
-        null
+        TopAppBarDefaults.pinnedScrollBehavior()
     } else {
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     }
@@ -297,9 +296,7 @@ internal fun SettingsPageLayout(
                     .paneContentPadding()
                     .paneWindowInsetsPadding()
                     .fillMaxWidth()
-                    .ifThen(!LocalPlatform.current.hasScrollingBug()) {
-                        topAppBarScrollBehavior?.let { nestedScroll(it.nestedScrollConnection) }
-                    }
+                    .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
                     .verticalScroll(listPaneScrollState),
                 drawerContainerColor = Color.Unspecified,
             ) {

@@ -151,7 +151,7 @@ fun ExplorationScreen(
 ) {
     val isHeightAtLeastMedium = currentWindowAdaptiveInfo1().windowSizeClass.isHeightAtLeastMedium
     val scrollBehavior = if (LocalPlatform.current.hasScrollingBug() || isHeightAtLeastMedium) {
-        null
+        TopAppBarDefaults.pinnedScrollBehavior()
     } else {
         // 在紧凑高度时收起 Top bar
         TopAppBarDefaults.enterAlwaysScrollBehavior()

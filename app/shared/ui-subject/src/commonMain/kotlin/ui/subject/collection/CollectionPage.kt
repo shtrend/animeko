@@ -350,7 +350,7 @@ private fun CollectionPageLayout(
 ) {
     val isHeightAtLeastMedium = currentWindowAdaptiveInfo1().windowSizeClass.isHeightAtLeastMedium
     val scrollBehavior = if (LocalPlatform.current.hasScrollingBug() || isHeightAtLeastMedium) {
-        null
+        null // Can't use PinnedBehavior, because we have a TabRow in this page, which does not sync color
     } else {
         // 在紧凑高度时收起 Top bar
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
