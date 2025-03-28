@@ -1,4 +1,4 @@
-# 4. 构建打包
+# 构建打包
 
 如果遇到问题，请查看 [常见构建和运行问题](#常见构建和运行问题)。
 
@@ -31,11 +31,15 @@ ani.dandanplay.app.secret=aaaaaaaaaaaaaaa
 
 一个操作系统只能构建对应的桌面应用，例如 Windows 只能构建 Windows 应用，而不能构建 macOS 应用。
 
+## 运行测试版应用
+
+参考 [testing](testing.md)。
+
 ## 运行测试
 
 在 IDE 中双击 Ctrl，执行 `./gradlew check` 可以运行所有测试，包括单元测试和 UI 测试。
 
-在 macOS 上，这将会运行全部测试，总共约 8000 个 (如果未启用 iOS 目标，会少一些)。在 Windows 上只能运行安卓和
+在 macOS 上，这将会运行全部测试，总共约 11,000 个 (如果未启用 iOS 目标，会少一些)。在 Windows 上只能运行安卓和
 JVM 平台测试，无法运行
 iOS 测试。
 
