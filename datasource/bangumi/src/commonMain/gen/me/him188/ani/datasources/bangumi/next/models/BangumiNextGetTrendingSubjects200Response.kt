@@ -24,33 +24,24 @@
 
 package me.him188.ani.datasources.bangumi.next.models
 
-
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param common
- * @param grid
- * @param large
- * @param medium
- * @param small 
+ *
+ * @param `data`
+ * @param total limit+offset 为参数的请求表示总条数，page 为参数的请求表示总页数
  */
 @Serializable
 
-data class BangumiNextSubjectImages(
+data class BangumiNextGetTrendingSubjects200Response(
 
-    @SerialName(value = "common") @Required val common: kotlin.String,
+    @SerialName(value = "data") @Required val `data`: kotlin.collections.List<BangumiNextTrendingSubject>,
 
-    @SerialName(value = "grid") @Required val grid: kotlin.String,
-
-    @SerialName(value = "large") @Required val large: kotlin.String,
-
-    @SerialName(value = "medium") @Required val medium: kotlin.String,
-
-    @SerialName(value = "small") @Required val small: kotlin.String
+    /* limit+offset 为参数的请求表示总条数，page 为参数的请求表示总页数 */
+    @SerialName(value = "total") @Required val total: kotlin.Int
 
 ) {
 

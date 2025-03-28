@@ -39,7 +39,7 @@ import kotlinx.serialization.Serializable
  * @param nameCn
  * @param platform
  * @param subjectId
- * @param type
+ * @param type 
  * @param typeId 
  * @param voteField 
  */

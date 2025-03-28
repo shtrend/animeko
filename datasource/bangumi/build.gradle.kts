@@ -144,6 +144,7 @@ private fun stripP1Api(path: String): File {
         "/p1/episodes/-/comments", // 条目剧集的吐槽箱, 作为剧集评论
         "/p1/episodes/{episodeID}", // 条目剧集的吐槽箱, 作为剧集评论
         "/p1/subjects/{subjectID}/comments", // 条目吐槽箱, 作为条目评论
+        "/p1/trending/subjects",
     )
     val subjectPaths = paths.filter { (path, _) -> keepPaths.any { path.startsWith(it) } }
     println("The following paths are kept: ${subjectPaths.keys}")
@@ -176,6 +177,8 @@ private fun stripP1Api(path: String): File {
         "SubjectType",
         "SubjectImages",
         "SlimSubjectInterest",
+
+        "TrendingSubject",
     )
     val schemas = components["schemas"].cast<Map<String, *>>().toMutableMap()
     val keepSchemas = schemas.filter { (component, _) -> component in keepSchemaKeys }

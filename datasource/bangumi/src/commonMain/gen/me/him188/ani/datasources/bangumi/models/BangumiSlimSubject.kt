@@ -32,7 +32,7 @@ import kotlinx.serialization.Serializable
  * 
  *
  * @param id
- * @param type
+ * @param type 
  * @param name 
  * @param nameCn 
  * @param shortSummary 截短后的条目描述。

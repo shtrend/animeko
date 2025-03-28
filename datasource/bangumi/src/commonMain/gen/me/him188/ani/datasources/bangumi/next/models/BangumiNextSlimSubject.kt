@@ -29,7 +29,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- *
+ * 
  *
  * @param id
  * @param info
@@ -40,7 +40,7 @@ import kotlinx.serialization.Serializable
  * @param rating
  * @param type
  * @param images
- * @param interest
+ * @param interest 
  */
 @Serializable
 

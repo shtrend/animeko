@@ -24,33 +24,23 @@
 
 package me.him188.ani.datasources.bangumi.next.models
 
-
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param common
- * @param grid
- * @param large
- * @param medium
- * @param small 
+ *
+ * @param count
+ * @param subject
  */
 @Serializable
 
-data class BangumiNextSubjectImages(
+data class BangumiNextTrendingSubject(
 
-    @SerialName(value = "common") @Required val common: kotlin.String,
+    @SerialName(value = "count") @Required val count: kotlin.Int,
 
-    @SerialName(value = "grid") @Required val grid: kotlin.String,
-
-    @SerialName(value = "large") @Required val large: kotlin.String,
-
-    @SerialName(value = "medium") @Required val medium: kotlin.String,
-
-    @SerialName(value = "small") @Required val small: kotlin.String
+    @SerialName(value = "subject") @Required val subject: BangumiNextSlimSubject
 
 ) {
 

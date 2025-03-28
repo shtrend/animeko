@@ -36,7 +36,7 @@ import kotlinx.serialization.Serializable
  * @param name
  * @param comment
  * @param addedAt
- * @param images
+ * @param images 
  * @param infobox 
  * @param date 
  */

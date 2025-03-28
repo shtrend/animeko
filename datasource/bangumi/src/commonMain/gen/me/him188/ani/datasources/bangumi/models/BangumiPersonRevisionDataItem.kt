@@ -33,7 +33,7 @@ import kotlinx.serialization.Serializable
  *
  * @param prsnInfobox
  * @param prsnSummary
- * @param profession
+ * @param profession 
  * @param extra 
  * @param prsnName 
  */

@@ -34,7 +34,7 @@ import kotlinx.serialization.Serializable
  *
  * @param id
  * @param staff
- * @param nameCn
+ * @param nameCn 
  * @param name 
  * @param image 
  */

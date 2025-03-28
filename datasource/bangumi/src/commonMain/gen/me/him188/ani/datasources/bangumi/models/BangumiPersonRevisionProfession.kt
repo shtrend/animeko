@@ -35,7 +35,7 @@ import kotlinx.serialization.Serializable
  * @param mangaka
  * @param artist
  * @param seiyu
- * @param writer
+ * @param writer 
  * @param illustrator 
  * @param actor 
  */

@@ -29,13 +29,13 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- *
+ * 
  *
  * @param comment
  * @param rate
  * @param tags
  * @param type
- * @param updatedAt
+ * @param updatedAt 
  */
 @Serializable
 
