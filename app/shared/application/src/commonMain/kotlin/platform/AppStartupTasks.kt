@@ -16,6 +16,8 @@ import me.him188.ani.app.domain.session.SessionStatus
 import me.him188.ani.app.platform.trace.SentryErrorReport
 import me.him188.ani.app.trace.ErrorReportHolder
 import me.him188.ani.utils.analytics.AnalyticsConfig
+import me.him188.ani.utils.analytics.AnalyticsHolder
+import me.him188.ani.utils.analytics.IAnalytics
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
@@ -27,6 +29,12 @@ object AppStartupTasks {
         initializeErrorReport(userId = userId)
         if (!currentAniBuildConfig.isDebug) {
             ErrorReportHolder.init(SentryErrorReport)
+        }
+    }
+
+    fun initializeAnalytics(instance: () -> IAnalytics) {
+        if (!currentAniBuildConfig.isDebug) {
+            AnalyticsHolder.init(instance())
         }
     }
 

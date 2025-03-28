@@ -38,7 +38,6 @@ import me.him188.ani.app.platform.startCommonKoinModule
 import me.him188.ani.app.ui.settings.tabs.getLogsDir
 import me.him188.ani.app.ui.settings.tabs.media.DEFAULT_TORRENT_CACHE_DIR_NAME
 import me.him188.ani.utils.analytics.AnalyticsConfig
-import me.him188.ani.utils.analytics.AnalyticsHolder
 import me.him188.ani.utils.analytics.AnalyticsImpl
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.error
@@ -140,7 +139,7 @@ class AniApplication : Application() {
                 AppStartupTasks.initializeSentry(settings.userId)
             }
             if (settings.allowAnonymousAnalytics) {
-                AnalyticsHolder.init(
+                AppStartupTasks.initializeAnalytics {
                     AnalyticsImpl(
                         AnalyticsConfig.create(),
                         userId = settings.userId,
@@ -150,8 +149,8 @@ class AniApplication : Application() {
                             apiKey = currentAniBuildConfig.analyticsKey,
                             host = currentAniBuildConfig.analyticsServer,
                         )
-                    },
-                )
+                    }
+                }
             }
         }
 

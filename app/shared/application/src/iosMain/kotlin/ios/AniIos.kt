@@ -69,7 +69,6 @@ import me.him188.ani.app.ui.foundation.widgets.Toaster
 import me.him188.ani.app.ui.main.AniApp
 import me.him188.ani.app.ui.main.AniAppContent
 import me.him188.ani.utils.analytics.AnalyticsConfig
-import me.him188.ani.utils.analytics.AnalyticsHolder
 import me.him188.ani.utils.analytics.AnalyticsImpl
 import me.him188.ani.utils.io.SystemCacheDir
 import me.him188.ani.utils.io.SystemDocumentDir
@@ -112,7 +111,7 @@ fun MainViewController(): UIViewController {
             AppStartupTasks.initializeSentry(settings.userId)
         }
         if (settings.allowAnonymousAnalytics) {
-            AnalyticsHolder.init(
+            AppStartupTasks.initializeAnalytics {
                 AnalyticsImpl(
                     AnalyticsConfig.create(),
                 ).apply {
@@ -120,8 +119,8 @@ fun MainViewController(): UIViewController {
                         apiKey = currentAniBuildConfig.analyticsKey,
                         host = currentAniBuildConfig.analyticsServer,
                     )
-                },
-            )
+                }
+            }
         }
     }
 

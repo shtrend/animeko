@@ -116,7 +116,6 @@ import me.him188.ani.app.ui.main.AniAppContent
 import me.him188.ani.desktop.generated.resources.Res
 import me.him188.ani.desktop.generated.resources.a_round
 import me.him188.ani.utils.analytics.AnalyticsConfig
-import me.him188.ani.utils.analytics.AnalyticsHolder
 import me.him188.ani.utils.analytics.AnalyticsImpl
 import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.io.toKtPath
@@ -331,7 +330,7 @@ object AniDesktop {
                 AppStartupTasks.initializeSentry(settings.userId)
             }
             if (settings.allowAnonymousAnalytics) {
-                AnalyticsHolder.init(
+                AppStartupTasks.initializeAnalytics {
                     AnalyticsImpl(
                         AnalyticsConfig.create(),
                         settings.userId,
@@ -340,8 +339,8 @@ object AniDesktop {
                             apiKey = currentAniBuildConfig.analyticsKey,
                             host = currentAniBuildConfig.analyticsServer,
                         )
-                    },
-                )
+                    }
+                }
             }
         }
 
