@@ -330,6 +330,7 @@ tasks.register<ComposeHotRun>("runHot") {
     this.jvmArgs(
 //        "-XX:+UseZGC", // this may crash the VM
         "-Xmx256m",
+        "-XX:+EnableDynamicAgentLoading",
     )
     systemProperty("org.slf4j.simpleLogger.defaultLogLevel", "TRACE")
     systemProperty("kotlinx.coroutines.debug", "on")
