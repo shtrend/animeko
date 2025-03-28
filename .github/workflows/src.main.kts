@@ -28,7 +28,7 @@
 @file:DependsOn("timheuer:base64-to-file:v1.1")
 @file:DependsOn("actions:upload-artifact:v4")
 @file:DependsOn("actions:download-artifact:v4")
-@file:DependsOn("reactivecircus:android-emulator-runner:v2")
+@file:DependsOn("reactivecircus:android-emulator-runner:v2.33.0")
 @file:DependsOn("jlumbroso:free-disk-space:v1.3.1")
 
 // Release
