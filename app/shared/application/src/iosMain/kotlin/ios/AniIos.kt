@@ -48,11 +48,11 @@ import me.him188.ani.app.platform.IosContext
 import me.him188.ani.app.platform.IosContextFiles
 import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.platform.PermissionManager
-import me.him188.ani.app.platform.PlatformWindow
 import me.him188.ani.app.platform.create
 import me.him188.ani.app.platform.createAppRootCoroutineScope
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.platform.getCommonKoinModule
+import me.him188.ani.app.platform.rememberPlatformWindow
 import me.him188.ani.app.platform.startCommonKoinModule
 import me.him188.ani.app.tools.update.IosUpdateInstaller
 import me.him188.ani.app.tools.update.UpdateInstaller
@@ -136,11 +136,10 @@ fun MainViewController(): UIViewController {
     runBlocking { analyticsInitializer.join() }
     return ComposeUIViewController {
         AniApp {
+            val platformWindow = rememberPlatformWindow()
             CompositionLocalProvider(
                 LocalContext provides context,
-                LocalPlatformWindow provides remember {
-                    PlatformWindow()
-                },
+                LocalPlatformWindow provides platformWindow,
                 LocalOnBackPressedDispatcherOwner provides onBackPressedDispatcherOwner,
             ) {
                 Box(
