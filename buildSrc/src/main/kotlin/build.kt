@@ -193,6 +193,7 @@ fun Project.configureJvmTarget() {
             compileTaskProvider.configure {
                 compilerOptions {
                     freeCompilerArgs.add("-Xdont-warn-on-error-suppression")
+                    freeCompilerArgs.add("-Xannotation-target-all")
                 }
             }
             if (this is KotlinJvmAndroidCompilation) {
