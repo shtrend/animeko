@@ -9,22 +9,49 @@
 
 package me.him188.ani.utils.httpdownloader
 
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.utils.io.*
-import kotlinx.coroutines.*
+import io.ktor.client.request.header
+import io.ktor.client.request.prepareGet
+import io.ktor.client.statement.HttpStatement
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.utils.io.ByteReadChannel
+import io.ktor.utils.io.readAvailable
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.io.buffered
 import kotlinx.io.files.FileSystem
 import kotlinx.io.files.Path
 import me.him188.ani.utils.coroutines.IO_
-import me.him188.ani.utils.httpdownloader.DownloadStatus.*
+import me.him188.ani.utils.httpdownloader.DownloadStatus.CANCELED
+import me.him188.ani.utils.httpdownloader.DownloadStatus.COMPLETED
+import me.him188.ani.utils.httpdownloader.DownloadStatus.DOWNLOADING
+import me.him188.ani.utils.httpdownloader.DownloadStatus.FAILED
+import me.him188.ani.utils.httpdownloader.DownloadStatus.INITIALIZING
+import me.him188.ani.utils.httpdownloader.DownloadStatus.MERGING
+import me.him188.ani.utils.httpdownloader.DownloadStatus.PAUSED
 import me.him188.ani.utils.httpdownloader.m3u.DefaultM3u8Parser
 import me.him188.ani.utils.httpdownloader.m3u.M3u8Parser
 import me.him188.ani.utils.httpdownloader.m3u.M3u8Playlist
@@ -167,7 +194,7 @@ open class KtorHttpDownloader(
                         code = if (e is M3u8Exception) e.errorCode else DownloadErrorCode.UNEXPECTED_ERROR,
                         technicalMessage = e.message,
                     ),
-                    timestamp = clock.now().toEpochMilliseconds()
+                    timestamp = clock.now().toEpochMilliseconds(),
                 )
             }
             emitProgress(downloadId)
@@ -178,7 +205,7 @@ open class KtorHttpDownloader(
             it.copy(
                 segments = segments,
                 totalSegments = segments.size,
-                status = DOWNLOADING
+                status = DOWNLOADING,
             )
         }
         emitProgress(downloadId)
@@ -511,7 +538,7 @@ open class KtorHttpDownloader(
                     tempFilePath = cacheDir.resolve("0.part").toString(),
                     rangeStart = null,
                     rangeEnd = null,
-                )
+                ),
             )
 
         if (!rangeSupported) {
@@ -525,7 +552,7 @@ open class KtorHttpDownloader(
                     tempFilePath = cacheDir.resolve("0.part").toString(),
                     rangeStart = null,
                     rangeEnd = null,
-                )
+                ),
             )
         }
 
@@ -542,7 +569,7 @@ open class KtorHttpDownloader(
                     tempFilePath = cacheDir.resolve("0.part").toString(),
                     rangeStart = 0,
                     rangeEnd = contentLength - 1,
-                )
+                ),
             )
         }
 
@@ -561,7 +588,7 @@ open class KtorHttpDownloader(
                     tempFilePath = cacheDir.resolve("$index.part").toString(),
                     rangeStart = start,
                     rangeEnd = end,
-                )
+                ),
             )
             start = end + 1
             index++
@@ -580,7 +607,7 @@ open class KtorHttpDownloader(
         options: DownloadOptions,
     ): Pair<Long, Boolean>? {
         val rangeOptions = options.copy(
-            headers = options.headers + ("Range" to "bytes=0-0")
+            headers = options.headers + ("Range" to "bytes=0-0"),
         )
         return try {
             client.use {
@@ -617,7 +644,7 @@ open class KtorHttpDownloader(
         // If we have a range, add it to the request headers.
         val finalOptions = if (segmentInfo.rangeStart != null && segmentInfo.rangeEnd != null) {
             options.copy(
-                headers = options.headers + ("Range" to "bytes=${segmentInfo.rangeStart}-${segmentInfo.rangeEnd}")
+                headers = options.headers + ("Range" to "bytes=${segmentInfo.rangeStart}-${segmentInfo.rangeEnd}"),
             )
         } else {
             options
@@ -631,7 +658,7 @@ open class KtorHttpDownloader(
             val segmentPath = Path(segmentInfo.tempFilePath)
             withContext(ioDispatcher) {
                 fileSystem.createDirectories(
-                    segmentPath.parent ?: error("Parent dir not found for segmentInfo: $segmentInfo")
+                    segmentPath.parent ?: error("Parent dir not found for segmentInfo: $segmentInfo"),
                 )
             }
 
@@ -679,6 +706,7 @@ open class KtorHttpDownloader(
                     return@forEach
                 }
                 semaphore.acquire()
+                @OptIn(DelicateCoroutinesApi::class)
                 launch(ioDispatcher, start = CoroutineStart.ATOMIC) {
                     try {
                         val newSize = downloadSingleSegment(seg, options)
