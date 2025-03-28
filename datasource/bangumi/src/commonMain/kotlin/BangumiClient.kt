@@ -43,6 +43,7 @@ import me.him188.ani.datasources.bangumi.models.subjects.BangumiLegacySubject
 import me.him188.ani.datasources.bangumi.models.subjects.BangumiSubjectImageSize
 import me.him188.ani.datasources.bangumi.next.apis.EpisodeBangumiNextApi
 import me.him188.ani.datasources.bangumi.next.apis.SubjectBangumiNextApi
+import me.him188.ani.datasources.bangumi.next.apis.TrendingBangumiNextApi
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.ktor.HttpTokenChecker
@@ -57,6 +58,7 @@ interface BangumiClient {
     val api: ApiInvoker<DefaultApi>
     val nextSubjectApi: ApiInvoker<SubjectBangumiNextApi>
     val nextEpisodeApi: ApiInvoker<EpisodeBangumiNextApi>
+    val nextTrendingApi: ApiInvoker<TrendingBangumiNextApi>
     val searchApi: ApiInvoker<BangumiSearchApi>
 
     /**
@@ -163,6 +165,8 @@ class BangumiClientImpl(
     override val api = ApiInvoker(client) { DefaultApi(BANGUMI_API_HOST, it) }
     override val nextSubjectApi = ApiInvoker(client) { SubjectBangumiNextApi(BANGUMI_NEXT_API_HOST, it) }
     override val nextEpisodeApi = ApiInvoker(client) { EpisodeBangumiNextApi(BANGUMI_NEXT_API_HOST, it) }
+    override val nextTrendingApi: ApiInvoker<TrendingBangumiNextApi> =
+        ApiInvoker(client) { TrendingBangumiNextApi(BANGUMI_NEXT_API_HOST, it) }
     override val searchApi: ApiInvoker<BangumiSearchApi> = ApiInvoker(client) { BangumiSearchApiImpl(it) }
 
     @Serializable

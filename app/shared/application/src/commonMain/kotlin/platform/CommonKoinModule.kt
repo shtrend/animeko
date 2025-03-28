@@ -34,6 +34,7 @@ import me.him188.ani.app.data.network.BangumiProfileService
 import me.him188.ani.app.data.network.BangumiRelatedPeopleService
 import me.him188.ani.app.data.network.BangumiSubjectSearchService
 import me.him188.ani.app.data.network.BangumiSubjectService
+import me.him188.ani.app.data.network.RecommendationRepository
 import me.him188.ani.app.data.network.RemoteBangumiSubjectService
 import me.him188.ani.app.data.network.TrendsRepository
 import me.him188.ani.app.data.persistent.dataStores
@@ -356,7 +357,8 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
     }
     single<BangumiProfileService> { BangumiProfileService() }
     single<AnimeScheduleService> { AnimeScheduleService(get<AniApiProvider>().scheduleApi) }
-    single<TrendsRepository> { TrendsRepository(get<AniApiProvider>().trendsApi) }
+    single<TrendsRepository> { TrendsRepository(get<AniApiProvider>().trendsApi, get<BangumiClient>().nextTrendingApi) }
+    single<RecommendationRepository> { RecommendationRepository(get<TrendsRepository>()) }
 
     single<DanmakuManager> {
         DanmakuManagerImpl(
