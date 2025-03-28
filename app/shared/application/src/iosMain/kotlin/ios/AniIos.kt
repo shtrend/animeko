@@ -71,8 +71,8 @@ import me.him188.ani.app.ui.main.AniAppContent
 import me.him188.ani.utils.analytics.AnalyticsConfig
 import me.him188.ani.utils.analytics.AnalyticsImpl
 import me.him188.ani.utils.io.SystemCacheDir
-import me.him188.ani.utils.io.SystemDocumentDir
 import me.him188.ani.utils.io.SystemPath
+import me.him188.ani.utils.io.SystemSupportDir
 import me.him188.ani.utils.io.createDirectories
 import me.him188.ani.utils.io.resolve
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -89,14 +89,14 @@ fun MainViewController(): UIViewController {
     val context = IosContext(
         IosContextFiles(
             cacheDir = SystemCacheDir.apply { createDirectories() },
-            dataDir = SystemDocumentDir.apply { createDirectories() },
+            dataDir = SystemSupportDir.apply { createDirectories() },
         ),
     )
     AppStartupTasks.printVersions()
 
     val koin = startKoin {
         modules(getCommonKoinModule({ context }, scope))
-        modules(getIosModules(SystemDocumentDir.resolve("torrent"), scope))
+        modules(getIosModules(context.files.dataDir.resolve("torrent"), scope))
     }.startCommonKoinModule(scope).koin
 
     val analyticsInitializer = scope.launch {
