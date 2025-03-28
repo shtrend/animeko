@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.navigation.BackNavigationBehavior
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -57,10 +58,12 @@ fun SearchScreen(
                     }
                 },
                 onLoadErrorRetry = { vm.reloadCurrentSubjectDetails() },
-                onClickTag = {
-                    vm.searchPageState.updateQuery { copy(tags = listOf(it.name)) }
+                onClickTag = { tag ->
                     coroutineScope.launch {
-                        listDetailNavigator.navigateTo(ListDetailPaneScaffoldRole.List)
+                        if (listDetailNavigator.currentDestination?.pane == ListDetailPaneScaffoldRole.Detail) {
+                            listDetailNavigator.navigateBack(BackNavigationBehavior.PopUntilScaffoldValueChange)
+                        }
+                        vm.searchPageState.updateQuery { copy(tags = listOf(tag.name)) }
                         vm.searchPageState.gridState.animateScrollToItem(0)
                     }
                 },
