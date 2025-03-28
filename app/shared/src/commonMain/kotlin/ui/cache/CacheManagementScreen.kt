@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells.Adaptive
@@ -401,9 +403,13 @@ fun CacheManagementScreen(
 
             LazyVerticalStaggeredGrid(
                 Adaptive(320.dp),
-                Modifier.ifNotNullThen(scrollBehavior) {
-                    nestedScroll(it.nestedScrollConnection)
-                },
+                Modifier
+                    .fillMaxWidth()
+                    .wrapContentWidth()
+                    .widthIn(max = 1300.dp)
+                    .ifNotNullThen(scrollBehavior) {
+                        nestedScroll(it.nestedScrollConnection)
+                    },
                 state = lazyGridState,
                 verticalItemSpacing = 20.dp,
                 horizontalArrangement = Arrangement.spacedBy(20.dp),

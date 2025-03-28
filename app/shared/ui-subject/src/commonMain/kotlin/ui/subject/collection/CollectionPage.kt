@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.LazyGridState
@@ -390,7 +391,12 @@ private fun CollectionPageLayout(
         contentWindowInsets = windowInsets.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom),
         containerColor = AniThemeDefaults.pageContentBackgroundColor,
     ) { topBarPaddings ->
-        Box(modifier = Modifier.padding(topBarPaddings).fillMaxSize()) {
+        Box(
+            modifier = Modifier.padding(topBarPaddings)
+                .fillMaxSize()
+                .wrapContentWidth()
+                .widthIn(max = 1300.dp),
+        ) {
             content(scrollBehavior?.nestedScrollConnection)
         }
     }
