@@ -27,10 +27,14 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
+import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldValue
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
@@ -71,6 +75,11 @@ fun SearchPage(
     val items = state.items
     SearchPageListDetailScaffold(
         navigator,
+        hasSelectedItem = remember(state) {
+            derivedStateOf {
+                state.selectedItemIndex != -1
+            }
+        }.value,
         searchBar = {
             SuggestionSearchBar(
                 state.suggestionSearchBarState,
@@ -171,6 +180,7 @@ fun SearchPage(
 @Composable
 internal fun SearchPageListDetailScaffold(
     navigator: ThreePaneScaffoldNavigator<*>,
+    hasSelectedItem: Boolean,
     searchBar: @Composable (PaneScope.() -> Unit),
     searchResultColumn: @Composable (PaneScope.(NestedScrollConnection?) -> Unit),
     detailContent: @Composable (PaneScope.() -> Unit),
@@ -236,6 +246,16 @@ internal fun SearchPageListDetailScaffold(
         modifier.background(MaterialTheme.colorScheme.surfaceContainerLowest),
         useSharedTransition = false,
         listPanePreferredWidth = 480.dp,
+        scaffoldValue = if (!hasSelectedItem) {
+            // 如果没有选中项目, 全屏显示 List 页面.
+            ThreePaneScaffoldValue(
+                primary = PaneAdaptedValue.Hidden,
+                secondary = PaneAdaptedValue.Expanded,
+                tertiary = PaneAdaptedValue.Hidden,
+            )
+        } else {
+            navigator.scaffoldValue
+        },
         contentWindowInsets = contentWindowInsets,
     )
 }

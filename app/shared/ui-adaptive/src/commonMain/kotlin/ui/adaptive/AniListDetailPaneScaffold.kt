@@ -35,6 +35,7 @@ import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldDefaults
 import androidx.compose.material3.adaptive.layout.PaneExpansionState
 import androidx.compose.material3.adaptive.layout.PaneScaffoldDirective
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldScope
+import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldValue
 import androidx.compose.material3.adaptive.layout.defaultDragHandleSemantics
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
@@ -126,6 +127,7 @@ fun <T> AniListDetailPaneScaffold(
             interactionSource = interactionSource,
         )
     },
+    scaffoldValue: ThreePaneScaffoldValue = navigator.scaffoldValue,
     layoutParameters: ListDetailLayoutParameters = ListDetailLayoutParameters.calculate(navigator.scaffoldDirective),
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -140,7 +142,7 @@ fun <T> AniListDetailPaneScaffold(
     SharedTransitionLayout {
         ListDetailPaneScaffold(
             navigator.scaffoldDirective,
-            navigator.scaffoldValue,
+            scaffoldValue,
             listPane = {
                 val threePaneScaffoldScope = this
                 ListDetailAnimatedPane(Modifier.preferredWidth(listPanePreferredWidth), useSharedTransition) {
