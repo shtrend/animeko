@@ -346,7 +346,7 @@ private fun SubjectDetailsPage(
                         onClickImage = { imageViewer.viewImage(it) },
                         connectedScrollState,
                         Modifier.fillMaxSize(),
-                        lazyStaggeredGridState = state.commentTabLazyStaggeredGridState,
+                        gridState = state.commentTabLazyGridState,
                         contentPadding = contentPadding,
                     )
                 },

@@ -20,11 +20,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemScope
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyGridItemScope
+import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material.icons.Icons
@@ -71,7 +71,7 @@ import me.him188.ani.app.ui.foundation.widgets.NsfwMask
 import me.him188.ani.app.ui.foundation.widgets.SelectableDropdownMenuItem
 import me.him188.ani.app.ui.search.LoadErrorCard
 import me.him188.ani.app.ui.search.SearchDefaults.IconTextButton
-import me.him188.ani.app.ui.search.SearchResultLazyVerticalStaggeredGrid
+import me.him188.ani.app.ui.search.SearchResultLazyVerticalGrid
 import me.him188.ani.app.ui.search.hasFirstPage
 import me.him188.ani.app.ui.search.isFinishedAndEmpty
 
@@ -85,8 +85,8 @@ internal fun SearchResultColumn(
     onPlay: (info: SubjectPreviewItemInfo) -> Unit,
     highlightSelected: Boolean = true,
     modifier: Modifier = Modifier,
-    headers: LazyStaggeredGridScope.() -> Unit = {},
-    state: LazyStaggeredGridState = rememberLazyStaggeredGridState()
+    headers: LazyGridScope.() -> Unit = {},
+    state: LazyGridState = rememberLazyGridState()
 ) {
     var height by rememberSaveable { mutableIntStateOf(0) }
     val bringIntoViewRequesters = remember { mutableStateMapOf<Int, BringIntoViewRequester>() }
@@ -94,7 +94,7 @@ internal fun SearchResultColumn(
     val aniMotionScheme = LocalAniMotionScheme.current
 
     val itemsState = rememberUpdatedState(items)
-    SearchResultLazyVerticalStaggeredGrid(
+    SearchResultLazyVerticalGrid(
         items,
         error = {
             LoadErrorCard(
@@ -115,12 +115,12 @@ internal fun SearchResultColumn(
             .keyboardPageToScroll({ height.toFloat() }) {
                 state.animateScrollBy(it)
             },
-        lazyStaggeredGridState = state,
+        state = state,
         horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo1().windowSizeClass.paneHorizontalPadding),
     ) {
         headers()
 
-        item(span = StaggeredGridItemSpan.FullLine) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
             val scope = remember(this, itemsState, aniMotionScheme) {
                 SearchResultColumnScopeImpl(itemsState, aniMotionScheme)
             }
@@ -207,7 +207,7 @@ internal fun SearchResultColumn(
 }
 
 @Suppress("FunctionName")
-private fun LazyStaggeredGridItemScope.SearchResultColumnScopeImpl(
+private fun LazyGridItemScope.SearchResultColumnScopeImpl(
     itemsState: State<LazyPagingItems<SubjectPreviewItemInfo>>,
     aniMotionScheme: AniMotionScheme,
 ): SearchResultColumnScope = object : SearchResultColumnScope {

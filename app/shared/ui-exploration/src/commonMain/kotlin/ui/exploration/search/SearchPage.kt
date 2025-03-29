@@ -17,7 +17,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.KeyboardArrowUp
 import androidx.compose.material3.Icon
@@ -118,7 +118,7 @@ fun SearchPage(
                     }
                 }, // collect only once
                 headers = {
-                    item(span = StaggeredGridItemSpan.FullLine) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
                         val filterState by state.searchFilterStateFlow.collectAsStateWithLifecycle()
                         SearchFilterChipsRow(
                             filterState,

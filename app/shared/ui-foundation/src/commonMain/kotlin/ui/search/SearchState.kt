@@ -43,7 +43,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
  *
  * 数据实现: [PagingSearchState]
  *
- * UI: [SearchResultLazyVerticalStaggeredGrid]
+ * UI: [SearchResultLazyVerticalGrid]
  *
  * All methods must be called on the main thread.
  */

@@ -31,8 +31,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
-import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -331,7 +331,7 @@ private fun EpisodeScreenContent(
             },
             onSendComplete = {
                 scope.launch {
-                    vm.commentLazyStaggeredGirdState.scrollToItem(0)
+                    vm.commentLazyGirdState.scrollToItem(0)
                 }
             },
         )
@@ -459,7 +459,7 @@ private fun EpisodeScreenTabletVeryWide(
                                 episodeId = page.episodePresentation.episodeId,
                                 setShowEditCommentSheet = setShowEditCommentSheet,
                                 pauseOnPlaying = pauseOnPlaying,
-                                lazyStaggeredGridState = vm.commentLazyStaggeredGirdState,
+                                gridState = vm.commentLazyGirdState,
                             )
                         }
                     }
@@ -579,7 +579,7 @@ private fun EpisodeScreenContentPhone(
                 episodeId = page.episodePresentation.episodeId,
                 setShowEditCommentSheet = setShowEditCommentSheet,
                 pauseOnPlaying = pauseOnPlaying,
-                lazyStaggeredGridState = vm.commentLazyStaggeredGirdState,
+                gridState = vm.commentLazyGirdState,
             )
         },
         modifier.then(if (vm.isFullscreen) Modifier.fillMaxSize() else Modifier.navigationBarsPadding()),
@@ -918,7 +918,7 @@ private fun EpisodeCommentColumn(
     setShowEditCommentSheet: (Boolean) -> Unit,
     pauseOnPlaying: () -> Unit,
     modifier: Modifier = Modifier,
-    lazyStaggeredGridState: LazyStaggeredGridState = rememberLazyStaggeredGridState(),
+    gridState: LazyGridState = rememberLazyGridState(),
 ) {
     val toaster = LocalToaster.current
     val browserNavigator = LocalUriHandler.current
@@ -949,7 +949,7 @@ private fun EpisodeCommentColumn(
             RichTextDefaults.checkSanityAndOpen(it, browserNavigator, toaster)
         },
         modifier = modifier.fillMaxSize(),
-        lazyStaggeredGridState = lazyStaggeredGridState,
+        gridState = gridState,
     )
 }
 

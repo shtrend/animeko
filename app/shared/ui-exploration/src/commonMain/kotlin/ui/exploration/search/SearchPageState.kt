@@ -9,7 +9,7 @@
 
 package me.him188.ani.app.ui.exploration.search
 
-import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -66,7 +66,7 @@ class SearchPageState(
         },
         backgroundScope = backgroundScope,
     )
-    val gridState = LazyStaggeredGridState()
+    val gridState = LazyGridState()
 
     val searchFilterStateFlow = queryFlow.map { it.tags.orEmpty() }.map { selectedTags ->
         val groups = selectedTags.groupBy { tag ->
