@@ -26,7 +26,6 @@ plugins {
 
     `ani-mpp-lib-targets`
     kotlin("plugin.serialization")
-    kotlin("native.cocoapods")
     id("org.jetbrains.kotlinx.atomicfu")
     id("io.sentry.kotlin.multiplatform.gradle")
 }
@@ -54,7 +53,7 @@ android {
 kotlin {
     if (enableIos) {
         // Sentry requires cocoapods for its dependencies
-        cocoapods {
+        extensions.configure<org.jetbrains.kotlin.gradle.plugin.cocoapods.CocoapodsExtension> {
             // https://kotlinlang.org/docs/native-cocoapods.html#configure-existing-project
             framework {
                 baseName = "application"

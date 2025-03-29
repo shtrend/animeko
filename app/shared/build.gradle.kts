@@ -21,7 +21,6 @@ plugins {
 
     kotlin("plugin.serialization")
     id("org.jetbrains.kotlinx.atomicfu")
-    kotlin("native.cocoapods")
     id("io.sentry.kotlin.multiplatform.gradle")
     idea
 }
