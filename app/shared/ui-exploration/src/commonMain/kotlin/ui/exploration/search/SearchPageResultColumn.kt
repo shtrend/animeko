@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.exploration.search
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridItemScope
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -36,6 +38,7 @@ import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +54,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -60,8 +64,11 @@ import androidx.paging.compose.itemKey
 import kotlinx.coroutines.flow.collectLatest
 import me.him188.ani.app.data.models.preference.NsfwMode
 import me.him188.ani.app.domain.search.SearchSort
+import me.him188.ani.app.ui.foundation.IconButton
 import me.him188.ani.app.ui.foundation.animation.AniMotionScheme
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
+import me.him188.ani.app.ui.foundation.icons.BackgroundDotLarge
+import me.him188.ani.app.ui.foundation.icons.GalleryThumbnail
 import me.him188.ani.app.ui.foundation.interaction.keyboardDirectionToSelectItem
 import me.him188.ani.app.ui.foundation.interaction.keyboardPageToScroll
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
@@ -74,11 +81,15 @@ import me.him188.ani.app.ui.search.SearchDefaults.IconTextButton
 import me.him188.ani.app.ui.search.SearchResultLazyVerticalGrid
 import me.him188.ani.app.ui.search.hasFirstPage
 import me.him188.ani.app.ui.search.isFinishedAndEmpty
+import me.him188.ani.app.ui.subject.SubjectCoverCard
+import me.him188.ani.app.ui.subject.SubjectGridDefaults
+import me.him188.ani.app.ui.subject.SubjectGridLayoutParams
 
 
 @Composable
 internal fun SearchResultColumn(
     items: LazyPagingItems<SubjectPreviewItemInfo>,
+    layoutKind: SearchResultLayoutKind,
     summary: @Composable SearchResultColumnScope.() -> Unit, // 可在还没发起任何搜索时不展示
     selectedItemIndex: () -> Int,
     onSelect: (index: Int) -> Unit,
@@ -86,11 +97,11 @@ internal fun SearchResultColumn(
     highlightSelected: Boolean = true,
     modifier: Modifier = Modifier,
     headers: LazyGridScope.() -> Unit = {},
-    state: LazyGridState = rememberLazyGridState()
+    state: LazyGridState = rememberLazyGridState(),
+    layoutParams: SearchResultColumnLayoutParams = SearchResultColumnLayoutParams.layoutParameters(kind = layoutKind),
 ) {
     var height by rememberSaveable { mutableIntStateOf(0) }
     val bringIntoViewRequesters = remember { mutableStateMapOf<Int, BringIntoViewRequester>() }
-    val nsfwBlurShape = SubjectItemLayoutParameters.calculate(currentWindowAdaptiveInfo1().windowSizeClass).shape
     val aniMotionScheme = LocalAniMotionScheme.current
 
     val itemsState = rememberUpdatedState(items)
@@ -115,8 +126,10 @@ internal fun SearchResultColumn(
             .keyboardPageToScroll({ height.toFloat() }) {
                 state.animateScrollBy(it)
             },
+        cells = layoutParams.grid.gridCells,
         state = state,
-        horizontalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo1().windowSizeClass.paneHorizontalPadding),
+        horizontalArrangement = layoutParams.grid.horizontalArrangement,
+        verticalArrangement = layoutParams.grid.verticalArrangement,
     ) {
         headers()
 
@@ -134,66 +147,59 @@ internal fun SearchResultColumn(
             contentType = items.itemContentType { 1 },
         ) { index ->
             val info = items[index]
-            val requester = remember { BringIntoViewRequester() }
-            // 记录 item 对应的 requester
-            if (info != null && !info.hide) {
-                DisposableEffect(requester) {
-                    bringIntoViewRequesters[info.subjectId] = requester
-                    onDispose {
-                        bringIntoViewRequesters.remove(info.subjectId)
+
+            AnimatedContent(
+                layoutParams.kind,
+                transitionSpec = aniMotionScheme.animatedContent.topLevel,
+            ) { targetKind ->
+                when (targetKind) {
+                    SearchResultLayoutKind.COVER -> {
+                        SubjectCoverCard(
+                            info?.title,
+                            info?.imageUrl,
+                            isPlaceholder = info == null,
+                            onClick = { onSelect(index) },
+                            Modifier
+                                .animateItem(
+                                    aniMotionScheme.feedItemFadeInSpec,
+                                    null,
+                                    aniMotionScheme.feedItemFadeOutSpec,
+                                ),
+                        )
+                    }
+
+                    SearchResultLayoutKind.PREVIEW -> {
+                        if (info != null && !info.hide) {
+                            val requester = remember { BringIntoViewRequester() }
+                            // 记录 item 对应的 requester
+                            DisposableEffect(requester) {
+                                bringIntoViewRequesters[info.subjectId] = requester
+                                onDispose {
+                                    bringIntoViewRequesters.remove(info.subjectId)
+                                }
+                            }
+
+                            SearchResultItem(
+                                info,
+                                highlightSelected && index == selectedItemIndex(),
+                                layoutParams.previewItem.shape,
+                                { onSelect(index) },
+                                onPlay,
+                                Modifier
+                                    .animateItem(
+                                        aniMotionScheme.feedItemFadeInSpec,
+                                        null,
+                                        aniMotionScheme.feedItemFadeOutSpec,
+                                    )
+                                    .bringIntoViewRequester(requester),
+                                aniMotionScheme,
+                            )
+                        } else {
+                            Box(Modifier.size(Dp.Hairline))
+                        }
                     }
                 }
 
-                var nsfwMaskState: NsfwMode by rememberSaveable(info) {
-                    mutableStateOf(info.nsfwMode)
-                }
-                NsfwMask(
-                    mode = nsfwMaskState,
-                    onTemporarilyDisplay = { nsfwMaskState = NsfwMode.DISPLAY },
-                    shape = nsfwBlurShape,
-                ) {
-                    SubjectPreviewItem(
-                        selected = highlightSelected && index == selectedItemIndex(),
-                        onClick = { onSelect(index) },
-                        onPlay = { onPlay(info) },
-                        info = info,
-                        Modifier
-//                        .sharedElement(
-//                            rememberSharedContentState(SharedTransitionKeys.subjectBounds(info.subjectId)),
-//                            animatedVisibilityScope,
-//                        )
-                            .animateItem(
-                                fadeInSpec = aniMotionScheme.feedItemFadeInSpec,
-                                placementSpec = aniMotionScheme.feedItemPlacementSpec,
-                                fadeOutSpec = aniMotionScheme.feedItemFadeOutSpec,
-                            )
-                            .fillMaxWidth()
-                            .bringIntoViewRequester(requester)
-                            .padding(vertical = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding / 2),
-                        image = {
-                            SubjectItemDefaults.Image(
-                                info.imageUrl,
-//                            Modifier.sharedElement(
-//                                rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = info.subjectId)),
-//                                animatedVisibilityScope,
-//                            ),
-                            )
-                        },
-                        title = { maxLines ->
-                            Text(
-                                info.title,
-//                            Modifier.sharedElement(
-//                                rememberSharedContentState(SharedTransitionKeys.subjectTitle(subjectId = info.subjectId)),
-//                                animatedVisibilityScope,
-//                            ),
-                                maxLines = maxLines,
-                            )
-                        },
-                    )
-                }
-            } else {
-                Box(Modifier.size(Dp.Hairline))
-                // placeholder
             }
         }
     }
@@ -206,13 +212,120 @@ internal fun SearchResultColumn(
     }
 }
 
+internal data class SearchResultColumnLayoutParams(
+    val kind: SearchResultLayoutKind,
+    val grid: SubjectGridLayoutParams,
+    val previewItem: SubjectItemLayoutParameters,
+) {
+    companion object {
+        @Composable
+        fun layoutParameters(
+            kind: SearchResultLayoutKind,
+            windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo1()
+        ): SearchResultColumnLayoutParams {
+            val subjectItem = SubjectItemLayoutParameters.calculate(windowAdaptiveInfo.windowSizeClass)
+
+            return SearchResultColumnLayoutParams(
+                kind = kind,
+                grid = when (kind) {
+                    SearchResultLayoutKind.COVER -> SubjectGridDefaults.coverLayoutParameters(windowAdaptiveInfo)
+                    SearchResultLayoutKind.PREVIEW -> {
+                        SubjectGridLayoutParams(
+                            gridCells = GridCells.Adaptive(360.dp),
+                            horizontalArrangement = Arrangement.spacedBy(windowAdaptiveInfo.windowSizeClass.paneHorizontalPadding),
+                            verticalArrangement = Arrangement.Top,
+                            cardShape = subjectItem.shape,
+                        )
+                    }
+                },
+                subjectItem,
+            )
+        }
+    }
+}
+
+enum class SearchResultLayoutKind {
+    COVER,
+    PREVIEW, ;
+
+    companion object {
+        fun next(kind: SearchResultLayoutKind): SearchResultLayoutKind {
+            return entries[(kind.ordinal + 1) % entries.size]
+        }
+    }
+}
+
+@Composable
+private fun LazyGridItemScope.SearchResultItem(
+    info: SubjectPreviewItemInfo,
+    selected: Boolean,
+    shape: Shape,
+    onClick: () -> Unit,
+    onPlay: (SubjectPreviewItemInfo) -> Unit,
+    modifier: Modifier = Modifier,
+    aniMotionScheme: AniMotionScheme = LocalAniMotionScheme.current,
+) {
+    var nsfwMaskState: NsfwMode by rememberSaveable(info) {
+        mutableStateOf(info.nsfwMode)
+    }
+    NsfwMask(
+        mode = nsfwMaskState,
+        onTemporarilyDisplay = { nsfwMaskState = NsfwMode.DISPLAY },
+        shape = shape,
+    ) {
+        SubjectPreviewItem(
+            selected = selected,
+            onClick = onClick,
+            onPlay = { onPlay(info) },
+            info = info,
+            modifier
+//                        .sharedElement(
+//                            rememberSharedContentState(SharedTransitionKeys.subjectBounds(info.subjectId)),
+//                            animatedVisibilityScope,
+//                        )
+                .animateItem(
+                    fadeInSpec = aniMotionScheme.feedItemFadeInSpec,
+                    placementSpec = aniMotionScheme.feedItemPlacementSpec,
+                    fadeOutSpec = aniMotionScheme.feedItemFadeOutSpec,
+                )
+                .fillMaxWidth()
+                .padding(vertical = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding / 2),
+            image = {
+                SubjectItemDefaults.Image(
+                    info.imageUrl,
+//                            Modifier.sharedElement(
+//                                rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = info.subjectId)),
+//                                animatedVisibilityScope,
+//                            ),
+                )
+            },
+            title = { maxLines ->
+                Text(
+                    info.title,
+//                            Modifier.sharedElement(
+//                                rememberSharedContentState(SharedTransitionKeys.subjectTitle(subjectId = info.subjectId)),
+//                                animatedVisibilityScope,
+//                            ),
+                    maxLines = maxLines,
+                )
+            },
+        )
+    }
+}
+
 @Suppress("FunctionName")
 private fun LazyGridItemScope.SearchResultColumnScopeImpl(
     itemsState: State<LazyPagingItems<SubjectPreviewItemInfo>>,
     aniMotionScheme: AniMotionScheme,
 ): SearchResultColumnScope = object : SearchResultColumnScope {
     @Composable
-    override fun SearchSummary(currentSort: SearchSort, onSortChange: (SearchSort) -> Unit, modifier: Modifier) {
+    override fun SearchSummary(
+        layoutKind: SearchResultLayoutKind,
+        currentSort: SearchSort,
+        onLayoutKindChange: (SearchResultLayoutKind) -> Unit,
+        onSortChange: (SearchSort) -> Unit,
+        modifier: Modifier
+    ) {
         val modifier1 = modifier.animateItem(
             fadeInSpec = aniMotionScheme.feedItemFadeInSpec,
             placementSpec = aniMotionScheme.feedItemPlacementSpec,
@@ -240,6 +353,10 @@ private fun LazyGridItemScope.SearchResultColumnScopeImpl(
                             Modifier.align(Alignment.Bottom),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
+                            LayoutKindButton(
+                                layoutKind,
+                                onLayoutKindChange,
+                            )
                             SortButton(
                                 currentSort,
                                 onSortChange,
@@ -259,13 +376,41 @@ private fun LazyGridItemScope.SearchResultColumnScopeImpl(
 interface SearchResultColumnScope {
     @Composable
     fun SearchSummary(
+        layoutKind: SearchResultLayoutKind,
         currentSort: SearchSort,
+        onLayoutKindChange: (SearchResultLayoutKind) -> Unit,
         onSortChange: (SearchSort) -> Unit,
         modifier: Modifier = Modifier,
     )
 }
 
+@Composable
+private fun LayoutKindButton(
+    layoutKind: SearchResultLayoutKind,
+    onLayoutKindChange: (SearchResultLayoutKind) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    IconButton(
+        onClick = {
+            onLayoutKindChange(SearchResultLayoutKind.next(layoutKind))
+        },
+        modifier,
+    ) {
+        Icon(
+            when (layoutKind) {
+                SearchResultLayoutKind.COVER -> Icons.Outlined.BackgroundDotLarge
+                SearchResultLayoutKind.PREVIEW -> Icons.Outlined.GalleryThumbnail
+            },
+            layoutKind.name, // not good
+        )
+    }
+}
 
+/**
+ * 切换排序方式的按钮
+ *
+ * @see [SearchSort]
+ */
 @Composable
 private fun SortButton(
     currentSort: SearchSort,

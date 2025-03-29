@@ -97,7 +97,15 @@ fun PreviewSearchPageResultColumn() = ProvideCompositionLocalsForPreview {
         val state = createTestFinishedSubjectSearchState()
         SearchResultColumn(
             items = state.collectItemsWithLifecycle(),
-            summary = { SearchSummary(currentSort = SearchSort.MATCH, onSortChange = {}) },
+            layoutKind = SearchResultLayoutKind.PREVIEW,
+            summary = {
+                SearchSummary(
+                    layoutKind = SearchResultLayoutKind.PREVIEW,
+                    currentSort = SearchSort.MATCH,
+                    onLayoutKindChange = {},
+                    onSortChange = {},
+                )
+            },
             selectedItemIndex = { 1 },
             onSelect = {},
             onPlay = {},

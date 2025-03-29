@@ -60,6 +60,7 @@ fun <T : Any> SearchResultLazyVerticalGrid(
     state: LazyGridState = rememberLazyGridState(),
     listItemColors: ListItemColors = ListItemDefaults.colors(containerColor = Color.Transparent),
     horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(0.dp),
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     content: LazyGridScope.() -> Unit,
 ) {
@@ -84,6 +85,7 @@ fun <T : Any> SearchResultLazyVerticalGrid(
                 Modifier.fillMaxWidth(),
                 state,
                 horizontalArrangement = horizontalArrangement,
+                verticalArrangement = verticalArrangement,
                 contentPadding = contentPadding,
             ) {
                 // 用于保持刷新时在顶部

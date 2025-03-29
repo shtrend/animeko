@@ -16,10 +16,8 @@ import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
-import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.isHeightCompact
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastBreakpoint
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastExpanded
@@ -28,17 +26,16 @@ import me.him188.ani.app.ui.foundation.layout.isWidthCompact
 
 
 @Immutable
-data class CoverSubjectGridLayoutParams(
+data class SubjectGridLayoutParams(
     val gridCells: GridCells,
     val horizontalArrangement: Arrangement.Horizontal,
-    val verticalItemArrangement: Arrangement.Vertical,
-    val verticalItemSpacing: Dp,
+    val verticalArrangement: Arrangement.Vertical,
     val cardShape: Shape,
 )
 
-object CoverSubjectGridDefaults {
+object SubjectGridDefaults {
     @Composable
-    fun layoutParameters(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo1()): CoverSubjectGridLayoutParams {
+    fun coverLayoutParameters(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo1()): SubjectGridLayoutParams {
         val windowSizeClass = windowAdaptiveInfo.windowSizeClass
 
         val arrangement = when {
@@ -46,7 +43,7 @@ object CoverSubjectGridDefaults {
             windowSizeClass.isWidthAtLeastMedium -> Arrangement.spacedBy(12.dp)
             else -> Arrangement.spacedBy(8.dp)
         }
-        return CoverSubjectGridLayoutParams(
+        return SubjectGridLayoutParams(
             gridCells = when {
                 windowSizeClass.isWidthCompact || windowSizeClass.isHeightCompact -> GridCells.Adaptive(minSize = 100.dp)
 
@@ -67,8 +64,7 @@ object CoverSubjectGridDefaults {
                 }
             },
             horizontalArrangement = arrangement,
-            verticalItemArrangement = arrangement,
-            verticalItemSpacing = if (windowSizeClass.isHeightAtLeastMedium) 16.dp else 8.dp,
+            verticalArrangement = arrangement,
             cardShape = MaterialTheme.shapes.large,
         )
     }

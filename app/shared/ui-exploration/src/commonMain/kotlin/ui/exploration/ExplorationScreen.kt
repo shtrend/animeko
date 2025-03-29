@@ -225,7 +225,7 @@ fun ExplorationScreen(
             state = state.pageScrollState,
             contentPadding = PaddingValues(horizontal = horizontalPadding),
             horizontalArrangement = layoutParams.horizontalArrangement,
-            verticalArrangement = layoutParams.verticalItemArrangement,
+            verticalArrangement = layoutParams.verticalArrangement,
         ) {
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Column {

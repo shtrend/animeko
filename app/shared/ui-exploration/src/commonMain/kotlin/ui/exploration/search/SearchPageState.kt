@@ -67,6 +67,7 @@ class SearchPageState(
         backgroundScope = backgroundScope,
     )
     val gridState = LazyGridState()
+    var layoutKind: SearchResultLayoutKind by mutableStateOf(SearchResultLayoutKind.COVER)
 
     val searchFilterStateFlow = queryFlow.map { it.tags.orEmpty() }.map { selectedTags ->
         val groups = selectedTags.groupBy { tag ->

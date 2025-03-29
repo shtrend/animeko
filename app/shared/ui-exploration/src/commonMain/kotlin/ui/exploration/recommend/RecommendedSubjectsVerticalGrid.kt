@@ -9,19 +9,14 @@
 
 package me.him188.ani.app.ui.exploration.recommend
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.material3.Surface
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -32,16 +27,14 @@ import me.him188.ani.app.data.models.recommend.RecommendedSubjectInfo
 import me.him188.ani.app.data.models.recommend.TestRecommendedItemInfos
 import me.him188.ani.app.data.models.recommend.id
 import me.him188.ani.app.data.models.recommend.type
-import me.him188.ani.app.ui.external.placeholder.placeholder
-import me.him188.ani.app.ui.foundation.AsyncImage
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
-import me.him188.ani.app.ui.foundation.layout.BasicCarouselItem
 import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.search.createTestPager
-import me.him188.ani.app.ui.subject.CoverSubjectGridDefaults
-import me.him188.ani.app.ui.subject.CoverSubjectGridLayoutParams
+import me.him188.ani.app.ui.subject.SubjectCoverCard
+import me.him188.ani.app.ui.subject.SubjectGridDefaults
+import me.him188.ani.app.ui.subject.SubjectGridLayoutParams
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.jetbrains.compose.ui.tooling.preview.PreviewScreenSizes
 
@@ -83,34 +76,23 @@ private fun RecommendedSubjectCard(
     shape: Shape = CarouselItemDefaults.shape,
     modifier: Modifier = Modifier,
 ) {
-    BasicCarouselItem(
-        label = { CarouselItemDefaults.Text(item?.nameCn ?: "", maxLines = 2) },
-        modifier.placeholder(item == null, shape = shape),
-        maskShape = shape,
-    ) {
-        if (item != null) {
-            val image = @Composable {
-                AsyncImage(
-                    item.imageLarge,
-                    modifier = Modifier.aspectRatio(9f / 16).fillMaxWidth(),
-                    contentDescription = item.nameCn,
-                    contentScale = ContentScale.Crop,
-                )
-            }
-            Surface({ onClick() }, content = image)
-        } else {
-            Box(Modifier.aspectRatio(9f / 16).fillMaxWidth())
-        }
-    }
+    SubjectCoverCard(
+        name = item?.nameCn,
+        image = item?.imageLarge,
+        isPlaceholder = item == null,
+        onClick = onClick,
+        modifier = modifier,
+        shape = shape,
+    )
 }
 
-typealias RecommendationLayoutParams = CoverSubjectGridLayoutParams
+typealias RecommendationLayoutParams = SubjectGridLayoutParams
 
 @Stable
 object RecommendationDefaults {
     @Composable
     fun layoutParameters(windowAdaptiveInfo: WindowAdaptiveInfo = currentWindowAdaptiveInfo1()): RecommendationLayoutParams {
-        return CoverSubjectGridDefaults.layoutParameters(windowAdaptiveInfo)
+        return SubjectGridDefaults.coverLayoutParameters(windowAdaptiveInfo)
     }
 }
 
@@ -126,7 +108,7 @@ private fun PreviewRecommendationVerticalGrid() {
             layoutParams.gridCells,
             contentPadding = PaddingValues(0.dp),
             horizontalArrangement = layoutParams.horizontalArrangement,
-            verticalArrangement = layoutParams.verticalItemArrangement,
+            verticalArrangement = layoutParams.verticalArrangement,
         ) {
             recommendationItems(
                 data = data,

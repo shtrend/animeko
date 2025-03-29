@@ -96,10 +96,13 @@ fun SearchPage(
             val query by state.queryFlow.collectAsStateWithLifecycle()
             SearchResultColumn(
                 items = items,
+                layoutKind = state.layoutKind,
                 summary = {
                     if (hasQuery) {
                         SearchSummary(
+                            state.layoutKind,
                             query.sort,
+                            onLayoutKindChange = { state.layoutKind = it },
                             onSortChange = { state.updateSort(it) },
                         )
                     }
