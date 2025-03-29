@@ -30,17 +30,20 @@ fun SubjectCoverCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     shape: Shape = CarouselItemDefaults.shape,
+    imageModifier: Modifier = Modifier,
+    brushLayerModifier: Modifier = Modifier,
 ) {
     BasicCarouselItem(
         label = { CarouselItemDefaults.Text(name ?: "", maxLines = 2) },
         modifier.placeholder(isPlaceholder, shape = shape),
         maskShape = shape,
+        brushLayerModifier = brushLayerModifier,
     ) {
         if (!isPlaceholder) {
             val image = @Composable {
                 AsyncImage(
                     image,
-                    modifier = Modifier.aspectRatio(9f / 16).fillMaxWidth(),
+                    modifier = imageModifier.aspectRatio(9f / 16).fillMaxWidth(),
                     contentDescription = name,
                     contentScale = ContentScale.Crop,
                 )

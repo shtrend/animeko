@@ -67,7 +67,7 @@ fun CarouselItemScope.CarouselItem(
         overlay,
         colors,
         maskShape,
-        image,
+        image = image,
     )
 }
 
@@ -85,13 +85,14 @@ fun BasicCarouselItem(
     overlay: @Composable BoxScope.() -> Unit = {},
     colors: CarouselItemColors = CarouselItemDefaults.colors(),
     maskShape: Shape = RectangleShape,
+    brushLayerModifier: Modifier = Modifier,
     image: @Composable () -> Unit,
 ) {
     Box(modifier) {
         Box(Modifier.clip(maskShape)) {
             image()
         }
-        Box(Modifier.matchParentSize().background(carouselBrush, maskShape)) {
+        Box(brushLayerModifier.matchParentSize().background(carouselBrush, maskShape)) {
             Column(
                 Modifier
                     .align(Alignment.BottomStart)

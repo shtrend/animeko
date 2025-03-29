@@ -10,6 +10,7 @@
 package me.him188.ani.app.ui.exploration.search
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
@@ -67,8 +69,10 @@ import me.him188.ani.app.domain.search.SearchSort
 import me.him188.ani.app.ui.foundation.IconButton
 import me.him188.ani.app.ui.foundation.animation.AniMotionScheme
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
+import me.him188.ani.app.ui.foundation.animation.SharedTransitionKeys
 import me.him188.ani.app.ui.foundation.icons.BackgroundDotLarge
 import me.him188.ani.app.ui.foundation.icons.GalleryThumbnail
+import me.him188.ani.app.ui.foundation.ifNotNullThen
 import me.him188.ani.app.ui.foundation.interaction.keyboardDirectionToSelectItem
 import me.him188.ani.app.ui.foundation.interaction.keyboardPageToScroll
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
@@ -105,6 +109,7 @@ internal fun SearchResultColumn(
     val aniMotionScheme = LocalAniMotionScheme.current
 
     val itemsState = rememberUpdatedState(items)
+    SharedTransitionLayout {
     SearchResultLazyVerticalGrid(
         items,
         error = {
@@ -152,6 +157,7 @@ internal fun SearchResultColumn(
                 layoutParams.kind,
                 transitionSpec = aniMotionScheme.animatedContent.topLevel,
             ) { targetKind ->
+                val animatedVisibilityScope = this
                 when (targetKind) {
                     SearchResultLayoutKind.COVER -> {
                         SubjectCoverCard(
@@ -160,11 +166,19 @@ internal fun SearchResultColumn(
                             isPlaceholder = info == null,
                             onClick = { onSelect(index) },
                             Modifier
+                                .ifNotNullThen(info) {
+                                    sharedElement(
+                                        rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = it.subjectId)),
+                                        animatedVisibilityScope,
+                                        clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
+                                    )
+                                }
                                 .animateItem(
                                     aniMotionScheme.feedItemFadeInSpec,
                                     null,
                                     aniMotionScheme.feedItemFadeOutSpec,
                                 ),
+                            shape = layoutParams.grid.cardShape,
                         )
                     }
 
@@ -192,7 +206,11 @@ internal fun SearchResultColumn(
                                         aniMotionScheme.feedItemFadeOutSpec,
                                     )
                                     .bringIntoViewRequester(requester),
-                                aniMotionScheme,
+                                imageModifier = Modifier.sharedElement(
+                                    rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = info.subjectId)),
+                                    animatedVisibilityScope,
+                                    clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
+                                ),
                             )
                         } else {
                             Box(Modifier.size(Dp.Hairline))
@@ -200,6 +218,7 @@ internal fun SearchResultColumn(
                     }
                 }
 
+            }
             }
         }
     }
@@ -256,14 +275,14 @@ enum class SearchResultLayoutKind {
 }
 
 @Composable
-private fun LazyGridItemScope.SearchResultItem(
+private fun SearchResultItem(
     info: SubjectPreviewItemInfo,
     selected: Boolean,
     shape: Shape,
     onClick: () -> Unit,
     onPlay: (SubjectPreviewItemInfo) -> Unit,
     modifier: Modifier = Modifier,
-    aniMotionScheme: AniMotionScheme = LocalAniMotionScheme.current,
+    imageModifier: Modifier = Modifier,
 ) {
     var nsfwMaskState: NsfwMode by rememberSaveable(info) {
         mutableStateOf(info.nsfwMode)
@@ -279,33 +298,19 @@ private fun LazyGridItemScope.SearchResultItem(
             onPlay = { onPlay(info) },
             info = info,
             modifier
-//                        .sharedElement(
-//                            rememberSharedContentState(SharedTransitionKeys.subjectBounds(info.subjectId)),
-//                            animatedVisibilityScope,
-//                        )
-                .animateItem(
-                    fadeInSpec = aniMotionScheme.feedItemFadeInSpec,
-                    placementSpec = aniMotionScheme.feedItemPlacementSpec,
-                    fadeOutSpec = aniMotionScheme.feedItemFadeOutSpec,
-                )
                 .fillMaxWidth()
                 .padding(vertical = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding / 2),
             image = {
-                SubjectItemDefaults.Image(
-                    info.imageUrl,
-//                            Modifier.sharedElement(
-//                                rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = info.subjectId)),
-//                                animatedVisibilityScope,
-//                            ),
-                )
+                Box(imageModifier) {
+                    SubjectItemDefaults.Image(
+                        info.imageUrl,
+                        Modifier.clip(shape),
+                    )
+                }
             },
             title = { maxLines ->
                 Text(
                     info.title,
-//                            Modifier.sharedElement(
-//                                rememberSharedContentState(SharedTransitionKeys.subjectTitle(subjectId = info.subjectId)),
-//                                animatedVisibilityScope,
-//                            ),
                     maxLines = maxLines,
                 )
             },
