@@ -25,13 +25,17 @@ tasks.register("iosFramework") {
         ":app:shared:application:embedAndSignPodAppleFrameworkForXcode",
     )
 }
-fun ipaArguments(): Array<String> {
+
+fun ipaArguments(
+    destination: String = "generic/platform=iOS",
+    sdk: String = "iphoneos",
+): Array<String> {
     return arrayOf(
         "xcodebuild",
         "-workspace", "Animeko.xcworkspace",
         "-scheme", "Animeko",
-        "-destination", "generic/platform=iOS",
-        "-sdk", "iphoneos",
+        "-destination", destination,
+        "-sdk", sdk,
         "CODE_SIGNING_ALLOWED=NO",
         "CODE_SIGNING_REQUIRED=NO",
     )
@@ -57,4 +61,54 @@ tasks.register("buildReleaseIpa", Exec::class) {
         "archive",
         "-configuration", "Release",
     )
+}
+
+/// FOR DEBUG
+
+fun simulatorAppPath(): Provider<RegularFile> =
+    // Adjust this path if your build output is located differently.
+    layout.buildDirectory.file("Debug-iphonesimulator/Animeko.app")
+
+tasks.register("buildDebugForSimulator", Exec::class) {
+    group = "build"
+    description = "Builds a debug version of Animeko for iOS Simulator"
+    val destination = project.getLocalProperty("ani.ios.simulator.destination") ?: "generic/platform=iOS Simulator"
+    inputs.property("destination", destination)
+    workingDir(projectDir)
+    commandLine(
+        *ipaArguments(
+            destination = destination,
+            sdk = "iphonesimulator",
+        ),
+        "-configuration", "Debug",
+        "build",
+    )
+}
+
+tasks.register("launchSimulator", Exec::class) {
+    group = "run"
+    description = "Launches the iOS simulator"
+
+    // This opens the default iOS Simulator app on macOS. 
+    // You can also explicitly boot a specific device via `xcrun simctl boot "iPhone 14"` 
+    // if you want more control.
+    commandLine("open", "-a", "Simulator")
+}
+
+tasks.register("installDebugOnSimulator", Exec::class) {
+    group = "run"
+    description = "Installs the debug build on the Simulator"
+    dependsOn("buildDebugForSimulator", "launchSimulator")
+
+    val appPath = simulatorAppPath()
+    // Typically, you want to ensure the simulator is booted before installing.
+    commandLine("xcrun", "simctl", "install", "booted", appPath.get().asFile.absolutePath)
+}
+
+tasks.register("launchAppOnSimulator", Exec::class) {
+    group = "run"
+    description = "Launches the Animeko app on the simulator"
+    dependsOn("installDebugOnSimulator")
+
+    commandLine("xcrun", "simctl", "launch", "booted", "org.openani.Animeko")
 }
