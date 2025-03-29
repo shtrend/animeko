@@ -32,7 +32,9 @@ import kotlinx.coroutines.runBlocking
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.foundation.HttpClientProvider
 import me.him188.ani.app.domain.foundation.get
+import me.him188.ani.app.domain.media.fetch.MediaSourceManager
 import me.him188.ani.app.domain.media.resolver.HttpStreamingMediaResolver
+import me.him188.ani.app.domain.media.resolver.IosWebMediaResolver
 import me.him188.ani.app.domain.media.resolver.LocalFileMediaResolver
 import me.him188.ani.app.domain.media.resolver.MediaResolver
 import me.him188.ani.app.domain.media.resolver.TorrentMediaResolver
@@ -96,7 +98,7 @@ fun MainViewController(): UIViewController {
 
     val koin = startKoin {
         modules(getCommonKoinModule({ context }, scope))
-        modules(getIosModules(context.files.dataDir.resolve("torrent"), scope))
+        modules(getIosModules(context, context.files.dataDir.resolve("torrent"), scope))
     }.startCommonKoinModule(scope).koin
 
     val analyticsInitializer = scope.launch {
@@ -180,6 +182,7 @@ fun MainViewController(): UIViewController {
 }
 
 fun getIosModules(
+    context: IosContext,
     defaultTorrentCacheDir: SystemPath,
     coroutineScope: CoroutineScope,
 ) = module {
@@ -207,7 +210,8 @@ fun getIosModules(
             get<TorrentManager>().engines
                 .map { TorrentMediaResolver(it) }
                 .plus(LocalFileMediaResolver())
-                .plus(HttpStreamingMediaResolver()),
+                .plus(HttpStreamingMediaResolver())
+                .plus(IosWebMediaResolver(get<MediaSourceManager>().webVideoMatcherLoader, context)),
         )
     }
     single<UpdateInstaller> { IosUpdateInstaller }
