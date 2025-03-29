@@ -10,14 +10,21 @@
 package me.him188.ani.app.data.persistent
 
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
+import androidx.datastore.core.okio.OkioStorage
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.PreferencesSerializer
 import androidx.datastore.preferences.core.mutablePreferencesOf
 import me.him188.ani.app.platform.Context
 import me.him188.ani.app.platform.IosContext
 import me.him188.ani.app.platform.asIosContext
 import me.him188.ani.utils.io.SystemPath
+import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.createDirectories
 import me.him188.ani.utils.io.resolve
+import okio.FileSystem
+import okio.Path.Companion.toPath
 
 /**
  * Must not be stored
@@ -29,17 +36,31 @@ private class IosPlatformDataStoreManager(
     private val context: IosContext,
 ) : PlatformDataStoreManager() {
     override val tokenStore: DataStore<Preferences> by lazy {
-        MemoryDataStore(mutablePreferencesOf())
+        createPreferencesDataStore("token")
     }
     override val preferencesStore: DataStore<Preferences> by lazy {
-        MemoryDataStore(mutablePreferencesOf())
+        createPreferencesDataStore("preferences")
     }
     override val preferredAllianceStore: DataStore<Preferences> by lazy {
-        MemoryDataStore(mutablePreferencesOf())
+        createPreferencesDataStore("preferredAlliance")
     }
 
     override fun resolveDataStoreFile(name: String): SystemPath =
         context.files.datastoreDir
             .apply { createDirectories() }
             .resolve(name)
+
+    private fun createPreferencesDataStore(name: String): DataStore<Preferences> = PreferenceDataStoreFactory.create(
+        storage = OkioStorage(
+            FileSystem.Companion.SYSTEM,
+            PreferencesSerializer,
+            producePath = {
+                resolveDataStoreFile(name).absolutePath.toPath()
+            },
+        ),
+        corruptionHandler = ReplaceFileCorruptionHandler {
+            mutablePreferencesOf()
+        },
+    )
 }
+
