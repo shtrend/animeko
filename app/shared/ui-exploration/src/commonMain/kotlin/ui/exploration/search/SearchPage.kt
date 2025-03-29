@@ -11,6 +11,7 @@ package me.him188.ani.app.ui.exploration.search
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -27,6 +28,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldValue
@@ -42,6 +44,7 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.window.core.layout.WindowSizeClass
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import me.him188.ani.app.navigation.LocalNavigator
@@ -50,6 +53,7 @@ import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.PaneScope
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.search.collectHasQueryAsState
@@ -94,58 +98,67 @@ fun SearchPage(
 
             val hasQuery by state.searchState.collectHasQueryAsState()
             val query by state.queryFlow.collectAsStateWithLifecycle()
-            SearchResultColumn(
-                items = items,
-                layoutKind = state.layoutKind,
-                summary = {
-                    if (hasQuery) {
-                        SearchSummary(
-                            state.layoutKind,
-                            query.sort,
-                            onLayoutKindChange = { state.layoutKind = it },
-                            onSortChange = { state.updateSort(it) },
-                        )
-                    }
-                },
-                selectedItemIndex = { state.selectedItemIndex },
-                onSelect = { index ->
-                    items[index]?.let {
-                        onSelect(index, it)
-                    }
-                    coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                        val shouldNavigate = navigator.currentDestination?.pane != ListDetailPaneScaffoldRole.Detail
-                        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
-                        if (shouldNavigate) {
-                            state.gridState.animateScrollToItem(index)
+            BoxWithConstraints {
+                SearchResultColumn(
+                    items = items,
+                    layoutKind = state.layoutKind,
+                    summary = {
+                        if (hasQuery) {
+                            SearchSummary(
+                                state.layoutKind,
+                                query.sort,
+                                onLayoutKindChange = { state.layoutKind = it },
+                                onSortChange = { state.updateSort(it) },
+                            )
                         }
-                    }
-                },
-                onPlay = { info ->
-                    scope.launch(start = CoroutineStart.UNDISPATCHED) {
-                        val playInfo = state.requestPlay(info)
-                        playInfo?.let {
-                            aniNavigator.navigateEpisodeDetails(it.subjectId, playInfo.episodeId)
+                    },
+                    selectedItemIndex = { state.selectedItemIndex },
+                    onSelect = { index ->
+                        items[index]?.let {
+                            onSelect(index, it)
                         }
-                    }
-                }, // collect only once
-                headers = {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        val filterState by state.searchFilterStateFlow.collectAsStateWithLifecycle()
-                        SearchFilterChipsRow(
-                            filterState,
-                            onClickItemText = { chip, value ->
-                                state.toggleTagSelection(chip, value, unselectOthersOfSameKind = true)
-                            },
-                            onCheckedChange = { chip, value ->
-                                state.toggleTagSelection(chip, value, unselectOthersOfSameKind = false)
-                            },
-                            Modifier.fillMaxWidth(),
-                        )
-                    }
-                },
-                highlightSelected = !isSinglePane,
-                state = state.gridState,
-            )
+                        coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                            val shouldNavigate = navigator.currentDestination?.pane != ListDetailPaneScaffoldRole.Detail
+                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
+                            if (shouldNavigate) {
+                                state.gridState.animateScrollToItem(index)
+                            }
+                        }
+                    },
+                    onPlay = { info ->
+                        scope.launch(start = CoroutineStart.UNDISPATCHED) {
+                            val playInfo = state.requestPlay(info)
+                            playInfo?.let {
+                                aniNavigator.navigateEpisodeDetails(it.subjectId, playInfo.episodeId)
+                            }
+                        }
+                    }, // collect only once
+                    headers = {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            val filterState by state.searchFilterStateFlow.collectAsStateWithLifecycle()
+                            SearchFilterChipsRow(
+                                filterState,
+                                onClickItemText = { chip, value ->
+                                    state.toggleTagSelection(chip, value, unselectOthersOfSameKind = true)
+                                },
+                                onCheckedChange = { chip, value ->
+                                    state.toggleTagSelection(chip, value, unselectOthersOfSameKind = false)
+                                },
+                                Modifier.fillMaxWidth(),
+                            )
+                        }
+                    },
+                    highlightSelected = !isSinglePane,
+                    state = state.gridState,
+                    layoutParams = SearchResultColumnLayoutParams.layoutParameters(
+                        kind = state.layoutKind,
+                        windowAdaptiveInfo = WindowAdaptiveInfo(
+                            WindowSizeClass(maxWidth.value, maxHeight.value),
+                            currentWindowAdaptiveInfo1().windowPosture,
+                        ),
+                    ),
+                )
+            }
         },
         detailContent = {
             items.itemSnapshotList.getOrNull(state.selectedItemIndex)?.let {
