@@ -16,9 +16,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.ZeroCornerSize
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardColors
@@ -184,8 +187,14 @@ fun <T> AniListDetailPaneScaffold(
                                 this@SharedTransitionLayout, this@ListDetailAnimatedPane,
                             ),
                         ) {
+                            val decoratedPaneContent = @Composable {
+                                Column(Modifier.fillMaxWidth().wrapContentWidth().widthIn(max = 1300.dp)) {
+                                    listPaneContent(scope)
+                                }
+                            }
+
                             if (listPaneTopAppBar == null) {
-                                listPaneContent(scope)
+                                decoratedPaneContent()
                             } else {
                                 listPaneTopAppBar(scope)
                                 Column(
@@ -193,7 +202,7 @@ fun <T> AniListDetailPaneScaffold(
                                         contentWindowInsets.only(WindowInsetsSides.Top),
                                     ),
                                 ) {
-                                    listPaneContent(scope)
+                                    decoratedPaneContent()
                                 }
                             }
                         }
