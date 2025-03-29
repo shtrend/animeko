@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.platform
 
+import io.sentry.kotlin.multiplatform.Sentry
 import me.him188.ani.app.domain.session.AuthorizationCancelledException
 import me.him188.ani.app.domain.session.AuthorizationFailedException
 import me.him188.ani.app.domain.session.SessionManager
@@ -29,6 +30,11 @@ object AppStartupTasks {
         initializeErrorReport(userId = userId)
         if (!currentAniBuildConfig.isDebug) {
             ErrorReportHolder.init(SentryErrorReport)
+        } else {
+            Sentry.init {
+                it.beforeBreadcrumb = { null }
+            }
+            Sentry.close()
         }
     }
 
