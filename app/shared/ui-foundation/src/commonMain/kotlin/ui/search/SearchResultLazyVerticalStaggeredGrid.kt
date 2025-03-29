@@ -93,7 +93,10 @@ fun <T : Any> SearchResultLazyVerticalGrid(
 
                 content()
 
-                if (items.isLoadingFirstPage || items.loadState.refresh is LoadState.Loading) {
+                // 在加载第一页时不显示, 避免有两个, #1835
+                if (!items.isLoadingFirstPage
+                    && items.loadState.refresh is LoadState.Loading
+                ) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         ListItem(
                             headlineContent = {
