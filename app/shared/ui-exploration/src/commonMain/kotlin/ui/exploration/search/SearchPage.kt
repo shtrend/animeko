@@ -27,6 +27,7 @@ import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.ThreePaneScaffoldValue
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
@@ -107,6 +108,13 @@ fun SearchPage(
                 onSelect = { index ->
                     items[index]?.let {
                         onSelect(index, it)
+                    }
+                    coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
+                        val shouldNavigate = navigator.currentDestination?.pane != ListDetailPaneScaffoldRole.Detail
+                        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
+                        if (shouldNavigate) {
+                            state.gridState.animateScrollToItem(index)
+                        }
                     }
                 },
                 onPlay = { info ->

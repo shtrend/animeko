@@ -87,9 +87,6 @@ fun SearchScreen(
         onSelect = { index, item ->
             vm.searchPageState.selectedItemIndex = index
             vm.viewSubjectDetails(item)
-            coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                listDetailNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
-            }
         },
         navigator = listDetailNavigator,
         navigationIcon = {
