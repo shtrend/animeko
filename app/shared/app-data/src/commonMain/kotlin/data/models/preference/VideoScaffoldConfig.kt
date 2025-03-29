@@ -16,6 +16,7 @@ import kotlinx.serialization.Transient
 import me.him188.ani.utils.platform.annotations.SerializationOnly
 
 @Immutable
+@Serializable
 enum class FullscreenSwitchMode {
     /**
      * 在小屏 (竖屏) 模式下也在右下角总是显示全屏按钮.

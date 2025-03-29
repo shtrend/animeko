@@ -170,6 +170,7 @@ data class DownloadState(
     val mediaType: MediaType,
 )
 
+@Serializable
 enum class MediaType {
     M3U8, MP4, MKV
 }

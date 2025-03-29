@@ -77,6 +77,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItemsWithLifecycle
 import coil3.compose.AsyncImagePainter
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import me.him188.ani.app.data.models.episode.findCacheStatus
 import me.him188.ani.app.data.models.subject.RatingInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
@@ -854,6 +855,7 @@ private fun PlaceholderSubjectDetailsContentPager(paddingValues: PaddingValues) 
 // endregion
 
 @Immutable
+@Serializable
 enum class SubjectDetailsTab {
     DETAILS,
     COMMENTS,
