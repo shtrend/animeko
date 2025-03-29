@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.exploration.search
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -28,12 +29,14 @@ import me.him188.ani.app.data.models.subject.kind
 import me.him188.ani.app.data.models.subject.nameCnOrName
 import me.him188.ani.app.data.network.LightRelatedCharacterInfo
 import me.him188.ani.app.data.network.LightRelatedPersonInfo
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.rating.RatingText
 import me.him188.ani.app.ui.subject.renderSubjectSeason
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.PreviewLightDark
 
 @Immutable
 class SubjectPreviewItemInfo(
@@ -247,6 +250,28 @@ private fun PreviewSubjectPreviewItem() {
                 info.title,
                 maxLines = maxLines,
             )
+        },
+    )
+}
+
+@Composable
+@PreviewLightDark
+private fun PreviewSubjectItemLayout() = ProvideCompositionLocalsForPreview {
+    SubjectItemLayout(
+        selected = false,
+        {},
+        image = { SubjectItemDefaults.Image("a", Modifier.fillMaxSize(), null) },
+        title = { maxLines ->
+            Text("关于我转生变成史莱姆这档事 第三季", maxLines = maxLines)
+        },
+        tags = { Text("2024 年 10 月 · 全 24 话 · 奇幻 / 战斗") },
+        extraInfo = {
+            Text("配音:  岡咲美保 · 前野智昭 ·  古川慎")
+            Text("制作:  8bit · 中山敦史 · 泽野弘之 ")
+        },
+        rating = {},
+        actions = {
+            SubjectItemDefaults.ActionPlay({})
         },
     )
 }
