@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
@@ -88,9 +87,6 @@ fun <T : Any> SearchResultLazyVerticalGrid(
                 verticalArrangement = verticalArrangement,
                 contentPadding = contentPadding,
             ) {
-                // 用于保持刷新时在顶部
-                item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(Dp.Hairline)) } // 如果空白内容, 它可能会有 bug
-
                 content()
 
                 // 在加载第一页时不显示, 避免有两个, #1835
