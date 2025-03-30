@@ -109,7 +109,6 @@ internal fun SearchResultColumn(
     val aniMotionScheme = LocalAniMotionScheme.current
 
     val itemsState = rememberUpdatedState(items)
-    SharedTransitionLayout {
     SearchResultLazyVerticalGrid(
         items,
         error = {
@@ -153,72 +152,72 @@ internal fun SearchResultColumn(
         ) { index ->
             val info = items[index]
 
-            AnimatedContent(
-                layoutParams.kind,
-                transitionSpec = aniMotionScheme.animatedContent.topLevel,
-            ) { targetKind ->
-                val animatedVisibilityScope = this
-                when (targetKind) {
-                    SearchResultLayoutKind.COVER -> {
-                        SubjectCoverCard(
-                            info?.title,
-                            info?.imageUrl,
-                            isPlaceholder = info == null,
-                            onClick = { onSelect(index) },
-                            Modifier
-                                .ifNotNullThen(info) {
-                                    sharedElement(
-                                        rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = it.subjectId)),
-                                        animatedVisibilityScope,
-                                        clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
-                                    )
-                                }
-                                .animateItem(
-                                    aniMotionScheme.feedItemFadeInSpec,
-                                    null,
-                                    aniMotionScheme.feedItemFadeOutSpec,
-                                ),
-                            shape = layoutParams.grid.cardShape,
-                        )
-                    }
-
-                    SearchResultLayoutKind.PREVIEW -> {
-                        if (info != null && !info.hide) {
-                            val requester = remember { BringIntoViewRequester() }
-                            // 记录 item 对应的 requester
-                            DisposableEffect(requester) {
-                                bringIntoViewRequesters[info.subjectId] = requester
-                                onDispose {
-                                    bringIntoViewRequesters.remove(info.subjectId)
-                                }
-                            }
-
-                            SearchResultItem(
-                                info,
-                                highlightSelected && index == selectedItemIndex(),
-                                layoutParams.previewItem.shape,
-                                { onSelect(index) },
-                                onPlay,
+            SharedTransitionLayout {
+                AnimatedContent(
+                    layoutParams.kind,
+                    transitionSpec = aniMotionScheme.animatedContent.topLevel,
+                ) { targetKind ->
+                    val animatedVisibilityScope = this
+                    when (targetKind) {
+                        SearchResultLayoutKind.COVER -> {
+                            SubjectCoverCard(
+                                info?.title,
+                                info?.imageUrl,
+                                isPlaceholder = info == null,
+                                onClick = { onSelect(index) },
                                 Modifier
+                                    .ifNotNullThen(info) {
+                                        sharedElement(
+                                            rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = it.subjectId)),
+                                            animatedVisibilityScope,
+                                            clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
+                                        )
+                                    }
                                     .animateItem(
                                         aniMotionScheme.feedItemFadeInSpec,
-                                        null,
+                                        aniMotionScheme.feedItemPlacementSpec,
                                         aniMotionScheme.feedItemFadeOutSpec,
-                                    )
-                                    .bringIntoViewRequester(requester),
-                                imageModifier = Modifier.sharedElement(
-                                    rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = info.subjectId)),
-                                    animatedVisibilityScope,
-                                    clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
-                                ),
+                                    ),
+                                shape = layoutParams.grid.cardShape,
                             )
-                        } else {
-                            Box(Modifier.size(Dp.Hairline))
+                        }
+
+                        SearchResultLayoutKind.PREVIEW -> {
+                            if (info != null && !info.hide) {
+                                val requester = remember { BringIntoViewRequester() }
+                                // 记录 item 对应的 requester
+                                DisposableEffect(requester) {
+                                    bringIntoViewRequesters[info.subjectId] = requester
+                                    onDispose {
+                                        bringIntoViewRequesters.remove(info.subjectId)
+                                    }
+                                }
+
+                                SearchResultItem(
+                                    info,
+                                    highlightSelected && index == selectedItemIndex(),
+                                    layoutParams.previewItem.shape,
+                                    { onSelect(index) },
+                                    onPlay,
+                                    Modifier
+                                        .animateItem(
+                                            aniMotionScheme.feedItemFadeInSpec,
+                                            aniMotionScheme.feedItemPlacementSpec,
+                                            aniMotionScheme.feedItemFadeOutSpec,
+                                        )
+                                        .bringIntoViewRequester(requester),
+                                    imageModifier = Modifier.sharedElement(
+                                        rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = info.subjectId)),
+                                        animatedVisibilityScope,
+                                        clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
+                                    ),
+                                )
+                            } else {
+                                Box(Modifier.size(Dp.Hairline))
+                            }
                         }
                     }
                 }
-
-            }
             }
         }
     }
