@@ -68,7 +68,7 @@ abstract class CommonAnalyticsImpl(
         val platform = currentPlatform()
         put("os", platform.name)
         put("arch", platform.arch.name)
-        put("version", config.appVersion)
+        put("\$app_version", config.appVersion)
     }
 
     final override fun recordEvent(event: AnalyticsEvent, properties: Map<String, Any>) {
