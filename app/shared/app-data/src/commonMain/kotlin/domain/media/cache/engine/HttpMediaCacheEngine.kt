@@ -31,13 +31,26 @@ import me.him188.ani.app.domain.media.resolver.MediaResolver
 import me.him188.ani.app.tools.Progress
 import me.him188.ani.app.tools.toProgress
 import me.him188.ani.app.torrent.api.files.averageRate
-import me.him188.ani.datasources.api.*
+import me.him188.ani.datasources.api.CachedMedia
+import me.him188.ani.datasources.api.DefaultMedia
+import me.him188.ani.datasources.api.Media
+import me.him188.ani.datasources.api.MediaCacheMetadata
+import me.him188.ani.datasources.api.MediaCacheProperties
+import me.him188.ani.datasources.api.MetadataKey
 import me.him188.ani.datasources.api.topic.FileSize
 import me.him188.ani.datasources.api.topic.FileSize.Companion.bytes
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.utils.coroutines.IO_
-import me.him188.ani.utils.httpdownloader.*
-import me.him188.ani.utils.io.*
+import me.him188.ani.utils.httpdownloader.DownloadId
+import me.him188.ani.utils.httpdownloader.DownloadOptions
+import me.him188.ani.utils.httpdownloader.DownloadStatus
+import me.him188.ani.utils.httpdownloader.HttpDownloader
+import me.him188.ani.utils.httpdownloader.MediaType
+import me.him188.ani.utils.io.absolutePath
+import me.him188.ani.utils.io.actualSize
+import me.him188.ani.utils.io.deleteRecursively
+import me.him188.ani.utils.io.inSystem
+import me.him188.ani.utils.io.resolve
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
@@ -319,10 +332,6 @@ class HttpMediaCache(
                 error("Download failed or canceled")
             }
         }
-    }
-
-    override fun isValid(): Boolean {
-        return true
     }
 
     override suspend fun pause() {

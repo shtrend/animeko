@@ -71,11 +71,6 @@ interface MediaCache {
     suspend fun getCachedMedia(): CachedMedia
 
     /**
-     * 缓存
-     */
-    fun isValid(): Boolean // todo: deprecate this
-
-    /**
      * @see TorrentFileEntry.Stats
      * @see TorrentMediaCacheEngine.TorrentMediaCache.fileStats
      */
@@ -285,7 +280,6 @@ open class TestMediaCache(
     )
 
     override suspend fun getCachedMedia(): CachedMedia = media
-    override fun isValid(): Boolean = true
 
     private val resumeCalled = atomic(0)
 

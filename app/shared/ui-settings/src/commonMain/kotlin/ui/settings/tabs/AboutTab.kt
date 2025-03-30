@@ -52,10 +52,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.domain.media.cache.MediaAutoCacheService
@@ -82,23 +80,6 @@ class AboutTabViewModel : AbstractViewModel(), KoinComponent {
     private val sessionManager: SessionManager by inject()
     private val cacheManager: MediaCacheManager by inject()
 
-    private val validMediaCacheTasks = kotlin.run {
-        val mediaCacheListFromStorages = cacheManager.storages.map { storageFlow ->
-            storageFlow.flatMapLatest { storage ->
-                if (storage == null) {
-                    return@flatMapLatest emptyFlow()
-                }
-                storage.listFlow
-            }.onStart { emit(emptyList()) }
-        }
-        if (mediaCacheListFromStorages.isEmpty()) {
-            return@run flowOf(0)
-        }
-        combine(mediaCacheListFromStorages) { lists ->
-            lists.asSequence().flatten().count { it.isValid() }
-        }
-    }
-
     val debugInfo = debugInfoFlow().shareInBackground(started = SharingStarted.Eagerly)
 
     @OptIn(OpaqueSession::class)
@@ -106,8 +87,7 @@ class AboutTabViewModel : AbstractViewModel(), KoinComponent {
         sessionManager.state,
         sessionManager.processingRequest.flatMapLatest { it?.state ?: flowOf(null) },
         sessionManager.isSessionVerified,
-        validMediaCacheTasks,
-    ) { session, processingRequest, isSessionValid, activeTasks ->
+    ) { session, processingRequest, isSessionValid ->
         DebugInfo(
             properties = buildMap {
                 val buildConfig = currentAniBuildConfig
@@ -118,7 +98,6 @@ class AboutTabViewModel : AbstractViewModel(), KoinComponent {
                 }
                 put("processingRequest.state", processingRequest.toString())
                 put("sessionManager.isSessionValid", isSessionValid.toString())
-                put("mediaCacheManager.validTasks", activeTasks.toString())
             },
         )
     }

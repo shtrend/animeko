@@ -21,7 +21,6 @@ import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.MediaCacheMetadata
 import me.him188.ani.datasources.api.source.MediaSourceLocation
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
-import kotlin.concurrent.Volatile
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -66,10 +65,6 @@ class DummyMediaCache(
     )
 
     override suspend fun getCachedMedia(): CachedMedia = cachedMedia
-
-    @Volatile
-    private var isValid = true
-    override fun isValid(): Boolean = isValid
 
     override val fileStats: Flow<MediaCache.FileStats> =
         flowOf(MediaCache.FileStats(300.megaBytes, 100.megaBytes))

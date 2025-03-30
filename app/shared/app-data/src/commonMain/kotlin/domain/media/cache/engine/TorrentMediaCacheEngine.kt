@@ -31,7 +31,6 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.io.files.FileNotFoundException
-import kotlinx.io.files.Path
 import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.MediaCacheState
 import me.him188.ani.app.domain.media.cache.engine.TorrentMediaCacheEngine.Companion.EXTRA_TORRENT_CACHE_DIR
@@ -58,7 +57,6 @@ import me.him188.ani.utils.io.actualSize
 import me.him188.ani.utils.io.delete
 import me.him188.ani.utils.io.deleteRecursively
 import me.him188.ani.utils.io.exists
-import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -151,12 +149,6 @@ class TorrentMediaCacheEngine(
                     download = origin.download,
                 )
             }
-        }
-
-        override fun isValid(): Boolean {
-            return metadata.extra[EXTRA_TORRENT_CACHE_DIR]?.let {
-                Path(it).inSystem.exists()
-            } ?: false
         }
 
         override val fileStats: Flow<MediaCache.FileStats> = lazyFileHandle.entry.flatMapLatest { entry ->
