@@ -117,6 +117,10 @@ fun SearchPage(
                         items[index]?.let {
                             onSelect(index, it)
                         }
+                        if (navigator.currentDestination?.pane == ListDetailPaneScaffoldRole.List) {
+                            // 在 list 模式点击 item, 自动切换列表 layout 为详细模式, 避免在 PC 上左侧太拥挤
+                            state.layoutKind = SearchResultLayoutKind.PREVIEW
+                        }
                         coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
                             val shouldNavigate = navigator.currentDestination?.pane != ListDetailPaneScaffoldRole.Detail
                             navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
