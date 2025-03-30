@@ -78,6 +78,7 @@ fun CommentColumn(
                 ),
             contentPadding = contentPadding,
             cells = GridCells.Fixed(1),
+            showLoadingIndicatorInFirstPage = false, // Use PTR instead
         ) {
             item("spacer header") { Spacer(Modifier.height(1.dp)) }
 

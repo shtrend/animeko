@@ -61,6 +61,7 @@ fun <T : Any> SearchResultLazyVerticalGrid(
     horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(0.dp),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    showLoadingIndicatorInFirstPage: Boolean = true,
     content: LazyGridScope.() -> Unit,
 ) {
     Box(modifier) {
@@ -90,18 +91,18 @@ fun <T : Any> SearchResultLazyVerticalGrid(
                 content()
 
                 // 在加载第一页时不显示, 避免有两个, #1835
-                if (!items.isLoadingFirstPage
-                    && items.loadState.refresh is LoadState.Loading
-                ) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        ListItem(
-                            headlineContent = {
-                                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                    LoadingIndicator()
-                                }
-                            },
-                            colors = listItemColors,
-                        )
+                if (items.loadState.refresh is LoadState.Loading) {
+                    if (showLoadingIndicatorInFirstPage || !items.isLoadingFirstPage) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            ListItem(
+                                headlineContent = {
+                                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                        LoadingIndicator()
+                                    }
+                                },
+                                colors = listItemColors,
+                            )
+                        }
                     }
                 }
             }
