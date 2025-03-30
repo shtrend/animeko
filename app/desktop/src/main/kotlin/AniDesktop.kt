@@ -273,7 +273,7 @@ object AniDesktop {
                                     get<SettingsRepository>().mediaCacheSettings.flow.first().saveDir
                                         ?.let(::Path)
                                 } ?: context.torrentDataCacheDir.toKtPath()
-                                toplevelLogger.info { "TorrentManager saveDir: $saveDir" }
+                                toplevelLogger.info { "TorrentManager baseSaveDir: $saveDir" }
                                 saveDir.inSystem
                             },
                         )
