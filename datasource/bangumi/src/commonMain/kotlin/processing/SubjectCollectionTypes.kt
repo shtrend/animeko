@@ -26,6 +26,17 @@ fun UnifiedCollectionType.toSubjectCollectionType(): BangumiSubjectCollectionTyp
     }
 }
 
+fun UnifiedCollectionType.toBangumiNextCollectionType(): BangumiNextCollectionType? {
+    return when (this) {
+        UnifiedCollectionType.WISH -> BangumiNextCollectionType.Wish
+        UnifiedCollectionType.DOING -> BangumiNextCollectionType.Doing
+        UnifiedCollectionType.DONE -> BangumiNextCollectionType.Collect
+        UnifiedCollectionType.ON_HOLD -> BangumiNextCollectionType.OnHold
+        UnifiedCollectionType.DROPPED -> BangumiNextCollectionType.Dropped
+        UnifiedCollectionType.NOT_COLLECTED -> null
+    }
+}
+
 fun BangumiSubjectCollectionType?.toCollectionType(): UnifiedCollectionType {
     return when (this) {
         BangumiSubjectCollectionType.Wish -> UnifiedCollectionType.WISH
