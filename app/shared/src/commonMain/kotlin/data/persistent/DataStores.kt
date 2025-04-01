@@ -20,26 +20,41 @@ import kotlin.concurrent.Volatile
 expect fun Context.createPlatformDataStoreManager(): PlatformDataStoreManager
 
 // workaround for compiler bug
-val Context.dataStores: PlatformDataStoreManager get() = PlatformDataStoreManagerHolder.init(this)
+val Context.dataStores: PlatformDataStoreManager get() = PlatformDataStoreManagerHolder.get(this)
 
 private object PlatformDataStoreManagerHolder : SynchronizedObject() {
-    @Volatile
-    private var instance: PlatformDataStoreManager? = null
+    private class Initialized(
+        val contextHashCode: Int,
+        val instance: PlatformDataStoreManager,
+    )
 
-    fun init(context: Context): PlatformDataStoreManager {
-        instance?.let {
+    @Volatile
+    private var initialized: Initialized? = null
+
+    fun get(context: Context): PlatformDataStoreManager {
+        getInitializedAndCheck(context)?.let { 
             return it
         }
         kotlinx.atomicfu.locks.synchronized(this) {
-            check(instance == null) {
-                "PlatformDataStoreManager already initialized with another Context instance"
-            }
-            instance?.let {
+            getInitializedAndCheck(context)?.let {
                 return it
             }
             return context.createPlatformDataStoreManager().also {
-                instance = it
+                initialized = Initialized(
+                    context.hashCode(),
+                    it,
+                )
             }
         }
+    }
+
+    private fun getInitializedAndCheck(context: Context): PlatformDataStoreManager? {
+        initialized?.let {
+            check(it.contextHashCode == context.hashCode()) {
+                "PlatformDataStoreManager already initialized with another Context instance"
+            }
+            return it.instance
+        }
+        return null
     }
 }
