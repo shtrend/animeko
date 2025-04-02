@@ -59,6 +59,7 @@ import me.him188.ani.utils.io.DEFAULT_BUFFER_SIZE
 import me.him188.ani.utils.io.copyTo
 import me.him188.ani.utils.io.resolve
 import me.him188.ani.utils.ktor.ScopedHttpClient
+import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.Uuid
@@ -122,10 +123,12 @@ open class KtorHttpDownloader(
     }
 
     protected fun getMediaTypeFromUrl(url: String): MediaType? {
+        val parsed = io.ktor.http.Url(url)
+        val path = parsed.encodedPath // without query
         return when {
-            url.endsWith(".m3u8", ignoreCase = true) -> MediaType.M3U8
-            url.endsWith(".mp4", ignoreCase = true) -> MediaType.MP4
-            url.endsWith(".mkv", ignoreCase = true) -> MediaType.MKV
+            path.endsWith(".m3u8", ignoreCase = true) -> MediaType.M3U8
+            path.endsWith(".mp4", ignoreCase = true) -> MediaType.MP4
+            path.endsWith(".mkv", ignoreCase = true) -> MediaType.MKV
             else -> null
         }
     }
