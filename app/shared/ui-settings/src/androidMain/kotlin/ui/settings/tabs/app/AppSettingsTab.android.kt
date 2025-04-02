@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.settings.tabs.app
 
+import android.os.Build
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -21,33 +22,35 @@ import kotlin.math.roundToInt
 
 @Composable
 actual fun SettingsScope.PlayerGroupPlatform(videoScaffoldConfig: SettingsState<VideoScaffoldConfig>) {
-    val context = LocalContext.current
-    val supportedModes = remember(context) {
-        context.display.supportedModes.orEmpty().toList() + null
-    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        val context = LocalContext.current
+        val supportedModes = remember(context) {
+            context.display.supportedModes.orEmpty().toList() + null
+        }
 
-    HorizontalDividerItem()
-    DropdownItem(
-        selected = {
-            supportedModes.find { it?.modeId == videoScaffoldConfig.value.displayModeId }
-        },
-        values = { supportedModes },
-        itemText = {
-            if (it == null) {
-                Text("自动")
-            } else {
-                Text(it.refreshRate.roundToInt().toString())
-            }
-        },
-        onSelect = {
-            videoScaffoldConfig.update(
-                videoScaffoldConfig.value.copy(
-                    displayModeId = it?.modeId ?: 0,
-                ),
-            )
-        },
-        title = {
-            Text("弹幕刷新率")
-        },
-    )
+        HorizontalDividerItem()
+        DropdownItem(
+            selected = {
+                supportedModes.find { it?.modeId == videoScaffoldConfig.value.displayModeId }
+            },
+            values = { supportedModes },
+            itemText = {
+                if (it == null) {
+                    Text("自动")
+                } else {
+                    Text(it.refreshRate.roundToInt().toString())
+                }
+            },
+            onSelect = {
+                videoScaffoldConfig.update(
+                    videoScaffoldConfig.value.copy(
+                        displayModeId = it?.modeId ?: 0,
+                    ),
+                )
+            },
+            title = {
+                Text("弹幕刷新率")
+            },
+        )
+    }
 }
