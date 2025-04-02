@@ -189,7 +189,7 @@ open class KtorHttpDownloader(
             }
         } catch (e: Throwable) {
             // If segment creation fails (404, parse error, etc.), mark FAILED
-            logger.info { "Segment creation failed for $downloadId: ${e.message}" }
+            logger.error(e) { "Segment creation failed for $downloadId, see cause" }
             updateState(downloadId) {
                 it.copy(
                     status = FAILED,
