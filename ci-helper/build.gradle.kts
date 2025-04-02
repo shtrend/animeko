@@ -159,7 +159,7 @@ val zipDesktopDistribution = tasks.register("zipDesktopDistribution", Zip::class
 tasks.register("uploadDesktopInstallers") {
     dependsOn(zipDesktopDistribution)
 
-    if (hostOS != OS.WINDOWS) {
+    if (hostOS == OS.MACOS) {
         dependsOn(
             ":app:desktop:packageReleaseDistributionForCurrentOS",
         )
@@ -485,8 +485,16 @@ fun ReleaseEnvironment.uploadDesktopDistributions() {
         }
 
         OS.LINUX -> {
-            uploadBinary("deb", osName = "debian")
-            uploadBinary("rpm", osName = "redhat")
+            uploadReleaseAsset(
+                name = namer.desktopDistributionFile(
+                    fullVersion,
+                    "linux",
+                    "x86_64",
+                    extension = "appimage",
+                ),
+                contentType = "application/x-appimage",
+                file = rootProject.file("Animeko-x86_64.AppImage"),
+            )
         }
     }
 }
