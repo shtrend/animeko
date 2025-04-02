@@ -62,7 +62,7 @@ data class VideoScaffoldConfig @SerializationOnly constructor(
     /**
      * 自动连播
      */
-    val autoPlayNext: Boolean = false,
+    val autoPlayNext: Boolean = true,
     /**
      * 跳过 OP 和 ED
      */
