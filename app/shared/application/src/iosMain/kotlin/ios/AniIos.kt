@@ -42,8 +42,8 @@ import me.him188.ani.app.domain.torrent.DefaultTorrentManager
 import me.him188.ani.app.domain.torrent.TorrentManager
 import me.him188.ani.app.navigation.AniNavigator
 import me.him188.ani.app.navigation.BrowserNavigator
+import me.him188.ani.app.navigation.IosBrowserNavigator
 import me.him188.ani.app.navigation.LocalNavigator
-import me.him188.ani.app.navigation.NoopBrowserNavigator
 import me.him188.ani.app.platform.AppStartupTasks
 import me.him188.ani.app.platform.GrantedPermissionManager
 import me.him188.ani.app.platform.IosContext
@@ -189,7 +189,7 @@ fun getIosModules(
     single<PermissionManager> {
         GrantedPermissionManager
     }
-    single<BrowserNavigator> { NoopBrowserNavigator }
+    single<BrowserNavigator> { IosBrowserNavigator() }
     single<TorrentManager> {
         DefaultTorrentManager.create(
             coroutineScope.coroutineContext,
