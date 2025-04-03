@@ -22,7 +22,7 @@ import platform.Foundation.NSUUID
 
 class IosAnalyticsImpl(
     config: AnalyticsConfig,
-    private val userId: String
+    private val userId: String,
 ) : IAnalytics, CommonAnalyticsImpl(config) {
     fun init(
         apiKey: String,
@@ -43,7 +43,7 @@ class IosAnalyticsImpl(
 
     override fun recordEventImpl(
         event: AnalyticsEvent,
-        properties: Map<String, Any>
+        properties: Map<String, Any>,
     ) {
         @Suppress("UNCHECKED_CAST")
         PostHogSDK.shared().captureWithEvent(
