@@ -51,6 +51,5 @@ kotlin {
     }
 
     sourceSets.nativeMain.dependencies {
-        implementation(libs.korlibs.crypto) // JVM 用 JDK 就够了
     }
 }
