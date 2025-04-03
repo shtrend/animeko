@@ -53,7 +53,6 @@ value class AnalyticsEvent(val event: String) {
 data class AnalyticsConfig(
     val appVersion: String,
     val debugLogging: Boolean,
-    val enabled: Boolean,
 ) {
     companion object
 }
