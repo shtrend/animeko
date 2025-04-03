@@ -1279,29 +1279,46 @@ jobs:
         Remove-Item -Path "C:\vcpkg\installed\x64-windows\lib\libssl*" -Recurse -Force -Verbose
         Remove-Item -Path "C:\vcpkg\installed\x64-windows\lib\libcrypto*" -Recurse -Force -Verbose
     - id: 'step-2'
-      name: 'Download Windows x64 Portable'
+      name: 'Download Windows x64 Portable (Attempt #1)'
+      continue-on-error: true
       uses: 'actions/download-artifact@v4'
       with:
         name: 'ani-windows-portable'
         path: '${{ github.workspace }}/ci-helper/verify'
     - id: 'step-3'
+      name: 'Download Windows x64 Portable (Attempt #2)'
+      continue-on-error: true
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-windows-portable'
+        path: '${{ github.workspace }}/ci-helper/verify'
+      if: '${{ steps.step-2.outcome == ''failure'' }}'
+    - id: 'step-4'
+      name: 'Download Windows x64 Portable (Attempt #3)'
+      continue-on-error: false
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-windows-portable'
+        path: '${{ github.workspace }}/ci-helper/verify'
+      if: '${{ steps.step-3.outcome == ''failure'' }}'
+    - id: 'step-5'
       name: 'Check that Anitorrent can be loaded'
       timeout-minutes: 5
       shell: 'powershell'
       run: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${{ github.workspace }}/ci-helper/verify/run-ani-test-windows-x64.ps1" "${{ github.workspace }}\ci-helper\verify" "anitorrent-load-test"'
-    - id: 'step-4'
+    - id: 'step-6'
       name: 'Check that Dandanplay APP ID is valid'
       timeout-minutes: 5
       shell: 'powershell'
       run: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${{ github.workspace }}/ci-helper/verify/run-ani-test-windows-x64.ps1" "${{ github.workspace }}\ci-helper\verify" "dandanplay-app-id"'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-5'
+    - id: 'step-7'
       name: 'Check that sentryDsn is valid'
       timeout-minutes: 5
       shell: 'powershell'
       run: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${{ github.workspace }}/ci-helper/verify/run-ani-test-windows-x64.ps1" "${{ github.workspace }}\ci-helper\verify" "sentry-dsn"'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-6'
+    - id: 'step-8'
       name: 'Check that analyticsServer is valid'
       timeout-minutes: 5
       shell: 'powershell'
@@ -1327,29 +1344,46 @@ jobs:
         Remove-Item -Path "C:\vcpkg\installed\x64-windows\lib\libssl*" -Recurse -Force -Verbose
         Remove-Item -Path "C:\vcpkg\installed\x64-windows\lib\libcrypto*" -Recurse -Force -Verbose
     - id: 'step-2'
-      name: 'Download Windows x64 Portable'
+      name: 'Download Windows x64 Portable (Attempt #1)'
+      continue-on-error: true
       uses: 'actions/download-artifact@v4'
       with:
         name: 'ani-windows-portable'
         path: '${{ github.workspace }}/ci-helper/verify'
     - id: 'step-3'
+      name: 'Download Windows x64 Portable (Attempt #2)'
+      continue-on-error: true
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-windows-portable'
+        path: '${{ github.workspace }}/ci-helper/verify'
+      if: '${{ steps.step-2.outcome == ''failure'' }}'
+    - id: 'step-4'
+      name: 'Download Windows x64 Portable (Attempt #3)'
+      continue-on-error: false
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-windows-portable'
+        path: '${{ github.workspace }}/ci-helper/verify'
+      if: '${{ steps.step-3.outcome == ''failure'' }}'
+    - id: 'step-5'
       name: 'Check that Anitorrent can be loaded'
       timeout-minutes: 5
       shell: 'powershell'
       run: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${{ github.workspace }}/ci-helper/verify/run-ani-test-windows-x64.ps1" "${{ github.workspace }}\ci-helper\verify" "anitorrent-load-test"'
-    - id: 'step-4'
+    - id: 'step-6'
       name: 'Check that Dandanplay APP ID is valid'
       timeout-minutes: 5
       shell: 'powershell'
       run: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${{ github.workspace }}/ci-helper/verify/run-ani-test-windows-x64.ps1" "${{ github.workspace }}\ci-helper\verify" "dandanplay-app-id"'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-5'
+    - id: 'step-7'
       name: 'Check that sentryDsn is valid'
       timeout-minutes: 5
       shell: 'powershell'
       run: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${{ github.workspace }}/ci-helper/verify/run-ani-test-windows-x64.ps1" "${{ github.workspace }}\ci-helper\verify" "sentry-dsn"'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-6'
+    - id: 'step-8'
       name: 'Check that analyticsServer is valid'
       timeout-minutes: 5
       shell: 'powershell'
@@ -1370,29 +1404,46 @@ jobs:
     - id: 'step-0'
       uses: 'actions/checkout@v4'
     - id: 'step-1'
-      name: 'Download Windows x64 Portable'
+      name: 'Download Windows x64 Portable (Attempt #1)'
+      continue-on-error: true
       uses: 'actions/download-artifact@v4'
       with:
         name: 'ani-windows-portable'
         path: '${{ github.workspace }}/ci-helper/verify'
     - id: 'step-2'
+      name: 'Download Windows x64 Portable (Attempt #2)'
+      continue-on-error: true
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-windows-portable'
+        path: '${{ github.workspace }}/ci-helper/verify'
+      if: '${{ steps.step-1.outcome == ''failure'' }}'
+    - id: 'step-3'
+      name: 'Download Windows x64 Portable (Attempt #3)'
+      continue-on-error: false
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-windows-portable'
+        path: '${{ github.workspace }}/ci-helper/verify'
+      if: '${{ steps.step-2.outcome == ''failure'' }}'
+    - id: 'step-4'
       name: 'Check that Anitorrent can be loaded'
       timeout-minutes: 5
       shell: 'powershell'
       run: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${{ github.workspace }}/ci-helper/verify/run-ani-test-windows-x64.ps1" "${{ github.workspace }}\ci-helper\verify" "anitorrent-load-test"'
-    - id: 'step-3'
+    - id: 'step-5'
       name: 'Check that Dandanplay APP ID is valid'
       timeout-minutes: 5
       shell: 'powershell'
       run: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${{ github.workspace }}/ci-helper/verify/run-ani-test-windows-x64.ps1" "${{ github.workspace }}\ci-helper\verify" "dandanplay-app-id"'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-4'
+    - id: 'step-6'
       name: 'Check that sentryDsn is valid'
       timeout-minutes: 5
       shell: 'powershell'
       run: 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "${{ github.workspace }}/ci-helper/verify/run-ani-test-windows-x64.ps1" "${{ github.workspace }}\ci-helper\verify" "sentry-dsn"'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-5'
+    - id: 'step-7'
       name: 'Check that analyticsServer is valid'
       timeout-minutes: 5
       shell: 'powershell'
@@ -1413,25 +1464,40 @@ jobs:
     - id: 'step-0'
       uses: 'actions/checkout@v4'
     - id: 'step-1'
-      name: 'Download DMG'
+      name: 'Download DMG (Attempt #1)'
+      continue-on-error: true
       uses: 'actions/download-artifact@v4'
       with:
         name: 'ani-macos-dmg-aarch64'
     - id: 'step-2'
+      name: 'Download DMG (Attempt #2)'
+      continue-on-error: true
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-macos-dmg-aarch64'
+      if: '${{ steps.step-1.outcome == ''failure'' }}'
+    - id: 'step-3'
+      name: 'Download DMG (Attempt #3)'
+      continue-on-error: false
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-macos-dmg-aarch64'
+      if: '${{ steps.step-2.outcome == ''failure'' }}'
+    - id: 'step-4'
       name: 'Check that Anitorrent can be loaded'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg anitorrent-load-test'
-    - id: 'step-3'
+    - id: 'step-5'
       name: 'Check that Dandanplay APP ID is valid'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg dandanplay-app-id'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-4'
+    - id: 'step-6'
       name: 'Check that sentryDsn is valid'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg sentry-dsn'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-5'
+    - id: 'step-7'
       name: 'Check that analyticsServer is valid'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg analytics-server'
@@ -1457,25 +1523,40 @@ jobs:
         sudo rm -rfv /opt/homebrew/lib/libssl* || true
         sudo rm -rfv /opt/homebrew/lib/libcrypto* || true
     - id: 'step-2'
-      name: 'Download DMG'
+      name: 'Download DMG (Attempt #1)'
+      continue-on-error: true
       uses: 'actions/download-artifact@v4'
       with:
         name: 'ani-macos-dmg-aarch64'
     - id: 'step-3'
+      name: 'Download DMG (Attempt #2)'
+      continue-on-error: true
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-macos-dmg-aarch64'
+      if: '${{ steps.step-2.outcome == ''failure'' }}'
+    - id: 'step-4'
+      name: 'Download DMG (Attempt #3)'
+      continue-on-error: false
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-macos-dmg-aarch64'
+      if: '${{ steps.step-3.outcome == ''failure'' }}'
+    - id: 'step-5'
       name: 'Check that Anitorrent can be loaded'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg anitorrent-load-test'
-    - id: 'step-4'
+    - id: 'step-6'
       name: 'Check that Dandanplay APP ID is valid'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg dandanplay-app-id'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-5'
+    - id: 'step-7'
       name: 'Check that sentryDsn is valid'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg sentry-dsn'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-6'
+    - id: 'step-8'
       name: 'Check that analyticsServer is valid'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg analytics-server'
@@ -1501,25 +1582,40 @@ jobs:
         sudo rm -rfv /opt/homebrew/lib/libssl* || true
         sudo rm -rfv /opt/homebrew/lib/libcrypto* || true
     - id: 'step-2'
-      name: 'Download DMG'
+      name: 'Download DMG (Attempt #1)'
+      continue-on-error: true
       uses: 'actions/download-artifact@v4'
       with:
         name: 'ani-macos-dmg-aarch64'
     - id: 'step-3'
+      name: 'Download DMG (Attempt #2)'
+      continue-on-error: true
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-macos-dmg-aarch64'
+      if: '${{ steps.step-2.outcome == ''failure'' }}'
+    - id: 'step-4'
+      name: 'Download DMG (Attempt #3)'
+      continue-on-error: false
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-macos-dmg-aarch64'
+      if: '${{ steps.step-3.outcome == ''failure'' }}'
+    - id: 'step-5'
       name: 'Check that Anitorrent can be loaded'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg anitorrent-load-test'
-    - id: 'step-4'
+    - id: 'step-6'
       name: 'Check that Dandanplay APP ID is valid'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg dandanplay-app-id'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-5'
+    - id: 'step-7'
       name: 'Check that sentryDsn is valid'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg sentry-dsn'
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-6'
+    - id: 'step-8'
       name: 'Check that analyticsServer is valid'
       timeout-minutes: 5
       run: '"$GITHUB_WORKSPACE/ci-helper/verify/run-ani-test-macos-aarch64.sh" "$GITHUB_WORKSPACE"/*.dmg analytics-server'
@@ -1537,12 +1633,29 @@ jobs:
     - id: 'step-0'
       uses: 'actions/checkout@v4'
     - id: 'step-1'
-      name: 'Download Linux x64 AppImage'
+      name: 'Download Linux x64 AppImage (Attempt #1)'
+      continue-on-error: true
       uses: 'actions/download-artifact@v4'
       with:
         name: 'ani-linux-appimage-x64'
         path: '${{ github.workspace }}/ci-helper/verify'
     - id: 'step-2'
+      name: 'Download Linux x64 AppImage (Attempt #2)'
+      continue-on-error: true
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-linux-appimage-x64'
+        path: '${{ github.workspace }}/ci-helper/verify'
+      if: '${{ steps.step-1.outcome == ''failure'' }}'
+    - id: 'step-3'
+      name: 'Download Linux x64 AppImage (Attempt #3)'
+      continue-on-error: false
+      uses: 'actions/download-artifact@v4'
+      with:
+        name: 'ani-linux-appimage-x64'
+        path: '${{ github.workspace }}/ci-helper/verify'
+      if: '${{ steps.step-2.outcome == ''failure'' }}'
+    - id: 'step-4'
       name: 'Check that Dandanplay APP ID is valid'
       timeout-minutes: 5
       shell: 'bash'
@@ -1551,7 +1664,7 @@ jobs:
         chmod +x "$ANI_APPIMAGE"
         ANIMEKO_DESKTOP_TEST_TASK="dandanplay-app-id" "$ANI_APPIMAGE"
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-3'
+    - id: 'step-5'
       name: 'Check that sentryDsn is valid'
       timeout-minutes: 5
       shell: 'bash'
@@ -1560,7 +1673,7 @@ jobs:
         chmod +x "$ANI_APPIMAGE"
         ANIMEKO_DESKTOP_TEST_TASK="sentry-dsn" "$ANI_APPIMAGE"
       if: '${{ (github.repository == ''open-ani/animeko'') && (!(github.event_name == ''pull_request'')) }}'
-    - id: 'step-4'
+    - id: 'step-6'
       name: 'Check that analyticsServer is valid'
       timeout-minutes: 5
       shell: 'bash'

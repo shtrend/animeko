@@ -630,7 +630,7 @@ fun getVerifyJobBody(
 
     when (runner.os to runner.arch) {
         OS.WINDOWS to Arch.X64 -> {
-            uses(
+            usesWithAttempts(
                 name = "Download Windows x64 Portable",
                 action = DownloadArtifact(
                     name = ArtifactNames.windowsPortable(),
@@ -653,7 +653,7 @@ fun getVerifyJobBody(
         }
 
         OS.MACOS to Arch.AARCH64 -> {
-            uses(
+            usesWithAttempts(
                 name = "Download DMG",
                 action = DownloadArtifact(name = ArtifactNames.macosDmg(Arch.AARCH64)),
             )
@@ -668,7 +668,7 @@ fun getVerifyJobBody(
         }
 
         OS.UBUNTU to Arch.X64 -> {
-            uses(
+            usesWithAttempts(
                 name = "Download Linux x64 AppImage",
                 action = DownloadArtifact(
                     name = ArtifactNames.linuxAppImage(Arch.X64),
