@@ -28,12 +28,13 @@ class IosAnalyticsImpl(
         apiKey: String,
         host: String,
     ) {
+        println("PostHogSDK initialized")
         PostHogSDK.shared().setup(
             PostHogConfig(apiKey = apiKey, host = host).apply {
                 setCaptureApplicationLifecycleEvents(false)
                 setCaptureElementInteractions(false)
                 setCaptureScreenViews(true)
-                setDebug(config.debugLogging)
+                setDebug(true)
                 setGetAnonymousId {
                     NSUUID(userId)
                 }
@@ -46,9 +47,13 @@ class IosAnalyticsImpl(
         properties: Map<String, Any>,
     ) {
         @Suppress("UNCHECKED_CAST")
-        PostHogSDK.shared().captureWithEvent(
-            event.event,
+        PostHogSDK.shared().screenWithTitle(
+            "Main",
             properties as Map<Any?, String>,
         )
+    }
+
+    override fun onAppStart() {
+        recordEvent(AnalyticsEvent.Screen)
     }
 }
