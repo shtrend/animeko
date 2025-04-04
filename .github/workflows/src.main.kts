@@ -1396,6 +1396,15 @@ class WithMatrix(
                 ],
             )
         }
+
+        if (matrix.uploadIpa) {
+            runGradle(
+                name = "Patch ios Plist",
+                tasks = [
+                    ":app:ios:patchInfoPlist",
+                ],
+            )
+        }
     }
 
     fun JobBuilder<*>.buildIosIpaDebug() {
