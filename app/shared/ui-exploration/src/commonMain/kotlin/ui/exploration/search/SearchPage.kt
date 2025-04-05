@@ -200,12 +200,14 @@ fun SearchPage(
         },
         modifier,
         navigationIcon = {
-            if (navigator.canNavigateBack()) {
+            if (
+                navigator.currentDestination?.pane == ListDetailPaneScaffoldRole.Detail
+                && state.selectedItemIndex != -1
+            ) { // navigator.canNavigate will always return false on Two Pane mode
                 BackNavigationIconButton(
                     {
-                        coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                            navigator.navigateBack()
-                        }
+                        // Unselect, then hasSelectedItem will change
+                        state.selectedItemIndex = -1
                     },
                 )
             } else {
