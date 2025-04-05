@@ -135,24 +135,52 @@ class IosWebViewVideoExtractor : WebViewVideoExtractor {
         private val logger = logger<IosWebViewVideoExtractor>()
     }
 
-    private val aniInterceptContentController = WKUserContentController().apply {
-        // Add the message handler for "AniIntercept"
-        addScriptMessageHandler(
-            object : NSObject(), WKScriptMessageHandlerProtocol {
-                override fun userContentController(
-                    userContentController: WKUserContentController,
-                    didReceiveScriptMessage: WKScriptMessage
-                ) {
-                    val body = didReceiveScriptMessage.body.toString()
-                    logger.info { "JS -> Native: $body" }
-                    currentHandler?.handleInterceptedUrl(body)
-                }
-            },
-            name = "AniIntercept",
-        )
+    // Hold strong reference
+    private lateinit var aniInterceptContentController: WKUserContentController
+    private lateinit var webView: WKWebView
 
-        // Insert a small test to ensure the script actually runs
-        val injectionScript = """
+    private var currentHandler: Handler? = null
+
+    @OptIn(DelicateCoroutinesApi::class)
+    override suspend fun getVideoResourceUrl(
+        context: Context,
+        pageUrl: String,
+        config: WebViewConfig,
+        resourceMatcher: (String) -> WebViewVideoExtractor.Instruction
+    ): WebResource? = withContext(Dispatchers.Main) {
+        initWebView()
+
+        // Create a new handler for each request to avoid re-entrancy issues
+        val handler = Handler(pageUrl, config, resourceMatcher)
+        currentHandler = handler
+        handler.run()
+    }
+
+    // Must be on Main thread
+    @OptIn(ExperimentalForeignApi::class)
+    private fun initWebView() {
+        if (::webView.isInitialized) {
+            return
+        }
+
+        aniInterceptContentController = WKUserContentController().apply {
+            // Add the message handler for "AniIntercept"
+            addScriptMessageHandler(
+                object : NSObject(), WKScriptMessageHandlerProtocol {
+                    override fun userContentController(
+                        userContentController: WKUserContentController,
+                        didReceiveScriptMessage: WKScriptMessage
+                    ) {
+                        val body = didReceiveScriptMessage.body.toString()
+                        logger.info { "JS -> Native: $body" }
+                        currentHandler?.handleInterceptedUrl(body)
+                    }
+                },
+                name = "AniIntercept",
+            )
+
+            // Insert a small test to ensure the script actually runs
+            val injectionScript = """
             console.log("[AniIntercept] Script injected at documentStart.");
             (function() {
                 const oldFetch = window.fetch;
@@ -182,45 +210,30 @@ class IosWebViewVideoExtractor : WebViewVideoExtractor {
             })();
         """.trimIndent()
 
-        addUserScript(
-            WKUserScript(
-                source = injectionScript,
-                injectionTime = WKUserScriptInjectionTime.WKUserScriptInjectionTimeAtDocumentStart,
-                forMainFrameOnly = false,
-            ),
+            addUserScript(
+                WKUserScript(
+                    source = injectionScript,
+                    injectionTime = WKUserScriptInjectionTime.WKUserScriptInjectionTimeAtDocumentStart,
+                    forMainFrameOnly = false,
+                ),
+            )
+        }
+
+        webView = WKWebView(
+            frame = CGRectMake(0.0, 0.0, 1000.0, 1000.0),
+            configuration = WKWebViewConfiguration().apply {
+                allowsInlineMediaPlayback = true
+                mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone
+                preferences.javaScriptCanOpenWindowsAutomatically = true
+                userContentController = aniInterceptContentController
+
+                // For demonstration; tweak if needed
+                defaultWebpagePreferences.allowsContentJavaScript = true
+                preferences.fraudulentWebsiteWarningEnabled = false
+                limitsNavigationsToAppBoundDomains = false
+                upgradeKnownHostsToHTTPS = false
+            },
         )
-    }
-
-    @OptIn(ExperimentalForeignApi::class)
-    val webView: WKWebView = WKWebView(
-        frame = CGRectMake(0.0, 0.0, 1000.0, 1000.0),
-        configuration = WKWebViewConfiguration().apply {
-            allowsInlineMediaPlayback = true
-            mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone
-            preferences.javaScriptCanOpenWindowsAutomatically = true
-            userContentController = aniInterceptContentController
-
-            // For demonstration; tweak if needed
-            defaultWebpagePreferences.allowsContentJavaScript = true
-            preferences.fraudulentWebsiteWarningEnabled = false
-            limitsNavigationsToAppBoundDomains = false
-            upgradeKnownHostsToHTTPS = false
-        },
-    )
-
-    private var currentHandler: Handler? = null
-
-    @OptIn(DelicateCoroutinesApi::class)
-    override suspend fun getVideoResourceUrl(
-        context: Context,
-        pageUrl: String,
-        config: WebViewConfig,
-        resourceMatcher: (String) -> WebViewVideoExtractor.Instruction
-    ): WebResource? = withContext(Dispatchers.Main) {
-        // Create a new handler for each request to avoid re-entrancy issues
-        val handler = Handler(pageUrl, config, resourceMatcher)
-        currentHandler = handler
-        handler.run()
     }
 
     @OptIn(DelicateCoroutinesApi::class)
