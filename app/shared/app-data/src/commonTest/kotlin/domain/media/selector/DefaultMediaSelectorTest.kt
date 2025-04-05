@@ -35,6 +35,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
+/**
+ * NOTE: 已弃用, 新测试请参考 [DefaultMediaSelectorSubjectSeriesTest].
+ */
 class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
     ///////////////////////////////////////////////////////////////////////////
     // Select contract
