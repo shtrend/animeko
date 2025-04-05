@@ -106,7 +106,7 @@ class TrendsRepository(
 private fun BangumiNextSlimSubject.toTrendingSubjectInfo(): TrendingSubjectInfo {
     return TrendingSubjectInfo(
         bangumiId = id,
-        nameCn = nameCN,
+        nameCn = nameCN.ifEmpty { name },
         imageLarge = images?.large ?: images?.medium ?: images?.common ?: "",
     )
 }
