@@ -81,7 +81,8 @@ class MediaSelectorFilterSortAlgorithm {
         context: MediaSelectorContext,
         mediaListFilterContext: MediaListFilterContext?
     ): MaybeExcludedMedia {
-        val mediaSubjectName = media.properties.subjectName ?: media.originalTitle
+        val mediaSubjectName = media.properties.subjectName
+        val mediaSubjectNameOrOriginalTitle = mediaSubjectName ?: media.originalTitle
         val contextSubjectNames = context.subjectInfo?.allNames.orEmpty().asSequence()
 
         // 由下面实现调用, 方便创建 MaybeExcludedMedia
@@ -90,7 +91,7 @@ class MediaSelectorFilterSortAlgorithm {
                 media,
                 metadata = calculateMatchMetadata(
                     contextSubjectNames,
-                    mediaSubjectName,
+                    mediaSubjectNameOrOriginalTitle,
                     media.episodeRange,
                     context.episodeInfo?.sort,
                     context.episodeInfo?.ep,
@@ -128,17 +129,43 @@ class MediaSelectorFilterSortAlgorithm {
             }
         }
 
-        context.subjectSeriesInfo?.sequelSubjectNames?.forEach { name ->
-            if (name.isNotBlank() && MediaListFilters.specialContains(media.originalTitle, name)) {
-                return exclude(MediaExclusionReason.FromSequelSeason) // 是其他季度
-            }
-        }
+        if (mediaSubjectName != null) {
+            // 数据源可以准确拿到条目名称, 我们采用 specialEquals
 
-        media.properties.subjectName?.let { subjectName ->
-            context.subjectSeriesInfo?.seriesSubjectNamesWithoutSelf?.forEach { name ->
-                if (MediaListFilters.specialEquals(subjectName, name)) {
-                    // 精确匹配到了是其他季度的名称. 这里只有用精确匹配才安全. 
-                    // 有些条目可能就只差距一个字母, 例如 "天降之物" 和 "天降之物f", 非常容易满足模糊匹配.
+            // 首先检查数据源条目名是否与当前条目名称相同.
+            // 只有在条目名称不相同的情况下, 才可以考虑续集, 因为续集可能只比前传多一个特殊字符, 能通过 specialEquals.
+            if (contextSubjectNames.any { contextSubjectNames ->
+                    MediaListFilters.specialEquals(mediaSubjectName, contextSubjectNames)
+                }) {
+                // contextSubjectNames 与条目名称相同, 肯定不能排除它
+            } else {
+                context.subjectSeriesInfo?.seriesSubjectNamesWithoutSelf?.forEach { name ->
+                    if (MediaListFilters.specialEquals(mediaSubjectName, name)) {
+                        // 排除特殊字符后精确匹配到了是其他季度的名称. 
+                        // 
+                        // 注意: 这里也不可以改成用 edit-distance 模糊匹配, 因为
+                        // 有些条目可能就只差距一个字母, 例如 "天降之物" 和 "天降之物f", 非常容易满足模糊匹配.
+
+                        // 优化一下类型, 以通过一些现有 test. 在实际选择效果上这两个原因是没什么区别的, 都是排除.
+                        return if (name in context.subjectSeriesInfo.sequelSubjectNames) {
+                            exclude(MediaExclusionReason.FromSequelSeason)
+                        } else {
+                            exclude(MediaExclusionReason.FromSeriesSeason)
+                        }
+                    }
+                }
+                // seriesSubjectNamesWithoutSelf 包括了 sequel, 所以我们不需要再考虑 sequel 了. 
+            }
+        } else {
+            // 不可以拿到条目名称, 只做保守排除
+
+            // 如果续集名称与当前条目名称相同, 说明是续集
+            context.subjectSeriesInfo?.sequelSubjectNames?.forEach { sequelName ->
+                if (sequelName.isNotBlank() &&
+                    // 注意: 这里不可以使用 specialContains, 因为续集可能比前传只多一个特殊字符. See #1912
+                    mediaSubjectNameOrOriginalTitle.contains(sequelName, ignoreCase = true)
+                ) {
+                    // 是其他季度
                     return exclude(MediaExclusionReason.FromSeriesSeason)
                 }
             }
@@ -151,7 +178,7 @@ class MediaSelectorFilterSortAlgorithm {
                         mediaListFilterContext.applyOn(
                             object : MediaListFilter.Candidate {
                                 override val originalTitle: String get() = media.originalTitle
-                                override val subjectName: String get() = mediaSubjectName
+                                override val subjectName: String get() = mediaSubjectNameOrOriginalTitle
                                 override val episodeRange: EpisodeRange? get() = media.episodeRange
                                 override fun toString(): String {
                                     return "Candidate(media=$media)"

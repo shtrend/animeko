@@ -167,7 +167,7 @@ class DefaultMediaSelectorSubjectSeriesTest {
         ) {
             checkSubjectExclusion {
                 expect(
-                    "轻音少女" to FromSequelSeason,
+                    "轻音少女" to null,
                     "轻音少女 第二季" to FromSequelSeason,
                 )
             }
@@ -193,7 +193,7 @@ class DefaultMediaSelectorSubjectSeriesTest {
         ) {
             checkSubjectExclusion {
                 expect(
-                    "轻音少女" to FromSeriesSeason,
+                    "轻音少女" to null,
                     "轻音少女 第二季" to FromSequelSeason,
                 )
             }
