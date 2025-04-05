@@ -29,6 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.io.files.SystemFileSystem
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.foundation.HttpClientProvider
 import me.him188.ani.app.domain.foundation.get
@@ -76,6 +77,7 @@ import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.SystemSupportDir
 import me.him188.ani.utils.io.createDirectories
 import me.him188.ani.utils.io.resolve
+import me.him188.ani.utils.logging.IosLoggingConfigurator
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.koin.core.context.startKoin
 import org.koin.dsl.module
@@ -94,6 +96,7 @@ fun MainViewController(): UIViewController {
         ),
     )
     AppStartupTasks.printVersions()
+    IosLoggingConfigurator.configure(context.files.logsDir.path, SystemFileSystem)
 
     val koin = startKoin {
         modules(getCommonKoinModule({ context }, scope))

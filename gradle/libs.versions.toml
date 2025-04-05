@@ -61,7 +61,7 @@ snakeyaml = "2.2"
 coil = "3.1.0" # https://github.com/coil-kt/coil/releases
 constraintlayout-compose = "0.4.0"
 antlr-kotlin = "1.0.2"
-oshai-kotlin-logging = "7.0.0" # Only for native. On JVM we use slf4j directly.
+diamondedge-logging = "2.0.3" # Only for native. On JVM we use slf4j directly.
 ipaddress-parser = "5.5.1"
 turbine = "1.2.0" # https://github.com/cashapp/turbine/releases/
 junit4 = "4.13.2"
@@ -247,7 +247,7 @@ jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
-oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-kotlin-logging" }
+diamondedge-logging = { module = "com.diamondedge:logging", version.ref = "diamondedge-logging" }
 jsonpathkt-kotlinx = { module = "com.eygraber:jsonpathkt-kotlinx", version.ref = "jsonpathkt-kotlinx" }
 filekit-compose = { module = "io.github.vinceglb:filekit-compose", version.ref = "filekit" }
 filekit-core = { module = "io.github.vinceglb:filekit-core", version.ref = "filekit" }

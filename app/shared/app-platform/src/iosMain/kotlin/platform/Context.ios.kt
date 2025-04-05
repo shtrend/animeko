@@ -38,4 +38,5 @@ class IosContextFiles(
     override val dataDir: SystemPath
 ) : ContextFiles {
     val datastoreDir = dataDir.resolve("datastores")
+    val logsDir = dataDir.resolve("logs")
 }
