@@ -12,6 +12,7 @@
 package me.him188.ani.app.domain.media.selector
 
 import kotlinx.coroutines.flow.first
+import me.him188.ani.app.domain.media.selector.MediaExclusionReason.FromSequelSeason
 import me.him188.ani.app.domain.media.selector.MediaExclusionReason.FromSeriesSeason
 import me.him188.ani.app.domain.media.selector.MediaExclusionReason.SubjectNameMismatch
 import me.him188.ani.test.TestContainer
@@ -144,6 +145,56 @@ class DefaultMediaSelectorSubjectSeriesTest {
                     "香格里拉2009" to SubjectNameMismatch, // 这确实是另一个番
                     "香格里拉·开拓异境～粪作猎手挑战神作" to null,
                     "这儿是香格里拉" to SubjectNameMismatch,
+                )
+            }
+        }
+    }
+
+    @TestFactory
+    fun `sequel name specially matches subject name`() = runDynamicTests {
+        addSimpleMediaSelectorTest(
+            "轻音少女",
+            {
+                initSubject("轻音少女") {
+                    seriesInfo(seasonSort = 1) {
+                        sequel(
+                            "轻音少女 第二季",
+                            "轻音少女~",
+                        )
+                    }
+                }
+            },
+        ) {
+            checkSubjectExclusion {
+                expect(
+                    "轻音少女" to FromSequelSeason,
+                    "轻音少女 第二季" to FromSequelSeason,
+                )
+            }
+        }
+    }
+
+    @TestFactory
+    fun `series name specially matches subject name`() = runDynamicTests {
+        addSimpleMediaSelectorTest(
+            "轻音少女",
+            {
+                initSubject("轻音少女") {
+                    seriesInfo(seasonSort = 1) {
+                        series(
+                            "轻音少女~",
+                        )
+                        sequel(
+                            "轻音少女 第二季",
+                        )
+                    }
+                }
+            },
+        ) {
+            checkSubjectExclusion {
+                expect(
+                    "轻音少女" to FromSeriesSeason,
+                    "轻音少女 第二季" to FromSequelSeason,
                 )
             }
         }
