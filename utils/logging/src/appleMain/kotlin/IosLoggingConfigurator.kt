@@ -11,9 +11,8 @@ package me.him188.ani.utils.logging
 
 import kotlinx.io.files.FileSystem
 import kotlinx.io.files.Path
-import kotlinx.io.files.SystemFileSystem
 import me.him188.ani.utils.logging.writer.DailyRollingFileLogWriter
-import me.him188.ani.utils.logging.writer.PrintLogWriter
+import me.him188.ani.utils.logging.writer.DarwinLogWriter
 import kotlin.concurrent.Volatile
 
 object IosLoggingConfigurator {
@@ -23,7 +22,7 @@ object IosLoggingConfigurator {
     // For unit tests only
     private val fallbackLoggerFactory = DefaultLoggerFactory(
         listOf(
-            PrintLogWriter(
+            DarwinLogWriter(
                 logLevel = LogLevel.TRACE,
             ),
         ),
@@ -35,7 +34,7 @@ object IosLoggingConfigurator {
     fun configure(logsDir: Path, fileSystem: FileSystem) {
         _configuredFactory = DefaultLoggerFactory(
             listOf(
-                PrintLogWriter(
+                DarwinLogWriter(
                     logLevel = LogLevel.TRACE,
                 ),
                 DailyRollingFileLogWriter(
