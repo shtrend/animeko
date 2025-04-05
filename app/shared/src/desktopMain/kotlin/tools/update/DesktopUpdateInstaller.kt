@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.tools.update
 
+import kotlinx.coroutines.runBlocking
 import me.him188.ani.app.platform.ContextMP
 import me.him188.ani.app.platform.ExecutableDirectoryDetector
 import me.him188.ani.app.platform.features.DesktopFileRevealer
@@ -198,8 +199,10 @@ object LinuxUpdateInstaller : DesktopUpdateInstaller {
     }
 
     override fun install(file: SystemPath, context: ContextMP): InstallationResult {
-        Desktop.getDesktop().open(file.toFile())
-        exitProcess(0)
+        runBlocking {
+            DesktopFileRevealer.revealFile(file)
+        }
+        return InstallationResult.Succeed
     }
 }
 
