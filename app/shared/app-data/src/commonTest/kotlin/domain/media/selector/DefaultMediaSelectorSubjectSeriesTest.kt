@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.first
 import me.him188.ani.app.domain.media.selector.MediaExclusionReason.FromSequelSeason
 import me.him188.ani.app.domain.media.selector.MediaExclusionReason.FromSeriesSeason
 import me.him188.ani.app.domain.media.selector.MediaExclusionReason.SubjectNameMismatch
+import me.him188.ani.app.domain.media.selector.testFramework.SimpleMediaSelectorTestSuite
+import me.him188.ani.app.domain.media.selector.testFramework.addSimpleMediaSelectorTest
 import me.him188.ani.test.TestContainer
 import me.him188.ani.test.TestFactory
 import me.him188.ani.test.runDynamicTests

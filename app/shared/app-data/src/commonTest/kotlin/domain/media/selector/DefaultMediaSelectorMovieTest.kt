@@ -12,6 +12,7 @@
 package me.him188.ani.app.domain.media.selector
 
 import me.him188.ani.app.domain.media.selector.MediaExclusionReason.FromSeriesSeason
+import me.him188.ani.app.domain.media.selector.testFramework.addSimpleMediaSelectorTest
 import me.him188.ani.test.TestContainer
 import me.him188.ani.test.TestFactory
 import me.him188.ani.test.runDynamicTests

@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.domain.media.selector
+package me.him188.ani.app.domain.media.selector.testFramework
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.asFlow
@@ -15,7 +15,7 @@ import kotlinx.coroutines.test.TestScope
 import me.him188.ani.app.domain.media.fetch.MediaFetchSession
 import me.him188.ani.app.domain.media.fetch.MediaFetcherConfig
 import me.him188.ani.app.domain.media.fetch.MediaSourceMediaFetcher
-import me.him188.ani.app.domain.media.selector.MediaSelectorTestSuite.Companion.SOURCE_DMHY
+import me.him188.ani.app.domain.media.selector.testFramework.MediaSelectorTestSuite.Companion.SOURCE_DMHY
 import me.him188.ani.app.domain.mediasource.instance.MediaSourceInstance
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.Media

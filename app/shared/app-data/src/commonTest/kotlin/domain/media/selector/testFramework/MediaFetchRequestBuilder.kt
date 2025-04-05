@@ -7,13 +7,13 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.domain.media.selector
+package me.him188.ani.app.domain.media.selector.testFramework
 
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.source.MediaFetchRequest
 
 /**
- * @see me.him188.ani.datasources.api.source.MediaFetchRequest
+ * @see MediaFetchRequest
  */
 class MediaFetchRequestBuilder(
     var subjectId: String = "1",

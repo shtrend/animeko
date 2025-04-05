@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.domain.media.selector
+package me.him188.ani.app.domain.media.selector.legacy
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import me.him188.ani.app.data.models.episode.EpisodeInfo
@@ -17,6 +17,11 @@ import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectSeriesInfo
 import me.him188.ani.app.domain.media.createTestDefaultMedia
 import me.him188.ani.app.domain.media.createTestMediaProperties
+import me.him188.ani.app.domain.media.selector.DefaultMediaSelector
+import me.him188.ani.app.domain.media.selector.MediaSelectorContext
+import me.him188.ani.app.domain.media.selector.MediaSelectorSourceTiers
+import me.him188.ani.app.domain.media.selector.MediaSelectorSubtitlePreferences
+import me.him188.ani.app.domain.media.selector.SubtitleKindPreference
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.MediaExtraFiles
@@ -28,15 +33,15 @@ import me.him188.ani.datasources.api.topic.FileSize
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.datasources.api.topic.Resolution
 import me.him188.ani.datasources.api.topic.ResourceLocation
-import me.him188.ani.datasources.api.topic.SubtitleLanguage.ChineseSimplified
-import me.him188.ani.datasources.api.topic.SubtitleLanguage.ChineseTraditional
+import me.him188.ani.datasources.api.topic.SubtitleLanguage
 import me.him188.ani.utils.platform.collections.copyPut
 import me.him188.ani.utils.platform.collections.toImmutable
 
 /**
- * This class is soft-deprecated. Use [MediaSelectorTestSuite] instead.
+ * @suppress 已弃用, 新的 test 使用 [me.him188.ani.app.domain.media.selector.testFramework.TestMediaFetchSessionBuilder].
+ * @see me.him188.ani.app.domain.media.selector.MediaSelectorAutoSelect
  */
-sealed class AbstractDefaultMediaSelectorTest {
+abstract class AbstractDefaultMediaSelectorTest {
     protected val mediaList: MutableStateFlow<MutableList<DefaultMedia>> = MutableStateFlow(mutableListOf())
     protected fun addMedia(vararg media: DefaultMedia) {
         mediaList.value.addAll(media)
@@ -44,7 +49,7 @@ sealed class AbstractDefaultMediaSelectorTest {
 
     protected val savedUserPreference = MutableStateFlow(DEFAULT_PREFERENCE)
     protected val savedDefaultPreference = MutableStateFlow(DEFAULT_PREFERENCE)
-    protected val mediaSelectorSettings = MutableStateFlow(MediaSelectorSettings.Default)
+    protected val mediaSelectorSettings = MutableStateFlow(MediaSelectorSettings.Companion.Default)
     protected val mediaSelectorContext = MutableStateFlow(
         createMediaSelectorContextFromEmpty(),
     )
@@ -58,7 +63,7 @@ sealed class AbstractDefaultMediaSelectorTest {
     }
 
     private fun getCurrentSubtitlePreferences() = (mediaSelectorContext.value.subtitlePreferences
-        ?: MediaSelectorSubtitlePreferences.AllNormal)
+        ?: MediaSelectorSubtitlePreferences.Companion.AllNormal)
 
     protected fun setSubtitlePreference(
         key: SubtitleKind,
@@ -79,16 +84,16 @@ sealed class AbstractDefaultMediaSelectorTest {
     )
 
     companion object {
-        val DEFAULT_PREFERENCE = MediaPreference.Empty.copy(
+        val DEFAULT_PREFERENCE = MediaPreference.Companion.Empty.copy(
             fallbackResolutions = listOf(
-                Resolution.R2160P,
-                Resolution.R1440P,
-                Resolution.R1080P,
-                Resolution.R720P,
+                Resolution.Companion.R2160P,
+                Resolution.Companion.R1440P,
+                Resolution.Companion.R1080P,
+                Resolution.Companion.R720P,
             ).map { it.id },
             fallbackSubtitleLanguageIds = listOf(
-                ChineseSimplified,
-                ChineseTraditional,
+                SubtitleLanguage.ChineseSimplified,
+                SubtitleLanguage.ChineseTraditional,
             ).map { it.id },
         )
 
@@ -100,15 +105,15 @@ sealed class AbstractDefaultMediaSelectorTest {
         fun createMediaSelectorContextFromEmpty(
             subjectCompleted: Boolean = false,
             mediaSourcePrecedence: List<String> = emptyList(),
-            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
+            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.Companion.AllNormal,
             subjectSequelNames: Set<String> = emptySet(),
-            subjectInfo: SubjectInfo = SubjectInfo.Empty,
-            episodeInfo: EpisodeInfo = EpisodeInfo.Empty,
+            subjectInfo: SubjectInfo = SubjectInfo.Companion.Empty,
+            episodeInfo: EpisodeInfo = EpisodeInfo.Companion.Empty,
         ) = createMediaSelectorContextFromEmpty(
             subjectCompleted = subjectCompleted,
             mediaSourcePrecedence = mediaSourcePrecedence,
             subtitleKindFilters = subtitleKindFilters,
-            subjectSeriesInfo = SubjectSeriesInfo.Fallback.copy(sequelSubjectNames = subjectSequelNames),
+            subjectSeriesInfo = SubjectSeriesInfo.Companion.Fallback.copy(sequelSubjectNames = subjectSequelNames),
             subjectInfo = subjectInfo,
             episodeInfo = episodeInfo,
         )
@@ -117,10 +122,10 @@ sealed class AbstractDefaultMediaSelectorTest {
         fun createMediaSelectorContextFromEmpty(
             subjectCompleted: Boolean = false,
             mediaSourcePrecedence: List<String> = emptyList(),
-            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
-            subjectSeriesInfo: SubjectSeriesInfo = SubjectSeriesInfo.Fallback,
-            subjectInfo: SubjectInfo = SubjectInfo.Empty,
-            episodeInfo: EpisodeInfo = EpisodeInfo.Empty,
+            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.Companion.AllNormal,
+            subjectSeriesInfo: SubjectSeriesInfo = SubjectSeriesInfo.Companion.Fallback,
+            subjectInfo: SubjectInfo = SubjectInfo.Companion.Empty,
+            episodeInfo: EpisodeInfo = EpisodeInfo.Companion.Empty,
         ) =
             MediaSelectorContext(
                 subjectFinished = subjectCompleted,
@@ -129,7 +134,7 @@ sealed class AbstractDefaultMediaSelectorTest {
                 subjectSeriesInfo = subjectSeriesInfo,
                 subjectInfo = subjectInfo,
                 episodeInfo = episodeInfo,
-                mediaSourceTiers = MediaSelectorSourceTiers.Empty,
+                mediaSourceTiers = MediaSelectorSourceTiers.Companion.Empty,
             )
     }
 
@@ -140,12 +145,15 @@ sealed class AbstractDefaultMediaSelectorTest {
         alliance: String = "字幕组",
         size: FileSize = 1.megaBytes,
         publishedTime: Long = 0,
-        subtitleLanguages: List<String> = listOf(ChineseSimplified, ChineseTraditional).map { it.id },
+        subtitleLanguages: List<String> = listOf(
+            SubtitleLanguage.ChineseSimplified,
+            SubtitleLanguage.ChineseTraditional,
+        ).map { it.id },
         location: MediaSourceLocation = MediaSourceLocation.Online,
         kind: MediaSourceKind = MediaSourceKind.BitTorrent,
-        episodeRange: EpisodeRange = EpisodeRange.single(EpisodeSort(1)),
+        episodeRange: EpisodeRange = EpisodeRange.Companion.single(EpisodeSort(1)),
         subtitleKind: SubtitleKind? = null,
-        extraFiles: MediaExtraFiles = MediaExtraFiles.EMPTY,
+        extraFiles: MediaExtraFiles = MediaExtraFiles.Companion.EMPTY,
         id: Int = mediaIdCounter++,
         originalTitle: String = "[字幕组] 孤独摇滚 $id",
         subjectName: String? = null,

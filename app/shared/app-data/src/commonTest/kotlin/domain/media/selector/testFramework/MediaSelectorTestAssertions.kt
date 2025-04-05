@@ -7,12 +7,16 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.domain.media.selector
+package me.him188.ani.app.domain.media.selector.testFramework
 
 import androidx.annotation.CheckResult
-import me.him188.ani.app.domain.media.selector.MaybeExcludedMediaAssertions.Assert
-import me.him188.ani.app.domain.media.selector.MaybeExcludedMediaAssertions.AssertNoMoreElements
-import me.him188.ani.app.domain.media.selector.MaybeExcludedMediaAssertions.Filter.FilterType
+import me.him188.ani.app.domain.media.selector.MatchMetadata
+import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
+import me.him188.ani.app.domain.media.selector.MediaExclusionReason
+import me.him188.ani.app.domain.media.selector.UnsafeOriginalMediaAccess
+import me.him188.ani.app.domain.media.selector.testFramework.MaybeExcludedMediaAssertions.Assert
+import me.him188.ani.app.domain.media.selector.testFramework.MaybeExcludedMediaAssertions.AssertNoMoreElements
+import me.him188.ani.app.domain.media.selector.testFramework.MaybeExcludedMediaAssertions.Filter.FilterType
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import kotlin.contracts.InvocationKind

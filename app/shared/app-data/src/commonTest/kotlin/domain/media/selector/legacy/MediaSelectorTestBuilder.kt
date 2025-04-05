@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.domain.media.selector
+package me.him188.ani.app.domain.media.selector.legacy
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +24,10 @@ import me.him188.ani.app.domain.media.fetch.MediaFetchSession
 import me.him188.ani.app.domain.media.fetch.MediaFetcher
 import me.him188.ani.app.domain.media.fetch.MediaFetcherConfig
 import me.him188.ani.app.domain.media.fetch.MediaSourceMediaFetcher
+import me.him188.ani.app.domain.media.selector.DefaultMediaSelector
+import me.him188.ani.app.domain.media.selector.MediaSelectorContext
+import me.him188.ani.app.domain.media.selector.MediaSelectorSourceTiers
+import me.him188.ani.app.domain.media.selector.MediaSelectorSubtitlePreferences
 import me.him188.ani.app.domain.mediasource.instance.MediaSourceInstance
 import me.him188.ani.app.domain.mediasource.instance.createTestMediaSourceInstance
 import me.him188.ani.datasources.api.DefaultMedia
@@ -44,6 +48,10 @@ import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.datasources.api.topic.SubtitleLanguage
 import kotlin.coroutines.ContinuationInterceptor
 
+/**
+ * @suppress 已弃用, 新的 test 使用 [me.him188.ani.app.domain.media.selector.testFramework.TestMediaFetchSessionBuilder].
+ * @see me.him188.ani.app.domain.media.selector.MediaSelectorAutoSelect
+ */
 class MediaSelectorTestBuilder(
     private val testScope: TestScope,
 ) {
@@ -54,11 +62,11 @@ class MediaSelectorTestBuilder(
         MediaSelectorContext(
             subjectFinished = false,
             mediaSourcePrecedence = emptyList(),
-            subtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
-            subjectSeriesInfo = SubjectSeriesInfo.Fallback,
-            subjectInfo = SubjectInfo.Empty,
-            episodeInfo = EpisodeInfo.Empty,
-            mediaSourceTiers = MediaSelectorSourceTiers.Empty,
+            subtitlePreferences = MediaSelectorSubtitlePreferences.Companion.AllNormal,
+            subjectSeriesInfo = SubjectSeriesInfo.Companion.Fallback,
+            subjectInfo = SubjectInfo.Companion.Empty,
+            episodeInfo = EpisodeInfo.Companion.Empty,
+            mediaSourceTiers = MediaSelectorSourceTiers.Companion.Empty,
         ),
     )
 
@@ -123,7 +131,7 @@ class MediaSelectorTestBuilder(
     fun createMediaFetcher() = MediaSourceMediaFetcher(
         configProvider = { MediaFetcherConfig.Companion.Default },
         mediaSources = mediaSources,
-        flowContext = testScope.coroutineContext[ContinuationInterceptor]!!,
+        flowContext = testScope.coroutineContext[ContinuationInterceptor.Key]!!,
     )
 
     fun createMediaFetchSession(fetcher: MediaFetcher) = fetcher.newSession(
@@ -143,7 +151,7 @@ class MediaSelectorTestBuilder(
         savedDefaultPreference = savedDefaultPreference,
         enableCaching = false,
         mediaSelectorSettings = mediaSelectorSettings,
-        flowCoroutineContext = testScope.coroutineContext[ContinuationInterceptor]!!,
+        flowCoroutineContext = testScope.coroutineContext[ContinuationInterceptor.Key]!!,
     )
 
     fun create(): Triple<MediaSourceMediaFetcher, MediaFetchSession, DefaultMediaSelector> {

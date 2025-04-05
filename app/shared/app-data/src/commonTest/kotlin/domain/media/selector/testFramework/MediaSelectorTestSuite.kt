@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.domain.media.selector
+package me.him188.ani.app.domain.media.selector.testFramework
 
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,6 +29,11 @@ import me.him188.ani.app.domain.media.createTestDefaultMedia
 import me.him188.ani.app.domain.media.createTestMediaProperties
 import me.him188.ani.app.domain.media.fetch.MediaFetchSession
 import me.him188.ani.app.domain.media.fetch.create
+import me.him188.ani.app.domain.media.selector.DefaultMediaSelector
+import me.him188.ani.app.domain.media.selector.MediaSelectorContext
+import me.him188.ani.app.domain.media.selector.MediaSelectorSourceTiers
+import me.him188.ani.app.domain.media.selector.MediaSelectorSubtitlePreferences
+import me.him188.ani.app.domain.media.selector.SubtitleKindPreference
 import me.him188.ani.app.domain.mediasource.codec.MediaSourceTier
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.EpisodeSort
@@ -54,7 +59,11 @@ import kotlin.jvm.JvmName
 import kotlin.random.Random
 
 /**
- * DSL for testing [DefaultMediaSelector].
+ * DSL for testing [me.him188.ani.app.domain.media.selector.DefaultMediaSelector].
+ *
+ * @see me.him188.ani.app.domain.media.selector.DefaultMediaSelectorSourceTierAutoSelectTest
+ * @see me.him188.ani.app.domain.media.selector.DefaultMediaSelectorSourceTierSortTest
+ * @see me.him188.ani.app.domain.media.selector.DefaultMediaSelectorMatchMetadataTest
  */
 sealed class MediaSelectorTestSuite {
     val random = Random(42)
@@ -63,7 +72,7 @@ sealed class MediaSelectorTestSuite {
     val preferenceApi = PreferenceApi()
 
     /**
-     * initializes [MediaSelectorContext].
+     * initializes [me.him188.ani.app.domain.media.selector.MediaSelectorContext].
      */
     inner class InitApi {
         lateinit var subjectName: String
@@ -136,7 +145,7 @@ sealed class MediaSelectorTestSuite {
         }
 
         private fun getCurrentSubtitlePreferences() = (mediaSelectorContext.value.subtitlePreferences
-            ?: MediaSelectorSubtitlePreferences.AllNormal)
+            ?: MediaSelectorSubtitlePreferences.Companion.AllNormal)
 
         fun setSubtitlePreference(
             key: SubtitleKind,
@@ -224,11 +233,11 @@ sealed class MediaSelectorTestSuite {
         fun createMediaSelectorContextFromEmpty(
             subjectCompleted: Boolean = false,
             mediaSourcePrecedence: List<String> = emptyList(),
-            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
+            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.Companion.AllNormal,
             subjectSequelNames: Set<String> = emptySet(),
             subjectInfo: SubjectInfo = SubjectInfo.Empty,
             episodeInfo: EpisodeInfo = EpisodeInfo.Empty,
-            mediaSelectorSourceTiers: MediaSelectorSourceTiers = MediaSelectorSourceTiers.Empty,
+            mediaSelectorSourceTiers: MediaSelectorSourceTiers = MediaSelectorSourceTiers.Companion.Empty,
         ) = createMediaSelectorContextFromEmpty(
             subjectCompleted = subjectCompleted,
             mediaSourcePrecedence = mediaSourcePrecedence,
@@ -243,11 +252,11 @@ sealed class MediaSelectorTestSuite {
         fun createMediaSelectorContextFromEmpty(
             subjectCompleted: Boolean = false,
             mediaSourcePrecedence: List<String> = emptyList(),
-            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
+            subtitleKindFilters: MediaSelectorSubtitlePreferences = MediaSelectorSubtitlePreferences.Companion.AllNormal,
             subjectSeriesInfo: SubjectSeriesInfo = SubjectSeriesInfo.Fallback,
             subjectInfo: SubjectInfo = SubjectInfo.Empty,
             episodeInfo: EpisodeInfo = EpisodeInfo.Empty,
-            mediaSelectorSourceTiers: MediaSelectorSourceTiers = MediaSelectorSourceTiers.Empty,
+            mediaSelectorSourceTiers: MediaSelectorSourceTiers = MediaSelectorSourceTiers.Companion.Empty,
         ) =
             MediaSelectorContext(
                 subjectFinished = subjectCompleted,
@@ -455,6 +464,9 @@ fun runSimpleMediaSelectorTestSuite(
     SimpleMediaSelectorTestSuite().apply(buildTest).thenCheck()
 }
 
+/**
+ * @see me.him188.ani.app.domain.media.selector.DefaultMediaSelectorSourceTierAutoSelectTest
+ */
 fun runFetchMediaSelectorTestSuite(
     buildTest: context(TestScope) FetchMediaSelectorTestSuite.() -> Unit = {},
     thenCheck: suspend context(TestScope) FetchMediaSelectorTestSuite.() -> Unit

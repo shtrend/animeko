@@ -11,6 +11,10 @@
 
 package me.him188.ani.app.domain.media.selector
 
+import me.him188.ani.app.domain.media.selector.testFramework.MediaSelectorTestSuite
+import me.him188.ani.app.domain.media.selector.testFramework.assertMedias
+import me.him188.ani.app.domain.media.selector.testFramework.runSimpleMediaSelectorTestSuite
+import me.him188.ani.app.domain.media.selector.testFramework.setSourceTiers
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.source.MediaSourceKind.BitTorrent
 import me.him188.ani.datasources.api.source.MediaSourceKind.WEB

@@ -7,9 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-@file:Suppress("unused")
-
-package me.him188.ani.app.domain.media.selector
+package me.him188.ani.app.domain.media.selector.legacy
 
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
@@ -23,16 +21,23 @@ import kotlinx.io.IOException
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.domain.media.SOURCE_DMHY
 import me.him188.ani.app.domain.media.fetch.MediaFetchSession
+import me.him188.ani.app.domain.media.selector.MediaSelectorAutoSelect
+import me.him188.ani.app.domain.media.selector.MediaSelectorSourceTiers
+import me.him188.ani.app.domain.media.selector.autoSelect
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
+/**
+ * @suppress 已弃用, 新的 test 使用 [me.him188.ani.app.domain.media.selector.testFramework.TestMediaFetchSessionBuilder].
+ * @see me.him188.ani.app.domain.media.selector.MediaSelectorAutoSelect
+ */
 class MediaSelectorFastSelectSourcesTest {
     private fun TestScope.createTestBuilder(): MediaSelectorTestBuilder = MediaSelectorTestBuilder(this).apply {
-        savedUserPreference.value = MediaPreference.Any
-        savedDefaultPreference.value = MediaPreference.Any
+        savedUserPreference.value = MediaPreference.Companion.Any
+        savedDefaultPreference.value = MediaPreference.Companion.Any
     }
 
     @Test
@@ -53,7 +58,7 @@ class MediaSelectorFastSelectSourcesTest {
         mediaFetchSession: MediaFetchSession,
         fastMediaSourceIdOrder: List<String>,
         preferKind: Flow<MediaSourceKind?>,
-        sourceTiers: MediaSelectorSourceTiers = MediaSelectorSourceTiers.Empty,
+        sourceTiers: MediaSelectorSourceTiers = MediaSelectorSourceTiers.Companion.Empty,
         overrideUserSelection: Boolean = false,
         blacklistMediaIds: Set<String> = emptySet(),
         allowNonPreferredFlow: Flow<Boolean> = flowOf(false),

@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.domain.media.selector
+package me.him188.ani.app.domain.media.selector.legacy
 
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
@@ -15,6 +15,7 @@ import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.data.models.subject.SubjectInfo
+import me.him188.ani.app.domain.media.selector.MediaExclusionReason
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.source.MediaSourceKind
@@ -22,6 +23,10 @@ import kotlin.random.Random
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+/**
+ * @suppress 已弃用, 新的 test 使用 [me.him188.ani.app.domain.media.selector.testFramework.TestMediaFetchSessionBuilder].
+ * @see me.him188.ani.app.domain.media.selector.MediaSelectorAutoSelect
+ */
 class DefaultMediaSelectorSortingTest : AbstractDefaultMediaSelectorTest() {
 
     @Test
@@ -84,7 +89,7 @@ class DefaultMediaSelectorSortingTest : AbstractDefaultMediaSelectorTest() {
     @Test
     fun `preferKind is null - keep original order`() = runTest {
         preferAnyMedia()
-        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy(preferKind = null)
+        mediaSelectorSettings.value = MediaSelectorSettings.Companion.Default.copy(preferKind = null)
         val expectedSort = listOf(
             media(kind = MediaSourceKind.WEB),
             media(kind = MediaSourceKind.BitTorrent),
@@ -112,7 +117,7 @@ class DefaultMediaSelectorSortingTest : AbstractDefaultMediaSelectorTest() {
     @Test
     fun `preferKind is null - cache always on top`() = runTest {
         preferAnyMedia()
-        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy(preferKind = null)
+        mediaSelectorSettings.value = MediaSelectorSettings.Companion.Default.copy(preferKind = null)
         PreferKindMedias().run {
             addMedia(web1, bt1, cache1)
             assertEquals(
@@ -125,7 +130,8 @@ class DefaultMediaSelectorSortingTest : AbstractDefaultMediaSelectorTest() {
     @Test
     fun `preferKind is BT - BT first`() = runTest {
         preferAnyMedia()
-        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy(preferKind = MediaSourceKind.BitTorrent)
+        mediaSelectorSettings.value =
+            MediaSelectorSettings.Companion.Default.copy(preferKind = MediaSourceKind.BitTorrent)
         PreferKindMedias().run {
             addMedia(web1, bt1, web2, bt2)
             assertEquals(
@@ -138,7 +144,8 @@ class DefaultMediaSelectorSortingTest : AbstractDefaultMediaSelectorTest() {
     @Test
     fun `preferKind is BT - cache on top`() = runTest {
         preferAnyMedia()
-        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy(preferKind = MediaSourceKind.BitTorrent)
+        mediaSelectorSettings.value =
+            MediaSelectorSettings.Companion.Default.copy(preferKind = MediaSourceKind.BitTorrent)
         PreferKindMedias().run {
             addMedia(web1, bt1, web2, bt2, cache1)
             assertEquals(
@@ -151,7 +158,7 @@ class DefaultMediaSelectorSortingTest : AbstractDefaultMediaSelectorTest() {
     @Test
     fun `preferKind is WEB - WEB first`() = runTest {
         preferAnyMedia()
-        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy(preferKind = MediaSourceKind.WEB)
+        mediaSelectorSettings.value = MediaSelectorSettings.Companion.Default.copy(preferKind = MediaSourceKind.WEB)
         PreferKindMedias().run {
             addMedia(web1, bt1, web2, bt2)
             assertEquals(
@@ -164,7 +171,7 @@ class DefaultMediaSelectorSortingTest : AbstractDefaultMediaSelectorTest() {
     @Test
     fun `preferKind is WEB - cache on top`() = runTest {
         preferAnyMedia()
-        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy(preferKind = MediaSourceKind.WEB)
+        mediaSelectorSettings.value = MediaSelectorSettings.Companion.Default.copy(preferKind = MediaSourceKind.WEB)
         PreferKindMedias().run {
             addMedia(web1, bt1, web2, bt2)
             assertEquals(
@@ -176,10 +183,10 @@ class DefaultMediaSelectorSortingTest : AbstractDefaultMediaSelectorTest() {
 
     private fun preferAnyMedia() {
         mediaSelectorContext.value = createMediaSelectorContextFromEmpty(
-            subjectInfo = SubjectInfo.Empty.copy(nameCn = "孤独摇滚", name = "Bocchi The Rock!"),
-            episodeInfo = EpisodeInfo.Empty.copy(sort = EpisodeSort(1)),
+            subjectInfo = SubjectInfo.Companion.Empty.copy(nameCn = "孤独摇滚", name = "Bocchi The Rock!"),
+            episodeInfo = EpisodeInfo.Companion.Empty.copy(sort = EpisodeSort(1)),
         )
-        savedDefaultPreference.value = MediaPreference.Any
-        savedUserPreference.value = MediaPreference.Any
+        savedDefaultPreference.value = MediaPreference.Companion.Any
+        savedUserPreference.value = MediaPreference.Companion.Any
     }
 }

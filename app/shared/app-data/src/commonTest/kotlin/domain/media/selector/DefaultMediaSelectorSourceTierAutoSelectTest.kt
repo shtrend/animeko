@@ -9,7 +9,7 @@
 
 @file:OptIn(UnsafeOriginalMediaAccess::class)
 
-package me.him188.ani.app.domain.media.selector.domain.media.selector
+package me.him188.ani.app.domain.media.selector
 
 import app.cash.turbine.test
 import kotlinx.coroutines.flow.Flow
@@ -20,7 +20,12 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.domain.media.fetch.MediaFetchSession
-import me.him188.ani.app.domain.media.selector.*
+import me.him188.ani.app.domain.media.selector.testFramework.FetchMediaSelectorTestSuite
+import me.him188.ani.app.domain.media.selector.testFramework.MediaSelectorTestSuite
+import me.him188.ani.app.domain.media.selector.testFramework.TestMediaFetchSession
+import me.him188.ani.app.domain.media.selector.testFramework.assert
+import me.him188.ani.app.domain.media.selector.testFramework.runFetchMediaSelectorTestSuite
+import me.him188.ani.app.domain.media.selector.testFramework.tier
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.source.MediaSourceKind.BitTorrent
@@ -30,8 +35,8 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 
 /**
- * @see me.him188.ani.app.domain.media.selector.DefaultMediaSelector.filteredCandidates
- * @see me.him188.ani.app.domain.media.selector.MediaSelectorSourceTiers
+ * @see DefaultMediaSelector.filteredCandidates
+ * @see MediaSelectorSourceTiers
  * @see me.him188.ani.app.domain.mediasource.codec.MediaSourceTier
  */
 @DisabledOnNative // TODO: ContextParameters crashes on Native

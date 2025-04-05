@@ -12,6 +12,8 @@ package me.him188.ani.app.domain.media.selector
 import kotlinx.coroutines.flow.first
 import me.him188.ani.app.domain.media.selector.MatchMetadata.EpisodeMatchKind
 import me.him188.ani.app.domain.media.selector.MatchMetadata.SubjectMatchKind
+import me.him188.ani.app.domain.media.selector.testFramework.SimpleMediaSelectorTestSuite
+import me.him188.ani.app.domain.media.selector.testFramework.addSimpleMediaSelectorTest
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.topic.EpisodeRange

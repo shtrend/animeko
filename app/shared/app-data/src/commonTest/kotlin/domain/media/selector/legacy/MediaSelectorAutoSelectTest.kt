@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.domain.media.selector
+package me.him188.ani.app.domain.media.selector.legacy
 
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +26,11 @@ import me.him188.ani.app.domain.media.fetch.MediaFetchSession
 import me.him188.ani.app.domain.media.fetch.MediaFetcherConfig
 import me.him188.ani.app.domain.media.fetch.MediaSourceFetchState
 import me.him188.ani.app.domain.media.fetch.MediaSourceMediaFetcher
+import me.him188.ani.app.domain.media.selector.DefaultMediaSelector
+import me.him188.ani.app.domain.media.selector.MediaSelectorContext
+import me.him188.ani.app.domain.media.selector.MediaSelectorSourceTiers
+import me.him188.ani.app.domain.media.selector.MediaSelectorSubtitlePreferences
+import me.him188.ani.app.domain.media.selector.autoSelect
 import me.him188.ani.app.domain.mediasource.instance.createTestMediaSourceInstance
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.EpisodeSort
@@ -44,8 +49,7 @@ import me.him188.ani.datasources.api.topic.FileSize
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.datasources.api.topic.Resolution
 import me.him188.ani.datasources.api.topic.ResourceLocation
-import me.him188.ani.datasources.api.topic.SubtitleLanguage.ChineseSimplified
-import me.him188.ani.datasources.api.topic.SubtitleLanguage.ChineseTraditional
+import me.him188.ani.datasources.api.topic.SubtitleLanguage
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -54,8 +58,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 /**
- * @suppress 已弃用, 新的 test 使用 [TestMediaFetchSessionBuilder].
- * @see MediaSelectorAutoSelect
+ * @suppress 已弃用, 新的 test 使用 [me.him188.ani.app.domain.media.selector.testFramework.TestMediaFetchSessionBuilder].
+ * @see me.him188.ani.app.domain.media.selector.MediaSelectorAutoSelect
  */
 class MediaSelectorAutoSelectTest {
     private val mediaList: MutableStateFlow<List<DefaultMedia>> = MutableStateFlow(
@@ -68,36 +72,36 @@ class MediaSelectorAutoSelectTest {
 
     private val savedUserPreference = MutableStateFlow(DEFAULT_PREFERENCE)
     private val savedDefaultPreference = MutableStateFlow(DEFAULT_PREFERENCE)
-    private val mediaSelectorSettings = MutableStateFlow(MediaSelectorSettings.Default)
+    private val mediaSelectorSettings = MutableStateFlow(MediaSelectorSettings.Companion.Default)
     private val mediaSelectorContext = MutableStateFlow(
         MediaSelectorContext(
             subjectFinished = false,
             mediaSourcePrecedence = emptyList(),
-            subtitlePreferences = MediaSelectorSubtitlePreferences.AllNormal,
-            subjectSeriesInfo = SubjectSeriesInfo.Fallback,
-            subjectInfo = SubjectInfo.Empty,
-            episodeInfo = EpisodeInfo.Empty,
-            mediaSourceTiers = MediaSelectorSourceTiers.Empty,
+            subtitlePreferences = MediaSelectorSubtitlePreferences.Companion.AllNormal,
+            subjectSeriesInfo = SubjectSeriesInfo.Companion.Fallback,
+            subjectInfo = SubjectInfo.Companion.Empty,
+            episodeInfo = EpisodeInfo.Companion.Empty,
+            mediaSourceTiers = MediaSelectorSourceTiers.Companion.Empty,
         ),
     )
 
     companion object {
-        private val DEFAULT_PREFERENCE = MediaPreference.Empty.copy(
+        private val DEFAULT_PREFERENCE = MediaPreference.Companion.Empty.copy(
             fallbackResolutions = listOf(
-                Resolution.R2160P,
-                Resolution.R1440P,
-                Resolution.R1080P,
-                Resolution.R720P,
+                Resolution.Companion.R2160P,
+                Resolution.Companion.R1440P,
+                Resolution.Companion.R1080P,
+                Resolution.Companion.R720P,
             ).map { it.id },
             fallbackSubtitleLanguageIds = listOf(
-                ChineseSimplified,
-                ChineseTraditional,
+                SubtitleLanguage.ChineseSimplified,
+                SubtitleLanguage.ChineseTraditional,
             ).map { it.id },
         )
     }
 
     private val mediaFetcher: MediaSourceMediaFetcher = MediaSourceMediaFetcher(
-        configProvider = { MediaFetcherConfig.Default },
+        configProvider = { MediaFetcherConfig.Companion.Default },
         mediaSources = listOf(
             createTestMediaSourceInstance(
                 TestHttpMediaSource(
@@ -134,7 +138,7 @@ class MediaSelectorAutoSelectTest {
     private val autoSelect get() = selector.autoSelect
 
     /**
-     * 创建一个具有一个 bt 源 和一个 web 源的 [MediaFetchSession]
+     * 创建一个具有一个 bt 源 和一个 web 源的 [me.him188.ani.app.domain.media.fetch.MediaFetchSession]
      * @param addBtSources 添加 bt 类型的资源信息
      * @param addWebSources 添加 web 类型的资源信息
      * @param btEnabled 启用 bt 数据源
@@ -159,10 +163,10 @@ class MediaSelectorAutoSelectTest {
         if (addWebSources) mediaList.addAll(TestMediaList.map { it.copy(kind = MediaSourceKind.WEB) })
         if (addBtSources) mediaList.addAll(TestMediaList.map { it.copy(kind = MediaSourceKind.BitTorrent) })
         this.mediaList.value = mediaList
-        mediaSelectorSettings.value = MediaSelectorSettings.Default.copy(preferKind = preferKind)
+        mediaSelectorSettings.value = MediaSelectorSettings.Companion.Default.copy(preferKind = preferKind)
 
         val mediaFetcher = MediaSourceMediaFetcher(
-            configProvider = { MediaFetcherConfig.Default },
+            configProvider = { MediaFetcherConfig.Companion.Default },
             mediaSources = listOf(
                 createTestMediaSourceInstance(
                     isEnabled = btEnabled,
@@ -208,7 +212,10 @@ class MediaSelectorAutoSelectTest {
     private fun createTestMediaProperties(
         subjectName: String? = null,
         episodeName: String? = null,
-        subtitleLanguageIds: List<String> = listOf(ChineseSimplified, ChineseTraditional).map { it.id },
+        subtitleLanguageIds: List<String> = listOf(
+            SubtitleLanguage.ChineseSimplified,
+            SubtitleLanguage.ChineseTraditional,
+        ).map { it.id },
         resolution: String = "1080P",
         alliance: String = "桜都字幕组",
         size: FileSize = 122.megaBytes,
@@ -261,15 +268,18 @@ class MediaSelectorAutoSelectTest {
     @Test
     fun `selectCached selects one when there is one cache`() = runTest {
         val target = createTestDefaultMedia(
-            mediaId = "$SOURCE_DMHY.1",
+            mediaId = "${SOURCE_DMHY}.1",
             mediaSourceId = SOURCE_DMHY,
             originalTitle = "[桜都字幕组] 孤独摇滚 ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC",
             download = ResourceLocation.MagnetLink("magnet:?xt=urn:btih:1"),
             originalUrl = "https://example.com/1",
             publishedTime = 1,
-            episodeRange = EpisodeRange.single(EpisodeSort(1)),
+            episodeRange = EpisodeRange.Companion.single(EpisodeSort(1)),
             properties = createTestMediaProperties(
-                subtitleLanguageIds = listOf(ChineseSimplified, ChineseTraditional).map { it.id },
+                subtitleLanguageIds = listOf(
+                    SubtitleLanguage.ChineseSimplified,
+                    SubtitleLanguage.ChineseTraditional,
+                ).map { it.id },
                 resolution = "1080P",
                 alliance = "桜都字幕组",
                 size = 122.megaBytes,
@@ -287,15 +297,18 @@ class MediaSelectorAutoSelectTest {
     @Test
     fun `selectCached selects first one when there are multiple caches`() = runTest {
         val target = createTestDefaultMedia(
-            mediaId = "$SOURCE_DMHY.1",
+            mediaId = "${SOURCE_DMHY}.1",
             mediaSourceId = SOURCE_DMHY,
             originalTitle = "[桜都字幕组] 孤独摇滚 ABC ABC ABC ABC ABC ABC ABC ABC ABC ABC",
             download = ResourceLocation.MagnetLink("magnet:?xt=urn:btih:1"),
             originalUrl = "https://example.com/1",
             publishedTime = 1,
-            episodeRange = EpisodeRange.single(EpisodeSort(1)),
+            episodeRange = EpisodeRange.Companion.single(EpisodeSort(1)),
             properties = createTestMediaProperties(
-                subtitleLanguageIds = listOf(ChineseSimplified, ChineseTraditional).map { it.id },
+                subtitleLanguageIds = listOf(
+                    SubtitleLanguage.ChineseSimplified,
+                    SubtitleLanguage.ChineseTraditional,
+                ).map { it.id },
                 resolution = "1080P",
                 alliance = "桜都字幕组",
                 size = 122.megaBytes,
