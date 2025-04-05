@@ -53,7 +53,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
@@ -245,10 +244,9 @@ private fun EpisodeScreenContent(
         vm.isFullscreen = LocalPlatformWindow.current.isUndecoratedFullscreen
     }
 
-    DisposableEffect(Unit) {
-        // Call only once.
+    LaunchedEffect(vm.isFullscreen) {
+        // Update system bar visibility whenever fullscreen state changes
         context.setSystemBarVisible(window, !vm.isFullscreen)
-        onDispose { }
     }
 
     BoxWithConstraints(modifier) {
