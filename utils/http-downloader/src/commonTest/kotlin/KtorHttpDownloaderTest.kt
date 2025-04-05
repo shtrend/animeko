@@ -10,21 +10,45 @@
 package me.him188.ani.utils.httpdownloader
 
 import app.cash.turbine.test
-import io.ktor.client.*
-import io.ktor.client.engine.mock.*
-import io.ktor.http.*
-import io.ktor.utils.io.core.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.test.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.mock.MockEngine
+import io.ktor.client.engine.mock.MockRequestHandleScope
+import io.ktor.client.engine.mock.respond
+import io.ktor.client.request.HttpResponseData
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.headersOf
+import io.ktor.utils.io.core.readAvailable
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestCoroutineScheduler
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.io.Source
 import kotlinx.io.buffered
-import kotlinx.io.files.*
+import kotlinx.io.files.FileMetadata
+import kotlinx.io.files.FileSystem
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
+import kotlinx.io.files.SystemTemporaryDirectory
 import me.him188.ani.utils.io.deleteRecursively
 import me.him188.ani.utils.io.resolve
 import me.him188.ani.utils.ktor.asScopedHttpClient
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -37,6 +61,10 @@ class KtorHttpDownloaderTest {
     private lateinit var tempDir: String
     private lateinit var downloader: KtorHttpDownloader
     private val fileSystem = SystemFileSystem
+
+    // We use this to track how many times a given URL has been requested.
+    // This allows us to simulate "fails first time, succeeds second time."
+    private val attempts = mutableMapOf<String, Int>().withDefault { 0 }
 
     @BeforeTest
     fun setup() {
@@ -61,8 +89,13 @@ class KtorHttpDownloaderTest {
             expectSuccess = true
             engine {
                 addHandler { request ->
+                    val urlString = request.url.toString()
+                    // Bump attempt counter for this URL
+                    val currentAttempt = attempts.getValue(urlString)
+                    attempts[urlString] = currentAttempt + 1
+
                     // Master playlist
-                    when (request.url.toString()) {
+                    when (urlString) {
                         "https://example.com/master.m3u8" -> {
                             respond(
                                 content = MASTER_PLAYLIST,
@@ -104,73 +137,13 @@ class KtorHttpDownloaderTest {
                         "https://example.com/sample.mp4" -> {
                             // Handle range requests for MP4 files
                             val rangeHeader = request.headers["Range"]
-                            if (rangeHeader != null) {
-                                // Parse range header (format: "bytes=start-end")
-                                val range = rangeHeader.removePrefix("bytes=").split("-")
-                                val start = range[0].toLong()
-                                val end = if (range[1].isNotEmpty()) range[1].toLong() else MP4_FILE_SIZE - 1
-                                val length = end - start + 1
-
-                                val headers = headersOf(
-                                    HttpHeaders.ContentType to listOf("video/mp4"),
-                                    HttpHeaders.ContentRange to listOf("bytes $start-$end/$MP4_FILE_SIZE"),
-                                    HttpHeaders.ContentLength to listOf("$length"),
-                                )
-
-                                respond(
-                                    content = ByteArray(length.toInt()) { (it + start).toByte() },
-                                    status = HttpStatusCode.PartialContent,
-                                    headers = headers,
-                                )
-                            } else {
-                                // Full file response
-                                val headers = headersOf(
-                                    HttpHeaders.ContentType to listOf("video/mp4"),
-                                    HttpHeaders.ContentLength to listOf("$MP4_FILE_SIZE"),
-                                )
-
-                                respond(
-                                    content = ByteArray(MP4_FILE_SIZE.toInt()) { it.toByte() },
-                                    status = HttpStatusCode.OK,
-                                    headers = headers,
-                                )
-                            }
+                            handleMp4(rangeHeader)
                         }
 
                         "https://example.com/sample.mkv" -> {
                             // Handle range requests for MKV files
                             val rangeHeader = request.headers["Range"]
-                            if (rangeHeader != null) {
-                                // Parse range header (format: "bytes=start-end")
-                                val range = rangeHeader.removePrefix("bytes=").split("-")
-                                val start = range[0].toLong()
-                                val end = if (range[1].isNotEmpty()) range[1].toLong() else MKV_FILE_SIZE - 1
-                                val length = end - start + 1
-
-                                val headers = headersOf(
-                                    HttpHeaders.ContentType to listOf("video/x-matroska"),
-                                    HttpHeaders.ContentRange to listOf("bytes $start-$end/$MKV_FILE_SIZE"),
-                                    HttpHeaders.ContentLength to listOf("$length"),
-                                )
-
-                                respond(
-                                    content = ByteArray(length.toInt()) { (it + start).toByte() },
-                                    status = HttpStatusCode.PartialContent,
-                                    headers = headers,
-                                )
-                            } else {
-                                // Full file response
-                                val headers = headersOf(
-                                    HttpHeaders.ContentType to listOf("video/x-matroska"),
-                                    HttpHeaders.ContentLength to listOf("$MKV_FILE_SIZE"),
-                                )
-
-                                respond(
-                                    content = ByteArray(MKV_FILE_SIZE.toInt()) { it.toByte() },
-                                    status = HttpStatusCode.OK,
-                                    headers = headers,
-                                )
-                            }
+                            handleMkv(rangeHeader)
                         }
 
                         "https://example.com/error.mp4" -> {
@@ -197,9 +170,27 @@ class KtorHttpDownloaderTest {
                             )
                         }
 
+                        "https://example.com/unstable-playlist1.m3u8" -> {
+                            // Fails the first time (attempt==1), succeeds second time
+                            if (currentAttempt == 0) {
+                                respond("Server error", HttpStatusCode.InternalServerError)
+                            } else {
+                                // Return a valid media playlist
+                                respond(
+                                    content = MEDIA_PLAYLIST,
+                                    status = HttpStatusCode.OK,
+                                    headers = headersOf(HttpHeaders.ContentType, "application/vnd.apple.mpegurl"),
+                                )
+                            }
+                        }
+
+                        "https://example.com/unstable-playlist2.m3u8" -> {
+                            // Always fail
+                            respond("Server error", HttpStatusCode.InternalServerError)
+                        }
+
+                        // Segment responses or unknown
                         else -> {
-                            // Segment responses
-                            val urlString = request.url.toString()
                             if (urlString.startsWith("https://example.com/segment") && urlString.endsWith(".ts")) {
                                 val num = urlString.substringAfter("segment").substringBefore(".ts").toInt()
                                 respond(
@@ -223,6 +214,76 @@ class KtorHttpDownloaderTest {
             computeDispatcher = testDispatcher,
             clock = mockClock,
         )
+    }
+
+    // Helper to handle MP4 partial or full
+    private fun MockRequestHandleScope.handleMp4(rangeHeader: String?): HttpResponseData {
+        return if (rangeHeader != null) {
+            // Parse range header (format: "bytes=start-end")
+            val range = rangeHeader.removePrefix("bytes=").split("-")
+            val start = range[0].toLong()
+            val end = if (range[1].isNotEmpty()) range[1].toLong() else MP4_FILE_SIZE - 1
+            val length = end - start + 1
+
+            val headers = headersOf(
+                HttpHeaders.ContentType to listOf("video/mp4"),
+                HttpHeaders.ContentRange to listOf("bytes $start-$end/$MP4_FILE_SIZE"),
+                HttpHeaders.ContentLength to listOf("$length"),
+            )
+
+            respond(
+                content = ByteArray(length.toInt()) { (it + start).toByte() },
+                status = HttpStatusCode.PartialContent,
+                headers = headers,
+            )
+        } else {
+            // Full file response
+            val headers = headersOf(
+                HttpHeaders.ContentType to listOf("video/mp4"),
+                HttpHeaders.ContentLength to listOf("$MP4_FILE_SIZE"),
+            )
+
+            respond(
+                content = ByteArray(MP4_FILE_SIZE.toInt()) { it.toByte() },
+                status = HttpStatusCode.OK,
+                headers = headers,
+            )
+        }
+    }
+
+    // Helper to handle MKV partial or full
+    private fun MockRequestHandleScope.handleMkv(rangeHeader: String?): HttpResponseData {
+        return if (rangeHeader != null) {
+            // Parse range header (format: "bytes=start-end")
+            val range = rangeHeader.removePrefix("bytes=").split("-")
+            val start = range[0].toLong()
+            val end = if (range[1].isNotEmpty()) range[1].toLong() else MKV_FILE_SIZE - 1
+            val length = end - start + 1
+
+            val headers = headersOf(
+                HttpHeaders.ContentType to listOf("video/x-matroska"),
+                HttpHeaders.ContentRange to listOf("bytes $start-$end/$MKV_FILE_SIZE"),
+                HttpHeaders.ContentLength to listOf("$length"),
+            )
+
+            respond(
+                content = ByteArray(length.toInt()) { (it + start).toByte() },
+                status = HttpStatusCode.PartialContent,
+                headers = headers,
+            )
+        } else {
+            // Full file response
+            val headers = headersOf(
+                HttpHeaders.ContentType to listOf("video/x-matroska"),
+                HttpHeaders.ContentLength to listOf("$MKV_FILE_SIZE"),
+            )
+
+            respond(
+                content = ByteArray(MKV_FILE_SIZE.toInt()) { it.toByte() },
+                status = HttpStatusCode.OK,
+                headers = headers,
+            )
+        }
     }
 
     @AfterTest
@@ -257,7 +318,7 @@ class KtorHttpDownloaderTest {
         // Merged segments directory should be cleaned
         assertFalse(fileSystem.exists(Path("$tempDir/output.ts_segments_$downloadId")))
 
-        // New: check final file size (we expect segment1 + segment2 + segment3 => 1024 + 2048 + 3072 = 6144)
+        // New: check final file size (segment1 + segment2 + segment3 => 1024 + 2048 + 3072 = 6144)
         val outputFileSize = fileSystem.metadata(Path("$tempDir/output.ts")).size
         assertEquals(1024 + 2048 + 3072, outputFileSize, "M3U8 final output file size mismatch.")
     }
@@ -506,7 +567,7 @@ class KtorHttpDownloaderTest {
                     assertEquals(
                         position.toByte(),
                         byte,
-                        "Byte mismatch at position $position"
+                        "Byte mismatch at position $position",
                     )
                     position++
                 }
@@ -669,7 +730,7 @@ class KtorHttpDownloaderTest {
         assertNotNull(state)
         assertTrue(
             state.segments.size >= 2,
-            "Expected at least 2 segments to be created, but got ${state.segments.size}"
+            "Expected at least 2 segments to be created, but got ${state.segments.size}",
         )
 
         // Complete the download
@@ -769,21 +830,70 @@ class KtorHttpDownloaderTest {
         assertEquals(0, downloader.getActiveDownloadIds().size)
 
         // If you want to test what happens if we try to start a new one:
-        // The current code *does not* throw, nor does it gracefully do anything.
-        // The job will run in a canceled scope => final state might remain INITIALIZING.
-        // Typically, you'd fix your implementation or simply omit this check:
         val newId = downloader.download(
             url = "https://example.com/master.m3u8",
             outputPath = "$tempDir/after-close.ts",
         )
         // Because the scope is canceled, that job won't actually proceed.
-        // You can check the state, expecting it to never go beyond INITIALIZING or end up canceled.
         downloader.joinDownload(newId)
 
         val newState = downloader.getState(newId)
-        // Usually you'd want to enforce an error or canceled state. For now, check if it's stuck:
         assertNotNull(newState)
         println("New job state after calling download on a closed downloader => $newState")
+    }
+
+    // ----------------------------------------------------
+    // NEW TESTS for "retry segment creation" scenario
+    // ----------------------------------------------------
+
+    @Test
+    fun `resume - segment creation fails first time - success second time`() = testScope.runTest {
+        // 1) Download (which will fail on first attempt because of internal server error).
+        val downloadId = downloader.download(
+            url = "https://example.com/unstable-playlist1.m3u8",
+            outputPath = "$tempDir/unstable1.ts",
+        )
+        downloader.joinDownload(downloadId)
+
+        // Expect FAILED
+        val failedState = downloader.getState(downloadId)
+        assertNotNull(failedState)
+        assertEquals(DownloadStatus.FAILED, failedState.status, "Expected first attempt to fail")
+
+        // 2) Resume => it should attempt segment creation again => now returns valid playlist => should succeed
+        val resumed = downloader.resume(downloadId)
+        assertTrue(resumed, "resume() should return true from a FAILED state")
+        downloader.joinDownload(downloadId)
+
+        val finalState = downloader.getState(downloadId)
+        assertNotNull(finalState)
+        assertEquals(DownloadStatus.COMPLETED, finalState.status, "Expected second attempt to succeed")
+        assertTrue(fileSystem.exists(Path("$tempDir/unstable1.ts")), "Expected final file to exist")
+    }
+
+    @Test
+    fun `resume - segment creation fails first time - fails second time then remain FAILED`() = testScope.runTest {
+        // 1) Download => always fails
+        val downloadId = downloader.download(
+            url = "https://example.com/unstable-playlist2.m3u8",
+            outputPath = "$tempDir/unstable2.ts",
+        )
+        downloader.joinDownload(downloadId)
+
+        // Expect FAILED
+        val failedState = downloader.getState(downloadId)
+        assertNotNull(failedState)
+        assertEquals(DownloadStatus.FAILED, failedState.status, "Expected first attempt to fail")
+
+        // 2) Resume => creation fails again => remain FAILED
+        val resumed = downloader.resume(downloadId)
+        assertFalse(resumed)
+        downloader.joinDownload(downloadId)
+
+        val finalState = downloader.getState(downloadId)
+        assertNotNull(finalState)
+        assertEquals(DownloadStatus.FAILED, finalState.status, "Expected to remain FAILED after second fail")
+        assertFalse(fileSystem.exists(Path("$tempDir/unstable2.ts")), "File should not exist after repeated failures")
     }
 
     companion object {

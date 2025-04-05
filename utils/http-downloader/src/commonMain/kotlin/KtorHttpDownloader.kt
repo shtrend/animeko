@@ -91,9 +91,7 @@ open class KtorHttpDownloader(
 
     override fun getProgressFlow(downloadId: DownloadId): Flow<DownloadProgress> {
         return progressFlow.filter { it.downloadId == downloadId }.onStart {
-            emit(
-                createProgress(getState(downloadId) ?: return@onStart),
-            )
+            emit(createProgress(getState(downloadId) ?: return@onStart))
         }
     }
 
@@ -117,7 +115,7 @@ open class KtorHttpDownloader(
         outputPath: Path,
         options: DownloadOptions,
     ): DownloadId {
-        val downloadId = DownloadId(value = generateDownloadId(url))
+        val downloadId = DownloadId(value = Uuid.randomString())
         downloadWithId(downloadId, url, outputPath, options)
         return downloadId
     }
@@ -142,11 +140,11 @@ open class KtorHttpDownloader(
         val mediaType = getMediaTypeFromUrl(url) ?: MediaType.M3U8
         logger.info { "Preparing to download with id=$downloadId, url=$url, mediaType=$mediaType" }
 
+        // 1) Set initial state if not present
         stateMutex.withLock {
             val currentMap = _downloadStatesFlow.value.toMutableMap()
-            val existing = currentMap[downloadId]
-            if (existing != null) {
-                // If there's already a state for this downloadId in COMPLETED, do nothing
+            if (currentMap[downloadId] != null) {
+                // If there's already a state in COMPLETED, do nothing
                 logger.info { "Existing completed download found for $downloadId, ignoring." }
                 return
             }
@@ -165,58 +163,23 @@ open class KtorHttpDownloader(
             )
             currentMap[downloadId] = DownloadEntry(job = null, state = initialState)
             _downloadStatesFlow.value = currentMap
-
-            logger.info { "Starting download '$url', initial state: $initialState" }
+            logger.info { "Created initial state for $downloadId" }
         }
-
         emitProgress(downloadId)
 
-        // -----------------------------------------------------------
-        // (1) Create segments *before* launching the job
-        // -----------------------------------------------------------
-        val segments: List<SegmentInfo> = try {
-            when (mediaType) {
-                MediaType.M3U8 -> {
-                    logger.info { "Resolving M3U8 media playlist for $downloadId" }
-                    val playlist = resolveM3u8MediaPlaylist(url, options)
-                    playlist.toSegments(Path(getState(downloadId)?.segmentCacheDir ?: return))
-                }
-
-                MediaType.MP4, MediaType.MKV -> {
-                    logger.info { "Creating range segments for $downloadId" }
-                    createRangeSegments(downloadId, url, options)
-                }
-            }
-        } catch (e: Throwable) {
-            // If segment creation fails (404, parse error, etc.), mark FAILED
-            logger.error(e) { "Segment creation failed for $downloadId, see cause" }
-            updateState(downloadId) {
-                it.copy(
-                    status = FAILED,
-                    error = DownloadError(
-                        code = if (e is M3u8Exception) e.errorCode else DownloadErrorCode.UNEXPECTED_ERROR,
-                        technicalMessage = e.message,
-                    ),
-                    timestamp = clock.now().toEpochMilliseconds(),
-                )
-            }
-            emitProgress(downloadId)
+        // 2) Create segments
+        if (!createSegments(downloadId, url, mediaType, options)) {
+            // If creation failed, the state is set to FAILED. We stop here.
             return
         }
 
+        // 3) Mark status=DOWNLOADING and launch the job
         updateState(downloadId) {
-            it.copy(
-                segments = segments,
-                totalSegments = segments.size,
-                status = DOWNLOADING,
-            )
+            it.copy(status = DOWNLOADING)
         }
         emitProgress(downloadId)
-        logger.info { "Created ${segments.size} segments for $downloadId" }
 
-        // -----------------------------------------------------------
-        // (2) Launch the coroutine that uses those segments
-        // -----------------------------------------------------------
+        logger.info { "Launching download job for $downloadId" }
         val job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             try {
                 logger.info { "Downloading segments for $downloadId" }
@@ -226,7 +189,7 @@ open class KtorHttpDownloader(
                     it.copy(status = MERGING, timestamp = clock.now().toEpochMilliseconds())
                 }
                 emitProgress(downloadId)
-                logger.info { "Merging segments for $downloadId into final output" }
+                logger.info { "Merging segments for $downloadId" }
 
                 mergeSegments(downloadId)
 
@@ -235,13 +198,10 @@ open class KtorHttpDownloader(
                 }
                 emitProgress(downloadId)
                 logger.info { "Download completed for $downloadId" }
-
             } catch (e: CancellationException) {
-                // Normal cancellation
                 logger.info { "Download cancelled for $downloadId" }
                 throw e
             } catch (e: Throwable) {
-                // Mark FAILED
                 logger.info { "Download failed for $downloadId: ${e.message}" }
                 updateState(downloadId) {
                     it.copy(
@@ -257,17 +217,19 @@ open class KtorHttpDownloader(
             }
         }
 
-        // Store the newly-created job
+        // 4) Store the job
         stateMutex.withLock {
             val currentMap = _downloadStatesFlow.value.toMutableMap()
-            val entry = currentMap[downloadId]
-            if (entry != null) {
-                currentMap[downloadId] = entry.copy(job = job)
-                _downloadStatesFlow.value = currentMap
-            }
+            val entry = currentMap[downloadId] ?: return
+            currentMap[downloadId] = entry.copy(job = job)
+            _downloadStatesFlow.value = currentMap
         }
     }
 
+    /**
+     * If segments are empty, tries to create them again.
+     * Returns false if creation fails (the state will be marked FAILED), otherwise true.
+     */
     override suspend fun resume(downloadId: DownloadId): Boolean {
         val st = getState(downloadId) ?: return false
         if (st.status != PAUSED && st.status != FAILED) {
@@ -278,30 +240,43 @@ open class KtorHttpDownloader(
         }
 
         // Check if there's already an active job
-        val hasExistingJob = stateMutex.withLock {
-            val existing = _downloadStatesFlow.value[downloadId]
-            existing != null && existing.job?.isActive == true
+        val alreadyActive = stateMutex.withLock {
+            val existingEntry = _downloadStatesFlow.value[downloadId]
+            existingEntry?.job?.isActive == true
         }
-        if (hasExistingJob) {
+        if (alreadyActive) {
             logger.info { "Attempting to resume $downloadId but there's already an active job." }
             emitProgress(downloadId)
             return true
         }
 
         logger.info { "Resuming $downloadId with status=${st.status}" }
-        updateState(downloadId) { it.copy(status = DOWNLOADING) }
+
+        // If we have no segments, it means we failed during segment creation
+        if (st.segments.isEmpty()) {
+            if (!createSegments(downloadId, st.url, st.mediaType, DownloadOptions())) {
+                return false // Already marked as FAILED
+            }
+        }
+
+        // Mark status = DOWNLOADING
+        updateState(downloadId) {
+            it.copy(status = DOWNLOADING)
+        }
         emitProgress(downloadId)
 
         val job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
             try {
                 logger.info { "Resumed: downloading segments for $downloadId" }
                 downloadSegments(downloadId, DownloadOptions())
+
                 updateState(downloadId) {
                     it.copy(status = MERGING)
                 }
                 emitProgress(downloadId)
                 logger.info { "Merging segments for resumed $downloadId" }
                 mergeSegments(downloadId)
+
                 updateState(downloadId) {
                     it.copy(status = COMPLETED)
                 }
@@ -321,13 +296,13 @@ open class KtorHttpDownloader(
                 emitProgress(downloadId)
             }
         }
+
+        // Store the new job
         stateMutex.withLock {
             val currentMap = _downloadStatesFlow.value.toMutableMap()
-            val entry = currentMap[downloadId]
-            if (entry != null) {
-                currentMap[downloadId] = entry.copy(job = job)
-                _downloadStatesFlow.value = currentMap
-            }
+            val entry = currentMap[downloadId] ?: return@withLock
+            currentMap[downloadId] = entry.copy(job = job)
+            _downloadStatesFlow.value = currentMap
         }
         return true
     }
@@ -482,6 +457,63 @@ open class KtorHttpDownloader(
         fileSystem.createDirectories(cacheDir)
         logger.info { "Created segment cache dir for $downloadId at $cacheDir" }
         cacheDir
+    }
+
+    /**
+     * Helper that attempts to create segments for the given [downloadId] & [url].
+     * Returns `true` if it succeeds, or `false` if it fails (the state is set to FAILED).
+     */
+    private suspend fun createSegments(
+        downloadId: DownloadId,
+        url: String,
+        mediaType: MediaType,
+        options: DownloadOptions,
+    ): Boolean {
+        try {
+            val newSegments = when (mediaType) {
+                MediaType.M3U8 -> {
+                    logger.info { "Resolving M3U8 media playlist for $downloadId" }
+                    val playlist = resolveM3u8MediaPlaylist(url, options)
+                    playlist.toSegments(Path(getState(downloadId)?.segmentCacheDir ?: return false))
+                }
+
+                MediaType.MP4, MediaType.MKV -> {
+                    logger.info { "Creating range segments for $downloadId" }
+                    createRangeSegments(downloadId, url, options)
+                }
+            }
+
+            updateState(downloadId) {
+                it.copy(
+                    segments = newSegments,
+                    totalSegments = newSegments.size,
+                )
+            }
+            emitProgress(downloadId)
+            logger.info { "Created ${newSegments.size} segments for $downloadId" }
+            return true
+        } catch (e: Throwable) {
+            handleSegmentCreationFailure(downloadId, e)
+            return false
+        }
+    }
+
+    /**
+     * If segment creation fails (404, parse error, OOM, etc.), mark the state as FAILED and emit progress.
+     */
+    private suspend fun handleSegmentCreationFailure(downloadId: DownloadId, e: Throwable) {
+        logger.error(e) { "Segment creation failed for $downloadId: ${e.message}" }
+        updateState(downloadId) {
+            it.copy(
+                status = FAILED,
+                error = DownloadError(
+                    code = if (e is M3u8Exception) e.errorCode else DownloadErrorCode.UNEXPECTED_ERROR,
+                    technicalMessage = e.message,
+                ),
+                timestamp = clock.now().toEpochMilliseconds(),
+            )
+        }
+        emitProgress(downloadId)
     }
 
     /**
@@ -696,6 +728,7 @@ open class KtorHttpDownloader(
         return totalBytes.load()
     }
 
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalAtomicApi::class)
     protected suspend fun downloadSegments(downloadId: DownloadId, options: DownloadOptions) {
         val snapshot = getState(downloadId) ?: return
         if (snapshot.segments.isEmpty()) {
@@ -707,11 +740,8 @@ open class KtorHttpDownloader(
 
         coroutineScope {
             snapshot.segments.forEach { seg ->
-                if (seg.isDownloaded) {
-                    return@forEach
-                }
+                if (seg.isDownloaded) return@forEach
                 semaphore.acquire()
-                @OptIn(DelicateCoroutinesApi::class)
                 launch(ioDispatcher, start = CoroutineStart.ATOMIC) {
                     try {
                         val newSize = downloadSingleSegment(seg, options)
@@ -785,10 +815,6 @@ open class KtorHttpDownloader(
                 options.headers.forEach { (k, v) -> header(k, v) }
             }.let { statement -> block(statement) }
         }
-    }
-
-    protected fun generateDownloadId(url: String): String {
-        return Uuid.randomString()
     }
 
     suspend fun joinDownload(downloadId: DownloadId) {
