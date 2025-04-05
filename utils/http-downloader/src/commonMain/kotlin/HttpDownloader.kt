@@ -194,6 +194,6 @@ data class DownloadOptions(
     val readTimeoutMs: Long = 30_000,
     val autoSaveIntervalMs: Long = 5_000,
     val headers: Map<String, String> = emptyMap(),
-    val maxRetriesPerSegment: Int = 3,
+    val maxRetriesPerSegment: Int = 100,
     val baseRetryDelayMillis: Long = 1000L,
 )
