@@ -63,7 +63,7 @@ class KtorHttpDownloaderTest {
     private val fileSystem = SystemFileSystem
 
     // We use this to track how many times a given URL has been requested.
-    // This allows us to simulate "fails first time, succeeds second time."
+    // This allows us to simulate "fails first time, succeeds second time", etc.
     private val attempts = mutableMapOf<String, Int>().withDefault { 0 }
 
     @BeforeTest
@@ -113,7 +113,7 @@ class KtorHttpDownloaderTest {
                         }
 
                         "https://example.com/bad-segments.m3u8" -> {
-                            // Replace a valid segment with a missing one.
+                            // Replace a valid segment with a missing one => 404
                             respond(
                                 content = MEDIA_PLAYLIST.replace("segment1.ts", "missing-segment.ts"),
                                 status = HttpStatusCode.OK,
@@ -162,7 +162,6 @@ class KtorHttpDownloaderTest {
                                 HttpHeaders.ContentType to listOf("video/mp4"),
                                 HttpHeaders.ContentLength to listOf("$MP4_FILE_SIZE"),
                             )
-
                             respond(
                                 content = ByteArray(MP4_FILE_SIZE.toInt()) { it.toByte() },
                                 status = HttpStatusCode.OK,
@@ -171,11 +170,10 @@ class KtorHttpDownloaderTest {
                         }
 
                         "https://example.com/unstable-playlist1.m3u8" -> {
-                            // Fails the first time (attempt==1), succeeds second time
+                            // Fails the first time (attempt==1 => 500), succeeds second time => return a valid playlist
                             if (currentAttempt == 0) {
                                 respond("Server error", HttpStatusCode.InternalServerError)
                             } else {
-                                // Return a valid media playlist
                                 respond(
                                     content = MEDIA_PLAYLIST,
                                     status = HttpStatusCode.OK,
@@ -185,8 +183,37 @@ class KtorHttpDownloaderTest {
                         }
 
                         "https://example.com/unstable-playlist2.m3u8" -> {
-                            // Always fail
+                            // Always fail => 500
                             respond("Server error", HttpStatusCode.InternalServerError)
+                        }
+
+                        // A playlist referencing "unstable-segment1.ts" & "unstable-segment2.ts"
+                        "https://example.com/unstable-segments.m3u8" -> {
+                            respond(
+                                content = UNSTABLE_SEGMENTS_PLAYLIST,
+                                status = HttpStatusCode.OK,
+                                headers = headersOf(HttpHeaders.ContentType, "application/vnd.apple.mpegurl"),
+                            )
+                        }
+
+                        // Unstable segments
+                        "https://example.com/unstable-segment1.ts" -> {
+                            // fails on first attempt => 500, succeeds afterwards => returns 512 bytes
+                            if (currentAttempt == 1) {
+                                respond("Internal server error", HttpStatusCode.InternalServerError)
+                            } else {
+                                val bytes = ByteArray(512) { it.toByte() }
+                                respond(
+                                    content = bytes,
+                                    status = HttpStatusCode.OK,
+                                    headers = headersOf(HttpHeaders.ContentType, "video/mp2t"),
+                                )
+                            }
+                        }
+
+                        "https://example.com/unstable-segment2.ts" -> {
+                            // always fails => 500
+                            respond("Internal server error", HttpStatusCode.InternalServerError)
                         }
 
                         // Segment responses or unknown
@@ -896,6 +923,121 @@ class KtorHttpDownloaderTest {
         assertFalse(fileSystem.exists(Path("$tempDir/unstable2.ts")), "File should not exist after repeated failures")
     }
 
+    /**
+     * This test references "unstable-segments.m3u8" which has:
+     *  - unstable-segment1.ts => fails the first time, then succeeds
+     *  - unstable-segment2.ts => always fails
+     *
+     * We use a custom [DownloadOptions] with some small [maxRetriesPerSegment].
+     * We verify that even though segment1 recovers, the entire download eventually fails
+     * because segment2 never succeeds (all retries will fail).
+     */
+    @Test
+    fun `download - segment always fails - marks as FAILED after max retries`() = testScope.runTest {
+        // We'll set maxRetriesPerSegment to 2 => each segment can fail up to 2 times.
+        val options = DownloadOptions(
+            maxConcurrentSegments = 2,
+            maxRetriesPerSegment = 2,
+            baseRetryDelayMillis = 10, // shorten for test
+        )
+
+        val downloadId = downloader.download(
+            url = "https://example.com/unstable-segments.m3u8",
+            outputPath = "$tempDir/unstable-failure.ts",
+            options = options,
+        )
+        downloader.joinDownload(downloadId)
+
+        val state = downloader.getState(downloadId)
+        assertNotNull(state, "Expected to find a state for $downloadId")
+        assertEquals(DownloadStatus.FAILED, state.status, "Expected the entire download to fail in the end.")
+        assertNotNull(state.error, "Expected error details on final state")
+    }
+
+    /**
+     * If we remove the second always-failing segment from the playlist, we can test
+     * that a single segment which fails once but succeeds on second attempt *does not*
+     * break the entire download. This test uses a custom playlist with only "unstable-segment1.ts".
+     *
+     * We show it inline for clarity.
+     */
+    @Test
+    fun `download - partial segment failure - recovers on second attempt`() = testScope.runTest {
+        // Single-segment playlist => only "unstable-segment1.ts"
+        val singleSegmentPlaylist = """
+            #EXTM3U
+            #EXT-X-TARGETDURATION:5
+            #EXT-X-MEDIA-SEQUENCE:0
+            #EXTINF:4.0,
+            https://example.com/unstable-segment1.ts
+            #EXT-X-ENDLIST
+        """.trimIndent()
+
+        // We will trick the engine by storing the content into the attempts map:
+        // We can just handle it in-place: "https://example.com/unstable-single.m3u8".
+        attempts["https://example.com/unstable-single.m3u8"] = 0  // reset attempts
+
+        // Register the single-segment playlist as well
+        val originalHandler = (mockClient.engine as MockEngine).config.requestHandlers.first()
+        (mockClient.engine as MockEngine).config.requestHandlers.clear()
+        (mockClient.engine as MockEngine).config.addHandler { request ->
+            val urlString = request.url.toString()
+            val currentAttempt = attempts.getValue(urlString)
+            attempts[urlString] = currentAttempt + 1
+
+            when (urlString) {
+                "https://example.com/unstable-single.m3u8" -> {
+                    respond(
+                        content = singleSegmentPlaylist,
+                        status = HttpStatusCode.OK,
+                        headers = headersOf(HttpHeaders.ContentType, "application/vnd.apple.mpegurl"),
+                    )
+                }
+
+                "https://example.com/unstable-segment1.ts" -> {
+                    // first attempt => fail, subsequent => success
+                    if (currentAttempt == 0) {
+                        respond("Internal server error", HttpStatusCode.InternalServerError)
+                    } else {
+                        val bytes = ByteArray(512) { it.toByte() }
+                        respond(
+                            content = bytes,
+                            status = HttpStatusCode.OK,
+                            headers = headersOf(HttpHeaders.ContentType, "video/mp2t"),
+                        )
+                    }
+                }
+
+                else -> {
+                    // fall back to original handler for other requests (if any)
+                    originalHandler.invoke(this, request)
+                }
+            }
+        }
+
+        val options = DownloadOptions(
+            maxConcurrentSegments = 1,
+            maxRetriesPerSegment = 2,
+            baseRetryDelayMillis = 10, // short delay for test
+        )
+        val downloadId = downloader.download(
+            url = "https://example.com/unstable-single.m3u8",
+            outputPath = "$tempDir/unstable-single.ts",
+            options = options,
+        )
+        downloader.joinDownload(downloadId)
+
+        // Final state => should be COMPLETED since the single segment recovers on 2nd attempt
+        val finalState = downloader.getState(downloadId)
+        assertNotNull(finalState)
+        assertEquals(DownloadStatus.COMPLETED, finalState.status, "Expected success after segment eventually recovers")
+
+        // Check final file's existence and size
+        assertTrue(fileSystem.exists(Path("$tempDir/unstable-single.ts")), "Output file should exist")
+        val size = fileSystem.metadata(Path("$tempDir/unstable-single.ts")).size
+        assertEquals(512, size, "File should contain the final recovered segment")
+    }
+
     companion object {
         private const val MASTER_PLAYLIST = """
             #EXTM3U
@@ -916,6 +1058,25 @@ class KtorHttpDownloaderTest {
             segment2.ts
             #EXTINF:4.0,
             segment3.ts
+            #EXT-X-ENDLIST
+        """
+
+        // ------------------------------------------------------------
+        // NEW: references 2 segments:
+        //  - unstable-segment1.ts => fails first time, then success
+        //  - unstable-segment2.ts => always fails
+        // ------------------------------------------------------------
+        private const val UNSTABLE_SEGMENTS_PLAYLIST = """
+            #EXTM3U
+            #EXT-X-VERSION:3
+            #EXT-X-TARGETDURATION:5
+            #EXT-X-MEDIA-SEQUENCE:0
+
+            #EXTINF:4.0,
+            https://example.com/unstable-segment1.ts
+            #EXTINF:4.0,
+            https://example.com/unstable-segment2.ts
+
             #EXT-X-ENDLIST
         """
 

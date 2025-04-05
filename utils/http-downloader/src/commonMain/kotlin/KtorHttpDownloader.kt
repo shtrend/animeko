@@ -28,6 +28,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -744,7 +745,13 @@ open class KtorHttpDownloader(
                 semaphore.acquire()
                 launch(ioDispatcher, start = CoroutineStart.ATOMIC) {
                     try {
-                        val newSize = downloadSingleSegment(seg, options)
+                        // Retry with exponential backoff if download fails
+                        val newSize = withRetry(
+                            maxRetries = options.maxRetriesPerSegment,
+                            baseDelayMillis = options.baseRetryDelayMillis,
+                        ) {
+                            downloadSingleSegment(seg, options)
+                        }
                         markSegmentDownloaded(downloadId, seg.index, newSize)
                     } finally {
                         semaphore.release()
@@ -825,6 +832,42 @@ open class KtorHttpDownloader(
             logger.info { "Waiting for download job to complete for $downloadId" }
             job.join()
             logger.info { "Download job completed for $downloadId" }
+        }
+    }
+
+    /**
+     * Helper to retry the [block] up to [maxRetries] times with exponential backoff.
+     * The backoff delay starts at [baseDelayMillis] and doubles each time.
+     */
+    private suspend fun <T> withRetry(
+        maxRetries: Int,
+        baseDelayMillis: Long,
+        block: suspend () -> T
+    ): T {
+        var attempt = 1
+        var currentDelay = baseDelayMillis
+        while (true) {
+            try {
+                return block()
+            } catch (ce: CancellationException) {
+                // Always rethrow cancellation
+                throw ce
+            } catch (ex: Throwable) {
+                if (attempt >= maxRetries) {
+                    logger.info {
+                        "Segment download failed after $attempt/$maxRetries attempts; no more retries. " +
+                                "Error: ${ex.message}"
+                    }
+                    throw ex
+                }
+                logger.info {
+                    "Segment download failed on attempt $attempt/$maxRetries: ${ex.message}. " +
+                            "Retrying after ${currentDelay}ms..."
+                }
+                delay(currentDelay)
+                currentDelay = (currentDelay * 2).coerceAtMost(30_000L) // cap at 30s
+                attempt++
+            }
         }
     }
 
