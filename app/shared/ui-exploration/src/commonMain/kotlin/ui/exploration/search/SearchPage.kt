@@ -119,14 +119,23 @@ fun SearchPage(
                         items[index]?.let {
                             onSelect(index, it)
                         }
-                        if (navigator.currentDestination?.pane == ListDetailPaneScaffoldRole.List) {
-                            // 在 list 模式点击 item, 自动切换列表 layout 为详细模式, 避免在 PC 上左侧太拥挤
+                        val didSwitchUI = if (
+                            !isSinglePane
+                            && navigator.currentDestination?.pane == ListDetailPaneScaffoldRole.List
+                            && state.layoutKind != SearchResultLayoutKind.PREVIEW
+                        ) {
+                            // 在多页模式下, 在 list 模式点击 item, 自动切换列表 layout 为详细模式, 避免左侧太拥挤
                             state.layoutKind = SearchResultLayoutKind.PREVIEW
+                            true
+                        } else {
+                            false
                         }
                         coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                            val shouldNavigate = navigator.currentDestination?.pane != ListDetailPaneScaffoldRole.Detail
-                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
-                            if (shouldNavigate) {
+                            // 切换 UI 后, 被选择的位置可能会变, 所以需要 scroll 到那个元素
+                            val shouldAnimateScroll = didSwitchUI
+                                    && navigator.currentDestination?.pane != ListDetailPaneScaffoldRole.Detail // 如果已经打开了右边, 就不要动 scroll. 我们只在初次切换 UI 时 scroll.
+                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail) // 打开右边
+                            if (shouldAnimateScroll) {
                                 state.gridState.animateScrollToItem(index)
                             }
                         }
