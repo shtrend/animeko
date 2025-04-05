@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import me.him188.ani.app.data.models.preference.NsfwMode
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
@@ -85,14 +86,20 @@ class SearchViewModel(
                                     .first()
                     },
                 ).combine(nsfwSettingFlow) { data, nsfwMode ->
+                    val explicitR18 = query.tags?.contains("R18") == true
                     // 当 settings 变更时, 会重新计算所有的 SubjectPreviewItemInfo 以更新其显示状态, 但不会重新搜索.
                     data.map { subject ->
                         SubjectPreviewItemInfo.compute(
                             subject.subjectInfo,
                             subject.mainEpisodeCount,
-                            nsfwMode,
-                            subject.lightSubjectRelations.lightRelatedPersonInfoList,
-                            subject.lightSubjectRelations.lightRelatedCharacterInfoList,
+                            nsfwModeSettings = if (explicitR18) {
+                                // 搜索 R18 条目时, 需要强制显示
+                                NsfwMode.DISPLAY
+                            } else {
+                                nsfwMode
+                            },
+                            relatedPersonList = subject.lightSubjectRelations.lightRelatedPersonInfoList,
+                            characters = subject.lightSubjectRelations.lightRelatedCharacterInfoList,
                             hide = shouldHide(query, subject),
                         )
                     }
