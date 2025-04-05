@@ -330,11 +330,7 @@ private fun LazyGridItemScope.SearchResultColumnScopeImpl(
         onSortChange: (SearchSort) -> Unit,
         modifier: Modifier
     ) {
-        val modifier1 = modifier.animateItem(
-            fadeInSpec = aniMotionScheme.feedItemFadeInSpec,
-            placementSpec = aniMotionScheme.feedItemPlacementSpec,
-            fadeOutSpec = aniMotionScheme.feedItemFadeOutSpec,
-        )
+        val modifier1 = modifier // 不要加动画, #1901
         when {
             itemsState.value.isFinishedAndEmpty -> {
                 ListItem(
