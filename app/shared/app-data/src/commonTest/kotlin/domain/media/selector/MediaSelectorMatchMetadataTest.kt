@@ -24,7 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.fail
 
 @TestContainer
-class DefaultMediaSelectorMatchMetadataTest {
+class MediaSelectorMatchMetadataTest {
     @TestFactory
     fun `subjectMatchKind EXACT vs FUZZY`() = runDynamicTests {
         addSimpleMediaSelectorTest(

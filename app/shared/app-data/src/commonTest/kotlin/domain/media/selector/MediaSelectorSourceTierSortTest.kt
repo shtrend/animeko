@@ -28,7 +28,7 @@ import kotlin.test.Test
  * @see me.him188.ani.app.domain.mediasource.codec.MediaSourceTier
  */
 @DisabledOnNative // TODO: ContextParameters crashes on Native
-class DefaultMediaSelectorSourceTierSortTest {
+class MediaSelectorSourceTierSortTest {
     @Test
     fun `tier - basic sorting`() = runSimpleMediaSelectorTestSuite {
         initSubject()

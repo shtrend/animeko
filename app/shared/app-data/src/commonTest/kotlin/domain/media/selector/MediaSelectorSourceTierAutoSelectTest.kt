@@ -40,7 +40,7 @@ import kotlin.test.assertNotNull
  * @see me.him188.ani.app.domain.mediasource.codec.MediaSourceTier
  */
 @DisabledOnNative // TODO: ContextParameters crashes on Native
-class DefaultMediaSelectorSourceTierAutoSelectTest {
+class MediaSelectorSourceTierAutoSelectTest {
     @Test
     fun `control group - auto select when all sources complete`() = runFetchMediaSelectorTestSuite {
         initSubject()

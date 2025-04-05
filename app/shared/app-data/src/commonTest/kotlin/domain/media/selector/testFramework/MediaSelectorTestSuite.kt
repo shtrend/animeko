@@ -61,9 +61,9 @@ import kotlin.random.Random
 /**
  * DSL for testing [me.him188.ani.app.domain.media.selector.DefaultMediaSelector].
  *
- * @see me.him188.ani.app.domain.media.selector.DefaultMediaSelectorSourceTierAutoSelectTest
- * @see me.him188.ani.app.domain.media.selector.DefaultMediaSelectorSourceTierSortTest
- * @see me.him188.ani.app.domain.media.selector.DefaultMediaSelectorMatchMetadataTest
+ * @see me.him188.ani.app.domain.media.selector.MediaSelectorSourceTierAutoSelectTest
+ * @see me.him188.ani.app.domain.media.selector.MediaSelectorSourceTierSortTest
+ * @see me.him188.ani.app.domain.media.selector.MediaSelectorMatchMetadataTest
  */
 sealed class MediaSelectorTestSuite {
     val random = Random(42)
@@ -465,7 +465,7 @@ fun runSimpleMediaSelectorTestSuite(
 }
 
 /**
- * @see me.him188.ani.app.domain.media.selector.DefaultMediaSelectorSourceTierAutoSelectTest
+ * @see me.him188.ani.app.domain.media.selector.MediaSelectorSourceTierAutoSelectTest
  */
 fun runFetchMediaSelectorTestSuite(
     buildTest: context(TestScope) FetchMediaSelectorTestSuite.() -> Unit = {},

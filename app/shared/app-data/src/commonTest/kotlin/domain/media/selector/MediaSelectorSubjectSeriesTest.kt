@@ -27,7 +27,7 @@ import kotlin.test.fail
  * 测试过滤掉其他季度的资源
  */
 @TestContainer
-class DefaultMediaSelectorSubjectSeriesTest {
+class MediaSelectorSubjectSeriesTest {
     @TestFactory
     fun `exclude S1 when playing S2`() = runDynamicTests {
         addSimpleMediaSelectorTest(

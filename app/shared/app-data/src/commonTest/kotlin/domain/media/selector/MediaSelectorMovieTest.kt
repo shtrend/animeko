@@ -21,7 +21,7 @@ import me.him188.ani.test.runDynamicTests
  * 测试主番与剧场版的关系
  */
 @TestContainer
-class DefaultMediaSelectorMovieTest {
+class MediaSelectorMovieTest {
     @TestFactory
     fun `exclude movie when playing main subject`() = runDynamicTests {
         addSimpleMediaSelectorTest(
