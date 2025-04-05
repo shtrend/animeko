@@ -13,11 +13,13 @@ import androidx.compose.runtime.Stable
 import androidx.paging.cachedIn
 import androidx.paging.map
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import me.him188.ani.app.data.models.preference.NsfwMode
 import me.him188.ani.app.data.models.subject.SubjectInfo
@@ -55,6 +57,7 @@ class SearchViewModel(
     private val authStateProvider: AniAuthStateProvider by inject()
 
     private val nsfwSettingFlow = settingsRepository.uiSettings.flow.map { it.searchSettings.nsfwMode }
+        .stateIn(backgroundScope, SharingStarted.Lazily, NsfwMode.HIDE)
 
     private val hasInitialSearchQuery = initialSearchQuery.keywords.isNotEmpty() || initialSearchQuery.hasFilters()
     private val queryFlow = MutableStateFlow(initialSearchQuery)
@@ -76,8 +79,14 @@ class SearchViewModel(
         },
         searchState = PagingSearchState(
             createPager = { scope ->
-                // 搜索总是会包含 NSFW
-                val query = queryFlow.value
+                val rawQuery = queryFlow.value
+                // 搜索 R18 条目时, 需要强制显示
+                val explicitR18 = rawQuery.tags?.contains("R18") == true
+
+                val query = rawQuery
+                    // 如果不需要 R18, 就隐藏
+                    .copy(nsfw = explicitR18 || nsfwSettingFlow.value != NsfwMode.HIDE)
+
                 subjectSearchRepository.searchSubjects(
                     query,
                     useNewApi = {
@@ -86,7 +95,6 @@ class SearchViewModel(
                                     .first()
                     },
                 ).combine(nsfwSettingFlow) { data, nsfwMode ->
-                    val explicitR18 = query.tags?.contains("R18") == true
                     // 当 settings 变更时, 会重新计算所有的 SubjectPreviewItemInfo 以更新其显示状态, 但不会重新搜索.
                     data.map { subject ->
                         SubjectPreviewItemInfo.compute(

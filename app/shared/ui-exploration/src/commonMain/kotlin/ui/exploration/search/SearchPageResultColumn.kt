@@ -157,63 +157,76 @@ internal fun SearchResultColumn(
                     layoutParams.kind,
                     transitionSpec = aniMotionScheme.animatedContent.topLevel,
                 ) { targetKind ->
-                    val animatedVisibilityScope = this
-                    when (targetKind) {
-                        SearchResultLayoutKind.COVER -> {
-                            SubjectCoverCard(
-                                info?.title,
-                                info?.imageUrl,
-                                isPlaceholder = info == null,
-                                onClick = { onSelect(index) },
-                                Modifier
-                                    .ifNotNullThen(info) {
-                                        sharedElement(
-                                            rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = it.subjectId)),
-                                            animatedVisibilityScope,
-                                            clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
-                                        )
-                                    }
-                                    .animateItem(
-                                        aniMotionScheme.feedItemFadeInSpec,
-                                        aniMotionScheme.feedItemPlacementSpec,
-                                        aniMotionScheme.feedItemFadeOutSpec,
-                                    ),
-                                shape = layoutParams.grid.cardShape,
-                            )
-                        }
-
-                        SearchResultLayoutKind.PREVIEW -> {
-                            if (info != null && !info.hide) {
-                                val requester = remember { BringIntoViewRequester() }
-                                // 记录 item 对应的 requester
-                                DisposableEffect(requester) {
-                                    bringIntoViewRequesters[info.subjectId] = requester
-                                    onDispose {
-                                        bringIntoViewRequesters.remove(info.subjectId)
-                                    }
-                                }
-
-                                SearchResultItem(
-                                    info,
-                                    highlightSelected && index == selectedItemIndex(),
-                                    layoutParams.previewItem.shape,
-                                    { onSelect(index) },
-                                    onPlay,
+                    var nsfwMaskState: NsfwMode by rememberSaveable(info?.title) {
+                        mutableStateOf(info?.nsfwMode ?: NsfwMode.DISPLAY)
+                    }
+                    NsfwMask(
+                        mode = nsfwMaskState,
+                        onTemporarilyDisplay = { nsfwMaskState = NsfwMode.DISPLAY },
+                        shape = layoutParams.grid.cardShape,
+                    ) {
+                        val animatedVisibilityScope = this
+                        when (targetKind) {
+                            SearchResultLayoutKind.COVER -> {
+                                SubjectCoverCard(
+                                    info?.title,
+                                    info?.imageUrl,
+                                    isPlaceholder = info == null,
+                                    onClick = { onSelect(index) },
                                     Modifier
+                                        .ifNotNullThen(info) {
+                                            sharedElement(
+                                                rememberSharedContentState(
+                                                    SharedTransitionKeys.subjectCoverImage(
+                                                        subjectId = it.subjectId,
+                                                    ),
+                                                ),
+                                                animatedVisibilityScope,
+                                                clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
+                                            )
+                                        }
                                         .animateItem(
                                             aniMotionScheme.feedItemFadeInSpec,
                                             aniMotionScheme.feedItemPlacementSpec,
                                             aniMotionScheme.feedItemFadeOutSpec,
-                                        )
-                                        .bringIntoViewRequester(requester),
-                                    imageModifier = Modifier.sharedElement(
-                                        rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = info.subjectId)),
-                                        animatedVisibilityScope,
-                                        clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
-                                    ),
+                                        ),
+                                    shape = layoutParams.grid.cardShape,
                                 )
-                            } else {
-                                Box(Modifier.size(Dp.Hairline))
+                            }
+
+                            SearchResultLayoutKind.PREVIEW -> {
+                                if (info != null && !info.hide) {
+                                    val requester = remember { BringIntoViewRequester() }
+                                    // 记录 item 对应的 requester
+                                    DisposableEffect(requester) {
+                                        bringIntoViewRequesters[info.subjectId] = requester
+                                        onDispose {
+                                            bringIntoViewRequesters.remove(info.subjectId)
+                                        }
+                                    }
+
+                                    SearchResultItem(
+                                        info,
+                                        highlightSelected && index == selectedItemIndex(),
+                                        layoutParams.previewItem.shape,
+                                        { onSelect(index) },
+                                        onPlay,
+                                        Modifier
+                                            .animateItem(
+                                                aniMotionScheme.feedItemFadeInSpec,
+                                                aniMotionScheme.feedItemPlacementSpec,
+                                                aniMotionScheme.feedItemFadeOutSpec,
+                                            )
+                                            .bringIntoViewRequester(requester),
+                                        imageModifier = Modifier.sharedElement(
+                                            rememberSharedContentState(SharedTransitionKeys.subjectCoverImage(subjectId = info.subjectId)),
+                                            animatedVisibilityScope,
+                                            clipInOverlayDuringTransition = OverlayClip(layoutParams.grid.cardShape),
+                                        ),
+                                    )
+                                } else {
+                                    Box(Modifier.size(Dp.Hairline))
+                                }
                             }
                         }
                     }
@@ -283,38 +296,29 @@ private fun SearchResultItem(
     modifier: Modifier = Modifier,
     imageModifier: Modifier = Modifier,
 ) {
-    var nsfwMaskState: NsfwMode by rememberSaveable(info) {
-        mutableStateOf(info.nsfwMode)
-    }
-    NsfwMask(
-        mode = nsfwMaskState,
-        onTemporarilyDisplay = { nsfwMaskState = NsfwMode.DISPLAY },
-        shape = shape,
-    ) {
-        SubjectPreviewItem(
-            selected = selected,
-            onClick = onClick,
-            onPlay = { onPlay(info) },
-            info = info,
-            modifier
-                .fillMaxWidth()
-                .padding(vertical = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding / 2),
-            image = {
-                Box(imageModifier) {
-                    SubjectItemDefaults.Image(
-                        info.imageUrl,
-                        Modifier.clip(shape),
-                    )
-                }
-            },
-            title = { maxLines ->
-                Text(
-                    info.title,
-                    maxLines = maxLines,
+    SubjectPreviewItem(
+        selected = selected,
+        onClick = onClick,
+        onPlay = { onPlay(info) },
+        info = info,
+        modifier
+            .fillMaxWidth()
+            .padding(vertical = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding / 2),
+        image = {
+            Box(imageModifier) {
+                SubjectItemDefaults.Image(
+                    info.imageUrl,
+                    Modifier.clip(shape),
                 )
-            },
-        )
-    }
+            }
+        },
+        title = { maxLines ->
+            Text(
+                info.title,
+                maxLines = maxLines,
+            )
+        },
+    )
 }
 
 @Suppress("FunctionName")

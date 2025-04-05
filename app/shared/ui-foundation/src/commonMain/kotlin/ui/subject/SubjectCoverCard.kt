@@ -48,6 +48,7 @@ fun SubjectCoverCard(
                     contentScale = ContentScale.Crop,
                 )
             }
+
             Surface({ onClick() }, content = image)
         } else {
             Box(Modifier.aspectRatio(9f / 16).fillMaxWidth())
