@@ -502,7 +502,20 @@ fun ReleaseEnvironment.uploadDesktopDistributions() {
         }
 
         OS.MACOS -> {
-            uploadBinary("dmg", osName = "macos")
+            if (hostArch == "x86_64") {
+                uploadReleaseAsset(
+                    name = namer.desktopDistributionFile(
+                        fullVersion,
+                        osName = hostOS.name.lowercase(),
+                        extension = "zip",
+                    ),
+                    contentType = "application/x-zip",
+                    file = layout.buildDirectory.dir("distributions").get().asFile.walk()
+                        .single { it.extension == "zip" },
+                )
+            } else {
+                uploadBinary("dmg", osName = "macos")
+            }
         }
 
         OS.LINUX -> {

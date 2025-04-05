@@ -463,7 +463,8 @@ run {
             uploadDesktopInstallers = false,
             extraGradleArgs = selfMac15.extraGradleArgs.filterNot { it.startsWith("-P$ANI_ANDROID_ABIS=") },
         ), // android apks
-        ghMac15, // macos installer
+        ghMac15, // macos AArch64 installer
+        ghMac13, // macos x64 portable
         ghUbuntu2404, // linux app image
     )
 }
@@ -1502,13 +1503,6 @@ class WithMatrix(
     }
 
     fun JobBuilder<*>.packageDesktopAndUpload(): PackageDesktopAndUploadOutputs {
-        if (matrix.isMacOSX64 // not supported
-            || !matrix.uploadDesktopInstallers // disabled
-        ) {
-
-            return PackageDesktopAndUploadOutputs()
-        }
-
         if (matrix.isWindows) {
             // Windows does not support installers
             runGradle(
@@ -1520,13 +1514,23 @@ class WithMatrix(
         }
 
         if (matrix.isMacOS) {
-            // macOS uses installers
-            runGradle(
-                name = "Package Desktop",
-                tasks = [
-                    "packageReleaseDistributionForCurrentOS", // dmg
-                ],
-            )
+            if (matrix.isAArch64) {
+                // macOS uses installers
+                runGradle(
+                    name = "Package Desktop",
+                    tasks = [
+                        "packageReleaseDistributionForCurrentOS", // dmg
+                    ],
+                )
+            } else {
+                // x64 uses portable
+                runGradle(
+                    name = "Package Desktop",
+                    tasks = [
+                        "createReleaseDistributable",
+                    ],
+                )
+            }
         }
 
         if (matrix.isUbuntu) {
@@ -1543,7 +1547,7 @@ class WithMatrix(
         return PackageDesktopAndUploadOutputs().apply {
             if (matrix.isMacOS && matrix.isAArch64) {
                 usesWithAttempts(
-                    name = "Upload macOS dmg",
+                    name = "Upload macOS AArch64 dmg",
                     action = UploadArtifact(
                         name = ArtifactNames.macosDmg(matrix.arch),
                         path_Untyped = "app/desktop/build/compose/binaries/main-release/dmg/Ani-*.dmg",
@@ -1555,7 +1559,7 @@ class WithMatrix(
 
             if (matrix.isMacOS && matrix.isX64) {
                 usesWithAttempts(
-                    name = "Upload macOS dmg",
+                    name = "Upload macOS x86_64 ZIP",
                     action = UploadArtifact(
                         name = ArtifactNames.macosPortable(matrix.arch),
                         path_Untyped = "app/desktop/build/compose/binaries/main-release/app/Ani.app",
