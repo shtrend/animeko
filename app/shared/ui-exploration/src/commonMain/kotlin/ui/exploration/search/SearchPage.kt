@@ -13,6 +13,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -54,6 +55,7 @@ import me.him188.ani.app.ui.adaptive.PaneScope
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.search.collectHasQueryAsState
@@ -160,6 +162,9 @@ fun SearchPage(
                             WindowSizeClass(maxWidth.value, maxHeight.value),
                             currentWindowAdaptiveInfo1().windowPosture,
                         ),
+                    ),
+                    contentPadding = PaddingValues(
+                        bottom = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding,
                     ),
                 )
             }

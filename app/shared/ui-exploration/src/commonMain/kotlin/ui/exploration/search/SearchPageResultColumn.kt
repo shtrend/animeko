@@ -16,6 +16,7 @@ import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -103,6 +104,7 @@ internal fun SearchResultColumn(
     headers: LazyGridScope.() -> Unit = {},
     state: LazyGridState = rememberLazyGridState(),
     layoutParams: SearchResultColumnLayoutParams = SearchResultColumnLayoutParams.layoutParameters(kind = layoutKind),
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     var height by rememberSaveable { mutableIntStateOf(0) }
     val bringIntoViewRequesters = remember { mutableStateMapOf<Int, BringIntoViewRequester>() }
@@ -134,6 +136,7 @@ internal fun SearchResultColumn(
         state = state,
         horizontalArrangement = layoutParams.grid.horizontalArrangement,
         verticalArrangement = layoutParams.grid.verticalArrangement,
+        contentPadding = contentPadding,
     ) {
         headers()
 
