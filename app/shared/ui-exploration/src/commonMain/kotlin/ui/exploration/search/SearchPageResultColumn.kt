@@ -348,10 +348,10 @@ private fun LazyGridItemScope.SearchResultColumnScopeImpl(
                         itemVerticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text("已显示 ${itemsState.value.itemCount} 个结果", style = MaterialTheme.typography.bodyLarge)
-                        Spacer(Modifier.weight(1f))
                         Row(
-                            Modifier.align(Alignment.Bottom),
+                            Modifier.weight(1f).align(Alignment.Bottom),
                             verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.aligned(Alignment.End),
                         ) {
                             LayoutKindButton(
                                 layoutKind,
