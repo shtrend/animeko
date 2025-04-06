@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.app.ui.settings.tabs
 
 import androidx.compose.material3.DropdownMenu
@@ -8,6 +17,9 @@ import androidx.compose.ui.Modifier
 import me.him188.ani.app.navigation.BrowserNavigator
 import me.him188.ani.app.platform.ContextMP
 import me.him188.ani.app.platform.LocalContext
+import me.him188.ani.app.ui.settings.tabs.about.ANI_WEBSITE
+import me.him188.ani.app.ui.settings.tabs.about.GITHUB_HOME
+import me.him188.ani.app.ui.settings.tabs.about.ISSUE_TRACKER
 import org.koin.mp.KoinPlatform
 
 object AniHelpNavigator {

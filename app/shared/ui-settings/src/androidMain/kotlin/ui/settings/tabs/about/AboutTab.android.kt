@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.settings.tabs
+package me.him188.ani.app.ui.settings.tabs.about
 
 import android.content.Context
 import android.content.Intent
@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
-import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
 import me.him188.ani.app.platform.BuildConfig
 import me.him188.ani.app.platform.LocalContext
