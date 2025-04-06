@@ -36,6 +36,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -48,6 +52,7 @@ import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.Res
 import me.him188.ani.app.ui.foundation.a
+import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.foundation.icons.AniIcons
 import me.him188.ani.app.ui.foundation.icons.DeployedCodeAccount
 import me.him188.ani.app.ui.foundation.icons.News
@@ -187,45 +192,50 @@ fun AboutTab(
 //            colors = listItemColors,
 //        )
 
+        var showChatGroups by rememberSaveable { mutableStateOf(false) }
         ListItem(
             headlineContent = { Text("交流群") },
-            modifier = Modifier,
+            modifier = Modifier.clickable { showChatGroups = !showChatGroups },
             leadingContent = {
                 Icon(Icons.Outlined.Forum, null)
             },
             colors = listItemColors,
         )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .padding(start = (24 + 16).dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        AniAnimatedVisibility(
+            showChatGroups,
+            label = "ChatGroups",
         ) {
-            val context = LocalContext.current
-            SuggestionChip(
-                { AniHelpNavigator.openJoinQQGroup(context) },
-                icon = {
-                    Icon(
-                        AniIcons.QqRoundedOutline, "QQ 群",
-                        Modifier.size(20.dp),
-                    )
-                },
-                label = { Text("927170241") },
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(start = (24 + 16).dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                val context = LocalContext.current
+                SuggestionChip(
+                    { AniHelpNavigator.openJoinQQGroup(context) },
+                    icon = {
+                        Icon(
+                            AniIcons.QqRoundedOutline, "QQ 群",
+                            Modifier.size(20.dp),
+                        )
+                    },
+                    label = { Text("927170241") },
+                )
 
-            SuggestionChip(
-                { AniHelpNavigator.openTelegram(context) },
-                icon = {
-                    Image(
-                        AniIcons.Telegram, "Telegram",
-                        Modifier.size(20.dp),
-                    )
-                },
-                label = { Text("Telegram") },
-            )
+                SuggestionChip(
+                    { AniHelpNavigator.openTelegram(context) },
+                    icon = {
+                        Image(
+                            AniIcons.Telegram, "Telegram",
+                            Modifier.size(20.dp),
+                        )
+                    },
+                    label = { Text("Telegram") },
+                )
+            }
         }
-
     }
 }
 
