@@ -88,13 +88,12 @@ fun AboutTab(
 ) {
     Column(modifier.fillMaxWidth()) {
         // Centered HeroIcon at the top
-        Column(Modifier.padding(top = 36.dp)) {
+        Column(Modifier.padding(vertical = 36.dp)) {
             HeroIcon(
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(
                     start = 16.dp,
                     end = 16.dp,
-                    bottom = 8.dp,
                 ),
             ) {
                 Icon(
