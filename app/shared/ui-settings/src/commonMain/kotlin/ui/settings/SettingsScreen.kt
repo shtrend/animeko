@@ -92,6 +92,7 @@ import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
+import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.rendering.P2p
 import me.him188.ani.app.ui.settings.tabs.AniHelpNavigator
@@ -187,12 +188,17 @@ fun SettingsScreen(
         },
         tabContent = { currentTab ->
             val tabModifier = Modifier
+            val toaster = LocalToaster.current
 
             Column {
                 when (currentTab) {
                     SettingsTab.ABOUT -> AboutTab(
                         vm.aboutTabInfo,
-                        { vm.debugTriggerState.triggerDebugMode() },
+                        {
+                            if (vm.debugTriggerState.triggerDebugMode()) {
+                                toaster.toast("已进入调试模式")
+                            }
+                        },
                         onClickReleaseNotes = { AniHelpNavigator.openGitHubRelease(context, vm.aboutTabInfo.version) },
                         onClickWebsite = { AniHelpNavigator.openAniWebsite(context) },
                         onClickFeedback = { AniHelpNavigator.openIssueTracker(context) },
