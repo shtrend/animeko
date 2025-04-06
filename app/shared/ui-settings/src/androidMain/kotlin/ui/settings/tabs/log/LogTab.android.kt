@@ -59,7 +59,8 @@ internal actual fun ColumnScope.PlatformLoggingItems(listItemColors: ListItemCol
     )
 }
 
-internal fun Context.getLogsDir(): File {
+// Used also in AniApplication
+fun Context.getLogsDir(): File {
     // /data/data/0/me.him188.ani/files/logs/
     val logs = applicationContext.filesDir.resolve("logs")
     if (!logs.exists()) {

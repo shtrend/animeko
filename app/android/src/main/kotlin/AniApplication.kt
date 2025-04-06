@@ -36,7 +36,7 @@ import me.him188.ani.app.platform.createAppRootCoroutineScope
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.platform.getCommonKoinModule
 import me.him188.ani.app.platform.startCommonKoinModule
-import me.him188.ani.app.ui.settings.tabs.about.getLogsDir
+import me.him188.ani.app.ui.settings.tabs.log.getLogsDir
 import me.him188.ani.utils.analytics.AnalyticsConfig
 import me.him188.ani.utils.analytics.AnalyticsImpl
 import me.him188.ani.utils.coroutines.IO_
