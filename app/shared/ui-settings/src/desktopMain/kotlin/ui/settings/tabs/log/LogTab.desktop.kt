@@ -7,35 +7,29 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.settings.tabs.about
+package me.him188.ani.app.ui.settings.tabs.log
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import me.him188.ani.app.platform.DesktopContext
 import me.him188.ani.app.platform.LocalContext
 import java.awt.Desktop
-import kotlin.system.exitProcess
 
 @Composable
-internal actual fun ColumnScope.PlatformDebugInfoItems() {
+internal actual fun ColumnScope.PlatformLoggingItems(listItemColors: ListItemColors) {
     val context = LocalContext.current
-    FilledTonalButton(
+    ListItem(
         {
-            Desktop.getDesktop().open((context as DesktopContext).logsDir)
-//        below also works on macOS, not sure about Windows
-//        KoinPlatform.getKoin().get<BrowserNavigator>()
-//            .openBrowser(context, "file://" + (context as DesktopContext).logsDir.absolutePath.replace(" ", "%20"))
+            Text("打开日志目录")
         },
-    ) {
-        Text("打开日志目录")
-    }
-    FilledTonalButton(
-        {
-            exitProcess(0)
-        }
-    ) {
-        Text("exitProcess(0)")
-    }
+        Modifier.clickable {
+            Desktop.getDesktop().open((context as DesktopContext).logsDir)
+        },
+        colors = listItemColors,
+    )
 }

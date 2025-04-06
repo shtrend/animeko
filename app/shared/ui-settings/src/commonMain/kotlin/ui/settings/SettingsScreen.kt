@@ -28,6 +28,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Download
+import androidx.compose.material.icons.rounded.Feedback
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.Palette
@@ -99,6 +100,7 @@ import me.him188.ani.app.ui.settings.tabs.about.AboutTab
 import me.him188.ani.app.ui.settings.tabs.app.AppearanceGroup
 import me.him188.ani.app.ui.settings.tabs.app.PlayerGroup
 import me.him188.ani.app.ui.settings.tabs.app.SoftwareUpdateGroup
+import me.him188.ani.app.ui.settings.tabs.log.LogTab
 import me.him188.ani.app.ui.settings.tabs.media.AutoCacheGroup
 import me.him188.ani.app.ui.settings.tabs.media.CacheDirectoryGroup
 import me.him188.ani.app.ui.settings.tabs.media.MediaSelectionGroup
@@ -178,6 +180,7 @@ fun SettingsScreen(
 
             Title("其他")
             Item(SettingsTab.ABOUT)
+            Item(SettingsTab.LOG)
             if (vm.isInDebugMode) {
                 Item(SettingsTab.DEBUG)
             }
@@ -202,6 +205,10 @@ fun SettingsScreen(
 //                            detailPaneNavController.navigate(DetailPaneRoutes.Acknowledgements)
                         },
                         modifier = tabModifier,
+                    )
+
+                    SettingsTab.LOG -> LogTab(
+                        onClickFeedback = { AniHelpNavigator.openIssueTracker(context) },
                     )
 
                     SettingsTab.DEBUG -> DebugTab(
@@ -242,6 +249,7 @@ fun SettingsScreen(
                             SettingsTab.STORAGE -> CacheDirectoryGroup(vm.cacheDirectoryGroupState)
                             SettingsTab.ABOUT -> {} // see above
                             SettingsTab.DEBUG -> {}
+                            SettingsTab.LOG -> {}
                             null -> {}
                         }
                     }
@@ -583,6 +591,7 @@ private fun getIcon(tab: SettingsTab): ImageVector {
         SettingsTab.CACHE -> Icons.Rounded.Download
         SettingsTab.STORAGE -> Icons.Rounded.Storage
         SettingsTab.ABOUT -> Icons.Rounded.Info
+        SettingsTab.LOG -> Icons.Rounded.Feedback
         SettingsTab.DEBUG -> Icons.Rounded.Science
     }
 }
@@ -601,7 +610,8 @@ private fun getName(tab: SettingsTab): String {
         SettingsTab.BT -> "BitTorrent"
         SettingsTab.CACHE -> "自动缓存"
         SettingsTab.STORAGE -> "存储空间"
-        SettingsTab.ABOUT -> "关于、反馈与日志"
+        SettingsTab.ABOUT -> "关于"
+        SettingsTab.LOG -> "日志"
         SettingsTab.DEBUG -> "调试"
     }
 }

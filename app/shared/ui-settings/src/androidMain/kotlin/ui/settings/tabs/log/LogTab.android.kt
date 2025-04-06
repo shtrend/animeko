@@ -7,14 +7,17 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.settings.tabs.about
+package me.him188.ani.app.ui.settings.tabs.log
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.core.content.FileProvider
@@ -24,10 +27,13 @@ import java.io.File
 
 
 @Composable
-internal actual fun ColumnScope.PlatformDebugInfoItems() {
+internal actual fun ColumnScope.PlatformLoggingItems(listItemColors: ListItemColors) {
     val context = LocalContext.current
-    FilledTonalButton(
-        {
+    val clipboard = LocalClipboardManager.current
+
+    ListItem(
+        headlineContent = { Text("分享当日日志文件") },
+        Modifier.clickable {
             val shareIntent = Intent(Intent.ACTION_SEND)
             shareIntent.setType("text/plain") // Set appropriate MIME type
             shareIntent.putExtra(
@@ -41,29 +47,19 @@ internal actual fun ColumnScope.PlatformDebugInfoItems() {
             shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             context.startActivity(Intent.createChooser(shareIntent, "分享日志文件"))
         },
-    ) {
-        Text("分享当日日志文件")
-    }
+        colors = listItemColors,
+    )
 
-    val clipboard = LocalClipboardManager.current
-    FilledTonalButton(
-        {
+    ListItem(
+        headlineContent = { Text("复制当日日志内容 (很大)") },
+        Modifier.clickable {
             clipboard.setText(AnnotatedString(context.getCurrentLogFile().readText()))
         },
-    ) {
-        Text("复制当日日志内容 (很大)")
-    }
-
-    FilledTonalButton(
-        {
-            context.applicationContext.cacheDir.resolve("torrent-caches").deleteRecursively()
-        },
-    ) {
-        Text("清除全部下载缓存")
-    }
+        colors = listItemColors,
+    )
 }
 
-fun Context.getLogsDir(): File {
+internal fun Context.getLogsDir(): File {
     // /data/data/0/me.him188.ani/files/logs/
     val logs = applicationContext.filesDir.resolve("logs")
     if (!logs.exists()) {
@@ -72,6 +68,6 @@ fun Context.getLogsDir(): File {
     return logs
 }
 
-fun Context.getCurrentLogFile(): File {
+internal fun Context.getCurrentLogFile(): File {
     return getLogsDir().resolve("app.log")
 }

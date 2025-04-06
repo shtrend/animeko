@@ -7,13 +7,15 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.settings.tabs.about
+package me.him188.ani.app.ui.settings.tabs.log
 
-
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.uikit.LocalUIViewController
@@ -33,12 +35,16 @@ import platform.UIKit.UIViewController
 import platform.UIKit.popoverPresentationController
 
 @Composable
-internal actual fun ColumnScope.PlatformDebugInfoItems() {
+internal actual fun ColumnScope.PlatformLoggingItems(listItemColors: ListItemColors) {
     val toaster = LocalToaster.current
     val uiViewController = LocalUIViewController.current
+    val clipboard = LocalClipboardManager.current
 
-    FilledTonalButton(
-        {
+    ListItem(
+        headlineContent = {
+            Text("分享当日日志文件")
+        },
+        Modifier.clickable {
             val file = getTodayLogFile()
             if (file == null) {
                 toaster.toast("未找到文件")
@@ -46,13 +52,14 @@ internal actual fun ColumnScope.PlatformDebugInfoItems() {
                 shareFile(file.inSystem.absolutePath, uiViewController)
             }
         },
-    ) {
-        Text("分享当日日志文件")
-    }
+        colors = listItemColors,
+    )
 
-    val clipboard = LocalClipboardManager.current
-    FilledTonalButton(
-        {
+    ListItem(
+        headlineContent = {
+            Text("复制当日日志内容 (很大)")
+        },
+        Modifier.clickable {
             val file = getTodayLogFile()
             if (file == null) {
                 toaster.toast("未找到文件")
@@ -60,9 +67,8 @@ internal actual fun ColumnScope.PlatformDebugInfoItems() {
                 clipboard.setText(AnnotatedString(file.inSystem.readText()))
             }
         },
-    ) {
-        Text("复制当日日志内容 (很大)")
-    }
+        colors = listItemColors,
+    )
 }
 
 private fun shareFile(filePath: String, uiViewController: UIViewController) {

@@ -160,6 +160,7 @@ enum class SettingsTab {
     STORAGE,
 
     ABOUT,
+    LOG,
     DEBUG,
     ;
 
