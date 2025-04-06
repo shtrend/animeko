@@ -9,45 +9,37 @@
 
 package me.him188.ani.app.ui.settings.tabs.about
 
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import me.him188.ani.app.domain.media.cache.MediaCacheManager
-import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
-import me.him188.ani.app.domain.session.isSessionVerified
-import me.him188.ani.app.domain.session.unverifiedAccessTokenOrNull
 import me.him188.ani.app.navigation.BrowserNavigator
-import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class AboutTabViewModel : AbstractViewModel(), KoinComponent {
-    val browserNavigator: BrowserNavigator by inject()
+    private val browserNavigator: BrowserNavigator by inject()
     private val sessionManager: SessionManager by inject()
     private val cacheManager: MediaCacheManager by inject()
 
-    val debugInfo = debugInfoFlow().shareInBackground(started = SharingStarted.Companion.Eagerly)
-
-    @OptIn(OpaqueSession::class)
-    private fun debugInfoFlow() = combine(
-        sessionManager.state,
-        sessionManager.processingRequest.flatMapLatest { it?.state ?: flowOf(null) },
-        sessionManager.isSessionVerified,
-    ) { session, processingRequest, isSessionValid ->
-        DebugInfo(
-            properties = buildMap {
-                val buildConfig = currentAniBuildConfig
-                put("isDebug", buildConfig.isDebug.toString())
-                if (buildConfig.isDebug) {
-                    put("accessToken", session.unverifiedAccessTokenOrNull)
-                    put("domain/session", session.toString())
-                }
-                put("processingRequest.state", processingRequest.toString())
-                put("sessionManager.isSessionValid", isSessionValid.toString())
-            },
-        )
-    }
+//    val debugInfo = debugInfoFlow().shareInBackground(started = SharingStarted.Companion.Eagerly)
+//
+//    @OptIn(OpaqueSession::class)
+//    private fun debugInfoFlow() = combine(
+//        sessionManager.state,
+//        sessionManager.processingRequest.flatMapLatest { it?.state ?: flowOf(null) },
+//        sessionManager.isSessionVerified,
+//    ) { session, processingRequest, isSessionValid ->
+//        DebugInfo(
+//            properties = buildMap {
+//                val buildConfig = currentAniBuildConfig
+//                put("isDebug", buildConfig.isDebug.toString())
+//                if (buildConfig.isDebug) {
+//                    put("accessToken", session.unverifiedAccessTokenOrNull)
+//                    put("domain/session", session.toString())
+//                }
+//                put("processingRequest.state", processingRequest.toString())
+//                put("sessionManager.isSessionValid", isSessionValid.toString())
+//            },
+//        )
+//    }
 }

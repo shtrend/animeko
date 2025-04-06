@@ -9,295 +9,223 @@
 
 package me.him188.ani.app.ui.settings.tabs.about
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Code
+import androidx.compose.material.icons.outlined.Feedback
+import androidx.compose.material.icons.outlined.Forum
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.LinkAnnotation
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.TextLinkStyles
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import me.him188.ani.app.domain.media.cache.MediaAutoCacheService
-import me.him188.ani.app.domain.media.cache.MediaCacheManager
-import me.him188.ani.app.domain.session.SessionManager
-import me.him188.ani.app.navigation.LocalNavigator
+import me.him188.ani.app.data.network.protocol.ReleaseClass
 import me.him188.ani.app.platform.LocalContext
-import me.him188.ani.app.ui.foundation.isInDebugMode
-import me.him188.ani.app.ui.foundation.widgets.LocalToaster
-import me.him188.ani.app.ui.settings.SettingsTab
-import me.him188.ani.app.ui.settings.tabs.HelpDropdown
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.Res
+import me.him188.ani.app.ui.foundation.a
+import me.him188.ani.app.ui.foundation.icons.AniIcons
+import me.him188.ani.app.ui.foundation.icons.DeployedCodeAccount
+import me.him188.ani.app.ui.foundation.icons.News
+import me.him188.ani.app.ui.foundation.icons.QqRoundedOutline
+import me.him188.ani.app.ui.foundation.icons.Telegram
+import me.him188.ani.app.ui.foundation.widgets.HeroIcon
+import me.him188.ani.app.ui.foundation.widgets.HeroIconDefaults
+import me.him188.ani.app.ui.settings.rendering.ReleaseClassIcon
+import me.him188.ani.app.ui.settings.rendering.guessReleaseClass
+import me.him188.ani.app.ui.settings.tabs.AniHelpNavigator
 import me.him188.ani.utils.platform.annotations.TestOnly
-import org.koin.mp.KoinPlatform
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 
-class DebugInfo(
-    val properties: Map<String, String?>,
+@Immutable
+data class AboutTabInfo(
+    val version: String,
+    val releaseClass: ReleaseClass = guessReleaseClass(version),
 )
-
-@Stable
-private const val GITHUB_REPO = "https://github.com/him188/ani"
-
-@Stable
-private const val BANGUMI = "https://bangumi.tv"
-
-@Stable
-private const val DANDANPLAY = "https://www.dandanplay.com/"
-
-@Stable
-private const val DMHY = "https://dmhy.org/"
-
-@Stable
-private const val ACG_RIP = "https://acg.rip/"
-
-@Stable
-private const val MIKAN = "https://mikanime.tv/"
 
 @OptIn(DelicateCoroutinesApi::class, TestOnly::class)
 @Composable
 fun AboutTab(
+    state: AboutTabInfo,
     onTriggerDebugMode: () -> Unit,
+    onClickReleaseNotes: () -> Unit,
+    onClickWebsite: () -> Unit,
+    onClickFeedback: () -> Unit,
+    onClickSource: () -> Unit,
+    onClickDevelopers: () -> Unit,
+    onClickAcknowledgements: () -> Unit,
     modifier: Modifier = Modifier,
-    vm: AboutTabViewModel = viewModel { AboutTabViewModel() },
 ) {
-    val context by rememberUpdatedState(LocalContext.current)
-    val toaster = LocalToaster.current
-    val navigator = LocalNavigator.current
-
-    SettingsTab(modifier) {
-        Group(
-            title = { Text("关于 Animeko") },
-        ) {
-            Column(Modifier.padding(horizontal = 16.dp)) {
-                val style by rememberUpdatedState(
-                    MaterialTheme.typography.bodyMedium.toSpanStyle()
-                        .copy(color = MaterialTheme.colorScheme.onSurface),
-                )
-                val primaryColor by rememberUpdatedState(MaterialTheme.colorScheme.primary)
-                val text by remember {
-                    derivedStateOf {
-                        buildAnnotatedString {
-                            pushStyle(style)
-                            append("Animeko 完全免费无广告且开源, 源代码可在 ")
-                            pushLink(
-                                LinkAnnotation.Url(
-                                    GITHUB_REPO,
-                                    TextLinkStyles(
-                                        SpanStyle(
-                                            color = primaryColor,
-                                            textDecoration = TextDecoration.Underline,
-                                        ),
-                                    ),
-                                ) {
-                                    vm.browserNavigator.openBrowser(context, GITHUB_REPO)
-                                },
-                            )
-                            append("GitHub")
-                            pop()
-                            append(" 找到")
-                            pop()
-                        }
-
-                    }
-                }
-                Text(
-                    text,
-                    style = MaterialTheme.typography.bodyMedium,
+    Column(modifier.fillMaxWidth()) {
+        // Centered HeroIcon at the top
+        Column(Modifier.padding(top = 36.dp)) {
+            HeroIcon(
+                modifier = Modifier.fillMaxWidth(),
+                contentPadding = PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 8.dp,
+                ),
+            ) {
+                Icon(
+                    painterResource(Res.drawable.a),
+                    contentDescription = "Animeko Icon",
+                    Modifier
+                        .clip(CircleShape)
+                        .size(HeroIconDefaults.iconSize),
+                    tint = Color.Unspecified,
                 )
             }
 
-            Group(title = { Text("感谢你的支持") }) {
-                AniHelpSection(Modifier.fillMaxWidth().padding(horizontal = 16.dp))
-            }
+            Spacer(Modifier.height(16.dp))
+
+            Text(
+                text = "Animeko",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Text(
+                text = "集找番、追番、看番的一站式弹幕追番平台",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
 
-        Group(
-            title = { Text("鸣谢") },
-        ) {
-            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Animeko 使用了许多爱好者用爱发电维护的免费服务.", style = MaterialTheme.typography.bodyMedium)
+        Spacer(Modifier.height(36.dp))
 
-                Text("特别感谢:", style = MaterialTheme.typography.bodyMedium)
+        // Menu items
 
-                val listStyle = MaterialTheme.typography.bodyMedium.copy(MaterialTheme.colorScheme.primary)
-                val uriHandler = LocalUriHandler.current
-                Text(
-                    buildAnnotatedString {
-                        pushLink(
-                            LinkAnnotation.Url(BANGUMI, TextLinkStyles()) {
-                                uriHandler.openUri(GITHUB_REPO)
-                            },
-                        )
-                        append("· Bangumi 番组计划")
-                    },
-                    style = listStyle,
-                )
+        val listItemColors = ListItemDefaults.colors(
+            containerColor = Color.Transparent,
+        )
 
-                Text(
-                    buildAnnotatedString {
-                        pushLink(
-                            LinkAnnotation.Url(MIKAN, TextLinkStyles()) {
-                                uriHandler.openUri(MIKAN)
-                            },
-                        )
-                        append("· Mikan 蜜柑计划")
-                    },
-                    style = listStyle,
-                )
-
-                Text(
-                    buildAnnotatedString {
-                        pushLink(
-                            LinkAnnotation.Url(DMHY, TextLinkStyles()) {
-                                uriHandler.openUri(DMHY)
-                            },
-                        )
-                        append("· 動漫花園資源網")
-                    },
-                    style = listStyle,
-                )
-
-                Text(
-                    buildAnnotatedString {
-                        pushLink(
-                            LinkAnnotation.Url(ACG_RIP, TextLinkStyles()) {
-                                uriHandler.openUri(ACG_RIP)
-                            },
-                        )
-                        append("· acg.rip")
-                    },
-                    style = listStyle,
-                )
-
-                Text(
-                    buildAnnotatedString {
-                        pushLink(
-                            LinkAnnotation.Url(DANDANPLAY, TextLinkStyles()) {
-                                uriHandler.openUri(DANDANPLAY)
-                            },
-                        )
-                        append("· 弹弹play")
-                    },
-                    style = listStyle,
-                )
-            }
-        }
-
-        Group(
-            title = {
-                Text(
-                    text = "调试信息",
-                    modifier = Modifier.clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onTriggerDebugMode,
-                    ),
-                )
+        ListItem(
+            headlineContent = { Text("版本号") },
+            modifier = Modifier.clickable(onClick = onTriggerDebugMode, role = Role.Button),
+            leadingContent = { ReleaseClassIcon(state.releaseClass) },
+            supportingContent = { Text(state.version) },
+            colors = listItemColors,
+        )
+        ListItem(
+            headlineContent = { Text("更新说明") },
+            modifier = Modifier.clickable(onClick = onClickReleaseNotes, role = Role.Button),
+            leadingContent = {
+                Icon(Icons.Outlined.News, contentDescription = null)
             },
-            description = { Text("在反馈问题时附上日志可能有用") },
+            colors = listItemColors,
+        )
+        ListItem(
+            headlineContent = { Text("官网") },
+            modifier = Modifier.clickable(onClick = onClickWebsite),
+            leadingContent = {
+                Icon(Icons.Outlined.Home, contentDescription = null)
+            },
+            colors = listItemColors,
+        )
+        ListItem(
+            headlineContent = { Text("反馈建议") },
+            modifier = Modifier.clickable(onClick = onClickFeedback),
+            leadingContent = {
+                Icon(Icons.Outlined.Feedback, contentDescription = null)
+            },
+            colors = listItemColors,
+        )
+        ListItem(
+            headlineContent = { Text("源代码") },
+            modifier = Modifier.clickable(onClick = onClickSource),
+            leadingContent = {
+                Icon(Icons.Outlined.Code, contentDescription = null)
+            },
+            colors = listItemColors,
+        )
+        ListItem(
+            headlineContent = { Text("开发者名单") },
+            modifier = Modifier.clickable(onClick = onClickDevelopers),
+            leadingContent = {
+                Icon(Icons.Outlined.DeployedCodeAccount, contentDescription = null)
+            },
+            colors = listItemColors,
+        )
+//        ListItem(
+//            headlineContent = { Text("鸣谢") },
+//            modifier = Modifier.clickable(onClick = onClickAcknowledgements),
+//            leadingContent = {
+//                Icon(Icons.Outlined.AwardStar, null)
+//            },
+//            colors = listItemColors,
+//        )
+
+        ListItem(
+            headlineContent = { Text("交流群") },
+            modifier = Modifier,
+            leadingContent = {
+                Icon(Icons.Outlined.Forum, null)
+            },
+            colors = listItemColors,
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .padding(start = (24 + 16).dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (isInDebugMode()) {
-                    val debugInfo by vm.debugInfo.collectAsStateWithLifecycle(null)
-                    val clipboard = LocalClipboardManager.current
-                    for ((name, value) in debugInfo?.properties.orEmpty()) {
-                        Text(
-                            "$name: $value",
-                            Modifier.fillMaxWidth().clickable {
-                                value?.let { clipboard.setText(AnnotatedString(it)) }
-                            },
-                            style = MaterialTheme.typography.labelSmall,
-                        )
-                    }
+            val context = LocalContext.current
+            SuggestionChip(
+                { AniHelpNavigator.openJoinQQGroup(context) },
+                icon = {
+                    Icon(
+                        AniIcons.QqRoundedOutline, "QQ 群",
+                        Modifier.size(20.dp),
+                    )
+                },
+                label = { Text("927170241") },
+            )
 
-                    FilledTonalButton(
-                        {
-                            GlobalScope.launch {
-                                KoinPlatform.getKoin().get<MediaAutoCacheService>().checkCache()
-                            }
-                        },
-                    ) {
-                        Text("执行自动缓存")
-                    }
-
-                    FilledTonalButton(
-                        {
-                            GlobalScope.launch {
-                                KoinPlatform.getKoin().get<MediaCacheManager>().closeAllCaches()
-                                withContext(Dispatchers.Main) {
-                                    toaster.toast("已关闭所有缓存任务")
-                                }
-                            }
-                        },
-                    ) {
-                        Text("关闭所有缓存任务")
-                    }
-
-                    FilledTonalButton(
-                        {
-                            GlobalScope.launch {
-                                KoinPlatform.getKoin().get<SessionManager>().clearSession()
-                            }
-                        },
-                    ) {
-                        Text("清除游客模式记录")
-                    }
-
-                    FilledTonalButton(
-                        {
-                            GlobalScope.launch { KoinPlatform.getKoin().get<SessionManager>().invalidateSession() }
-                        },
-                    ) {
-                        Text("Invalidate Session")
-                    }
-                }
-
-                FilledTonalButton(
-                    {
-                        GlobalScope.launch {
-                            KoinPlatform.getKoin().get<SessionManager>().clearSession()
-                        }
-                    },
-                ) {
-                    Text("退出登录")
-                }
-
-                PlatformDebugInfoItems()
-            }
+            SuggestionChip(
+                { AniHelpNavigator.openTelegram(context) },
+                icon = {
+                    Image(
+                        AniIcons.Telegram, "Telegram",
+                        Modifier.size(20.dp),
+                    )
+                },
+                label = { Text("Telegram") },
+            )
         }
+
     }
 }
 
@@ -305,57 +233,22 @@ fun AboutTab(
 @Composable
 internal expect fun ColumnScope.PlatformDebugInfoItems()
 
-const val GITHUB_HOME = "https://github.com/open-ani/ani"
-const val ANI_WEBSITE = "https://myani.org"
-const val ISSUE_TRACKER = "https://github.com/open-ani/ani/issues"
+@TestOnly
+val TestAboutTabInfo
+    get() = AboutTabInfo(
+        version = "4.8.0-alpha02",
+        releaseClass = ReleaseClass.ALPHA,
+    )
 
+@OptIn(TestOnly::class)
 @Composable
-fun AniHelpSection(modifier: Modifier = Modifier) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(
-            "欢迎加入 QQ 群反馈建议或者闲聊: 927170241. Telegram 群 openani. 如遇到问题, 除加群外也可以在 GitHub 反馈.",
-        )
-
-        Row(Modifier.align(Alignment.End), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val uriHandler = LocalUriHandler.current
-            Box {
-                var showOpenDropdown by remember { mutableStateOf(false) }
-                DropdownMenu(showOpenDropdown, { showOpenDropdown = false }) {
-                    DropdownMenuItem(
-                        text = { Text("GitHub") },
-                        onClick = {
-                            uriHandler.openUri(GITHUB_HOME)
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text("反馈问题") },
-                        onClick = { uriHandler.openUri(ISSUE_TRACKER) },
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Ani 官网") },
-                        onClick = { uriHandler.openUri(ANI_WEBSITE) },
-                    )
-                }
-
-                OutlinedButton({ showOpenDropdown = true }) {
-                    Text("打开...")
-                }
-            }
-
-            Box {
-                var showHelp by remember { mutableStateOf(false) }
-                Button({ showHelp = true }) {
-                    Text("加群")
-                }
-                HelpDropdown(showHelp, { showHelp = false })
-            }
+@Preview
+private fun PreviewAboutTab() {
+    ProvideCompositionLocalsForPreview {
+        Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest) {
+            AboutTab(
+                TestAboutTabInfo, {}, {}, {}, {}, {}, {}, {},
+            )
         }
-
-        Text(
-            "要让每个番剧都拥有不错的弹幕量需要不小用户基数, 如果你喜欢本应用, 请向朋友推荐以增加弹幕量!",
-            style = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Bold,
-            ),
-        )
     }
 }
