@@ -27,19 +27,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Feedback
+import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Science
+import androidx.compose.material.icons.outlined.SettingsApplications
+import androidx.compose.material.icons.outlined.SmartDisplay
+import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Subscriptions
+import androidx.compose.material.icons.outlined.Subtitles
+import androidx.compose.material.icons.outlined.Update
+import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material.icons.rounded.Feedback
-import androidx.compose.material.icons.rounded.FilterList
-import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Science
-import androidx.compose.material.icons.rounded.SettingsApplications
-import androidx.compose.material.icons.rounded.SmartDisplay
-import androidx.compose.material.icons.rounded.Storage
-import androidx.compose.material.icons.rounded.Subscriptions
-import androidx.compose.material.icons.rounded.Subtitles
-import androidx.compose.material.icons.rounded.Update
-import androidx.compose.material.icons.rounded.VpnKey
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
@@ -585,20 +585,20 @@ abstract class SettingsDrawerScope internal constructor() : ColumnScope {
 @Stable
 private fun getIcon(tab: SettingsTab): ImageVector {
     return when (tab) {
-        SettingsTab.APPEARANCE -> Icons.Rounded.SettingsApplications
-        SettingsTab.THEME -> Icons.Rounded.Palette
-        SettingsTab.UPDATE -> Icons.Rounded.Update
-        SettingsTab.PLAYER -> Icons.Rounded.SmartDisplay
-        SettingsTab.MEDIA_SOURCE -> Icons.Rounded.Subscriptions
-        SettingsTab.MEDIA_SELECTOR -> Icons.Rounded.FilterList
-        SettingsTab.DANMAKU -> Icons.Rounded.Subtitles
-        SettingsTab.PROXY -> Icons.Rounded.VpnKey
+        SettingsTab.APPEARANCE -> Icons.Outlined.SettingsApplications
+        SettingsTab.THEME -> Icons.Outlined.Palette
+        SettingsTab.UPDATE -> Icons.Outlined.Update
+        SettingsTab.PLAYER -> Icons.Outlined.SmartDisplay
+        SettingsTab.MEDIA_SOURCE -> Icons.Outlined.Subscriptions
+        SettingsTab.MEDIA_SELECTOR -> Icons.Outlined.FilterList
+        SettingsTab.DANMAKU -> Icons.Outlined.Subtitles
+        SettingsTab.PROXY -> Icons.Outlined.VpnKey
         SettingsTab.BT -> Icons.Filled.P2p
-        SettingsTab.CACHE -> Icons.Rounded.Download
-        SettingsTab.STORAGE -> Icons.Rounded.Storage
-        SettingsTab.ABOUT -> Icons.Rounded.Info
-        SettingsTab.LOG -> Icons.Rounded.Feedback
-        SettingsTab.DEBUG -> Icons.Rounded.Science
+        SettingsTab.CACHE -> Icons.Rounded.Download // Icons.Outlined.Download 太 sharp 了
+        SettingsTab.STORAGE -> Icons.Outlined.Storage
+        SettingsTab.ABOUT -> Icons.Outlined.Info
+        SettingsTab.LOG -> Icons.Outlined.Feedback
+        SettingsTab.DEBUG -> Icons.Outlined.Science
     }
 }
 

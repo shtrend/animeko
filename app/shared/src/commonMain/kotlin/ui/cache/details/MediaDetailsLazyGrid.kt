@@ -16,13 +16,13 @@ import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Hd
 import androidx.compose.material.icons.rounded.ArrowOutward
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Event
 import androidx.compose.material.icons.rounded.FileOpen
 import androidx.compose.material.icons.rounded.FilePresent
-import androidx.compose.material.icons.rounded.Hd
 import androidx.compose.material.icons.rounded.Layers
 import androidx.compose.material.icons.rounded.Subtitles
 import androidx.compose.material.icons.rounded.VideoFile
@@ -312,7 +312,7 @@ fun MediaDetailsLazyGrid(
         item {
             ListItem(
                 headlineContent = { Text("分辨率") },
-                leadingContent = { Icon(Icons.Rounded.Hd, contentDescription = null) },
+                leadingContent = { Icon(Icons.Outlined.Hd, contentDescription = null) },
                 supportingContent = { SelectionContainer { Text(details.properties.resolution) } },
             )
         }
