@@ -27,12 +27,13 @@ import me.him188.ani.app.ui.foundation.text.ProvideContentColor
 @Composable
 fun HeroIcon(
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = HeroIconDefaults.contentPadding,
     content: @Composable () -> Unit
 ) {
     Box(modifier = modifier) {
         Box(
             modifier = Modifier
-                .padding(HeroIconDefaults.contentPadding())
+                .padding(contentPadding)
                 .fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
@@ -55,11 +56,8 @@ object HeroIconDefaults {
     @Stable
     val iconSize: Dp = 96.dp
 
-    @Composable
-    fun contentPadding(): PaddingValues {
-        return PaddingValues(
-            top = 16.dp,
-            bottom = 8.dp,
-        )
-    }
+    val contentPadding = PaddingValues(
+        top = 16.dp,
+        bottom = 8.dp,
+    )
 }
