@@ -84,8 +84,13 @@ class SearchViewModel(
                 val explicitR18 = rawQuery.tags?.contains("R18") == true
 
                 val query = rawQuery
-                    // 如果不需要 R18, 就隐藏
-                    .copy(nsfw = explicitR18 || nsfwSettingFlow.value != NsfwMode.HIDE)
+                    .copy(
+                        nsfw = when {
+                            explicitR18 -> true
+                            nsfwSettingFlow.value == NsfwMode.HIDE -> false
+                            else -> null
+                        },
+                    )
 
                 subjectSearchRepository.searchSubjects(
                     query,
