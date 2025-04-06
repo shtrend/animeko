@@ -165,7 +165,6 @@ fun SettingsScreen(
             Title("应用与界面", paddingTop = 0.dp)
             Item(SettingsTab.APPEARANCE)
             Item(SettingsTab.THEME)
-            Item(SettingsTab.UPDATE)
 
             Title("数据源与播放")
             Item(SettingsTab.PLAYER)
@@ -180,8 +179,9 @@ fun SettingsScreen(
             Item(SettingsTab.STORAGE)
 
             Title("其他")
-            Item(SettingsTab.ABOUT)
+            Item(SettingsTab.UPDATE)
             Item(SettingsTab.LOG)
+            Item(SettingsTab.ABOUT)
             if (vm.isInDebugMode) {
                 Item(SettingsTab.DEBUG)
             }
@@ -360,7 +360,7 @@ internal fun SettingsPageLayout(
         listPaneContent = paneScope@{
             PermanentDrawerSheet(
                 Modifier
-                    .paneContentPadding()
+                    .paneContentPadding(extraStart = (-8).dp, extraEnd = (-8).dp)
                     .paneWindowInsetsPadding()
                     .fillMaxWidth()
                     .nestedScroll(listPaneTopAppBarScrollBehavior.nestedScrollConnection)
@@ -575,7 +575,7 @@ abstract class SettingsDrawerScope internal constructor() : ColumnScope {
         Text(
             text,
             Modifier
-                .padding(horizontal = 8.dp)
+                .padding(horizontal = 16.dp)
                 .padding(top = paddingTop, bottom = 12.dp),
             color = MaterialTheme.colorScheme.primary,
         )
@@ -607,7 +607,6 @@ private fun getName(tab: SettingsTab): String {
     return when (tab) {
         SettingsTab.APPEARANCE -> "界面"
         SettingsTab.THEME -> "主题与色彩"
-        SettingsTab.UPDATE -> "软件更新"
         SettingsTab.PLAYER -> "播放器和弹幕过滤"
         SettingsTab.MEDIA_SOURCE -> "数据源管理"
         SettingsTab.MEDIA_SELECTOR -> "观看偏好"
@@ -616,8 +615,9 @@ private fun getName(tab: SettingsTab): String {
         SettingsTab.BT -> "BitTorrent"
         SettingsTab.CACHE -> "自动缓存"
         SettingsTab.STORAGE -> "存储空间"
-        SettingsTab.ABOUT -> "关于"
         SettingsTab.LOG -> "日志"
+        SettingsTab.UPDATE -> "软件更新"
+        SettingsTab.ABOUT -> "关于"
         SettingsTab.DEBUG -> "调试"
     }
 }
