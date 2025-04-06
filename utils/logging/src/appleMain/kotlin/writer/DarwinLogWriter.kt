@@ -13,13 +13,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ptr
 import me.him188.ani.utils.logging.LogLevel
 import me.him188.ani.utils.logging.LogLineFormatter
-import platform.darwin.OS_LOG_TYPE_DEBUG
-import platform.darwin.OS_LOG_TYPE_ERROR
-import platform.darwin.OS_LOG_TYPE_FAULT
-import platform.darwin.OS_LOG_TYPE_INFO
-import platform.darwin.__dso_handle
-import platform.darwin._os_log_internal
-import platform.darwin.os_log_create
+import platform.darwin.*
 
 class DarwinLogWriter(
     private val formatter: LogLineFormatter = LogLineFormatter(),
@@ -31,16 +25,19 @@ class DarwinLogWriter(
     override fun writeLog(level: LogLevel, tag: String, message: String?, throwable: Throwable?) {
         val line = formatter.formatLine(level, tag, message, throwable)
 
-        _os_log_internal(
-            __dso_handle.ptr,
-            log,
-            level.toDarwinLevel(),
-            line,
-        )
+        if (isLoggingEnabled(level)) {
+            _os_log_internal(
+                __dso_handle.ptr,
+                log,
+                level.toDarwinLevel(),
+                "%s",
+                line
+            )
+        }
     }
 
     override fun isLoggingEnabled(level: LogLevel): Boolean {
-        return level >= logLevel
+        return os_log_type_enabled(log, level.toDarwinLevel())
     }
 }
 
