@@ -72,14 +72,14 @@ uploaded.
 
 [linux-issue]: https://github.com/open-ani/animeko/issues/944
 
-|                  | 下载                                               | 常见问题                                         |
-|------------------|--------------------------------------------------|----------------------------------------------|
-| 安卓 手机/平板/电视      | [主线][cf-android] / [备线][ghproxy-android]         |                                              |
-| iOS              | [主线][cf-ios] / [备线][ghproxy-ios]                 | 需要自签                                         |
-| Windows          | [主线][cf-win-x64] / [备线][ghproxy-win-x64]         | 1. 目录不要有中文或者空格. <br/> 2. [显示异常][windows解决方案] |
-| macOS (M 系列芯片)   | [主线][cf-mac-aarch64] / [备线][ghproxy-mac-aarch64] | [安装后打不开][macos解决方案]                          |
-| macOS (Intel 芯片) | 正在开发。<br/>点赞[此 issue][macos-intel-issue] 以加快开发速度 |                                              |
-| Linux AppImage   | [主线][cf-linux-x64] / [备线][ghproxy-linux-x64]     | [安装说明][linux安装说明]                            |
+|                  | 下载                                               | 常见问题                                        |
+|------------------|--------------------------------------------------|---------------------------------------------|
+| 安卓 手机/平板/电视      | [主线][cf-android] / [备线][ghproxy-android]         |                                             |
+| iOS              | [主线][cf-ios] / [备线][ghproxy-ios]                 | 需要自签                                        |
+| Windows          | [主线][cf-win-x64] / [备线][ghproxy-win-x64]         | 1. 目录不要有中文或者空格 <br/> 2. [显示异常][windows解决方案] |
+| macOS (M 系列芯片)   | [主线][cf-mac-aarch64] / [备线][ghproxy-mac-aarch64] | ⚠️ [安装后打不开][macos解决方案]                      |
+| macOS (Intel 芯片) | 正在开发。<br/>点赞[此 issue][macos-intel-issue] 以加快开发速度 |                                             |
+| Linux AppImage   | [主线][cf-linux-x64] / [备线][ghproxy-linux-x64]     | ⚠️ [安装教程][linux安装说明]                        |
 
 [github-android-qr]: https://github.com/open-ani/ani/releases/download/$GIT_TAG/ani-$TAG_VERSION-universal.apk.github.qrcode.png
 
