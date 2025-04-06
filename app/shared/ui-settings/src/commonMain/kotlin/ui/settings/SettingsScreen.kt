@@ -73,10 +73,13 @@ import me.him188.ani.app.ui.adaptive.AniTopAppBar
 import me.him188.ani.app.ui.adaptive.AniTopAppBarDefaults
 import me.him188.ani.app.ui.adaptive.ListDetailLayoutParameters
 import me.him188.ani.app.ui.adaptive.PaneScope
+import me.him188.ani.app.ui.adaptive.TopAppBarSize
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastExpanded
+import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
@@ -262,13 +265,29 @@ internal fun SettingsPageLayout(
         }
     }
 
-    val topAppBarScrollBehavior = if (LocalPlatform.current.hasScrollingBug()) {
+    val listPaneTopAppBarScrollBehavior = if (LocalPlatform.current.hasScrollingBug()) {
         TopAppBarDefaults.pinnedScrollBehavior()
     } else {
-        TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+        TopAppBarDefaults.enterAlwaysScrollBehavior()
+    }
+
+    val detailPaneTopAppBarScrollBehavior = if (LocalPlatform.current.hasScrollingBug()) {
+        TopAppBarDefaults.pinnedScrollBehavior()
+    } else {
+        TopAppBarDefaults.enterAlwaysScrollBehavior()
     }
 
     val listPaneScrollState = rememberScrollState()
+    val topAppBarSize = if (LocalPlatform.current.hasScrollingBug()) {
+        TopAppBarSize.SMALL
+    } else {
+        val windowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass
+        when {
+            windowSizeClass.isHeightAtLeastExpanded -> TopAppBarSize.LARGE
+            windowSizeClass.isHeightAtLeastMedium -> TopAppBarSize.MEDIUM
+            else -> TopAppBarSize.SMALL
+        }
+    }
     AniListDetailPaneScaffold(
         navigator,
         listPaneTopAppBar = {
@@ -285,9 +304,20 @@ internal fun SettingsPageLayout(
                         navigationIcon()
                     }
                 },
-                colors = AniThemeDefaults.transparentAppBarColors(),
-                scrollBehavior = topAppBarScrollBehavior,
+                colors = if (isSinglePane) {
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = containerColor,
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                    )
+                } else {
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = containerColor,
+                        scrolledContainerColor = containerColor,
+                    )
+                },
+                scrollBehavior = listPaneTopAppBarScrollBehavior,
                 windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                size = topAppBarSize,
             )
         },
         listPaneContent = paneScope@{
@@ -296,7 +326,7 @@ internal fun SettingsPageLayout(
                     .paneContentPadding()
                     .paneWindowInsetsPadding()
                     .fillMaxWidth()
-                    .nestedScroll(topAppBarScrollBehavior.nestedScrollConnection)
+                    .nestedScroll(listPaneTopAppBarScrollBehavior.nestedScrollConnection)
                     .verticalScroll(listPaneScrollState),
                 drawerContainerColor = Color.Unspecified,
             ) {
@@ -348,8 +378,10 @@ internal fun SettingsPageLayout(
                                     )
                                 }
                             },
-                            colors = AniThemeDefaults.transparentAppBarColors(),
+                            colors = AniThemeDefaults.topAppBarColors(),
                             windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal),
+                            size = topAppBarSize,
+                            scrollBehavior = detailPaneTopAppBarScrollBehavior,
                         )
                     }
 
@@ -364,7 +396,8 @@ internal fun SettingsPageLayout(
                                     extraStart = -SettingsScope.itemHorizontalPadding,
                                     extraEnd = -SettingsScope.itemHorizontalPadding,
                                 )
-                                .paneWindowInsetsPadding(),
+                                .paneWindowInsetsPadding()
+                                .nestedScroll(detailPaneTopAppBarScrollBehavior.nestedScrollConnection),
                         ) {
                             tabContent(tab)
                         }
