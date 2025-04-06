@@ -138,7 +138,7 @@ open class KtorHttpDownloader(
         outputPath: Path,
         options: DownloadOptions,
     ) {
-        val mediaType = getMediaTypeFromUrl(url) ?: MediaType.M3U8
+        val mediaType = getMediaTypeFromUrl(url) ?: MediaType.MP4
         logger.info { "Preparing to download with id=$downloadId, url=$url, mediaType=$mediaType" }
 
         // 1) Set initial state if not present
