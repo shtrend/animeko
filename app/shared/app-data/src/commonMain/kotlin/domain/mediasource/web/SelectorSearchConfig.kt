@@ -92,6 +92,12 @@ data class SelectorSearchConfig(
      * @since 4.9
      */
     val defaultSubtitleLanguage: SubtitleLanguage = SubtitleLanguage.ChineseSimplified,
+    /**
+     * `vlc`, `exoplayer`, `avkit`
+     *
+     * @since 4.9
+     */
+    val onlySupportsPlayers: List<String> = emptyList(),
 
     // Search done. Now we should have Medias.
     val filterByEpisodeSort: Boolean = true,
