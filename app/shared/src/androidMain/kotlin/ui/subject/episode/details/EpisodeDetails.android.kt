@@ -42,9 +42,9 @@ import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
 import me.him188.ani.app.ui.subject.episode.mediaFetch.TestMediaSourceResultListPresentation
 import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberTestMediaSelectorState
+import me.him188.ani.app.ui.subject.episode.statistics.DanmakuStatistics
+import me.him188.ani.app.ui.subject.episode.statistics.createTestDanmakuStatistics
 import me.him188.ani.app.ui.subject.episode.statistics.testPlayerStatisticsState
-import me.him188.ani.app.ui.subject.episode.video.DanmakuStatistics
-import me.him188.ani.app.ui.subject.episode.video.createTestDanmakuStatistics
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.annotations.TestOnly

@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.subject.episode.video
+package me.him188.ani.app.ui.subject.episode.statistics
 
 import androidx.compose.runtime.Immutable
 import me.him188.ani.app.domain.danmaku.DanmakuLoadingState
