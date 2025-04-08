@@ -111,7 +111,7 @@ fun OnboardingScreen(
 
     var bangumiShowTokenAuthorizePage by remember { mutableStateOf(false) }
 
-    val authorizeState by state.bangumiAuthorizeState.state.collectAsStateWithLifecycle(AuthState.NotAuthed)
+    val authorizeState by state.bangumiAuthorizeState.state.collectAsStateWithLifecycle(AuthState.DummyAwaitingResult)
     val proxyState by state.configureProxyState.state.collectAsStateWithLifecycle(ConfigureProxyUIState.Placeholder)
     val grantNotificationPermissionState by state.bitTorrentFeatureState.grantNotificationPermissionState
         .collectAsStateWithLifecycle(GrantNotificationPermissionState.Placeholder)

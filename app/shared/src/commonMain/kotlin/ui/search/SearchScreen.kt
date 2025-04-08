@@ -46,7 +46,7 @@ fun SearchScreen(
         detailContent = {
             val subjectDetailsState by vm.subjectDetailsStateLoader.state
                 .collectAsStateWithLifecycle(null)
-            val authState by vm.authState.collectAsStateWithLifecycle(AuthState.NotAuthed)
+            val authState by vm.authState.collectAsStateWithLifecycle(AuthState.DummyAwaitingResult)
 
             SubjectDetailsScreen(
                 subjectDetailsState,

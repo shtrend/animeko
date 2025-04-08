@@ -151,7 +151,7 @@ fun SubjectDetailsScreen(
     navigationIcon: @Composable () -> Unit = {},
 ) {
     val state by vm.state.collectAsStateWithLifecycle(null)
-    val authState by vm.authState.collectAsStateWithLifecycle(AuthState.NotAuthed)
+    val authState by vm.authState.collectAsStateWithLifecycle(AuthState.DummyAwaitingResult)
 
     LaunchedEffect(Unit) {
         vm.reload()
