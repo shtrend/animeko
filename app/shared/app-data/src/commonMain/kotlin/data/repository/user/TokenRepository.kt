@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -48,7 +48,7 @@ data object GuestSession : Session
  */
 // don't remove `data`. required for equals
 data class AccessTokenSession(
-    val accessToken: String,
+    val bangumiAccessToken: String,
     val expiresAtMillis: Long,
 ) : Session
 
@@ -60,11 +60,11 @@ class TokenRepositoryImpl(
 ) : TokenRepository {
     private companion object Keys {
         val USER_ID = longPreferencesKey("user_id")
-        val REFRESH_TOKEN = stringPreferencesKey("refresh_token")
+        val REFRESH_TOKEN = stringPreferencesKey("refresh_token") // bangumi
 
         // Note: we added this because we cannot change ACCESS_TOKEN anymore because old users are using them.
         val IS_GUEST = stringPreferencesKey("is_guest")
-        val ACCESS_TOKEN = stringPreferencesKey("access_token")
+        val ACCESS_TOKEN = stringPreferencesKey("access_token") // bangumi
         val ACCESS_TOKEN_EXPIRE_AT = longPreferencesKey("access_token_expire_at")
     }
 
@@ -87,7 +87,7 @@ class TokenRepositoryImpl(
                 return@map null
             }
             AccessTokenSession(
-                accessToken = accessToken,
+                bangumiAccessToken = accessToken,
                 expiresAtMillis = expireAt,
             )
         }
@@ -97,7 +97,7 @@ class TokenRepositoryImpl(
         tokenStore.edit {
             when (session) {
                 is AccessTokenSession -> {
-                    it[ACCESS_TOKEN] = session.accessToken
+                    it[ACCESS_TOKEN] = session.bangumiAccessToken
                     it[ACCESS_TOKEN_EXPIRE_AT] = session.expiresAtMillis
                     it[IS_GUEST] = false.toString()
                 }

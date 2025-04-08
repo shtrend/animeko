@@ -282,7 +282,7 @@ class AniAuthConfigurator(
     suspend fun setAuthorizationToken(token: String) {
         sessionManager.setSession(
             AccessTokenSession(
-                accessToken = token,
+                bangumiAccessToken = token,
                 expiresAtMillis = currentTimeMillis() + 365.days.inWholeMilliseconds,
             ),
         )

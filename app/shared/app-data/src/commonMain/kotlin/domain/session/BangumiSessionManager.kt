@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -83,9 +83,9 @@ fun BangumiSessionManager(
 }
 
 class NewSession(
-    val accessToken: String,
+    val bangumiAccessToken: String,
     val expiresAtMillis: Long,
-    val refreshToken: String,
+    val bangumiRefreshToken: String,
 )
 
 class BangumiSessionManager(
@@ -195,17 +195,17 @@ class BangumiSessionManager(
             is AccessTokenSession -> {
                 if (savedSession.isValid()) {
                     // token 有效, 尝试登录
-                    emit(SessionStatus.Verifying(savedSession.accessToken))
+                    emit(SessionStatus.Verifying(savedSession.bangumiAccessToken))
 
                     val firstAttempt = try {
-                        getSelfInfo(savedSession.accessToken)
+                        getSelfInfo(savedSession.bangumiAccessToken)
                     } catch (e: CancellationException) {
                         throw e
                     }
 
                     firstAttempt.fold(
                         onSuccess = { userInfo ->
-                            emit(SessionStatus.Verified(savedSession.accessToken, userInfo))
+                            emit(SessionStatus.Verified(savedSession.bangumiAccessToken, userInfo))
                             return
                         },
                         onKnownFailure = { failure ->
@@ -282,7 +282,7 @@ class BangumiSessionManager(
                 isNewLogin = false,
             )
 
-            session.accessToken
+            session.bangumiAccessToken
         }
     }
 
@@ -395,8 +395,8 @@ class BangumiSessionManager(
     ) {
         logger.info { "Bangumi session refreshed, new expiresAtMillis=${newSession.expiresAtMillis}" }
 
-        tokenRepository.setRefreshToken(newSession.refreshToken)
-        setSessionImpl(AccessTokenSession(newSession.accessToken, newSession.expiresAtMillis))
+        tokenRepository.setRefreshToken(newSession.bangumiRefreshToken)
+        setSessionImpl(AccessTokenSession(newSession.bangumiAccessToken, newSession.expiresAtMillis))
         if (isNewLogin) {
             events.tryEmit(SessionEvent.Login)
         } else {
