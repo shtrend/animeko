@@ -38,7 +38,7 @@ actual fun Context.createPlatformDataStoreManager(): PlatformDataStoreManager =
 private class IosPlatformDataStoreManager(
     private val context: IosContext,
 ) : PlatformDataStoreManager() {
-    override val tokenStore: DataStore<Preferences> by lazy {
+    override val legacyTokenStore: DataStore<Preferences> by lazy {
         createPreferencesDataStore("token")
     }
     override val preferencesStore: DataStore<Preferences> by lazy {

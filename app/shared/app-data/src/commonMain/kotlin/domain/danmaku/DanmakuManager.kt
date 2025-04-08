@@ -28,11 +28,9 @@ import me.him188.ani.app.data.network.danmaku.AniDanmakuSender
 import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.foundation.HttpClientProvider
-import me.him188.ani.app.domain.foundation.ScopedHttpClientUserAgent
 import me.him188.ani.app.domain.foundation.get
 import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
-import me.him188.ani.app.domain.session.verifiedAccessToken
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.platform.getAniUserAgent
 import me.him188.ani.app.ui.foundation.BackgroundScope
@@ -49,8 +47,6 @@ import me.him188.ani.danmaku.api.provider.DanmakuProvider
 import me.him188.ani.danmaku.api.provider.MatchingDanmakuProvider
 import me.him188.ani.danmaku.api.provider.SimpleDanmakuProvider
 import me.him188.ani.danmaku.dandanplay.DandanplayDanmakuProvider
-import me.him188.ani.utils.coroutines.closeOnReplacement
-import me.him188.ani.utils.coroutines.mapAutoClose
 import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
@@ -83,29 +79,22 @@ class DanmakuManager(
     }
 
     private val providers: Flow<List<DanmakuProvider>> = config.map { config ->
-        val client = httpClientProvider.get()
         listOf(
             AniDanmakuProvider(danmakuApi),
             DandanplayDanmakuProvider(
                 dandanplayAppId = currentAniBuildConfig.dandanplayAppId,
                 dandanplayAppSecret = currentAniBuildConfig.dandanplayAppSecret,
-                client,
+                httpClientProvider.get(),
             ),
         )
     }.shareInBackground(started = SharingStarted.Lazily)
 
     @OptIn(OpaqueSession::class)
-    private val sender: Flow<AniDanmakuSender> = config.mapAutoClose { config ->
+    private val sender: Flow<AniDanmakuSender> = config.map { config ->
         AniDanmakuSender(
-            httpClientProvider.get(
-                userAgent = ScopedHttpClientUserAgent.ANI,
-            ),
             danmakuApi,
-            sessionManager.verifiedAccessToken, // TODO: Handle danmaku sender errors 
-            backgroundScope.coroutineContext,
         )
-    }.closeOnReplacement()
-        .shareInBackground(started = SharingStarted.Lazily)
+    }.shareInBackground(started = SharingStarted.Lazily)
 
     private companion object {
         private val logger = logger<DanmakuManager>()

@@ -44,6 +44,7 @@ import me.him188.ani.app.data.persistent.database.createDatabaseBuilder
 import me.him188.ani.app.data.repository.RepositoryAuthorizationException
 import me.him188.ani.app.data.repository.RepositoryNetworkException
 import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
+import me.him188.ani.app.data.repository.RepositoryUnknownException
 import me.him188.ani.app.data.repository.RepositoryUsernameProvider
 import me.him188.ani.app.data.repository.episode.AnimeScheduleRepository
 import me.him188.ani.app.data.repository.episode.BangumiCommentRepository
@@ -73,10 +74,13 @@ import me.him188.ani.app.data.repository.subject.SubjectRelationsRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchHistoryRepository
 import me.him188.ani.app.data.repository.subject.SubjectSearchRepository
 import me.him188.ani.app.data.repository.torrent.peer.PeerFilterSubscriptionRepository
+import me.him188.ani.app.data.repository.user.AccessTokenSession
+import me.him188.ani.app.data.repository.user.GuestSession
+import me.him188.ani.app.data.repository.user.LegacyTokenRepository
 import me.him188.ani.app.data.repository.user.PreferencesRepositoryImpl
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.data.repository.user.TokenRepository
-import me.him188.ani.app.data.repository.user.TokenRepositoryImpl
+import me.him188.ani.app.data.repository.user.isValid
 import me.him188.ani.app.domain.comment.TurnstileState
 import me.him188.ani.app.domain.danmaku.DanmakuManager
 import me.him188.ani.app.domain.foundation.ConvertSendCountExceedExceptionFeature
@@ -88,6 +92,7 @@ import me.him188.ani.app.domain.foundation.ScopedHttpClientUserAgent
 import me.him188.ani.app.domain.foundation.ServerListFeature
 import me.him188.ani.app.domain.foundation.ServerListFeatureConfig
 import me.him188.ani.app.domain.foundation.ServerListFeatureHandler
+import me.him188.ani.app.domain.foundation.UseAniTokenFeatureHandler
 import me.him188.ani.app.domain.foundation.UseBangumiTokenFeature
 import me.him188.ani.app.domain.foundation.UseBangumiTokenFeatureHandler
 import me.him188.ani.app.domain.foundation.UserAgentFeature
@@ -144,6 +149,7 @@ import me.him188.ani.utils.io.deleteRecursively
 import me.him188.ani.utils.io.exists
 import me.him188.ani.utils.io.isDirectory
 import me.him188.ani.utils.io.resolve
+import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
 import org.koin.core.KoinApplication
@@ -179,20 +185,23 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
                 UserAgentFeatureHandler,
                 UseBangumiTokenFeatureHandler(
                     @OptIn(OpaqueSession::class)
-                    sessionManager.unverifiedAccessToken,
+                    sessionManager.unverifiedAccessToken.map { it?.bangumiAccessToken },
                     onRefresh = {
-                        val before = sessionManager.finalState.first()
-                        logger.info("Ktor believes Bangumi token is invalid. Refreshing. Current state: $before")
-                        if (before !is SessionStatus.Expired) {
-                            sessionManager.retry()
+                        refreshTokens(
+                            sessionManager,
+                        ) {
+                            sessionManager.finalState.first().unverifiedAccessTokenOrNull?.bangumiAccessToken
                         }
-                        logger.info("Retry started. Now waiting for session to be verified.")
-                        // `finalState.first()` wait for `retry` to complete.
-                        // If `retry` succeeds, `finalState` will receive SessionStatus.Verified with a valid token.
-                        sessionManager.finalState.first().unverifiedAccessTokenOrNull?.let {
-                            BearerTokens(it, "")
-                        }.also {
-                            logger.info("Result: ${it?.accessToken}")
+                    },
+                ),
+                UseAniTokenFeatureHandler(
+                    @OptIn(OpaqueSession::class)
+                    sessionManager.unverifiedAccessToken.map { it?.aniAccessToken },
+                    onRefresh = {
+                        refreshTokens(
+                            sessionManager,
+                        ) {
+                            sessionManager.finalState.first().unverifiedAccessTokenOrNull?.aniAccessToken
                         }
                     },
                 ),
@@ -209,11 +218,11 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
             ),
         )
     }
-    single<AniApiProvider> { AniApiProvider(get<HttpClientProvider>().get()) }
+    single<AniApiProvider> { AniApiProvider(get<HttpClientProvider>().get(useAniToken = true)) }
     single<AniAuthClient> {
         AniAuthClientImpl(get<AniApiProvider>().oauthApi)
     }
-    single<TokenRepository> { TokenRepositoryImpl(getContext().dataStores.tokenStore) }
+    single<TokenRepository> { TokenRepository(getContext().dataStores.tokenStore) }
     single<EpisodePreferencesRepository> { EpisodePreferencesRepositoryImpl(getContext().dataStores.preferredAllianceStore) }
     single<SessionManager> { BangumiSessionManager(koin, coroutineScope.coroutineContext) }
     single<BangumiClient> {
@@ -241,13 +250,15 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
         RepositoryUsernameProvider {
             when (val finalState = get<SessionManager>().finalState.first()) {
                 SessionStatus.Guest,
-                SessionStatus.Expired,
+                is SessionStatus.Expired,
                 SessionStatus.NoToken -> throw RepositoryAuthorizationException()
 
                 SessionStatus.NetworkError -> throw RepositoryNetworkException()
                 SessionStatus.ServiceUnavailable -> throw RepositoryServiceUnavailableException()
                 is SessionStatus.Verified -> finalState.userInfo.username
                     ?: throw IllegalStateException("RepositoryUsernameProvider: Username is null")
+
+                is SessionStatus.UnknownError -> throw RepositoryUnknownException(finalState.exception)
             }
         }
     }
@@ -514,6 +525,25 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
     }
 }
 
+private suspend fun Scope.refreshTokens(
+    sessionManager: SessionManager,
+    getTokenAfterRetry: suspend () -> String?
+): BearerTokens? {
+    val before = sessionManager.finalState.first()
+    logger.info("Ktor believes Bangumi token is invalid. Refreshing. Current state: $before")
+    if (before !is SessionStatus.Expired) {
+        sessionManager.retry()
+    }
+    logger.info("Retry started. Now waiting for session to be verified.")
+    // `finalState.first()` wait for `retry` to complete.
+    // If `retry` succeeds, `finalState` will receive SessionStatus.Verified with a valid token.
+    return getTokenAfterRetry()?.let {
+        BearerTokens(it, "")
+    }.also {
+        logger.info("Result: ${it?.accessToken}")
+    }
+}
+
 
 /**
  * 会在非 preview 环境调用. 用来初始化一些模块
@@ -633,6 +663,99 @@ fun KoinApplication.startCommonKoinModule(
             )
             themeSettings.update { newThemeSettings }
             uiSettings.update { uiSettingsContent.copy(theme = null) }
+        }
+    }
+
+    // Since 4.9, migrate legacy token store to new
+    coroutineScope.launch {
+        val logger = logger("LegacyTokenMigration")
+        val legacyRepo = LegacyTokenRepository(context.dataStores.legacyTokenStore)
+        val legacySession = legacyRepo
+            .session.first()
+
+        if (legacySession == null) {
+            return@launch
+        }
+
+        logger.info { "Legacy token is not null, migrating" }
+
+        val newRepo = koin.get<TokenRepository>()
+        val sessionManager = koin.get<SessionManager>()
+        when (legacySession) {
+            is AccessTokenSession -> {
+                val authClient = koin.get<AniAuthClient>()
+                if (!legacySession.isValid()) {
+                    val refreshToken = legacyRepo.refreshToken.first()
+                    if (refreshToken == null) {
+                        logger.info { "Legacy session is AccessTokenSession but invalid, skipping migrate and deleting legacy info" }
+                        legacyRepo.clear()
+                        return@launch
+                    }
+
+                    val authResult = try {
+                        authClient.refreshAccessToken(refreshToken)
+                    } catch (e: Throwable) {
+                        logger.warn(
+                            IllegalStateException(
+                                "Failed to refreshAccessToken, skipping migrate and deleting legacy info",
+                                e,
+                            ),
+                        )
+                        legacyRepo.clear()
+                        return@launch
+                    }
+
+                    logger.info { "Successfully migrated legacy tokens" }
+
+                    newRepo.setSession(
+                        AccessTokenSession(
+                            tokens = authResult.tokens,
+                            expiresAtMillis = legacySession.expiresAtMillis,
+                        ),
+                    )
+                    sessionManager.retry()
+                    legacyRepo.clear()
+                    logger.info { "Done" }
+                    return@launch
+                } else {
+                    logger.info { "Legacy session is AccessTokenSession and valid, migrating to AccessTokenSession" }
+
+                    val legacyBangumiToken = legacySession.tokens.bangumiAccessToken
+                    // legacy aniAccessToken is always empty.
+
+                    val tokens = try {
+                        authClient.getAccessTokensByBangumiToken(legacyBangumiToken)
+                    } catch (e: Throwable) {
+                        logger.warn(
+                            IllegalStateException(
+                                "Failed to get access tokens by bangumi token, skipping migrate and deleting legacy info",
+                                e,
+                            ),
+                        )
+                        legacyRepo.clear()
+                        return@launch
+                    }
+                    logger.info { "Successfully migrated legacy tokens" }
+
+                    newRepo.setSession(
+                        AccessTokenSession(
+                            tokens = tokens,
+                            expiresAtMillis = legacySession.expiresAtMillis,
+                        ),
+                    )
+                    sessionManager.retry()
+                    legacyRepo.clear()
+                    logger.info { "Done" }
+                }
+            }
+
+            GuestSession -> {
+                logger.info { "Legacy session is GuestSession, migrating to GuestSession" }
+                newRepo.setSession(GuestSession)
+                sessionManager.retry()
+                legacyRepo.clear()
+                logger.info { "Done" }
+            }
         }
     }
 

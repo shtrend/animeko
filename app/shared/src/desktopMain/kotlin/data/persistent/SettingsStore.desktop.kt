@@ -28,7 +28,7 @@ actual fun Context.createPlatformDataStoreManager(): PlatformDataStoreManager =
 internal class PlatformDataStoreManagerDesktop(
     private val context: DesktopContext,
 ) : PlatformDataStoreManager() {
-    override val tokenStore: DataStore<Preferences> =
+    override val legacyTokenStore: DataStore<Preferences> =
         PreferenceDataStoreFactory.create(corruptionHandler = replaceFileCorruptionHandlerForPreferences) {
             context.dataStoreDir.resolve("tokens.preferences_pb")
         }

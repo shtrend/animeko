@@ -12,17 +12,20 @@ package me.him188.ani.app.domain.session
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
-import me.him188.ani.app.data.models.ApiFailure
-import me.him188.ani.app.data.models.ApiResponse
 import me.him188.ani.app.data.models.UserInfo
+import me.him188.ani.app.data.repository.RepositoryAuthorizationException
+import me.him188.ani.app.data.repository.RepositoryNetworkException
+import me.him188.ani.app.data.repository.RepositoryUnknownException
 import me.him188.ani.app.data.repository.user.GuestSession
 import me.him188.ani.app.domain.media.fetch.AtomicInteger
+import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.fail
-import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 
 class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerTest() {
 
@@ -33,7 +36,7 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
     @Test
     fun `requireAuthorize checks self info`() = runTest {
         val manager = createManager(
-            getSelfInfo = { ApiResponse.success(SUCCESS_USER_INFO) },
+            getSelfInfo = { SUCCESS_USER_INFO },
             refreshAccessToken = { noCall() },
         )
         setValidToken()
@@ -46,7 +49,7 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
     @Test
     fun `requireAuthorize guest with skipOnGuest is true`() = runTest {
         val manager = createManager(
-            getSelfInfo = { ApiResponse.success(SUCCESS_USER_INFO) },
+            getSelfInfo = { SUCCESS_USER_INFO },
             refreshAccessToken = { noCall() },
         )
         manager.setSession(GuestSession)
@@ -59,7 +62,7 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
     @Test
     fun `requireAuthorize guest with skipOnGuest is false`() = runTest {
         val manager = createManager(
-            getSelfInfo = { ApiResponse.success(SUCCESS_USER_INFO) },
+            getSelfInfo = { SUCCESS_USER_INFO },
             refreshAccessToken = { noCall() },
         )
         manager.setSession(GuestSession)
@@ -75,7 +78,7 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
     fun `requireAuthorize invokes onLaunch when failed to verify`() = runTest {
         val manager = createManager(
             getSelfInfo = {
-                ApiResponse.failure(ApiFailure.Unauthorized)
+                throw RepositoryAuthorizationException()
             },
             refreshAccessToken = { noCall() },
         )
@@ -97,15 +100,22 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         val manager = createManager(
             getSelfInfo = {
                 if (it == initial) {
-                    ApiResponse.failure(ApiFailure.Unauthorized)
+                    throw RepositoryAuthorizationException()
                 } else {
-                    ApiResponse.success(UserInfo.EMPTY)
+                    UserInfo.EMPTY
                 }
             },
-            refreshAccessToken = { ApiResponse.success(NewSession(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN)) },
+            refreshAccessToken = {
+                NewSession(
+                    successAccessTokenPair(),
+                    currentTimeMillis() + 100.days.inWholeMilliseconds,
+                    REFRESH_TOKEN,
+                )
+            },
         )
         setValidToken(initial)
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
+
         manager.requireAuthorizeTest(
             onLaunch = { fail() },
         )
@@ -115,9 +125,9 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         assertEquals(2, getSelfInfoCalled.value)
 
         manager.statePass.toList().run {
-            assertEquals(2, size)
-            assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), get(0))
-            assertEquals(SessionStatus.Verified(ACCESS_TOKEN, UserInfo.EMPTY), get(1))
+            assertEquals(2, size, "Expected 2 states, but got $this")
+            assertEquals(createVerifying(ACCESS_TOKEN), get(0))
+            assertEquals(createVerified(ACCESS_TOKEN, UserInfo.EMPTY), get(1))
         }
 
         assertEquals(0, onLaunchCalled.value)
@@ -131,15 +141,17 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         val manager = createManager(
             getSelfInfo = {
                 if (it == initial) {
-                    ApiResponse.failure(ApiFailure.Unauthorized)
+                    throw RepositoryAuthorizationException()
                 } else {
-                    ApiResponse.success(UserInfo.EMPTY)
+                    UserInfo.EMPTY
                 }
             },
-            refreshAccessToken = { ApiResponse.failure(ApiFailure.NetworkError) },
+            refreshAccessToken = {
+                throw RepositoryNetworkException()
+            },
         )
         setValidToken(initial)
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         assertFailsWith<AuthorizationFailedException> {
             manager.requireAuthorizeTest(
                 onLaunch = { fail() },
@@ -151,7 +163,7 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
 
         manager.statePass.toList().run {
             assertEquals(3, size)
-            assertEquals(SessionStatus.Verifying(initial), get(0))
+            assertEquals(createVerifying(initial), get(0))
             assertEquals(SessionStatus.Refreshing, get(1))
             assertEquals(SessionStatus.NetworkError, get(2))
         }
@@ -167,37 +179,47 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         val manager = createManager(
             getSelfInfo = {
                 if (it == initial) {
-                    ApiResponse.failure(ApiFailure.Unauthorized)
+                    throw RepositoryAuthorizationException()
                 } else {
-                    ApiResponse.success(UserInfo.EMPTY)
+                    UserInfo.EMPTY
                 }
             },
-            refreshAccessToken = { ApiResponse.failure(ApiFailure.Unauthorized) },
+            refreshAccessToken = {
+                throw RepositoryAuthorizationException()
+            },
         )
         setValidToken(initial)
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         manager.requireAuthorizeTest(
             onLaunch = {
                 manager.processingRequest.value.let {
                     assertNotNull(it)
                     assertEquals(ExternalOAuthRequest.State.Launching, it.state.value)
 
-                    it.onCallback(Result.success(OAuthResult(ACCESS_TOKEN, REFRESH_TOKEN, Duration.INFINITE)))
+                    it.onCallback(
+                        Result.success(
+                            OAuthResult(
+                                successAccessTokenPair(),
+                                REFRESH_TOKEN,
+                                veryLongDuration,
+                            ),
+                        ),
+                    )
                 }
             },
         )
 
-        assertEquals(1, onLaunchCalled.value)
         assertEquals(1, refreshAccessTokenCalled.value)
+        assertEquals(1, onLaunchCalled.value)
         assertEquals(1, getSelfInfoCalled.value)
 
         manager.statePass.toList().run {
-            assertEquals(2, size)
+            assertEquals(2, size, "Expected 2 states, but got $this")
             assertEquals(
-                SessionStatus.Verifying(ACCESS_TOKEN), // not initial token
+                createVerifying(ACCESS_TOKEN), // not initial token
                 get(0),
             )
-            assertEquals(SessionStatus.Verified(ACCESS_TOKEN, UserInfo.EMPTY), get(1))
+            assertEquals(createVerified(ACCESS_TOKEN, UserInfo.EMPTY), get(1))
         }
 
         assertEquals(1, onLaunchCalled.value)
@@ -211,15 +233,17 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         val manager = createManager(
             getSelfInfo = {
                 if (it == initial) {
-                    ApiResponse.failure(ApiFailure.Unauthorized)
+                    throw RepositoryAuthorizationException()
                 } else {
-                    ApiResponse.success(UserInfo.EMPTY)
+                    UserInfo.EMPTY
                 }
             },
-            refreshAccessToken = { ApiResponse.failure(ApiFailure.Unauthorized) },
+            refreshAccessToken = {
+                throw RepositoryAuthorizationException()
+            },
         )
         setValidToken(initial)
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         assertFailsWith<AuthorizationCancelledException> {
             manager.requireAuthorizeTest(
                 onLaunch = {
@@ -239,9 +263,9 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
 
         manager.statePass.toList().run {
             assertEquals(3, size, message = this.toString())
-            assertEquals(SessionStatus.Verifying(initial), get(0))
+            assertEquals(createVerifying(initial), get(0))
             assertEquals(SessionStatus.Refreshing, get(1))
-            assertEquals(SessionStatus.Expired, get(2))
+            assertIs<SessionStatus.Expired>(get(2))
         }
 
         assertEquals(1, onLaunchCalled.value)
@@ -255,15 +279,17 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         val manager = createManager(
             getSelfInfo = {
                 if (it == initial) {
-                    ApiResponse.failure(ApiFailure.Unauthorized)
+                    throw RepositoryAuthorizationException()
                 } else {
-                    ApiResponse.success(UserInfo.EMPTY)
+                    UserInfo.EMPTY
                 }
             },
-            refreshAccessToken = { ApiResponse.failure(ApiFailure.Unauthorized) },
+            refreshAccessToken = {
+                throw RepositoryAuthorizationException()
+            },
         )
         setValidToken(initial)
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         assertFailsWith<AuthorizationFailedException> {
             manager.requireAuthorizeTest(
                 onLaunch = {
@@ -283,9 +309,9 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
 
         manager.statePass.toList().run {
             assertEquals(3, size)
-            assertEquals(SessionStatus.Verifying(initial), get(0))
+            assertEquals(createVerifying(initial), get(0))
             assertEquals(SessionStatus.Refreshing, get(1))
-            assertEquals(SessionStatus.Expired, get(2))
+            assertIs<SessionStatus.Expired>(get(2))
         }
 
         assertEquals(1, onLaunchCalled.value)
@@ -298,9 +324,9 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         val manager = createManager(
             getSelfInfo = {
                 if (getSelfInfoCalled.value == 0) {
-                    ApiResponse.failure(ApiFailure.Unauthorized)
+                    throw RepositoryAuthorizationException()
                 } else {
-                    ApiResponse.success(SUCCESS_USER_INFO)
+                    SUCCESS_USER_INFO
                 }
             },
             refreshAccessToken = { noCall() },
@@ -312,7 +338,15 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
                     assertNotNull(it)
                     assertEquals(ExternalOAuthRequest.State.Launching, it.state.value)
 
-                    it.onCallback(Result.success(OAuthResult(ACCESS_TOKEN, REFRESH_TOKEN, Duration.INFINITE)))
+                    it.onCallback(
+                        Result.success(
+                            OAuthResult(
+                                successAccessTokenPair(),
+                                REFRESH_TOKEN,
+                                veryLongDuration,
+                            ),
+                        ),
+                    )
                 }
             },
         )
@@ -322,29 +356,40 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         assertEquals(1, getSelfInfoCalled.value)
         manager.statePass.toList().run {
             assertEquals(2, size)
-            assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), get(0))
-            assertEquals(SessionStatus.Verified(ACCESS_TOKEN, UserInfo.EMPTY), get(1))
+            assertEquals(createVerifying(ACCESS_TOKEN), get(0))
+            assertEquals(createVerified(ACCESS_TOKEN, UserInfo.EMPTY), get(1))
         }
         assertEquals(1, onLaunchCalled.value)
         assertEquals(2, getSelfInfoCalled.value)
     }
 
+    private fun successAccessTokenPair(): AccessTokenPair = AccessTokenPair(ACCESS_TOKEN, ACCESS_TOKEN)
+
     @Test
     fun `requireAuthorize guest followed by successful oauth`() = runTest {
         val manager = createManager(
-            getSelfInfo = {
-                ApiResponse.success(SUCCESS_USER_INFO)
+            getSelfInfo = { SUCCESS_USER_INFO },
+            refreshAccessToken = {
+                noCall()
             },
-            refreshAccessToken = { noCall() },
         )
         manager.setSession(GuestSession)
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         manager.requireAuthorizeTest(
             onLaunch = {
                 manager.processingRequest.value.let {
                     assertNotNull(it)
                     assertEquals(ExternalOAuthRequest.State.Launching, it.state.value)
 
-                    it.onCallback(Result.success(OAuthResult(ACCESS_TOKEN, REFRESH_TOKEN, Duration.INFINITE)))
+                    it.onCallback(
+                        Result.success(
+                            OAuthResult(
+                                successAccessTokenPair(),
+                                REFRESH_TOKEN,
+                                veryLongDuration,
+                            ),
+                        ),
+                    )
                 }
             },
         )
@@ -353,9 +398,9 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         assertEquals(1, onLaunchCalled.value)
         assertEquals(0, getSelfInfoCalled.value)
         manager.statePass.toList().run {
-            assertEquals(2, size)
-            assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), get(0))
-            assertEquals(SessionStatus.Verified(ACCESS_TOKEN, UserInfo.EMPTY), get(1))
+            assertEquals(2, size, "Expected 2 states, but got $this")
+            assertEquals(createVerifying(ACCESS_TOKEN), get(0))
+            assertEquals(createVerified(ACCESS_TOKEN, UserInfo.EMPTY), get(1))
         }
         assertEquals(1, onLaunchCalled.value)
         assertEquals(1, getSelfInfoCalled.value)
@@ -367,9 +412,9 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         val manager = createManager(
             getSelfInfo = {
                 if (it == initialToken) {
-                    ApiResponse.failure(ApiFailure.Unauthorized)
+                    throw RepositoryAuthorizationException()
                 } else {
-                    ApiResponse.success(SUCCESS_USER_INFO)
+                    SUCCESS_USER_INFO
                 }
             },
             refreshAccessToken = { noCall() },
@@ -393,8 +438,8 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         assertEquals(1, getSelfInfoCalled.value)
         manager.statePass.toList().run {
             assertEquals(2, size)
-            assertEquals(SessionStatus.Verifying(initialToken), get(0))
-            assertEquals(SessionStatus.Expired, get(1))
+            assertEquals(createVerifying(initialToken), get(0))
+            assertIs<SessionStatus.Expired>(get(1))
         }
         assertEquals(1, onLaunchCalled.value)
         assertEquals(2, getSelfInfoCalled.value)
@@ -406,9 +451,9 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         val manager = createManager(
             getSelfInfo = {
                 if (it == initialToken) {
-                    ApiResponse.failure(ApiFailure.Unauthorized)
+                    throw RepositoryAuthorizationException()
                 } else {
-                    ApiResponse.success(SUCCESS_USER_INFO)
+                    SUCCESS_USER_INFO
                 }
             },
             refreshAccessToken = { noCall() },
@@ -432,8 +477,8 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         assertEquals(1, getSelfInfoCalled.value)
         manager.statePass.toList().run {
             assertEquals(2, size)
-            assertEquals(SessionStatus.Verifying(initialToken), get(0))
-            assertEquals(SessionStatus.Expired, get(1))
+            assertEquals(createVerifying(initialToken), get(0))
+            assertIs<SessionStatus.Expired>(get(1))
         }
         assertEquals(1, onLaunchCalled.value)
         assertEquals(2, getSelfInfoCalled.value)
@@ -460,60 +505,81 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
 
 
     @Test
-    fun `requireAuthorize rethrows exception during getSelfInfo`() = runTest {
+    fun `requireAuthorize wraps exception during getSelfInfo`() = runTest {
         val manager = createManager(
             getSelfInfo = { throw IndexOutOfBoundsException("a bug") },
             refreshAccessToken = { noCall() },
         )
         setValidToken()
-        assertFailsWith<IndexOutOfBoundsException> {
+
+        assertFailsWith<AuthorizationFailedException> {
             manager.requireAuthorizeTest({})
+        }.let {
+            assertIs<RepositoryUnknownException>(it.cause)
         }
     }
 
     @Test
-    fun `state rethrows exception during getSelfInfo`() = runTest {
+    fun `state wraps exception during getSelfInfo`() = runTest {
         val manager = createManager(
             getSelfInfo = { throw IndexOutOfBoundsException("a bug") },
             refreshAccessToken = { noCall() },
         )
         setValidToken()
-        assertFailsWith<IndexOutOfBoundsException> {
-            manager.state.filterNot { it is SessionStatus.Loading }.first()
+
+        manager.state.filterNot { it is SessionStatus.Loading }.first().let {
+            assertIs<SessionStatus.UnknownError>(it)
+            assertIs<RepositoryUnknownException>(it.exception)
+            assertIs<IndexOutOfBoundsException>(it.exception.cause)
         }
-        assertFailsWith<IndexOutOfBoundsException> {
-            // 顺便也检查一下专门为 test 实现的 statePass 也拥有相同的行为
-            manager.statePass.toList()
+        manager.statePass.filterNot { it is SessionStatus.Loading }.first().let {
+            assertIs<SessionStatus.UnknownError>(it)
+            assertIs<RepositoryUnknownException>(it.exception)
+            assertIs<IndexOutOfBoundsException>(it.exception.cause)
         }
     }
 
     @Test
-    fun `requireAuthorize rethrows exception during refreshAccessToken`() = runTest {
+    fun `requireAuthorize wraps exception during refreshAccessToken`() = runTest {
         val manager = createManager(
-            getSelfInfo = { ApiResponse.failure(ApiFailure.Unauthorized) },
+            getSelfInfo = { throw RepositoryAuthorizationException() },
             refreshAccessToken = { throw IndexOutOfBoundsException("a bug") },
         )
         setValidToken()
-        refreshToken.value = REFRESH_TOKEN
-        assertFailsWith<IndexOutOfBoundsException> {
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
+        assertFailsWith<AuthorizationFailedException> {
             manager.requireAuthorizeTest({})
         }
     }
 
     @Test
-    fun `state rethrows exception during refreshAccessToken`() = runTest {
+    fun `state wraps exception during refreshAccessToken`() = runTest {
         val manager = createManager(
-            getSelfInfo = { ApiResponse.failure(ApiFailure.Unauthorized) },
+            getSelfInfo = { throw RepositoryAuthorizationException() },
             refreshAccessToken = { throw IndexOutOfBoundsException("a bug") },
         )
         setValidToken()
-        refreshToken.value = REFRESH_TOKEN
-        assertFailsWith<IndexOutOfBoundsException> {
-            println(manager.state.filterNot { it is SessionStatus.Loading }.first())
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
+        manager.state.filterNot { it is SessionStatus.Loading }.first().let {
+            assertIs<SessionStatus.UnknownError>(it)
+            assertIs<RepositoryUnknownException>(it.exception)
+            assertIs<IndexOutOfBoundsException>(it.exception.cause)
         }
-        assertFailsWith<IndexOutOfBoundsException> {
-            // 顺便也检查一下专门为 test 实现的 statePass 也拥有相同的行为
-            println(manager.statePass.filterNot { it is SessionStatus.Loading }.first())
+        // 顺便也检查一下专门为 test 实现的 statePass 也拥有相同的行为
+        manager.statePass.filterNot { it is SessionStatus.Loading }.first().let {
+            assertIs<SessionStatus.UnknownError>(it)
+            assertIs<RepositoryUnknownException>(it.exception)
+            assertIs<IndexOutOfBoundsException>(it.exception.cause)
         }
     }
+
+    private val veryLongDuration = 100.days
+
+    private fun createVerifying(token: String): SessionStatus.Verifying =
+        SessionStatus.Verifying(AccessTokenPair(token, token))
+
+    @Suppress("SameParameterValue")
+    private fun createVerified(token: String, userInfo: UserInfo): SessionStatus.Verified =
+        SessionStatus.Verified(AccessTokenPair(token, token), userInfo)
+
 }

@@ -131,10 +131,17 @@ enum class ScopedHttpClientUserAgent {
 val UseBangumiTokenFeature = ScopedHttpClientFeatureKey<Boolean>("UseBangumiToken")
 
 class UseBangumiTokenFeatureHandler(
+    bearerToken: Flow<String?>,
+    onRefresh: suspend () -> BearerTokens?,
+) : AbstractBearerTokenHandler(UseBangumiTokenFeature, bearerToken, onRefresh)
+
+// endregion
+
+abstract class AbstractBearerTokenHandler(
+    key: ScopedHttpClientFeatureKey<Boolean>,
     private val bearerToken: Flow<String?>,
     private val onRefresh: suspend () -> BearerTokens?,
-) : ScopedHttpClientFeatureHandler<Boolean>(UseBangumiTokenFeature) {
-
+) : ScopedHttpClientFeatureHandler<Boolean>(key) {
     override fun applyToConfig(config: HttpClientConfig<*>, value: Boolean) {
         if (!value) return
         config.install(Auth) {
@@ -164,6 +171,14 @@ class UseBangumiTokenFeatureHandler(
         }
     }
 }
+
+// region UseBangumiToken = ScopedHttpClientFeatureKey<Boolean>("UseBangumiToken")
+val UseAniTokenFeature = ScopedHttpClientFeatureKey<Boolean>("UseAniToken")
+
+class UseAniTokenFeatureHandler(
+    bearerToken: Flow<String?>,
+    onRefresh: suspend () -> BearerTokens?,
+) : AbstractBearerTokenHandler(UseAniTokenFeature, bearerToken, onRefresh)
 
 // endregion
 

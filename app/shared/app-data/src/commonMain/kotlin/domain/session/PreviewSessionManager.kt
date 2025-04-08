@@ -23,12 +23,23 @@ import kotlin.time.Duration.Companion.days
 object PreviewSessionManager : SessionManager {
     private val savedSession: MutableStateFlow<Session?> = MutableStateFlow(
         AccessTokenSession(
-            bangumiAccessToken = "testToken",
+            tokens = AccessTokenPair(
+                bangumiAccessToken = "testToken",
+                aniAccessToken = "testToken",
+            ),
             expiresAtMillis = currentTimeMillis() + 1.days.inWholeMilliseconds,
         ),
     )
     override val state: Flow<SessionStatus> =
-        MutableStateFlow(SessionStatus.Verified("testToken", UserInfo.EMPTY))
+        MutableStateFlow(
+            SessionStatus.Verified(
+                AccessTokenPair(
+                    bangumiAccessToken = "testToken",
+                    aniAccessToken = "testToken",
+                ),
+                UserInfo.EMPTY,
+            ),
+        )
     override val processingRequest: MutableStateFlow<ExternalOAuthRequest?> =
         MutableStateFlow(null)
     override val events: SharedFlow<SessionEvent> = MutableSharedFlow(

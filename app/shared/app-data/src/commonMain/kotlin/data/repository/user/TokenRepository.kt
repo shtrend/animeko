@@ -16,6 +16,8 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import me.him188.ani.app.domain.session.AccessTokenPair
 import me.him188.ani.app.domain.session.SessionManager
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.time.Duration.Companion.hours
@@ -23,17 +25,96 @@ import kotlin.time.Duration.Companion.hours
 /**
  * Do not access directly. Use [SessionManager] instead.
  */
-interface TokenRepository {
-    val refreshToken: Flow<String?>
-    suspend fun setRefreshToken(value: String)
+class TokenRepository(
+    private val dataStore: DataStore<TokenSave>
+) {
+    val refreshToken: Flow<String?> = dataStore.data.map { it.refreshToken }
+    suspend fun setRefreshToken(value: String) {
+        dataStore.updateData {
+            it.copy(refreshToken = value)
+        }
+    }
 
     /**
      * 当前的登录会话, 为 `null` 表示未登录.
      */
-    val session: Flow<Session?>
-    suspend fun setSession(session: Session)
+    val session: Flow<Session?> = dataStore.data.map { save ->
+        when {
+            save.isGuest == true -> GuestSession
+            save.accessTokens != null -> {
+                AccessTokenSession(
+                    AccessTokenPair(
+                        bangumiAccessToken = save.accessTokens.bangumiAccessToken,
+                        aniAccessToken = save.accessTokens.aniAccessToken,
+                    ),
+                    expiresAtMillis = save.accessTokens.expiresAtMillis,
+                )
+            }
 
-    suspend fun clear()
+            else -> null
+        }
+    }
+
+    /**
+     * Updates [TokenSave.accessTokens].
+     *
+     * For [GuestSession], this also removes [TokenSave.refreshToken].
+     */
+    suspend fun setSession(session: Session) {
+        when (session) {
+            is AccessTokenSession -> {
+                dataStore.updateData {
+                    it.copy(
+                        accessTokens = TokenSave.AccessTokens(
+                            bangumiAccessToken = session.tokens.bangumiAccessToken,
+                            aniAccessToken = session.tokens.aniAccessToken,
+                            expiresAtMillis = session.expiresAtMillis,
+                        ),
+                        isGuest = false,
+                    )
+                }
+            }
+
+            GuestSession -> {
+                dataStore.updateData {
+                    it.copy(
+                        refreshToken = null,
+                        accessTokens = null,
+                        isGuest = true,
+                    )
+                }
+            }
+        }
+    }
+
+    suspend fun clear() {
+        dataStore.updateData {
+            it.copy(
+                refreshToken = null,
+                accessTokens = null,
+                isGuest = null,
+            )
+        }
+    }
+}
+
+@ConsistentCopyVisibility
+@Serializable
+data class TokenSave internal constructor(
+    val refreshToken: String? = null,
+    val accessTokens: AccessTokens? = null,
+    val isGuest: Boolean? = null,
+) {
+    @Serializable
+    data class AccessTokens(
+        val bangumiAccessToken: String,
+        val aniAccessToken: String,
+        val expiresAtMillis: Long,
+    )
+
+    companion object {
+        val Initial = TokenSave()
+    }
 }
 
 sealed interface Session
@@ -48,16 +129,22 @@ data object GuestSession : Session
  */
 // don't remove `data`. required for equals
 data class AccessTokenSession(
-    val bangumiAccessToken: String,
+    val tokens: AccessTokenPair,
     val expiresAtMillis: Long,
 ) : Session
 
 fun AccessTokenSession.isValid() = !isExpired()
 fun AccessTokenSession.isExpired() = expiresAtMillis <= currentTimeMillis() + 1.hours.inWholeMilliseconds
 
-class TokenRepositoryImpl(
+
+/**
+ * Used before 4.9.
+ *
+ * Only for migration
+ */
+class LegacyTokenRepository(
     store: DataStore<Preferences>,
-) : TokenRepository {
+) {
     private companion object Keys {
         val USER_ID = longPreferencesKey("user_id")
         val REFRESH_TOKEN = stringPreferencesKey("refresh_token") // bangumi
@@ -70,13 +157,13 @@ class TokenRepositoryImpl(
 
     private val tokenStore = store
 
-    override val refreshToken: Flow<String?> = tokenStore.data.map { it[REFRESH_TOKEN] }
+    val refreshToken: Flow<String?> = tokenStore.data.map { it[REFRESH_TOKEN] }
 
-    override suspend fun setRefreshToken(value: String) {
+    suspend fun setRefreshToken(value: String) {
         tokenStore.edit { it[REFRESH_TOKEN] = value }
     }
 
-    override val session: Flow<Session?> = tokenStore.data.map { preferences ->
+    val session: Flow<Session?> = tokenStore.data.map { preferences ->
         val accessToken = preferences[ACCESS_TOKEN]
         val expireAt = preferences[ACCESS_TOKEN_EXPIRE_AT]
         val isGuest = preferences[IS_GUEST]?.toBooleanStrict()
@@ -87,30 +174,16 @@ class TokenRepositoryImpl(
                 return@map null
             }
             AccessTokenSession(
-                bangumiAccessToken = accessToken,
+                AccessTokenPair(
+                    accessToken,
+                    "",
+                ),
                 expiresAtMillis = expireAt,
             )
         }
     }
 
-    override suspend fun setSession(session: Session) {
-        tokenStore.edit {
-            when (session) {
-                is AccessTokenSession -> {
-                    it[ACCESS_TOKEN] = session.bangumiAccessToken
-                    it[ACCESS_TOKEN_EXPIRE_AT] = session.expiresAtMillis
-                    it[IS_GUEST] = false.toString()
-                }
-
-                GuestSession -> {
-                    it[IS_GUEST] = true.toString()
-                }
-            }
-
-        }
-    }
-
-    override suspend fun clear() {
+    suspend fun clear() {
         tokenStore.edit {
             it.remove(USER_ID)
             it.remove(ACCESS_TOKEN)

@@ -233,7 +233,7 @@ class OnboardingViewModel : AbstractSettingsViewModel(), KoinComponent {
             }
         },
         onAuthorizeByToken = {
-            backgroundScope.launch { authConfigurator.setAuthorizationToken(it) }
+            backgroundScope.launch { authConfigurator.authorizeByBangumiToken(it) }
         },
     )
 

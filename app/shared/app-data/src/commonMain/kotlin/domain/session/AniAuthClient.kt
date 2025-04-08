@@ -13,50 +13,132 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import io.ktor.util.reflect.typeInfo
 import me.him188.ani.app.data.models.ApiFailure
-import me.him188.ani.app.data.models.ApiResponse
-import me.him188.ani.app.data.models.runApiRequest
+import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
+import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.client.apis.BangumiOAuthAniApi
-import me.him188.ani.client.models.AniAnonymousBangumiUserToken
+import me.him188.ani.client.infrastructure.HttpResponse
+import me.him188.ani.client.models.AniBangumiLoginRequest
+import me.him188.ani.client.models.AniBangumiLoginResponse
 import me.him188.ani.client.models.AniBangumiUserToken
 import me.him188.ani.client.models.AniRefreshBangumiTokenRequest
 import me.him188.ani.utils.ktor.ApiInvoker
+import me.him188.ani.utils.platform.currentPlatform
 
 interface AniAuthClient {
-    suspend fun getResult(requestId: String): ApiResponse<AniBangumiUserToken?>
-    suspend fun refreshAccessToken(refreshToken: String): ApiResponse<AniAnonymousBangumiUserToken>
+    /**
+     * 获取使用 Ani OAuth 登录的结果. 同时返回 bangumi 和 ani tokens.
+     */
+    suspend fun getResult(requestId: String): AniAuthResult?
+
+    /**
+     * 使用 refresh token 刷新得到新的 bangumi 和 ani tokens.
+     */
+    suspend fun refreshAccessToken(refreshToken: String): AniAuthResult
+
+    /**
+     * 用 [bangumiAccessToken] 登录 ani 账户, 返回 tokens.
+     */
+    suspend fun getAccessTokensByBangumiToken(bangumiAccessToken: String): AccessTokenPair
 }
+
+data class AniAuthResult(
+    val tokens: AccessTokenPair,
+    val expiresInSeconds: Long,
+    val refreshToken: String,
+)
 
 class AniAuthClientImpl(
     private val oauthApiInvoker: ApiInvoker<BangumiOAuthAniApi>,
 ) : AniAuthClient {
-    override suspend fun getResult(requestId: String) = runApiRequest {
-        try {
+    override suspend fun getResult(requestId: String): AniAuthResult? {
+        return try {
             oauthApiInvoker {
-                getBangumiToken(requestId)
+                // TODO: 2025/4/8 未来我们需要在 Ani 服务器直接返回两个 token, 避免多次请求 
+                val bangumiToken = getBangumiToken(requestId)
                     .typedBody<AniBangumiUserToken>(typeInfo<AniBangumiUserToken>())
+
+                val aniToken = bangumiLogin(bangumiToken.accessToken).body().token
+
+                AniAuthResult(
+                    tokens = AccessTokenPair(
+                        bangumiAccessToken = bangumiToken.accessToken,
+                        aniAccessToken = aniToken,
+                    ),
+                    expiresInSeconds = bangumiToken.expiresIn,
+                    refreshToken = bangumiToken.refreshToken,
+//                    bangumiUserId = bangumiToken.userId,
+                )
             }
         } catch (e: ClientRequestException) {
             if (e.response.status == HttpStatusCode.NotFound) {
-                return@runApiRequest null
+                return null
             }
-            throw e
+            throw RepositoryException.wrapOrThrowCancellation(e)
+        } catch (e: Throwable) {
+            throw RepositoryException.wrapOrThrowCancellation(e)
         }
     }
 
-    override suspend fun refreshAccessToken(refreshToken: String) = runApiRequest {
-        oauthApiInvoker { refreshBangumiToken(AniRefreshBangumiTokenRequest(refreshToken)).body() }
+    override suspend fun refreshAccessToken(refreshToken: String): AniAuthResult {
+        return try {
+            oauthApiInvoker {
+                // TODO: 2025/4/8 未来我们需要在 Ani 服务器直接返回两个 token, 避免多次请求 
+                val bangumiToken = refreshBangumiToken(AniRefreshBangumiTokenRequest(refreshToken)).body()
+                val aniToken = bangumiLogin(bangumiToken.accessToken).body().token
+
+                AniAuthResult(
+                    tokens = AccessTokenPair(
+                        bangumiAccessToken = bangumiToken.accessToken,
+                        aniAccessToken = aniToken,
+                    ),
+                    expiresInSeconds = bangumiToken.expiresIn,
+                    refreshToken = bangumiToken.refreshToken,
+                )
+            }
+        } catch (e: Throwable) {
+            throw RepositoryException.wrapOrThrowCancellation(e)
+        }
     }
+
+    override suspend fun getAccessTokensByBangumiToken(bangumiAccessToken: String): AccessTokenPair {
+        try {
+            return oauthApiInvoker {
+                val aniToken = bangumiLogin(bangumiAccessToken).body().token
+                AccessTokenPair(
+                    bangumiAccessToken = bangumiAccessToken,
+                    aniAccessToken = aniToken,
+                )
+            }
+        } catch (e: Throwable) {
+            throw RepositoryException.wrapOrThrowCancellation(e)
+        }
+    }
+
+    private suspend fun BangumiOAuthAniApi.bangumiLogin(bangumiAccessToken: String): HttpResponse<AniBangumiLoginResponse> =
+        bangumiLogin(
+            AniBangumiLoginRequest(
+                bangumiAccessToken,
+                clientArch = currentPlatform().arch.displayName,
+                clientOS = currentPlatform().name,
+                clientVersion = currentAniBuildConfig.versionName,
+            ),
+        )
 }
 
 /**
  * A [AniAuthClient] that does nothing. Always get failure response [ApiFailure.ServiceUnavailable].
  */
 object ConstantFailureAniAuthClient : AniAuthClient {
-    override suspend fun getResult(requestId: String): ApiResponse<AniBangumiUserToken?> {
-        return ApiResponse.failure(ApiFailure.ServiceUnavailable)
+    override suspend fun getResult(requestId: String): AniAuthResult? {
+        throw RepositoryServiceUnavailableException()
     }
 
-    override suspend fun refreshAccessToken(refreshToken: String): ApiResponse<AniAnonymousBangumiUserToken> {
-        return ApiResponse.failure(ApiFailure.ServiceUnavailable)
+    override suspend fun refreshAccessToken(refreshToken: String): AniAuthResult {
+        throw RepositoryServiceUnavailableException()
+    }
+
+    override suspend fun getAccessTokensByBangumiToken(bangumiAccessToken: String): AccessTokenPair {
+        throw RepositoryServiceUnavailableException()
     }
 }

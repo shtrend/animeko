@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -15,13 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import me.him188.ani.app.data.models.ApiFailure
-import me.him188.ani.app.data.models.ApiResponse
-import me.him188.ani.app.data.models.UserInfo
-import me.him188.ani.app.data.models.networkError
-import me.him188.ani.app.data.models.serviceUnavailable
-import me.him188.ani.app.data.models.unauthorized
 import me.him188.ani.app.data.repository.user.Session
 import me.him188.ani.app.navigation.AniNavigator
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -151,23 +145,8 @@ val SessionManager.userInfo get() = state.map { it.userInfoOrNull }
 @OpaqueSession
 val SessionManager.username get() = state.map { it.usernameOrNull }
 
-/**
- * 获取会考虑网络状态的 [UserInfo].
- */
-val SessionManager.userInfoAsApiResponse
-    get() = finalState.mapNotNull {
-        when (it) {
-            SessionStatus.Guest -> ApiResponse.unauthorized()
-            is SessionStatus.Verified -> ApiResponse.success(it.userInfo)
-            SessionStatus.Expired -> ApiResponse.unauthorized()
-            SessionStatus.NetworkError -> ApiResponse.networkError()
-            SessionStatus.NoToken -> ApiResponse.unauthorized()
-            SessionStatus.ServiceUnavailable -> ApiResponse.serviceUnavailable()
-        }
-    }
-
 @OpaqueSession
-val SessionManager.verifiedAccessToken: Flow<String?>
+val SessionManager.verifiedAccessToken: Flow<AccessTokenPair?>
     get() = state.map {
         (it as? SessionStatus.Verified)?.accessToken
     }

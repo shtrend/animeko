@@ -31,11 +31,11 @@ internal class PlatformDataStoreManagerAndroid(
         return context.applicationContext.dataStoreFile(name).toKtPath().inSystem
     }
 
-    private val Context.tokenStoreImpl by preferencesDataStore(
+    private val Context.legacyTokenStoreImpl by preferencesDataStore(
         "tokens",
         corruptionHandler = replaceFileCorruptionHandlerForPreferences,
     )
-    override val tokenStore: DataStore<Preferences> get() = context.tokenStoreImpl
+    override val legacyTokenStore: DataStore<Preferences> get() = context.legacyTokenStoreImpl
 
     private val Context.preferencesStoreImpl by preferencesDataStore(
         "preferences",

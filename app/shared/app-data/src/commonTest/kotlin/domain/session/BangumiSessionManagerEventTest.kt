@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -46,7 +46,7 @@ class BangumiSessionManagerEventTest : AbstractBangumiSessionManagerTest() {
             refreshAccessToken = { noCall() },
         )
         runCollectingEvents(manager) {
-            setSession(AccessTokenSession(ACCESS_TOKEN, 1))
+            setSession(AccessTokenSession(AccessTokenPair(ACCESS_TOKEN, ACCESS_TOKEN), 1))
         }.run {
             assertEquals(1, size)
             assertEquals(SessionEvent.Login, get(0))
@@ -59,7 +59,7 @@ class BangumiSessionManagerEventTest : AbstractBangumiSessionManagerTest() {
             getSelfInfo = { noCall() },
             refreshAccessToken = { noCall() },
         )
-        manager.setSession(AccessTokenSession(ACCESS_TOKEN, 1))
+        manager.setSession(AccessTokenSession(AccessTokenPair(ACCESS_TOKEN, ACCESS_TOKEN), 1))
         runCollectingEvents(manager) {
             clearSession()
         }.run {

@@ -23,6 +23,7 @@ import me.him188.ani.app.data.repository.media.MediaSourceSubscriptionsSaveData
 import me.him188.ani.app.data.repository.media.MikanIndexes
 import me.him188.ani.app.data.repository.player.EpisodeHistories
 import me.him188.ani.app.data.repository.torrent.peer.PeerFilterSubscriptionsSaveData
+import me.him188.ani.app.data.repository.user.TokenSave
 import me.him188.ani.app.domain.media.cache.storage.MediaCacheSave
 import me.him188.ani.utils.httpdownloader.DownloadState
 import me.him188.ani.utils.io.SystemPath
@@ -114,7 +115,19 @@ abstract class PlatformDataStoreManager {
         )
     }
 
-    abstract val tokenStore: DataStore<Preferences>
+    /**
+     * For [me.him188.ani.app.data.repository.user.TokenRepository]
+     * @since 4.9
+     */
+    val tokenStore by lazy {
+        DataStoreFactory.create(
+            serializer = TokenSave.serializer().asDataStoreSerializer({ TokenSave.Initial }),
+            produceFile = { resolveDataStoreFile("authSession") },
+            corruptionHandler = ReplaceFileCorruptionHandler { TokenSave.Initial },
+        )
+    }
+
+    abstract val legacyTokenStore: DataStore<Preferences>
     abstract val preferencesStore: DataStore<Preferences>
     abstract val preferredAllianceStore: DataStore<Preferences>
 

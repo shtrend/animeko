@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * 表示一个外部 OAuth 授权请求.
@@ -41,7 +40,7 @@ interface ExternalOAuthRequest {
      * @param
      */
     fun completeExceptionally(reason: Throwable)
-    
+
     /**
      * Does not throw
      */
@@ -74,7 +73,7 @@ interface ExternalOAuthRequest {
 }
 
 data class OAuthResult(
-    val accessToken: String,
+    val tokens: AccessTokenPair,
     val refreshToken: String,
     val expiresIn: Duration,
 )
@@ -124,8 +123,8 @@ class ExternalOAuthRequestImpl(
 
             onSuccess(
                 NewSession(
-                    result.accessToken,
-                    (currentTimeMillis().milliseconds + result.expiresIn).inWholeMilliseconds,
+                    result.tokens,
+                    currentTimeMillis() + result.expiresIn.inWholeMilliseconds,
                     result.refreshToken,
                 ),
             )

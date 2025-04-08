@@ -13,10 +13,8 @@ import app.cash.turbine.test
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
-import me.him188.ani.app.data.models.ApiFailure
-import me.him188.ani.app.data.models.ApiResponse
 import me.him188.ani.app.data.models.UserInfo
-import me.him188.ani.app.data.models.networkError
+import me.him188.ani.app.data.repository.RepositoryNetworkException
 import me.him188.ani.app.data.repository.user.AccessTokenSession
 import me.him188.ani.client.models.AniAnonymousBangumiUserToken
 import me.him188.ani.client.models.AniBangumiUserToken
@@ -25,6 +23,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.test.runTest as runCoroutineTest
 
 class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
@@ -34,7 +33,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             getSelfInfo = { noCall() },
             refreshAccessToken = { noCall() },
         )
-        val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
+        val authClient = createTestAuthClient(getResult = { null })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
@@ -63,7 +62,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             getSelfInfo = { noCall() },
             refreshAccessToken = { noCall() },
         )
-        val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
+        val authClient = createTestAuthClient(getResult = { null })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
@@ -94,7 +93,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         ).apply {
             setSession(AccessTokenSession(ACCESS_TOKEN, Long.MAX_VALUE))
         }
-        val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
+        val authClient = createTestAuthClient(getResult = { null })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
@@ -129,7 +128,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         ).apply {
             setSession(AccessTokenSession(ACCESS_TOKEN, 0))
         }
-        val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
+        val authClient = createTestAuthClient(getResult = { null })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
@@ -163,7 +162,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         ).apply {
             setSession(AccessTokenSession(ACCESS_TOKEN, 0))
         }
-        val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
+        val authClient = createTestAuthClient(getResult = { null })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
@@ -272,7 +271,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             getSelfInfo = { getSelfInfoSuccess() },
             refreshAccessToken = { refreshTokenSuccess() },
         )
-        val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
+        val authClient = createTestAuthClient(getResult = { null })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
@@ -307,7 +306,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             getSelfInfo = { getSelfInfoSuccess() },
             refreshAccessToken = { refreshTokenSuccess() },
         )
-        val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
+        val authClient = createTestAuthClient(getResult = { null })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
@@ -323,7 +322,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         configurator.state.test {
             assertIs<AuthState.NotAuthed>(awaitItem(), "Initially should be Idle.")
 
-            configurator.setAuthorizationToken(ACCESS_TOKEN)
+            configurator.authorizeByBangumiToken(ACCESS_TOKEN)
             assertIs<AuthState.AwaitingUserInfo>(awaitItem())
 
             val successState = awaitItem()
@@ -343,7 +342,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             getSelfInfo = { noCall() },
             refreshAccessToken = { noCall() },
         )
-        val authClient = createTestAuthClient(getResult = { ApiResponse.success(null) })
+        val authClient = createTestAuthClient(getResult = { null })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
@@ -359,7 +358,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         configurator.state.test {
             assertIs<AuthState.NotAuthed>(awaitItem(), "Initially should be Idle.")
 
-            configurator.setAuthorizationToken(ACCESS_TOKEN)
+            configurator.authorizeByBangumiToken(ACCESS_TOKEN)
             assertIs<AuthState.AwaitingUserInfo>(awaitItem())
             assertIs<AuthState.TokenExpired>(awaitItem(), "Token is invalid, should change state to TokenExpired.")
 
@@ -376,7 +375,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
             getSelfInfo = { noCall() },
             refreshAccessToken = { noCall() },
         )
-        val authClient = createTestAuthClient(getResult = { ApiResponse.failure(ApiFailure.NetworkError) })
+        val authClient = createTestAuthClient(getResult = { throw RepositoryNetworkException() })
 
         var launchedAuthorize = false
         val configurator = AniAuthConfigurator(
@@ -418,7 +417,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
                     checkAuthorizeResultSuccess()
                 } else {
                     retriesThenNetworkOk--
-                    ApiResponse.networkError()
+                    throw RepositoryNetworkException()
                 }
             },
         )
@@ -455,8 +454,8 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
     @Test
     fun `test authorize - network error - in refresh token`() = runCoroutineTest {
         val manager = createManager(
-            getSelfInfo = { ApiResponse.networkError() },
-            refreshAccessToken = { ApiResponse.networkError() },
+            getSelfInfo = { throw RepositoryNetworkException() },
+            refreshAccessToken = { throw RepositoryNetworkException() },
         )
         val authClient = createTestAuthClient(getResult = { checkAuthorizeResultSuccess() })
 
@@ -491,7 +490,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
     @Test
     fun `test authorize - network error - in refresh token getSelfInfo`() = runCoroutineTest {
         val manager = createManager(
-            getSelfInfo = { ApiResponse.networkError() },
+            getSelfInfo = { throw RepositoryNetworkException() },
             refreshAccessToken = { refreshTokenSuccess() },
         )
         val authClient = createTestAuthClient(getResult = { checkAuthorizeResultSuccess() })
@@ -524,32 +523,46 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
         loopJob.cancel()
     }
 
-    private fun getSelfInfoSuccess(): ApiResponse<UserInfo> {
-        return ApiResponse.success(TestUserInfo)
+    private fun getSelfInfoSuccess(): UserInfo {
+        return TestUserInfo
     }
 
-    private fun checkAuthorizeResultSuccess(): ApiResponse<AniBangumiUserToken> {
-        return ApiResponse.success(AniBangumiUserToken(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN, TestUserInfo.id))
+    private fun checkAuthorizeResultSuccess(): AniBangumiUserToken {
+        return AniBangumiUserToken(ACCESS_TOKEN, 100.days.inWholeMilliseconds, REFRESH_TOKEN, TestUserInfo.id)
     }
 
     private fun createTestAuthClient(
-        getResult: suspend () -> ApiResponse<AniBangumiUserToken?>,
+        getResult: suspend () -> AniBangumiUserToken?,
         refreshAccessToken: suspend () -> AniAnonymousBangumiUserToken? = {
-            AniAnonymousBangumiUserToken(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN)
+            AniAnonymousBangumiUserToken(ACCESS_TOKEN, 100.days.inWholeMilliseconds, REFRESH_TOKEN)
         },
     ): AniAuthClient {
         return object : AniAuthClient {
-            override suspend fun getResult(requestId: String): ApiResponse<AniBangumiUserToken?> {
-                return getResult()
+            override suspend fun getResult(requestId: String): AniAuthResult? {
+                return getResult()?.let {
+                    AniAuthResult(
+                        AccessTokenPair(it.accessToken, it.accessToken),
+                        it.expiresIn,
+                        it.refreshToken,
+                    )
+                }
             }
 
-            override suspend fun refreshAccessToken(refreshToken: String): ApiResponse<AniAnonymousBangumiUserToken> {
+            override suspend fun refreshAccessToken(refreshToken: String): AniAuthResult {
                 val result = refreshAccessToken()
                 return if (result != null) {
-                    ApiResponse.success(result)
+                    AniAuthResult(
+                        AccessTokenPair(result.accessToken, result.accessToken),
+                        result.expiresIn,
+                        result.refreshToken,
+                    )
                 } else {
-                    ApiResponse.networkError()
+                    throw RepositoryNetworkException()
                 }
+            }
+
+            override suspend fun getAccessTokensByBangumiToken(bangumiAccessToken: String): AccessTokenPair {
+                return AccessTokenPair(bangumiAccessToken, bangumiAccessToken)
             }
         }
     }
@@ -557,4 +570,10 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
     private companion object {
         val TestUserInfo = UserInfo(123, "TestUser")
     }
+
+    @Suppress("SameParameterValue", "TestFunctionName")
+    private fun AccessTokenSession(
+        accessToken: String, // bangumi
+        expiresAtMillis: Long,
+    ) = AccessTokenSession(tokens = AccessTokenPair(accessToken, accessToken), expiresAtMillis)
 }

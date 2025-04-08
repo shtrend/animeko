@@ -95,12 +95,14 @@ fun HttpClientProvider.get(
     userAgent: ScopedHttpClientUserAgent = ScopedHttpClientUserAgent.ANI,
     useBangumiToken: Boolean = false,
     serverListConfig: ServerListFeatureConfig = ServerListFeatureConfig.Default,
+    useAniToken: Boolean = false,
 ): ScopedHttpClient = get(
     setOf(
         UserAgentFeature.withValue(userAgent),
         UseBangumiTokenFeature.withValue(useBangumiToken),
         ServerListFeature.withValue(serverListConfig),
         ConvertSendCountExceedExceptionFeature.withValue(true),
+        UseAniTokenFeature.withValue(useAniToken),
     ),
 )
 

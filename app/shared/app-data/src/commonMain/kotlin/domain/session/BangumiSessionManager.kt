@@ -27,13 +27,14 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import me.him188.ani.app.data.models.ApiFailure
-import me.him188.ani.app.data.models.ApiResponse
 import me.him188.ani.app.data.models.UserInfo
-import me.him188.ani.app.data.models.flatMap
-import me.him188.ani.app.data.models.fold
-import me.him188.ani.app.data.models.map
 import me.him188.ani.app.data.network.BangumiProfileService
+import me.him188.ani.app.data.repository.RepositoryAuthorizationException
+import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.data.repository.RepositoryNetworkException
+import me.him188.ani.app.data.repository.RepositoryRateLimitedException
+import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
+import me.him188.ani.app.data.repository.RepositoryUnknownException
 import me.him188.ani.app.data.repository.user.AccessTokenSession
 import me.him188.ani.app.data.repository.user.GuestSession
 import me.him188.ani.app.data.repository.user.Session
@@ -64,18 +65,16 @@ fun BangumiSessionManager(
 
     return BangumiSessionManager(
         tokenRepository,
-        refreshToken = tokenRepository.refreshToken,
-        getSelfInfo = { accessToken ->
+        getBangumiSelfInfo = { accessToken ->
             bangumiProfileService.getSelfUserInfo(accessToken)
         },
         refreshAccessToken = refreshAccessToken@{ refreshToken ->
-            client.refreshAccessToken(refreshToken).map {
-                NewSession(
-                    it.accessToken,
-                    (currentTimeMillis().milliseconds + it.expiresIn.seconds).inWholeMilliseconds,
-                    it.refreshToken,
-                )
-            }
+            val it = client.refreshAccessToken(refreshToken)
+            NewSession(
+                it.tokens,
+                expiresAtMillis = (currentTimeMillis().milliseconds + it.expiresInSeconds.seconds).inWholeMilliseconds,
+                bangumiRefreshToken = it.refreshToken,
+            )
         },
         parentCoroutineContext,
         enableSharing = true,
@@ -83,22 +82,21 @@ fun BangumiSessionManager(
 }
 
 class NewSession(
-    val bangumiAccessToken: String,
+    val accessTokens: AccessTokenPair,
     val expiresAtMillis: Long,
     val bangumiRefreshToken: String,
 )
 
 class BangumiSessionManager(
     private val tokenRepository: TokenRepository,
-    private val refreshToken: Flow<String?>,
     /**
-     * Must not throw exception.
+     * May throw [me.him188.ani.app.data.repository.RepositoryException].
      */
-    private val getSelfInfo: suspend (accessToken: String) -> ApiResponse<UserInfo>,
+    private val getBangumiSelfInfo: suspend (bangumiAccessToken: String) -> UserInfo,
     /**
-     * Must not throw exception.
+     * May throw [me.him188.ani.app.data.repository.RepositoryException].
      */
-    private val refreshAccessToken: suspend (refreshToken: String) -> ApiResponse<NewSession>,
+    private val refreshAccessToken: suspend (refreshToken: String) -> NewSession,
     parentCoroutineContext: CoroutineContext,
     /**
      * Should be `true`. Set to `false` only for testing.
@@ -146,29 +144,37 @@ class BangumiSessionManager(
         }
 
     private fun shouldStopSessionRefresh(
-        failure: ApiFailure
+        failure: RepositoryException
     ): SessionStatus.VerificationFailed? {
         // explicit when to be exhaustive
         when (failure) {
-            is ApiFailure.Unauthorized -> {
+            is RepositoryAuthorizationException -> {
                 // 我们肯定登录已经过期, 继续尝试 refresh token
             }
 
-            ApiFailure.NetworkError -> {
+            is RepositoryNetworkException,
+            is RepositoryRateLimitedException -> {
                 return SessionStatus.NetworkError
             }
 
-            ApiFailure.ServiceUnavailable -> {
+            is RepositoryServiceUnavailableException -> {
                 return SessionStatus.ServiceUnavailable
+            }
+
+            is RepositoryUnknownException -> {
+                return SessionStatus.UnknownError(failure)
             }
         }
         return null
     }
 
-    private fun ApiFailure.toSessionState() = when (this) {
-        ApiFailure.NetworkError -> SessionStatus.NetworkError
-        ApiFailure.ServiceUnavailable -> SessionStatus.ServiceUnavailable
-        ApiFailure.Unauthorized -> SessionStatus.Expired
+    private fun RepositoryException.toSessionState() = when (this) {
+        is RepositoryRateLimitedException,
+        is RepositoryNetworkException -> SessionStatus.NetworkError
+
+        is RepositoryServiceUnavailableException -> SessionStatus.ServiceUnavailable
+        is RepositoryAuthorizationException -> SessionStatus.Expired(cause = this)
+        is RepositoryUnknownException -> SessionStatus.UnknownError(this)
     }
 
     /**
@@ -195,73 +201,57 @@ class BangumiSessionManager(
             is AccessTokenSession -> {
                 if (savedSession.isValid()) {
                     // token 有效, 尝试登录
-                    emit(SessionStatus.Verifying(savedSession.bangumiAccessToken))
+                    emit(SessionStatus.Verifying(savedSession.tokens))
 
-                    val firstAttempt = try {
-                        getSelfInfo(savedSession.bangumiAccessToken)
+                    try {
+                        val userInfo = getBangumiSelfInfo(savedSession.tokens.bangumiAccessToken)
+                        emit(SessionStatus.Verified(savedSession.tokens, userInfo))
+                        // First attempt successful, let's return
+                        return
                     } catch (e: CancellationException) {
                         throw e
-                    }
-
-                    firstAttempt.fold(
-                        onSuccess = { userInfo ->
-                            emit(SessionStatus.Verified(savedSession.bangumiAccessToken, userInfo))
+                    } catch (e: Throwable) {
+                        shouldStopSessionRefresh(RepositoryException.wrapOrThrowCancellation(e))?.let {
+                            emit(it)
                             return
-                        },
-                        onKnownFailure = { failure ->
-                            shouldStopSessionRefresh(failure)?.let {
-                                emit(it)
-                                return
-                            }
-                        },
-                    )
-
-                    // 能到这里一定是登录过期了, 我们要尝试 refreshToken
-                    check(firstAttempt.failureOrNull() is ApiFailure.Unauthorized) {
-                        "Unexpected firstAttempt: $firstAttempt"
+                        }
                     }
                 }
             }
         }
 
         // session 无效, 继续尝试 refresh token
-        val refreshToken = refreshToken.first()
+        val refreshToken = tokenRepository.refreshToken.first()
         if (refreshToken == null) {
             if (savedSession == null) { // 没有保存的 token 时才 emit NoToken
                 emit(SessionStatus.NoToken)
             } else {
-                emit(SessionStatus.Expired)
+                emit(
+                    SessionStatus.Expired(
+                        RepositoryAuthorizationException("session ($savedSession) is invalid and refreshToken is null"),
+                    ),
+                )
             }
             return
         }
 
         // 有 refresh token, 尝试刷新
         emit(SessionStatus.Refreshing)
-        val failure = try {
-            tryRefreshSessionByRefreshToken(refreshToken)
+        try {
+            val accessTokens = tryRefreshSessionByRefreshToken(refreshToken).accessTokens
+
+            // refresh 成功, 再次尝试登录
+            emit(SessionStatus.Verifying(accessTokens))
+            val userInfo = getBangumiSelfInfo(accessTokens.bangumiAccessToken)
+
+            // 终于 OK
+            emit(SessionStatus.Verified(accessTokens, userInfo))
         } catch (e: CancellationException) {
             throw e
-        }.flatMap { accessToken ->
-            // refresh 成功, 再次尝试登录
-            emit(SessionStatus.Verifying(accessToken))
-            try {
-                getSelfInfo(accessToken).map { accessToken to it }
-            } catch (e: CancellationException) {
-                throw e
-            }
-        }.fold(
-            onSuccess = { (accessToken, userInfo) ->
-                // 终于 OK
-                emit(SessionStatus.Verified(accessToken, userInfo))
-                return
-            },
-            onKnownFailure = { failure ->
-                failure
-            },
-        )
-
-        // 刷新 refresh token 失败, 或者刷新成功后登录却失败了, 已经没有更多方法可以尝试了
-        emit(failure.toSessionState())
+        } catch (e: Throwable) {
+            // 刷新 refresh token 失败, 或者刷新成功后登录却失败了, 已经没有更多方法可以尝试了
+            emit(RepositoryException.wrapOrThrowCancellation(e).toSessionState())
+        }
     }
 
     private val singleAuthLock = Mutex()
@@ -271,19 +261,16 @@ class BangumiSessionManager(
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
     )
 
-    private suspend fun tryRefreshSessionByRefreshToken(refreshToken: String): ApiResponse<String> {
+    private suspend fun tryRefreshSessionByRefreshToken(refreshToken: String): NewSession {
         logger.trace { "tryRefreshSessionByRefreshToken: start" }
         // session is invalid, refresh it
-        val newAccessToken = refreshAccessToken(refreshToken)
-        return newAccessToken.map { session ->
-            setSessionAndRefreshToken(
+        val session = refreshAccessToken(refreshToken)
+        setSessionAndRefreshToken(
 //            session.userId,
-                session,
-                isNewLogin = false,
-            )
-
-            session.bangumiAccessToken
-        }
+            session,
+            isNewLogin = false,
+        )
+        return session
     }
 
     override suspend fun requireAuthorize(
@@ -320,10 +307,18 @@ class BangumiSessionManager(
                     )
                 }
 
-                SessionStatus.Expired,
+                is SessionStatus.Expired,
                 SessionStatus.NoToken
                     -> {
                     // continue, smart casts should work
+                }
+
+                is SessionStatus.UnknownError -> {
+                    throw AuthorizationFailedException(
+                        currentStatus,
+                        "Failed to login due to $currentStatus, but this may be recovered by a refresh",
+                        cause = currentStatus.exception,
+                    )
                 }
             }
 
@@ -338,6 +333,12 @@ class BangumiSessionManager(
             processingRequest.value = req
             try {
                 req.invoke()
+            } catch (e: RepositoryException) {
+                throw AuthorizationFailedException(
+                    currentStatus,
+                    "Exception during invoking ExternalOAuthRequestImpl, see cause",
+                    cause = e,
+                )
             } finally {
                 processingRequest.value = null
             }
@@ -374,7 +375,7 @@ class BangumiSessionManager(
             try {
                 requireAuthorize(onLaunch, skipOnGuest)
                 logger.info { "requireOnline: success" }
-            } catch (e: AuthorizationCancelledException) {
+            } catch (_: AuthorizationCancelledException) {
                 logger.info { "requireOnline: cancelled (hint: there might be another job still running)" }
             } catch (e: AuthorizationException) {
                 logger.error(e) { "Authorization failed" }
@@ -396,7 +397,7 @@ class BangumiSessionManager(
         logger.info { "Bangumi session refreshed, new expiresAtMillis=${newSession.expiresAtMillis}" }
 
         tokenRepository.setRefreshToken(newSession.bangumiRefreshToken)
-        setSessionImpl(AccessTokenSession(newSession.bangumiAccessToken, newSession.expiresAtMillis))
+        setSessionImpl(AccessTokenSession(newSession.accessTokens, newSession.expiresAtMillis))
         if (isNewLogin) {
             events.tryEmit(SessionEvent.Login)
         } else {

@@ -11,23 +11,21 @@
 
 package me.him188.ani.app.domain.session
 
-import androidx.datastore.preferences.core.mutablePreferencesOf
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
-import me.him188.ani.app.data.models.ApiFailure
-import me.him188.ani.app.data.models.ApiResponse
 import me.him188.ani.app.data.models.UserInfo
 import me.him188.ani.app.data.persistent.MemoryDataStore
+import me.him188.ani.app.data.repository.RepositoryAuthorizationException
 import me.him188.ani.app.data.repository.user.AccessTokenSession
-import me.him188.ani.app.data.repository.user.TokenRepositoryImpl
+import me.him188.ani.app.data.repository.user.TokenRepository
+import me.him188.ani.app.data.repository.user.TokenSave
 import me.him188.ani.app.domain.media.fetch.AtomicInteger
-import me.him188.ani.app.ui.framework.runComposeStateTest
+import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.time.Duration.Companion.days
 
 sealed class AbstractBangumiSessionManagerTest {
     internal companion object {
@@ -40,22 +38,19 @@ sealed class AbstractBangumiSessionManagerTest {
     // - no session (access token)
     // - no refresh token
 
-    internal val tokenRepository = TokenRepositoryImpl(MemoryDataStore(mutablePreferencesOf()))
-    internal val refreshToken = MutableStateFlow<String?>(null)
+    internal val tokenRepository = TokenRepository(MemoryDataStore(TokenSave.Initial))
 
     internal val getSelfInfoCalled = AtomicInteger(0)
     internal val refreshAccessTokenCalled = AtomicInteger(0)
 
     internal fun TestScope.createManager(
-        getSelfInfo: suspend (accessToken: String) -> ApiResponse<UserInfo>,
-        refreshAccessToken: suspend (refreshToken: String) -> ApiResponse<NewSession>,
-        tokenRepository: TokenRepositoryImpl = this@AbstractBangumiSessionManagerTest.tokenRepository,
-        refreshToken: Flow<String?> = this@AbstractBangumiSessionManagerTest.refreshToken,
+        getSelfInfo: suspend (accessToken: String) -> UserInfo,
+        refreshAccessToken: suspend (refreshToken: String) -> NewSession,
+        tokenRepository: TokenRepository = this@AbstractBangumiSessionManagerTest.tokenRepository,
         parentCoroutineContext: CoroutineContext = testScheduler,
     ) = BangumiSessionManager(
         tokenRepository = tokenRepository,
-        refreshToken = refreshToken,
-        getSelfInfo = {
+        getBangumiSelfInfo = {
             try {
                 getSelfInfo(it)
             } finally {
@@ -77,23 +72,26 @@ sealed class AbstractBangumiSessionManagerTest {
         return statePass.drop(drop).first()
     }
 
-    internal fun <T> noCall(): ApiResponse<T> {
+    internal fun <T> noCall(): T {
         // 必须要返回一个, 因为 flow 实际上还会在跑一会
-        return ApiResponse.failure(ApiFailure.Unauthorized)
+        throw RepositoryAuthorizationException()
     }
-    
+
     internal fun refreshTokenSuccess(
         accessToken: String = ACCESS_TOKEN,
         expiresAtMillis: Long = Long.MAX_VALUE,
         refreshToken: String = REFRESH_TOKEN,
-    ): ApiResponse<NewSession> {
-        return ApiResponse.success(NewSession(accessToken, expiresAtMillis, refreshToken))
+    ): NewSession {
+        return NewSession(
+            AccessTokenPair(accessToken, accessToken),
+            expiresAtMillis, refreshToken,
+        )
     }
 
     internal suspend fun setExpiredToken() {
         tokenRepository.setSession(
             AccessTokenSession(
-                bangumiAccessToken = ACCESS_TOKEN,
+                tokens = AccessTokenPair(ACCESS_TOKEN, ACCESS_TOKEN),
                 expiresAtMillis = 0, // expired
             ),
         )
@@ -102,8 +100,8 @@ sealed class AbstractBangumiSessionManagerTest {
     internal suspend fun setValidToken(token: String = ACCESS_TOKEN) {
         tokenRepository.setSession(
             AccessTokenSession(
-                bangumiAccessToken = token,
-                expiresAtMillis = Long.MAX_VALUE,
+                tokens = AccessTokenPair(token, token),
+                expiresAtMillis = currentTimeMillis() + 100.days.inWholeMilliseconds, // not too large, avoid overflow.
             ),
         )
     }
@@ -115,5 +113,5 @@ sealed class AbstractBangumiSessionManagerTest {
     fun runTest(
         context: CoroutineContext = EmptyCoroutineContext,
         testBody: suspend TestScope.() -> Unit
-    ): TestResult = runComposeStateTest(context, testBody)
+    ): TestResult = kotlinx.coroutines.test.runTest(context, testBody = testBody)
 }

@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.ApiFailure
-import me.him188.ani.app.data.models.fold
+import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.user.AccessTokenSession
 import me.him188.ani.app.data.repository.user.GuestSession
 import me.him188.ani.app.tools.MonoTasker
@@ -198,6 +198,7 @@ class AniAuthConfigurator(
                 } catch (e: CancellationException) {
                     throw e // don't prevent cancellation
                 } catch (e: Throwable) {
+                    lastAuthException.update { e.cause }
                     throw IllegalStateException("Unknown exception during requireAuthorize, see cause", e)
                 }
             }
@@ -279,11 +280,17 @@ class AniAuthConfigurator(
     /**
      * 通过 token 授权
      */
-    suspend fun setAuthorizationToken(token: String) {
+    suspend fun authorizeByBangumiToken(bangumiToken: String) {
+        val tokenPair = try {
+            authClient.getAccessTokensByBangumiToken(bangumiToken) // This may throw
+        } catch (e: Throwable) {
+            lastAuthException.value = e
+            throw e
+        }
         sessionManager.setSession(
             AccessTokenSession(
-                bangumiAccessToken = token,
-                expiresAtMillis = currentTimeMillis() + 365.days.inWholeMilliseconds,
+                tokens = tokenPair,
+                expiresAtMillis = currentTimeMillis() + 100.days.inWholeMilliseconds,
             ),
         )
         // trigger ui update
@@ -308,20 +315,27 @@ class AniAuthConfigurator(
     private suspend fun getAccessTokenFromAniServer(
         requestId: String,
     ): OAuthResult {
-        val token = authClient
-            .getResult(requestId)
-            .fold(
-                onSuccess = { resp -> resp ?: throw NotAuthorizedException() },
-                // 已知 API 错误总是抛出 NotAuthorizedException, 
-                // caller 捕获这个错误并重试 checkAuthorizeStatus
-                onKnownFailure = { throw NotAuthorizedException() },
+        try {
+            val result = authClient
+                .getResult(requestId) ?: throw NotAuthorizedException()
+            return OAuthResult(
+                tokens = result.tokens,
+                refreshToken = result.refreshToken,
+                expiresIn = result.expiresInSeconds.seconds,
             )
-
-        return OAuthResult(
-            accessToken = token.accessToken,
-            refreshToken = token.refreshToken,
-            expiresIn = token.expiresIn.seconds,
-        )
+        } catch (_: RepositoryException) {
+            throw NotAuthorizedException()
+        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+            throw e
+        } catch (e: NotAuthorizedException) {
+            throw e
+        } catch (e: Exception) {
+            val ex = GetAuthTokenFromAniServerException(e)
+            logger.error(ex) {
+                "[AuthCheckLoop][$requestId] Failed to get access token from AniServer."
+            }
+            throw ex
+        }
     }
 
     /**
@@ -352,7 +366,7 @@ class AniAuthConfigurator(
                 AuthState.NetworkError
             }
 
-            SessionStatus.Expired -> {
+            is SessionStatus.Expired -> {
                 AuthState.TokenExpired
             }
 
@@ -403,6 +417,8 @@ class AniAuthConfigurator(
             }
 
             SessionStatus.Guest -> AuthState.Success("", null, isGuest = true)
+
+            is SessionStatus.UnknownError -> AuthState.UnknownError(sessionState.exception)
         }
     }
 

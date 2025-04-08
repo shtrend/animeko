@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -10,18 +10,18 @@
 package me.him188.ani.app.domain.session
 
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
-import me.him188.ani.app.data.models.ApiFailure
-import me.him188.ani.app.data.models.ApiResponse
-import me.him188.ani.app.domain.session.NewSession
-import me.him188.ani.app.domain.session.SessionStatus
+import me.him188.ani.app.data.models.UserInfo
+import me.him188.ani.app.data.repository.RepositoryAuthorizationException
+import me.him188.ani.app.data.repository.RepositoryNetworkException
+import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
+import me.him188.ani.app.data.repository.RepositoryUnknownException
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.fail
 
 class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
-   
+
     ///////////////////////////////////////////////////////////////////////////
     // Preconditions
     ///////////////////////////////////////////////////////////////////////////
@@ -33,9 +33,9 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
             refreshAccessToken = { noCall() },
         )
         setValidToken("testToken")
-        assertEquals(SessionStatus.Verifying("testToken"), manager.awaitState())
+        assertEquals(createVerifying("testToken"), manager.awaitState())
         runCoroutines()
-        assertEquals(SessionStatus.Verifying("testToken"), manager.awaitState()) // should rerun flow
+        assertEquals(createVerifying("testToken"), manager.awaitState()) // should rerun flow
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -58,18 +58,18 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
             refreshAccessToken = { noCall() },
         )
         setExpiredToken()
-        assertEquals(SessionStatus.Expired, manager.awaitState())
+        assertIs<SessionStatus.Expired>(manager.awaitState())
     }
 
     @Test
     fun `valid token needs to be verified`() = runTest {
         val manager = createManager(
-            getSelfInfo = { ApiResponse.success(SUCCESS_USER_INFO) },
+            getSelfInfo = { SUCCESS_USER_INFO },
             refreshAccessToken = { noCall() },
         )
         setValidToken()
-        assertEquals(SessionStatus.Verifying("testToken"), manager.awaitState())
-        assertEquals(SessionStatus.Verified(ACCESS_TOKEN, SUCCESS_USER_INFO), manager.awaitState(1))
+        assertEquals(createVerifying("testToken"), manager.awaitState())
+        assertEquals(createVerified(ACCESS_TOKEN, SUCCESS_USER_INFO), manager.awaitState(1))
     }
 
     @Test
@@ -77,22 +77,22 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
         val manager = createManager(
             getSelfInfo = {
                 if (getSelfInfoCalled.value == 0) {
-                    ApiResponse.failure(ApiFailure.Unauthorized)
+                    throw RepositoryAuthorizationException()
                 } else {
-                    ApiResponse.success(SUCCESS_USER_INFO)
+                    SUCCESS_USER_INFO
                 }
             },
             refreshAccessToken = {
-                ApiResponse.success(NewSession(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN))
+                newSession()
             },
         )
         setValidToken()
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         val states = manager.statePass.toList()
-        assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), states[0])
+        assertEquals(createVerifying(ACCESS_TOKEN), states[0])
         assertEquals(SessionStatus.Refreshing, states[1])
-        assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), states[2])
-        assertEquals(SessionStatus.Verified(ACCESS_TOKEN, SUCCESS_USER_INFO), states[3])
+        assertEquals(createVerifying(ACCESS_TOKEN), states[2])
+        assertEquals(createVerified(ACCESS_TOKEN, SUCCESS_USER_INFO), states[3])
         assertEquals(2, getSelfInfoCalled.value)
         assertEquals(1, refreshAccessTokenCalled.value)
     }
@@ -102,21 +102,21 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
         val manager = createManager(
             getSelfInfo = {
                 when (getSelfInfoCalled.value) {
-                    0, 1 -> ApiResponse.failure(ApiFailure.Unauthorized)
+                    0, 1 -> throw RepositoryAuthorizationException()
                     else -> fail()
                 }
             },
             refreshAccessToken = {
-                ApiResponse.success(NewSession(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN))
+                newSession()
             },
         )
         setValidToken()
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         val states = manager.statePass.toList()
-        assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), states[0])
+        assertEquals(createVerifying(ACCESS_TOKEN), states[0])
         assertEquals(SessionStatus.Refreshing, states[1])
-        assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), states[2])
-        assertEquals(SessionStatus.Expired, states[3])
+        assertEquals(createVerifying(ACCESS_TOKEN), states[2])
+        assertIs<SessionStatus.Expired>(states[3])
         assertEquals(2, getSelfInfoCalled.value)
         assertEquals(1, refreshAccessTokenCalled.value)
     }
@@ -126,21 +126,21 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
         val manager = createManager(
             getSelfInfo = {
                 when (getSelfInfoCalled.value) {
-                    0 -> ApiResponse.failure(ApiFailure.Unauthorized)
-                    1 -> ApiResponse.failure(ApiFailure.NetworkError)
+                    0 -> throw RepositoryAuthorizationException()
+                    1 -> throw RepositoryNetworkException()
                     else -> fail()
                 }
             },
             refreshAccessToken = {
-                ApiResponse.success(NewSession(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN))
+                newSession()
             },
         )
         setValidToken()
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         val states = manager.statePass.toList()
-        assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), states[0])
+        assertEquals(createVerifying(ACCESS_TOKEN), states[0])
         assertEquals(SessionStatus.Refreshing, states[1])
-        assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), states[2])
+        assertEquals(createVerifying(ACCESS_TOKEN), states[2])
         assertEquals(SessionStatus.NetworkError, states[3])
         assertEquals(2, getSelfInfoCalled.value)
         assertEquals(1, refreshAccessTokenCalled.value)
@@ -150,18 +150,18 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
     fun `valid token - unauthorized verify - unauthorized refresh`() = runTest {
         val manager = createManager(
             getSelfInfo = {
-                ApiResponse.failure(ApiFailure.Unauthorized)
+                throw RepositoryAuthorizationException()
             },
             refreshAccessToken = {
-                ApiResponse.failure(ApiFailure.Unauthorized)
+                throw RepositoryAuthorizationException()
             },
         )
         setValidToken()
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         val states = manager.statePass.toList()
-        assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), states[0])
+        assertEquals(createVerifying(ACCESS_TOKEN), states[0])
         assertEquals(SessionStatus.Refreshing, states[1])
-        assertEquals(SessionStatus.Expired, states[2])
+        assertIs<SessionStatus.Expired>(states[2])
         assertEquals(1, getSelfInfoCalled.value)
         assertEquals(1, refreshAccessTokenCalled.value)
     }
@@ -170,16 +170,16 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
     fun `valid token - unauthorized verify - NetworkError refresh`() = runTest {
         val manager = createManager(
             getSelfInfo = {
-                ApiResponse.failure(ApiFailure.Unauthorized)
+                throw RepositoryAuthorizationException()
             },
             refreshAccessToken = {
-                ApiResponse.failure(ApiFailure.NetworkError)
+                throw RepositoryNetworkException()
             },
         )
         setValidToken()
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         val states = manager.statePass.toList()
-        assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), states[0])
+        assertEquals(createVerifying(ACCESS_TOKEN), states[0])
         assertEquals(SessionStatus.Refreshing, states[1])
         assertEquals(SessionStatus.NetworkError, states[2])
         assertEquals(1, getSelfInfoCalled.value)
@@ -190,16 +190,16 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
     fun `valid token - unauthorized verify - ServiceUnavailable refresh`() = runTest {
         val manager = createManager(
             getSelfInfo = {
-                ApiResponse.failure(ApiFailure.Unauthorized)
+                throw RepositoryAuthorizationException()
             },
             refreshAccessToken = {
-                ApiResponse.failure(ApiFailure.ServiceUnavailable)
+                throw RepositoryServiceUnavailableException()
             },
         )
         setValidToken()
-        refreshToken.value = REFRESH_TOKEN
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
         val states = manager.statePass.toList()
-        assertEquals(SessionStatus.Verifying(ACCESS_TOKEN), states[0])
+        assertEquals(createVerifying(ACCESS_TOKEN), states[0])
         assertEquals(SessionStatus.Refreshing, states[1])
         assertEquals(SessionStatus.ServiceUnavailable, states[2])
         assertEquals(1, getSelfInfoCalled.value)
@@ -210,10 +210,10 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
     fun `valid token - NetworkError verify - no refresh`() = runTest {
         val manager = createManager(
             getSelfInfo = {
-                ApiResponse.failure(ApiFailure.NetworkError)
+                throw RepositoryNetworkException()
             },
             refreshAccessToken = {
-                ApiResponse.success(NewSession(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN))
+                newSession()
             },
         )
         setValidToken()
@@ -226,10 +226,10 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
     fun `valid token - ServiceUnavailable verify - no refresh`() = runTest {
         val manager = createManager(
             getSelfInfo = {
-                ApiResponse.failure(ApiFailure.ServiceUnavailable)
+                throw RepositoryServiceUnavailableException()
             },
             refreshAccessToken = {
-                ApiResponse.success(NewSession(ACCESS_TOKEN, Long.MAX_VALUE, REFRESH_TOKEN))
+                newSession()
             },
         )
         setValidToken()
@@ -243,30 +243,54 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
     // Wrap exceptions
     ///////////////////////////////////////////////////////////////////////////
 
+    @Suppress("ComplexRedundantLet")
     @Test
-    fun `rethrow exception in getSelfInfo`() = runTest {
+    fun `wraps exception in getSelfInfo`() = runTest {
         val myException = IndexOutOfBoundsException()
         val manager = createManager(
             getSelfInfo = { throw myException },
             refreshAccessToken = { noCall() },
         )
         setValidToken()
-        assertFailsWith<IndexOutOfBoundsException> {
-            manager.awaitState(1)
-        }
+        val state = manager.awaitState(1)
+        assertIs<SessionStatus.UnknownError>(state)
+            .let {
+                assertIs<RepositoryUnknownException>(it.exception)
+            }
+            .let {
+                assertIs<IndexOutOfBoundsException>(it.cause)
+            }
     }
 
     @Test
-    fun `rethrow exception in refreshAccessToken`() = runTest {
-        val myException = IndexOutOfBoundsException()
+    fun `wraps exception in refreshAccessToken`() = runTest {
         val manager = createManager(
             getSelfInfo = { noCall() },
-            refreshAccessToken = { throw myException },
+            refreshAccessToken = { throw IndexOutOfBoundsException() },
         )
         setExpiredToken()
-        refreshToken.value = REFRESH_TOKEN
-        assertFailsWith<IndexOutOfBoundsException> { // kotlinx-coroutines-debug 会重新构造 exception 所以不能 assertSame
-            manager.awaitState(1)
-        }
+        tokenRepository.setRefreshToken(REFRESH_TOKEN)
+        val state = manager.awaitState(1)
+        @Suppress("ComplexRedundantLet")
+        assertIs<SessionStatus.UnknownError>(state)
+            .let {
+                assertIs<RepositoryUnknownException>(it.exception)
+            }
+            .let {
+                assertIs<IndexOutOfBoundsException>(it.cause)
+            }
     }
+
+
+    private fun newSession(): NewSession = NewSession(
+        AccessTokenPair(ACCESS_TOKEN, ACCESS_TOKEN),
+        Long.MAX_VALUE, REFRESH_TOKEN,
+    )
+
+    private fun createVerifying(token: String): SessionStatus.Verifying =
+        SessionStatus.Verifying(AccessTokenPair(token, token))
+
+    private fun createVerified(token: String, userInfo: UserInfo): SessionStatus.Verified =
+        SessionStatus.Verified(AccessTokenPair(token, token), userInfo)
+
 }
