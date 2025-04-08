@@ -96,11 +96,12 @@ fun DanmakuSourceCard(
     enabled: Boolean,
     showDetails: Boolean,
     onClickSettings: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
     dropdown: @Composable () -> Unit = {},
     colors: CardColors = CardDefaults.cardColors(),
 ) {
-    Card(modifier, colors = colors) {
+    Card(onClick, modifier, colors = colors) {
         Column(
             Modifier.padding(bottom = 16.dp),
         ) {

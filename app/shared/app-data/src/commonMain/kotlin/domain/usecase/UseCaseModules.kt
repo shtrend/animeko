@@ -11,6 +11,8 @@ package me.him188.ani.app.domain.usecase
 
 import me.him188.ani.app.domain.comment.PostCommentUseCase
 import me.him188.ani.app.domain.comment.PostCommentUseCaseImpl
+import me.him188.ani.app.domain.danmaku.GetDanmakuFetcherUseCase
+import me.him188.ani.app.domain.danmaku.GetDanmakuFetcherUseCaseImpl
 import me.him188.ani.app.domain.danmaku.SearchDanmakuUseCase
 import me.him188.ani.app.domain.danmaku.SearchDanmakuUseCaseImpl
 import me.him188.ani.app.domain.danmaku.SetDanmakuEnabledUseCase
@@ -65,6 +67,7 @@ fun KoinApplication.useCaseModules() = module {
     single<PostCommentUseCase> { PostCommentUseCaseImpl(get(), get()) }
     single<GetPreferredMediaSourceSortingUseCase> { GetPreferredMediaSourceSortingUseCaseImpl(get()) }
     single<GetMediaSelectorSourceTiersUseCase> { GetMediaSelectorSourceTiersUseCaseImpl(get()) }
+    single<GetDanmakuFetcherUseCase> { GetDanmakuFetcherUseCaseImpl(get()) }
 }
 
 val GlobalKoin get() = KoinPlatform.getKoin()

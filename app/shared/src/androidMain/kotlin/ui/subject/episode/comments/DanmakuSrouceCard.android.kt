@@ -33,6 +33,7 @@ fun PreviewDanmakuSourceCard() {
                 enabled = true,
                 showDetails = false,
                 onClickSettings = {},
+                onClick = {},
             )
         }
     }
@@ -48,6 +49,7 @@ fun PreviewDanmakuSourceCardDetails() {
                 enabled = true,
                 showDetails = true,
                 onClickSettings = {},
+                onClick = {},
             )
         }
     }
@@ -63,6 +65,7 @@ fun PreviewDanmakuSourceCardDisabled() {
                 enabled = false,
                 showDetails = false,
                 onClickSettings = {},
+                onClick = {},
             )
         }
     }

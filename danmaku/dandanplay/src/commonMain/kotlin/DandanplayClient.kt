@@ -22,6 +22,9 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.encodedPath
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.withContext
 import kotlinx.io.bytestring.encodeToByteString
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -35,6 +38,7 @@ import me.him188.ani.utils.io.DigestAlgorithm
 import me.him188.ani.utils.io.digest
 import me.him188.ani.utils.ktor.ScopedHttpClient
 import me.him188.ani.utils.platform.currentTimeMillis
+import kotlin.coroutines.CoroutineContext
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration
@@ -44,6 +48,7 @@ internal class DandanplayClient(
     private val client: ScopedHttpClient,
     private val appId: String,
     private val appSecret: String,
+    private val ioDispatcher: CoroutineContext = Dispatchers.IO,
 ) {
     /**
      * Must be used at the last step of building the request.
@@ -64,7 +69,7 @@ internal class DandanplayClient(
     suspend fun getSeasonAnimeList(
         year: Int,
         month: Int,
-    ): DandanplaySeasonSearchResponse {
+    ): DandanplaySeasonSearchResponse = withContext(ioDispatcher) {
         // https://api.dandanplay.net/api/v2/bangumi/season/anime/2024/04
         client.use {
             val response =
@@ -74,15 +79,15 @@ internal class DandanplayClient(
                     addAuthorizationHeaders()
                 }
 
-            return response.body<DandanplaySeasonSearchResponse>()
+            response.body<DandanplaySeasonSearchResponse>()
         }
     }
 
     suspend fun searchSubject(
         subjectName: String,
-    ): DandanplaySearchEpisodeResponse {
+    ): DandanplaySearchEpisodeResponse = withContext(ioDispatcher) {
         client.use {
-            val response = get("https://api.dandanplay.net/api/v2/search/subject") {
+            val response = get("https://api.dandanplay.net/api/v2/search/anime") {
                 configureTimeout()
                 accept(ContentType.Application.Json)
                 parameter("keyword", subjectName)
@@ -90,17 +95,17 @@ internal class DandanplayClient(
             }
 
             if (response.status == HttpStatusCode.NotFound) {
-                return DandanplaySearchEpisodeResponse()
+                return@withContext DandanplaySearchEpisodeResponse()
             }
 
-            return response.body<DandanplaySearchEpisodeResponse>()
+            response.body<DandanplaySearchEpisodeResponse>()
         }
     }
 
     suspend fun searchEpisode(
         subjectName: String,
         episodeName: String?,
-    ): DandanplaySearchEpisodeResponse {
+    ): DandanplaySearchEpisodeResponse = withContext(ioDispatcher) {
         client.use {
             val response =
                 get("https://api.dandanplay.net/api/v2/search/episodes") {
@@ -111,13 +116,13 @@ internal class DandanplayClient(
                     addAuthorizationHeaders()
                 }
 
-            return response.body<DandanplaySearchEpisodeResponse>()
+            response.body<DandanplaySearchEpisodeResponse>()
         }
     }
 
     suspend fun getBangumiEpisodes(
         bangumiId: Int, // 注意, 这是 dandanplay 的 id, 不是 Bangumi.tv 的 id
-    ): DandanplayGetBangumiResponse {
+    ): DandanplayGetBangumiResponse = withContext(ioDispatcher) {
         client.use {
             val response =
                 get("https://api.dandanplay.net/api/v2/bangumi/$bangumiId") {
@@ -126,7 +131,7 @@ internal class DandanplayClient(
                     addAuthorizationHeaders()
                 }
 
-            return response.body<DandanplayGetBangumiResponse>()
+            response.body<DandanplayGetBangumiResponse>()
         }
     }
 
@@ -135,7 +140,7 @@ internal class DandanplayClient(
         fileHash: String?,
         fileSize: Long?,
         videoDuration: Duration
-    ): DandanplayMatchVideoResponse {
+    ): DandanplayMatchVideoResponse = withContext(ioDispatcher) {
         client.use {
             val response =
                 post("https://api.dandanplay.net/api/v2/match") {
@@ -153,13 +158,13 @@ internal class DandanplayClient(
                     addAuthorizationHeaders()
                 }
 
-            return response.body<DandanplayMatchVideoResponse>()
+            response.body<DandanplayMatchVideoResponse>()
         }
     }
 
     suspend fun getDanmakuList(
         episodeId: Long,
-    ): List<DandanplayDanmaku> {
+    ): List<DandanplayDanmaku> = withContext(ioDispatcher) {
         // See #122
 //        val chConvert = when (getSystemChineseVariant()) {
 //            ChineseVariant.SIMPLIFIED -> 1
@@ -174,7 +179,7 @@ internal class DandanplayClient(
                     accept(ContentType.Application.Json)
                     addAuthorizationHeaders()
                 }.body<DandanplayDanmakuListResponse>()
-            return response.comments
+            response.comments
         }
     }
 

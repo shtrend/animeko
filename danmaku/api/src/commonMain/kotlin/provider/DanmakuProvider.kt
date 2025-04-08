@@ -12,6 +12,7 @@ package me.him188.ani.danmaku.api.provider
 import me.him188.ani.danmaku.api.DanmakuServiceId
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.PackedDate
+import kotlin.jvm.JvmInline
 import kotlin.time.Duration
 
 /**
@@ -21,6 +22,8 @@ import kotlin.time.Duration
  * @see MatchingDanmakuProvider
  */
 sealed interface DanmakuProvider {
+    val providerId: DanmakuProviderId
+
     /**
      * 主要的 [DanmakuServiceId].
      *
@@ -28,6 +31,20 @@ sealed interface DanmakuProvider {
      * 但是当该 [DanmakuProvider] 查询没有任何结果时, UI 必须显示该来源无结果, 届时会使用此 id.
      */
     val mainServiceId: DanmakuServiceId
+
+    suspend fun fetchAutomatic(
+        request: DanmakuFetchRequest,
+    ): List<DanmakuFetchResult>
+}
+
+@JvmInline
+value class DanmakuProviderId(
+    val id: String,
+) {
+    companion object {
+        val Animeko = DanmakuProviderId("animeko")
+        val Dandanplay = DanmakuProviderId("dandanplay")
+    }
 }
 
 

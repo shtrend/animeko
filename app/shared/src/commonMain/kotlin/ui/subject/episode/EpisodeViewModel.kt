@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
@@ -49,6 +50,7 @@ import me.him188.ani.app.data.models.episode.renderEpisodeEp
 import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
+import me.him188.ani.app.data.models.subject.nameCnOrName
 import me.him188.ani.app.data.repository.episode.BangumiCommentRepository
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepository
@@ -99,6 +101,8 @@ import me.him188.ani.app.ui.comment.CommentState
 import me.him188.ani.app.ui.comment.EditCommentSticker
 import me.him188.ani.app.ui.danmaku.UIDanmakuEvent
 import me.him188.ani.app.ui.episode.PlayingEpisodeSummary
+import me.him188.ani.app.ui.episode.danmaku.MatchingDanmakuPresenter
+import me.him188.ani.app.ui.episode.danmaku.MatchingDanmakuUiState
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.foundation.HasBackgroundScope
 import me.him188.ani.app.ui.foundation.launchInBackground
@@ -130,6 +134,8 @@ import me.him188.ani.danmaku.api.DanmakuContent
 import me.him188.ani.danmaku.api.DanmakuEvent
 import me.him188.ani.danmaku.api.DanmakuInfo
 import me.him188.ani.danmaku.api.DanmakuServiceId
+import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
+import me.him188.ani.danmaku.api.provider.DanmakuProviderId
 import me.him188.ani.danmaku.ui.DanmakuConfig
 import me.him188.ani.danmaku.ui.DanmakuHostState
 import me.him188.ani.danmaku.ui.DanmakuPresentation
@@ -140,6 +146,7 @@ import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.topic.isDoneOrDropped
 import me.him188.ani.utils.coroutines.flows.FlowRestarter
 import me.him188.ani.utils.coroutines.flows.flowOfEmptyList
+import me.him188.ani.utils.coroutines.flows.flowOfNull
 import me.him188.ani.utils.coroutines.flows.restartable
 import me.him188.ani.utils.coroutines.sampleWithInitial
 import me.him188.ani.utils.logging.warn
@@ -171,6 +178,8 @@ data class EpisodePageState(
     val playingEpisodeSummary: PlayingEpisodeSummary?, // null means placeholder TODO: should distinguish placeholder
     val mediaSelectorSummary: MediaSelectorSummary,
     val initialMediaSelectorViewKind: ViewKind,
+    val matchingDanmakuPresenter: MatchingDanmakuPresenter?,
+    val matchingDanmakuUiState: MatchingDanmakuUiState?,
 )
 
 /**
@@ -541,6 +550,8 @@ class EpisodeViewModel(
             .produceState(0.milliseconds),
     )
 
+    private val matchingDanmakuProviderId = MutableStateFlow<DanmakuProviderId?>(null)
+
     val pageState = fetchPlayState.episodeSessionFlow.transformLatest { episodeSession ->
         coroutineScope {
             emitAll(createPageStateFlow(episodeSession))
@@ -563,6 +574,18 @@ class EpisodeViewModel(
             filteredSourceResults,
             flowScope = this,
         ).presentationFlow
+
+        val matchingDanmakuPresenter = matchingDanmakuProviderId.map { providerId ->
+            danmakuLoader.fetchers
+                .find { fetcher ->
+                    fetcher.providerId == providerId && fetcher.supportsInteractiveMatching
+                }
+                ?.startInteractiveMatch()
+                ?.let {
+                    MatchingDanmakuPresenter(it, this)
+                }
+        }.shareIn(this, started = SharingStarted.Lazily, replay = 1)
+
         return me.him188.ani.utils.coroutines.flows.combine(
             authStateProvider.state,
             episodeSession.infoBundleFlow.distinctUntilChanged().onStart { emit(null) },
@@ -599,7 +622,9 @@ class EpisodeViewModel(
                 mediaSourceResultsFlow,
             ),
             initialMediaSelectorViewKindFlow(),
-        ) { authState, subjectEpisodeBundle, loadError, fetchSelect, danmakuStatistics, danmakuEnabled, danmakuConfig, mediaSelectorState, mediaSourceResultsPresentation, mediaSelectorSummary, initialMediaSelectorViewKind ->
+            matchingDanmakuPresenter,
+            matchingDanmakuPresenter.flatMapLatest { it?.uiState ?: flowOfNull() },
+        ) { authState, subjectEpisodeBundle, loadError, fetchSelect, danmakuStatistics, danmakuEnabled, danmakuConfig, mediaSelectorState, mediaSourceResultsPresentation, mediaSelectorSummary, initialMediaSelectorViewKind, matchingDanmakuPresenter, matchingDanmaku ->
 
             val (subject, episode) = if (subjectEpisodeBundle == null) {
                 SubjectPresentation.Placeholder to EpisodePresentation.Placeholder
@@ -611,7 +636,7 @@ class EpisodeViewModel(
             }
 
             if (loadError != null) { // TODO: 2025/1/6 display load error in UI 
-                logger.warn { "InfoBundle load error: loadError" }
+                logger.warn { "InfoBundle load error: $loadError" }
             }
 
             EpisodePageState(
@@ -640,6 +665,10 @@ class EpisodeViewModel(
                 },
                 mediaSelectorSummary = mediaSelectorSummary,
                 initialMediaSelectorViewKind = initialMediaSelectorViewKind,
+                matchingDanmakuPresenter = matchingDanmakuPresenter,
+                matchingDanmakuUiState = matchingDanmaku?.copy(
+                    initialQuery = subjectEpisodeBundle?.subjectInfo?.nameCnOrName ?: "",
+                ),
             )
         }
     }
@@ -822,5 +851,18 @@ class EpisodeViewModel(
 
     fun setDanmakuSourceEnabled(serviceId: DanmakuServiceId, enabled: Boolean) {
         danmakuLoader.setEnabled(serviceId, enabled)
+    }
+
+    fun startMatchingDanmaku(id: DanmakuProviderId) {
+        matchingDanmakuProviderId.value = id
+    }
+
+    fun cancelMatchingDanmaku() {
+        matchingDanmakuProviderId.value = null
+    }
+
+    fun onMatchingDanmakuComplete(provider: DanmakuProviderId, result: List<DanmakuFetchResult>) {
+        danmakuLoader.overrideResults(provider, result)
+        cancelMatchingDanmaku()
     }
 }

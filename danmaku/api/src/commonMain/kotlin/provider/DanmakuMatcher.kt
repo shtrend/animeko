@@ -13,11 +13,11 @@ import kotlinx.serialization.Serializable
 import me.him188.ani.datasources.api.EpisodeSort
 
 fun interface DanmakuMatcher {
-    fun match(list: List<DanmakuEpisode>): DanmakuEpisode?
+    fun match(list: List<DanmakuEpisodeWithSubject>): DanmakuEpisodeWithSubject?
 }
 
 @Serializable
-data class DanmakuEpisode(
+data class DanmakuEpisodeWithSubject(
     val id: String,
     val subjectName: String,
     val episodeName: String,

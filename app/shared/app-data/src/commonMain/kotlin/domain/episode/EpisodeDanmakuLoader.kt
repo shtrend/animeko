@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.update
 import me.him188.ani.app.data.repository.danmaku.SearchDanmakuRequest
 import me.him188.ani.app.domain.danmaku.DanmakuLoaderImpl
 import me.him188.ani.app.domain.danmaku.DanmakuLoadingState
+import me.him188.ani.app.domain.danmaku.GetDanmakuFetcherUseCase
 import me.him188.ani.app.domain.media.player.data.filenameOrNull
 import me.him188.ani.app.domain.settings.GetDanmakuRegexFilterListFlowUseCase
 import me.him188.ani.danmaku.api.DanmakuEvent
@@ -38,8 +39,10 @@ import me.him188.ani.danmaku.api.DanmakuServiceId
 import me.him188.ani.danmaku.api.DanmakuSession
 import me.him188.ani.danmaku.api.TimeBasedDanmakuSession
 import me.him188.ani.danmaku.api.emptyDanmakuCollection
+import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
 import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
 import me.him188.ani.danmaku.api.provider.DanmakuMatchMethod
+import me.him188.ani.danmaku.api.provider.DanmakuProviderId
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -66,6 +69,7 @@ class EpisodeDanmakuLoader(
     sharingStarted: SharingStarted = SharingStarted.WhileSubscribed(),
 ) {
     private val getDanmakuRegexFilterListFlowUseCase: GetDanmakuRegexFilterListFlowUseCase by koin.inject()
+    private val getDanmakuFetcherUseCase: GetDanmakuFetcherUseCase by koin.inject()
 
     private val flowScope = backgroundScope
 
@@ -156,6 +160,8 @@ class EpisodeDanmakuLoader(
 
     val danmakuLoadingStateFlow: StateFlow<DanmakuLoadingState> = danmakuLoader.danmakuLoadingStateFlow
 
+    val fetchers by lazy { getDanmakuFetcherUseCase() }
+
     // this flow must emit a value quickly when started, otherwise it will block ui
     val fetchResults: Flow<List<DanmakuFetchResultWithConfig>> = combine(
         danmakuLoader.fetchResultFlow.onStart { emit(null) },
@@ -163,6 +169,7 @@ class EpisodeDanmakuLoader(
     ) { results, configs ->
         results.orEmpty().map {
             DanmakuFetchResultWithConfig(
+                it.providerId,
                 it.matchInfo.serviceId,
                 it.matchInfo,
                 configs[it.matchInfo.serviceId] ?: DanmakuOriginConfig.Default,
@@ -214,6 +221,10 @@ class EpisodeDanmakuLoader(
         return result
     }
 
+    fun overrideResults(provider: DanmakuProviderId, result: List<DanmakuFetchResult>) {
+        danmakuLoader.overrideResults(provider, result)
+    }
+
     private companion object {
         private val logger = logger<EpisodeDanmakuLoader>()
     }
@@ -235,6 +246,7 @@ data class DanmakuOriginConfig(
  * 一个弹幕数据源的结果, 包含了匹配信息和弹幕列表, 还包含本次会话的配置
  */
 data class DanmakuFetchResultWithConfig(
+    val providerId: DanmakuProviderId,
     val serviceId: DanmakuServiceId,
     val matchInfo: DanmakuMatchInfo,
     val config: DanmakuOriginConfig,
@@ -252,4 +264,5 @@ fun createTestDanmakuFetchResultWithConfig(
         ),
     ),
     config: DanmakuOriginConfig = DanmakuOriginConfig.Default,
-): DanmakuFetchResultWithConfig = DanmakuFetchResultWithConfig(DanmakuServiceId(serviceId), matchInfo, config)
+): DanmakuFetchResultWithConfig =
+    DanmakuFetchResultWithConfig(DanmakuProviderId(serviceId), DanmakuServiceId(serviceId), matchInfo, config)

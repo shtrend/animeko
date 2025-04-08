@@ -9,15 +9,20 @@
 
 package me.him188.ani.danmaku.dandanplay
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import me.him188.ani.danmaku.api.DanmakuInfo
 import me.him188.ani.danmaku.api.DanmakuServiceId
 import me.him188.ani.danmaku.api.provider.DanmakuEpisode
+import me.him188.ani.danmaku.api.provider.DanmakuEpisodeWithSubject
 import me.him188.ani.danmaku.api.provider.DanmakuFetchRequest
 import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
 import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
 import me.him188.ani.danmaku.api.provider.DanmakuMatchMethod
 import me.him188.ani.danmaku.api.provider.DanmakuMatchers
-import me.him188.ani.danmaku.api.provider.SimpleDanmakuProvider
+import me.him188.ani.danmaku.api.provider.DanmakuProviderId
+import me.him188.ani.danmaku.api.provider.DanmakuSubject
+import me.him188.ani.danmaku.api.provider.MatchingDanmakuProvider
 import me.him188.ani.danmaku.dandanplay.data.SearchEpisodesAnime
 import me.him188.ani.danmaku.dandanplay.data.toDanmakuOrNull
 import me.him188.ani.datasources.api.EpisodeSort
@@ -27,20 +32,18 @@ import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.thisLogger
 import me.him188.ani.utils.logging.warn
+import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 
 class DandanplayDanmakuProvider(
     dandanplayAppId: String,
     dandanplayAppSecret: String,
     client: ScopedHttpClient,
-) : SimpleDanmakuProvider {
+    private val defaultDispatcher: CoroutineContext = Dispatchers.Default,
+) : MatchingDanmakuProvider {
     private val logger = thisLogger()
-
-    companion object {
-        val ID = DanmakuServiceId.Dandanplay
-    }
-
-    override val mainServiceId: DanmakuServiceId get() = ID
+    override val providerId: DanmakuProviderId get() = DanmakuProviderId.Dandanplay
+    override val mainServiceId: DanmakuServiceId get() = DanmakuServiceId.Dandanplay
 
     private val dandanplayClient = DandanplayClient(client, dandanplayAppId, dandanplayAppSecret)
 
@@ -52,13 +55,20 @@ class DandanplayDanmakuProvider(
         DanDanPlay(DanmakuServiceId.Dandanplay),
     }
 
-    override suspend fun fetch(
+    override suspend fun fetchAutomatic(
         request: DanmakuFetchRequest,
-    ): List<DanmakuFetchResult> {
+    ): List<DanmakuFetchResult> = withContext(defaultDispatcher) {
         val raw = fetchImpl(request)
+        categorizeByService(raw)
+    }
+
+    private fun categorizeByService(
+        raw: DanmakuFetchResult
+    ): List<DanmakuFetchResult> {
         val rawList = raw.list.toList()
         return rawList.groupBy { it.origin }.map { (origin, list) ->
             DanmakuFetchResult(
+                providerId = providerId,
                 matchInfo = DanmakuMatchInfo(
                     serviceId = origin.serviceId,
                     count = list.size,
@@ -70,6 +80,7 @@ class DandanplayDanmakuProvider(
             if (results.none { it.matchInfo.serviceId == DanmakuServiceId.Dandanplay }) {
                 // 保证至少返回 DanDanPlay
                 results + DanmakuFetchResult(
+                    providerId = providerId,
                     matchInfo = raw.matchInfo,
                     list = rawList.filter { it.origin == DanmakuOrigin.DanDanPlay },
                 )
@@ -105,7 +116,7 @@ class DandanplayDanmakuProvider(
         // 2. 用剧集在当前季度中的序号 (ep) 匹配
         // 3. 用剧集名字模糊匹配
 
-        val episodes: List<DanmakuEpisode>? =
+        val episodes: List<DanmakuEpisodeWithSubject>? =
             runCatching { getEpisodesByExactSubjectMatch(request) }
                 .onFailure {
                     if (it is CancellationException) throw it
@@ -173,11 +184,11 @@ class DandanplayDanmakuProvider(
                 videoDuration = request.videoDuration,
             )
             val match = if (resp.isMatched) {
-                resp.matches.firstOrNull() ?: return DanmakuFetchResult.noMatch(DanmakuServiceId.Dandanplay)
+                resp.matches.firstOrNull() ?: return DanmakuFetchResult.noMatch(providerId, DanmakuServiceId.Dandanplay)
             } else {
                 matcher.match(
                     resp.matches.map {
-                        DanmakuEpisode(
+                        DanmakuEpisodeWithSubject(
                             it.episodeId.toString(),
                             it.animeTitle,
                             it.episodeTitle,
@@ -186,7 +197,7 @@ class DandanplayDanmakuProvider(
                     },
                 )?.let { match ->
                     resp.matches.first { it.episodeId.toString() == match.id }
-                } ?: return DanmakuFetchResult.noMatch(DanmakuServiceId.Dandanplay)
+                } ?: return DanmakuFetchResult.noMatch(providerId, DanmakuServiceId.Dandanplay)
             }
             logger.info { "Best match by file match: ${match.animeTitle} - ${match.episodeTitle}" }
             val episodeId = match.episodeId
@@ -195,7 +206,7 @@ class DandanplayDanmakuProvider(
                 DanmakuMatchMethod.Fuzzy(match.animeTitle, match.episodeTitle),
             )
         }
-        return DanmakuFetchResult.noMatch(DanmakuServiceId.Dandanplay)
+        return DanmakuFetchResult.noMatch(providerId, DanmakuServiceId.Dandanplay)
     }
 
     /**
@@ -203,14 +214,14 @@ class DandanplayDanmakuProvider(
      */
     private suspend fun DandanplayDanmakuProvider.getEpisodesByExactSubjectMatch(
         request: DanmakuFetchRequest
-    ): List<DanmakuEpisode>? {
+    ): List<DanmakuEpisodeWithSubject>? {
         if (!request.subjectPublishDate.isValid) return null
 
         // 将筛选范围缩小到季度
         val anime = getDandanplayAnimeIdOrNull(request) ?: return null
         return dandanplayClient.getBangumiEpisodes(anime.bangumiId ?: anime.animeId)
             .bangumi.episodes?.map { episode ->
-                DanmakuEpisode(
+                DanmakuEpisodeWithSubject(
                     id = episode.episodeId.toString(),
                     subjectName = request.subjectPrimaryName,
                     episodeName = episode.episodeTitle,
@@ -219,7 +230,7 @@ class DandanplayDanmakuProvider(
             }
     }
 
-    private suspend fun getEpisodesByFuzzyEpisodeSearch(request: DanmakuFetchRequest): List<DanmakuEpisode> {
+    private suspend fun getEpisodesByFuzzyEpisodeSearch(request: DanmakuFetchRequest): List<DanmakuEpisodeWithSubject> {
         val searchEpisodeResponse = request.subjectNames.flatMap { name ->
             kotlin.runCatching {
                 dandanplayClient.searchEpisode(
@@ -237,7 +248,7 @@ class DandanplayDanmakuProvider(
         logger.info { "Ep search result: ${searchEpisodeResponse}}" }
         return searchEpisodeResponse.flatMap { anime ->
             anime.episodes.map { ep ->
-                DanmakuEpisode(
+                DanmakuEpisodeWithSubject(
                     id = ep.episodeId.toString(),
                     subjectName = anime.animeTitle ?: "",
                     episodeName = ep.episodeTitle ?: "",
@@ -247,10 +258,12 @@ class DandanplayDanmakuProvider(
         }
     }
 
-    private suspend fun getDandanplayAnimeIdOrNull(request: DanmakuFetchRequest): SearchEpisodesAnime? {
+    private suspend fun getDandanplayAnimeIdOrNull(
+        request: DanmakuFetchRequest
+    ): SearchEpisodesAnime? = withContext(defaultDispatcher) {
         val date = request.subjectPublishDate
         val mo = date.seasonMonth
-        if (mo == 0) return null
+        if (mo == 0) return@withContext null
 
         val expectedNames = request.subjectNames.toSet()
 
@@ -266,7 +279,7 @@ class DandanplayDanmakuProvider(
             ?.firstOrNull { it.animeTitle in expectedNames }
             ?.let {
                 logger.info { "Matched Dandanplay Anime in season using name: ${it.animeId} ${it.animeTitle}" }
-                return it
+                return@withContext it
             }
 
 
@@ -281,10 +294,10 @@ class DandanplayDanmakuProvider(
             .firstOrNull { it.animeTitle in expectedNames }
             ?.let {
                 logger.info { "Matched Dandanplay Anime by search using name: ${it.animeId} ${it.animeTitle}" }
-                return it
+                return@withContext it
             }
 
-        return null
+        null
     }
 
     private suspend fun createResult(
@@ -294,8 +307,56 @@ class DandanplayDanmakuProvider(
         val list = dandanplayClient.getDanmakuList(episodeId = episodeId)
         logger.info { "${DanmakuServiceId.Dandanplay} Fetched danmaku list: ${list.size}" }
         return DanmakuFetchResult(
+            providerId = providerId,
             matchInfo = DanmakuMatchInfo(DanmakuServiceId.Dandanplay, list.size, matchMethod),
             list = list.mapNotNull { it.toDanmakuOrNull() },
         )
+    }
+
+    override suspend fun fetchSubjectList(name: String): List<DanmakuSubject> = withContext(defaultDispatcher) {
+        dandanplayClient.searchSubject(subjectName = name).animes.map {
+            DanmakuSubject(
+                it.animeId.toString(),
+                it.animeTitle ?: it.animeId.toString(),
+            )
+        }
+    }
+
+    override suspend fun fetchEpisodeList(subject: DanmakuSubject): List<DanmakuEpisode> =
+        withContext(defaultDispatcher) {
+            val animeId = subject.id.toIntOrNull() ?: throw IllegalArgumentException("Invalid anime id: ${subject.id}")
+            val bangumi = dandanplayClient.getBangumiEpisodes(animeId)
+
+            bangumi.bangumi.episodes?.map {
+                DanmakuEpisode(
+                    id = it.episodeId.toString(),
+                    name = it.episodeTitle,
+                )
+            } ?: emptyList()
+        }
+
+    override suspend fun fetchDanmakuList(
+        subject: DanmakuSubject,
+        episode: DanmakuEpisode
+    ): List<DanmakuFetchResult> = withContext(defaultDispatcher) {
+        val episodeId =
+            episode.id.toLongOrNull() ?: throw IllegalArgumentException("Invalid episode id: ${episode.id}")
+        val list = dandanplayClient.getDanmakuList(episodeId = episodeId)
+
+        list.mapNotNull { it.toDanmakuOrNull() }.let { list ->
+            categorizeByService(
+                DanmakuFetchResult(
+                    providerId = providerId,
+                    matchInfo = DanmakuMatchInfo(
+                        DanmakuServiceId.Dandanplay, list.size,
+                        DanmakuMatchMethod.Exact(
+                            subject.name,
+                            episode.name,
+                        ),
+                    ),
+                    list = list,
+                ),
+            )
+        }
     }
 }

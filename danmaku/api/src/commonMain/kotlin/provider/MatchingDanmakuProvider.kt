@@ -13,5 +13,22 @@ package me.him188.ani.danmaku.api.provider
  * 通过请求, 查询出一些结果, 可能需要手动选择的 [DanmakuProvider].
  */
 interface MatchingDanmakuProvider : DanmakuProvider {
-    suspend fun fetchSubjectList(request: DanmakuFetchRequest): List<DanmakuFetchResult>
+    suspend fun fetchSubjectList(name: String): List<DanmakuSubject>
+
+    suspend fun fetchEpisodeList(subject: DanmakuSubject): List<DanmakuEpisode>
+
+    suspend fun fetchDanmakuList(
+        subject: DanmakuSubject,
+        episode: DanmakuEpisode,
+    ): List<DanmakuFetchResult>
 }
+
+data class DanmakuSubject(
+    val id: String,
+    val name: String,
+)
+
+data class DanmakuEpisode(
+    val id: String,
+    val name: String,
+)

@@ -217,6 +217,8 @@ private fun PreviewEpisodeDetailsImpl(
             onSetDanmakuSourceEnabled = { _, _ -> },
             onClickLogin = { },
             onClickTag = {},
+            onManualMatchDanmaku = {
+            },
             Modifier
                 .padding(bottom = 16.dp, top = 8.dp)
                 .padding(it)

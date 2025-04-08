@@ -19,6 +19,7 @@ import me.him188.ani.danmaku.api.provider.DanmakuFetchRequest
 import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
 import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
 import me.him188.ani.danmaku.api.provider.DanmakuMatchMethod
+import me.him188.ani.danmaku.api.provider.DanmakuProviderId
 import me.him188.ani.danmaku.api.provider.SimpleDanmakuProvider
 import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.logging.info
@@ -28,6 +29,7 @@ class AniDanmakuProvider(
     private val danmakuApi: ApiInvoker<DanmakuAniApi>,
 ) : SimpleDanmakuProvider {
     private val logger = thisLogger()
+    override val providerId: DanmakuProviderId get() = DanmakuProviderId.Animeko
 
     companion object {
         val ID = DanmakuServiceId.Animeko
@@ -35,13 +37,14 @@ class AniDanmakuProvider(
 
     override val mainServiceId: DanmakuServiceId get() = ID
 
-    override suspend fun fetch(request: DanmakuFetchRequest): List<DanmakuFetchResult> {
+    override suspend fun fetchAutomatic(request: DanmakuFetchRequest): List<DanmakuFetchResult> {
         val list = danmakuApi {
             getDanmaku(request.episodeId.toString()).body().danmakuList
         }
         logger.info { "$ID Fetched danmaku list: ${list.size}" }
         return listOf(
             DanmakuFetchResult(
+                providerId,
                 matchInfo = DanmakuMatchInfo(
                     serviceId = DanmakuServiceId.Animeko,
                     count = list.size,

@@ -92,6 +92,7 @@ import me.him188.ani.app.ui.danmaku.DanmakuEditorState
 import me.him188.ani.app.ui.danmaku.DummyDanmakuEditor
 import me.him188.ani.app.ui.danmaku.PlayerDanmakuEditor
 import me.him188.ani.app.ui.danmaku.PlayerDanmakuHost
+import me.him188.ani.app.ui.episode.danmaku.MatchingDanmakuDialog
 import me.him188.ani.app.ui.external.placeholder.placeholder
 import me.him188.ani.app.ui.foundation.ImageViewer
 import me.him188.ani.app.ui.foundation.LocalImageViewerHandler
@@ -291,6 +292,28 @@ private fun EpisodeScreenContent(
                     )
                 }
 
+                page.matchingDanmakuUiState?.let { uiState ->
+                    MatchingDanmakuDialog(
+                        onDismissRequest = { vm.cancelMatchingDanmaku() },
+                        initialQuery = uiState.initialQuery,
+                        page.matchingDanmakuUiState,
+                        onSubmitQuery = {
+                            page.matchingDanmakuPresenter?.submitQuery(it)
+                        },
+                        onSelectSubject = {
+                            page.matchingDanmakuPresenter?.selectSubject(it)
+                        },
+                        onSelectEpisode = {
+                            page.matchingDanmakuPresenter?.selectEpisode(it)
+                        },
+                        onComplete = { list ->
+                            page.matchingDanmakuPresenter?.providerId?.let {
+                                vm.onMatchingDanmakuComplete(it, list)
+                            }
+                        },
+                    )
+                }
+
                 CompositionLocalProvider(LocalImageViewerHandler provides imageViewer) {
                     when {
                         showExpandedUI ->
@@ -452,6 +475,9 @@ private fun EpisodeScreenTabletVeryWide(
                                     },
                                     onClickLogin = { navigator.navigateBangumiAuthorize() },
                                     onClickTag = { navigator.navigateSubjectSearch(it.name) },
+                                    onManualMatchDanmaku = {
+                                        vm.startMatchingDanmaku(it)
+                                    },
                                 )
                             }
                         }
@@ -572,6 +598,9 @@ private fun EpisodeScreenContentPhone(
                     },
                     onClickLogin = { navigator.navigateBangumiAuthorize() },
                     onClickTag = { navigator.navigateSubjectSearch(it.name) },
+                    onManualMatchDanmaku = {
+                        vm.startMatchingDanmaku(it)
+                    },
                     Modifier.fillMaxSize(),
                 )
             }

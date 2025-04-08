@@ -18,27 +18,21 @@ import kotlin.jvm.JvmStatic
  *
  * [SimpleDanmakuProvider] 通常需要使用 [DanmakuFetchRequest.subjectId] 和 [DanmakuFetchRequest.episodeId] 来精确匹配剧集弹幕.
  */
-interface SimpleDanmakuProvider : DanmakuProvider {
-    /**
-     * Matches a danmaku stream by the given filtering parameters.
-     *
-     * Returns `null` if not found.
-     *
-     * The returned [me.him188.ani.danmaku.api.DanmakuCollection] should be closed when it is no longer needed.
-     */
-    suspend fun fetch(
-        request: DanmakuFetchRequest,
-    ): List<DanmakuFetchResult>
-}
+interface SimpleDanmakuProvider : DanmakuProvider
 
 
 class DanmakuFetchResult(
+    val providerId: DanmakuProviderId,
     val matchInfo: DanmakuMatchInfo,
     val list: List<DanmakuInfo>,
 ) {
     companion object {
         @JvmStatic
-        fun noMatch(serviceId: DanmakuServiceId) = DanmakuFetchResult(
+        fun noMatch(
+            providerId: DanmakuProviderId,
+            serviceId: DanmakuServiceId
+        ) = DanmakuFetchResult(
+            providerId = providerId,
             matchInfo = DanmakuMatchInfo(
                 serviceId = serviceId,
                 count = 0,

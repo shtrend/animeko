@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.data.repository.danmaku
 
+import kotlinx.coroutines.flow.first
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.data.models.subject.SubjectInfo
@@ -39,7 +40,7 @@ class DanmakuRepository(
         val subject = request.subjectInfo
         val episode = request.episodeInfo
 
-        return danmakuManager.fetch(
+        return danmakuManager.fetchFromAll(
             DanmakuFetchRequest(
                 subjectId = subject.subjectId,
                 subjectPrimaryName = subject.displayName,
@@ -54,7 +55,7 @@ class DanmakuRepository(
                 fileSize = request.fileLength,
                 videoDuration = request.videoDuration,
             ),
-        )
+        ).first()
     }
 
     suspend fun post(episodeId: Int, info: DanmakuContent): DanmakuInfo =

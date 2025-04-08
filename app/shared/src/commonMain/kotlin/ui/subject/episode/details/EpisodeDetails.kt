@@ -91,6 +91,7 @@ import me.him188.ani.app.ui.subject.episode.statistics.DanmakuMatchInfoSummaryRo
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuStatistics
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics
 import me.him188.ani.danmaku.api.DanmakuServiceId
+import me.him188.ani.danmaku.api.provider.DanmakuProviderId
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.isDesktop
 
@@ -134,6 +135,7 @@ fun EpisodeDetails(
     onSetDanmakuSourceEnabled: (serviceId: DanmakuServiceId, enabled: Boolean) -> Unit,
     onClickLogin: () -> Unit,
     onClickTag: (Tag) -> Unit,
+    onManualMatchDanmaku: (DanmakuProviderId) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
 ) {
@@ -297,6 +299,9 @@ fun EpisodeDetails(
                             expandDanmakuStatistics,
                             onClickSettings = {
                                 showDropdown = true
+                            },
+                            onClick = {
+                                onManualMatchDanmaku(source.providerId)
                             },
                             Modifier.fillMaxWidth(),
                             colors = colors,

@@ -15,12 +15,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.flow.update
 import me.him188.ani.app.data.repository.danmaku.SearchDanmakuRequest
 import me.him188.ani.danmaku.api.DanmakuCollection
 import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
+import me.him188.ani.danmaku.api.provider.DanmakuProviderId
+import me.him188.ani.utils.platform.collections.tupleOf
 import org.koin.core.Koin
 
 /**
@@ -42,26 +48,58 @@ class DanmakuLoaderImpl(
     override val danmakuLoadingStateFlow: MutableStateFlow<DanmakuLoadingState> =
         MutableStateFlow(DanmakuLoadingState.Idle)
 
-    override val fetchResultFlow: Flow<List<DanmakuFetchResult>?> =
-        requestFlow.distinctUntilChanged().transformLatest { request ->
-            emit(null) // 每次更换 mediaFetchSession 时 (ep 变更), 首先清空历史弹幕
+    private val overrideResultsFlow = MutableStateFlow<Map<DanmakuProviderId, List<DanmakuFetchResult>>>(emptyMap())
 
-            if (request == null) {
-                danmakuLoadingStateFlow.value = DanmakuLoadingState.Idle
-                return@transformLatest
+    private val originalFetchResultFlow = requestFlow.distinctUntilChanged().transformLatest { request ->
+        emit(null) // 每次更换 mediaFetchSession 时 (ep 变更), 首先清空历史弹幕
+
+        if (request == null) {
+            danmakuLoadingStateFlow.value = DanmakuLoadingState.Idle
+            return@transformLatest
+        }
+        danmakuLoadingStateFlow.value = DanmakuLoadingState.Loading
+        try {
+            val result = searchDanmakuUseCase(request)
+            danmakuLoadingStateFlow.value = DanmakuLoadingState.Success
+            emit(result)
+        } catch (e: CancellationException) {
+            danmakuLoadingStateFlow.value = DanmakuLoadingState.Idle
+            throw e
+        } catch (e: Throwable) {
+            danmakuLoadingStateFlow.value = DanmakuLoadingState.Failed(e)
+            throw e
+        }
+    }.shareIn(flowScope, started = sharingStarted, replay = 1)
+
+    override val fetchResultFlow: Flow<List<DanmakuFetchResult>?> = requestFlow
+        .distinctUntilChangedBy {
+            tupleOf(it?.subjectInfo?.subjectId, it?.episodeInfo?.episodeId)
+        }.flatMapLatest { _ ->
+            // 每次切换剧集时, 这里会重新执行.
+            overrideResultsFlow.value = emptyMap() // 清空覆盖
+
+            combine(originalFetchResultFlow, overrideResultsFlow) { original, overrideResults ->
+                if (original == null) {
+                    overrideResults.values.flatten()
+                } else {
+                    // Combine and replace
+                    LinkedHashMap<DanmakuProviderId, List<DanmakuFetchResult>>().apply {
+                        original.groupBy { it.providerId }.forEach { (providerId, result) ->
+                            put(providerId, result)
+                        }
+                        for ((providerId, result) in overrideResults) {
+                            put(providerId, result)
+                        }
+                    }.values.flatten()
+                }
             }
-            danmakuLoadingStateFlow.value = DanmakuLoadingState.Loading
-            try {
-                val result = searchDanmakuUseCase(request)
-                danmakuLoadingStateFlow.value = DanmakuLoadingState.Success
-                emit(result)
-            } catch (e: CancellationException) {
-                danmakuLoadingStateFlow.value = DanmakuLoadingState.Idle
-                throw e
-            } catch (e: Throwable) {
-                danmakuLoadingStateFlow.value = DanmakuLoadingState.Failed(e)
-                throw e
-            }
-        }.shareIn(flowScope, started = sharingStarted, replay = 1)
+        }
+
+
+    fun overrideResults(provider: DanmakuProviderId, result: List<DanmakuFetchResult>) {
+        overrideResultsFlow.update {
+            it + (provider to result)
+        }
+    }
 }
 
