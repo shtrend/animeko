@@ -17,8 +17,8 @@ import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.charsets.Charset
 import io.ktor.utils.io.charsets.Charsets
 import io.ktor.utils.io.charsets.decode
-import korlibs.io.serialization.xml.Xml
 import me.him188.ani.utils.xml.Document
+import me.him188.ani.utils.xml.Xml
 
 internal actual fun getXmlConverter(): ContentConverter {
     return XmlConverter
