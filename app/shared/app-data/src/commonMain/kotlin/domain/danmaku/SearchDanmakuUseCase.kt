@@ -15,7 +15,7 @@ import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.danmaku.DanmakuRepository
 import me.him188.ani.app.data.repository.danmaku.SearchDanmakuRequest
 import me.him188.ani.app.domain.usecase.UseCase
-import me.him188.ani.danmaku.api.DanmakuFetchResult
+import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.coroutines.CoroutineContext

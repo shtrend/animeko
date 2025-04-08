@@ -49,7 +49,6 @@ import me.him188.ani.app.data.models.episode.renderEpisodeEp
 import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
-import me.him188.ani.app.data.network.protocol.DanmakuInfo
 import me.him188.ani.app.data.repository.episode.BangumiCommentRepository
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.player.DanmakuRegexFilterRepository
@@ -127,11 +126,13 @@ import me.him188.ani.app.ui.subject.episode.video.PlayerSkipOpEdState
 import me.him188.ani.app.ui.subject.episode.video.sidesheet.EpisodeSelectorState
 import me.him188.ani.app.videoplayer.ui.ControllerVisibility
 import me.him188.ani.app.videoplayer.ui.PlayerControllerState
-import me.him188.ani.danmaku.api.Danmaku
+import me.him188.ani.danmaku.api.DanmakuContent
 import me.him188.ani.danmaku.api.DanmakuEvent
-import me.him188.ani.danmaku.api.DanmakuPresentation
+import me.him188.ani.danmaku.api.DanmakuInfo
+import me.him188.ani.danmaku.api.DanmakuServiceId
 import me.him188.ani.danmaku.ui.DanmakuConfig
 import me.him188.ani.danmaku.ui.DanmakuHostState
+import me.him188.ani.danmaku.ui.DanmakuPresentation
 import me.him188.ani.danmaku.ui.DanmakuTrackProperties
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.source.MediaSourceInfo
@@ -463,7 +464,7 @@ class EpisodeViewModel(
      */
     val uiDanmakuEventFlow = danmakuManager.selfId.flatMapLatest { selfId ->
         fun createDanmakuPresentation(
-            data: Danmaku,
+            data: DanmakuInfo,
             selfId: String?,
         ) = DanmakuPresentation(data, isSelf = selfId == data.senderId)
 
@@ -734,7 +735,7 @@ class EpisodeViewModel(
     }
 
     @OptIn(UnsafeEpisodeSessionApi::class)
-    suspend fun postDanmaku(danmaku: DanmakuInfo): Danmaku {
+    suspend fun postDanmaku(danmaku: DanmakuContent): DanmakuInfo {
         return withContext(Dispatchers.Default) {
             danmakuManager.post(fetchPlayState.getCurrentEpisodeId(), danmaku)
         }
@@ -819,7 +820,7 @@ class EpisodeViewModel(
 
     override fun getKoin(): Koin = koin
 
-    fun setDanmakuSourceEnabled(providerId: String, enabled: Boolean) {
-        danmakuLoader.setEnabled(providerId, enabled)
+    fun setDanmakuSourceEnabled(serviceId: DanmakuServiceId, enabled: Boolean) {
+        danmakuLoader.setEnabled(serviceId, enabled)
     }
 }

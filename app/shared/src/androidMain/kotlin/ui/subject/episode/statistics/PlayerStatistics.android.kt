@@ -9,46 +9,45 @@
 
 package me.him188.ani.app.ui.subject.episode.statistics
 
-import me.him188.ani.app.data.network.AniDanmakuProvider
 import me.him188.ani.app.domain.player.VideoLoadingState
-import me.him188.ani.danmaku.api.DanmakuMatchInfo
-import me.him188.ani.danmaku.api.DanmakuMatchMethod
-import me.him188.ani.danmaku.dandanplay.DandanplayDanmakuProvider
+import me.him188.ani.danmaku.api.DanmakuServiceId
+import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
+import me.him188.ani.danmaku.api.provider.DanmakuMatchMethod
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 
 @TestOnly
 fun DanmakuMatchInfo.Companion.noMatch() = DanmakuMatchInfo(
-    providerId = DandanplayDanmakuProvider.ID,
+    serviceId = DanmakuServiceId.Animeko,
     count = 200,
     method = DanmakuMatchMethod.NoMatch,
 )
 
 @TestOnly
 fun DanmakuMatchInfo.Companion.exactId() = DanmakuMatchInfo(
-    providerId = AniDanmakuProvider.ID,
+    serviceId = DanmakuServiceId.Animeko,
     count = 200,
     method = DanmakuMatchMethod.ExactId(1, 2),
 )
 
 @TestOnly
 fun DanmakuMatchInfo.Companion.exactMatch() = DanmakuMatchInfo(
-    providerId = DandanplayDanmakuProvider.ID,
+    serviceId = DanmakuServiceId.Animeko,
     count = 100,
     method = DanmakuMatchMethod.Exact("Subject Title", "Episode Title"),
 )
 
 @TestOnly
 fun DanmakuMatchInfo.Companion.fuzzy() = DanmakuMatchInfo(
-    providerId = DandanplayDanmakuProvider.ID,
+    serviceId = DanmakuServiceId.Animeko,
     count = 100,
     method = DanmakuMatchMethod.Fuzzy("Subject Title", "Episode Title"),
 )
 
 @TestOnly
 fun DanmakuMatchInfo.Companion.halfFuzzy() = DanmakuMatchInfo(
-    providerId = DandanplayDanmakuProvider.ID,
+    serviceId = DanmakuServiceId.Animeko,
     count = 100,
     method = DanmakuMatchMethod.ExactSubjectFuzzyEpisode("Subject Title", "Episode Title"),
 )

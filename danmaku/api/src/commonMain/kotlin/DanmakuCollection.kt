@@ -31,7 +31,7 @@ interface DanmakuCollection {
     /**
      * 创建一个随视频进度 [progress] 匹配到的弹幕数据流.
      *
-     * 每当有一个新的 [Duration] 从 [progress] emit, 本函数返回的 flow 都会 emit 一些新的 [Danmaku] 对象, 表示在该视频进度 [Duration] 匹配到的弹幕列表.
+     * 每当有一个新的 [Duration] 从 [progress] emit, 本函数返回的 flow 都会 emit 一些新的 [DanmakuInfo] 对象, 表示在该视频进度 [Duration] 匹配到的弹幕列表.
      *
      * 当有新的 [Duration] 从 [progress] emit, 并且上一个时间点匹配到的弹幕列表还没被完全 collect 时, 将会抛弃上一个时间点匹配到的弹幕列表, 并且从新的时间点开始匹配.
      *
@@ -49,7 +49,7 @@ sealed class DanmakuEvent {
     /**
      * 发送一个新弹幕
      */
-    class Add(val danmaku: Danmaku) : DanmakuEvent()
+    class Add(val danmaku: DanmakuInfo) : DanmakuEvent()
 
     /**
      * 清空屏幕并以这些弹幕填充. 常见于快进/快退时
@@ -57,7 +57,7 @@ sealed class DanmakuEvent {
      * @param list 顺序为由距离当前时间近到远.
      * @param playTimeMillis 当前播放器的时间
      */
-    data class Repopulate(val list: List<Danmaku>, val playTimeMillis: Long) : DanmakuEvent()
+    data class Repopulate(val list: List<DanmakuInfo>, val playTimeMillis: Long) : DanmakuEvent()
 }
 
 fun emptyDanmakuCollection(): DanmakuCollection {
@@ -71,16 +71,16 @@ fun emptyDanmakuCollection(): DanmakuCollection {
 
 class TimeBasedDanmakuSession private constructor(
     /**
-     * 一个[Danmaku] list. 必须根据 [DanmakuInfo.playTime] 排序且创建后不可更改，是一条动漫完整的弹幕列表.
+     * 一个[DanmakuInfo] list. 必须根据 [DanmakuInfo.playTime] 排序且创建后不可更改，是一条动漫完整的弹幕列表.
      */
-    private val list: List<Danmaku>,
+    private val list: List<DanmakuInfo>,
     private val flowCoroutineContext: CoroutineContext = EmptyCoroutineContext,
 ) : DanmakuCollection {
     override val totalCount: Flow<Int?> = flowOf(list.size)
 
     companion object {
         fun create(
-            sequence: Sequence<Danmaku>,
+            sequence: Sequence<DanmakuInfo>,
             coroutineContext: CoroutineContext = EmptyCoroutineContext,
         ): DanmakuCollection {
             val list = sequence.mapTo(ArrayList()) {
@@ -92,12 +92,12 @@ class TimeBasedDanmakuSession private constructor(
 
 
         /**
-         * 输入一个[Danmaku] list. 和一个[List<String>]，返回一个过滤后的[Danmaku] list
+         * 输入一个[DanmakuInfo] list. 和一个[List<String>]，返回一个过滤后的[DanmakuInfo] list
          */
         fun filterList(
-            list: List<Danmaku>,
+            list: List<DanmakuInfo>,
             danmakuRegexFilterList: List<String>,
-        ): List<Danmaku> {
+        ): List<DanmakuInfo> {
             if (danmakuRegexFilterList.isEmpty()) {
                 return list
             }
@@ -211,7 +211,7 @@ class TimeBasedDanmakuSession private constructor(
 
 internal class DanmakuSessionFlowState(
     @Volatile
-    var list: List<Danmaku>,
+    var list: List<DanmakuInfo>,
     /**
      * 每当快进/快退超过这个阈值后, 重新装填整个屏幕弹幕
      */
@@ -247,7 +247,7 @@ internal class DanmakuSessionFlowState(
         lastTime = Duration.INFINITE
     }
 
-    fun updateList(newList: List<Danmaku>) {
+    fun updateList(newList: List<DanmakuInfo>) {
         list = newList
     }
 }
@@ -262,7 +262,7 @@ internal class DanmakuSessionAlgorithm(
     /**
      * 对于每一个时间已经到达的弹幕, 并更新 [DanmakuSessionFlowState.lastIndex]
      */
-    private inline fun useEachDanmaku(block: (Danmaku) -> Unit) {
+    private inline fun useEachDanmaku(block: (DanmakuInfo) -> Unit) {
         var i = state.lastIndex + 1
         val list = state.list
         try {

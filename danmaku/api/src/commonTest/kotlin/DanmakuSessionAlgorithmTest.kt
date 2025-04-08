@@ -21,7 +21,7 @@ import kotlin.time.Duration.Companion.seconds
 internal class DanmakuSessionAlgorithmTest {
 
     private fun create(
-        sequence: Sequence<Danmaku>,
+        sequence: Sequence<DanmakuInfo>,
         repopulateThreshold: Duration = 3.seconds,
         repopulateDistance: Duration = 2.seconds,
     ): DanmakuSessionAlgorithm {
@@ -39,8 +39,8 @@ internal class DanmakuSessionAlgorithmTest {
         return this
     }
 
-    private fun DanmakuSessionAlgorithm.tickCollect(maxSize: Int = Int.MAX_VALUE): List<Danmaku> {
-        val list = mutableListOf<Danmaku>()
+    private fun DanmakuSessionAlgorithm.tickCollect(maxSize: Int = Int.MAX_VALUE): List<DanmakuInfo> {
+        val list = mutableListOf<DanmakuInfo>()
         tick {
             if (list.size >= maxSize) {
                 return@tick false
@@ -74,18 +74,22 @@ internal class DanmakuSessionAlgorithmTest {
 
 
     private fun dummyDanmaku(timeSeconds: Double, text: String = "$timeSeconds") =
-        Danmaku(
+        DanmakuInfo(
             text,
-            "dummy",
-            (timeSeconds * 1000L).toLong(),
-            text,
-            DanmakuLocation.NORMAL,
-            text,
-            0
+            DanmakuServiceId("dummy"), text,
+            DanmakuContent(
+                (timeSeconds * 1000L).toLong(),
+                0,
+                text,
+                DanmakuLocation.NORMAL,
+            ),
         )
 
     private fun dummyDanmaku(timeSeconds: Long, text: String = "$timeSeconds") =
-        Danmaku(text, "dummy", timeSeconds * 1000, text, DanmakuLocation.NORMAL, text, 0)
+        DanmakuInfo(
+            text, DanmakuServiceId("dummy"),
+            text, DanmakuContent(timeSeconds * 1000, 0, text, DanmakuLocation.NORMAL),
+        )
 
 
     @Test
@@ -379,7 +383,7 @@ internal class DanmakuSessionAlgorithmTest {
         )
         assertEquals(
             listOf(7.0, 8.0),
-            instance.at(8.seconds).tickRepopulateTime()
+            instance.at(8.seconds).tickRepopulateTime(),
         ) // 初次收集 repopulate
         assertEquals(listOf(3.0, 4.0), instance.at(4.5.seconds).tickRepopulateTime())
     }

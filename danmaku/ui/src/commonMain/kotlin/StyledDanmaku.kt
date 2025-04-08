@@ -21,9 +21,10 @@ import androidx.compose.ui.text.TextPainter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
-import me.him188.ani.danmaku.api.Danmaku
+import me.him188.ani.danmaku.api.DanmakuContent
+import me.him188.ani.danmaku.api.DanmakuInfo
 import me.him188.ani.danmaku.api.DanmakuLocation
-import me.him188.ani.danmaku.api.DanmakuPresentation
+import me.him188.ani.danmaku.api.DanmakuServiceId
 import me.him188.ani.utils.platform.Uuid
 import me.him188.ani.utils.platform.format2f
 import kotlin.math.floor
@@ -103,11 +104,13 @@ internal fun dummyDanmaku(
 ): StyledDanmaku {
     return StyledDanmaku(
         presentation = DanmakuPresentation(
-            Danmaku(
+            DanmakuInfo(
                 Uuid.randomString(),
-                "dummy",
-                0L, "1",
-                DanmakuLocation.NORMAL, dummyText, 0,
+                DanmakuServiceId("dummy"), "1",
+                DanmakuContent(
+                    0L, 0,
+                    dummyText, DanmakuLocation.NORMAL,
+                ),
             ),
             isSelf = false,
         ),

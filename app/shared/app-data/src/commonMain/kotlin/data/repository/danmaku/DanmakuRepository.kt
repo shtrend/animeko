@@ -12,12 +12,12 @@ package me.him188.ani.app.data.repository.danmaku
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.data.models.subject.SubjectInfo
-import me.him188.ani.app.data.network.protocol.DanmakuInfo
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.domain.danmaku.DanmakuManager
-import me.him188.ani.danmaku.api.Danmaku
-import me.him188.ani.danmaku.api.DanmakuFetchResult
-import me.him188.ani.danmaku.api.DanmakuSearchRequest
+import me.him188.ani.danmaku.api.DanmakuContent
+import me.him188.ani.danmaku.api.DanmakuInfo
+import me.him188.ani.danmaku.api.provider.DanmakuFetchRequest
+import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -40,7 +40,7 @@ class DanmakuRepository(
         val episode = request.episodeInfo
 
         return danmakuManager.fetch(
-            DanmakuSearchRequest(
+            DanmakuFetchRequest(
                 subjectId = subject.subjectId,
                 subjectPrimaryName = subject.displayName,
                 subjectNames = subject.allNames,
@@ -57,5 +57,6 @@ class DanmakuRepository(
         )
     }
 
-    suspend fun post(episodeId: Int, info: DanmakuInfo): Danmaku = danmakuManager.post(episodeId, info)
+    suspend fun post(episodeId: Int, info: DanmakuContent): DanmakuInfo =
+        danmakuManager.post(episodeId, info)
 }

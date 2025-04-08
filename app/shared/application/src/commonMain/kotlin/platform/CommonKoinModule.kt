@@ -79,7 +79,6 @@ import me.him188.ani.app.data.repository.user.TokenRepository
 import me.him188.ani.app.data.repository.user.TokenRepositoryImpl
 import me.him188.ani.app.domain.comment.TurnstileState
 import me.him188.ani.app.domain.danmaku.DanmakuManager
-import me.him188.ani.app.domain.danmaku.DanmakuManagerImpl
 import me.him188.ani.app.domain.foundation.ConvertSendCountExceedExceptionFeature
 import me.him188.ani.app.domain.foundation.ConvertSendCountExceedExceptionFeatureHandler
 import me.him188.ani.app.domain.foundation.DefaultHttpClientProvider
@@ -156,6 +155,7 @@ import me.him188.ani.app.ui.comment.TurnstileState as CreateTurnstileState
 private val Scope.client get() = get<BangumiClient>()
 private val Scope.database get() = get<AniDatabase>()
 private val Scope.settingsRepository get() = get<SettingsRepository>()
+private val Scope.aniApiProvider get() = get<AniApiProvider>()
 
 /**
  * @see me.him188.ani.app.data.persistent.PlatformDataStoreManager.mediaCacheMetadataStore
@@ -375,8 +375,9 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
     single<RecommendationRepository> { RecommendationRepository(get<TrendsRepository>()) }
 
     single<DanmakuManager> {
-        DanmakuManagerImpl(
+        DanmakuManager(
             parentCoroutineContext = coroutineScope.coroutineContext,
+            danmakuApi = aniApiProvider.danmakuApi,
         )
     }
     single<UpdateManager> {

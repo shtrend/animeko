@@ -11,9 +11,10 @@ package me.him188.ani.danmaku.ui
 
 import androidx.compose.runtime.mutableLongStateOf
 import kotlinx.coroutines.test.runTest
-import me.him188.ani.danmaku.api.Danmaku
+import me.him188.ani.danmaku.api.DanmakuContent
+import me.him188.ani.danmaku.api.DanmakuInfo
 import me.him188.ani.danmaku.api.DanmakuLocation
-import me.him188.ani.danmaku.api.DanmakuPresentation
+import me.him188.ani.danmaku.api.DanmakuServiceId
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -49,9 +50,9 @@ class DanmakuRepopulatorTest {
         }
 
         val singleDanmaku = DanmakuPresentation(
-            danmaku = Danmaku(
+            danmaku = DanmakuInfo(
                 id = "1",
-                providerId = "provider1",
+                serviceId = "provider1",
                 playTimeMillis = 5_000, // 5s
                 senderId = "sender1",
                 location = DanmakuLocation.NORMAL,
@@ -83,9 +84,9 @@ class DanmakuRepopulatorTest {
         }
 
         val singleDanmaku = DanmakuPresentation(
-            danmaku = Danmaku(
+            danmaku = DanmakuInfo(
                 id = "2",
-                providerId = "provider2",
+                serviceId = "provider2",
                 playTimeMillis = 10_000, // 10s
                 senderId = "sender2",
                 location = DanmakuLocation.TOP, // fixed location
@@ -118,15 +119,15 @@ class DanmakuRepopulatorTest {
         // Three floating danmakus, sorted by playTimeMillis: 8000, 9000, 10000
         val danmakuList = listOf(
             DanmakuPresentation(
-                Danmaku("3", "provider3", 8_000, "sender3", DanmakuLocation.NORMAL, "d1", 0xFF0000),
+                DanmakuInfo("3", "provider3", 8_000, "sender3", DanmakuLocation.NORMAL, "d1", 0xFF0000),
                 isSelf = false,
             ),
             DanmakuPresentation(
-                Danmaku("4", "provider4", 9_000, "sender4", DanmakuLocation.NORMAL, "d2", 0x00FF00),
+                DanmakuInfo("4", "provider4", 9_000, "sender4", DanmakuLocation.NORMAL, "d2", 0x00FF00),
                 isSelf = false,
             ),
             DanmakuPresentation(
-                Danmaku("5", "provider5", 10_000, "sender5", DanmakuLocation.NORMAL, "d3", 0x0000FF),
+                DanmakuInfo("5", "provider5", 10_000, "sender5", DanmakuLocation.NORMAL, "d3", 0x0000FF),
                 isSelf = false,
             ),
         )
@@ -155,15 +156,15 @@ class DanmakuRepopulatorTest {
 
         val danmakuList = listOf(
             DanmakuPresentation(
-                Danmaku("6", "provider6", 12_000, "sender6", DanmakuLocation.TOP, "f1", 0xFFFF00),
+                DanmakuInfo("6", "provider6", 12_000, "sender6", DanmakuLocation.TOP, "f1", 0xFFFF00),
                 isSelf = false,
             ),
             DanmakuPresentation(
-                Danmaku("7", "provider7", 13_000, "sender7", DanmakuLocation.BOTTOM, "f2", 0xFF00FF),
+                DanmakuInfo("7", "provider7", 13_000, "sender7", DanmakuLocation.BOTTOM, "f2", 0xFF00FF),
                 isSelf = false,
             ),
             DanmakuPresentation(
-                Danmaku("8", "provider8", 14_000, "sender8", DanmakuLocation.TOP, "f3", 0x00FFFF),
+                DanmakuInfo("8", "provider8", 14_000, "sender8", DanmakuLocation.TOP, "f3", 0x00FFFF),
                 isSelf = false,
             ),
         )
@@ -204,23 +205,23 @@ class DanmakuRepopulatorTest {
         // Mixed: 3 floating (NORMAL) and 2 fixed (TOP/BOTTOM), sorted ascending by playTimeMillis
         val danmakuList = listOf(
             DanmakuPresentation(
-                Danmaku("9", "p9", 2_000, "s9", DanmakuLocation.NORMAL, "floating1", 0x111111),
+                DanmakuInfo("9", "p9", 2_000, "s9", DanmakuLocation.NORMAL, "floating1", 0x111111),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("10", "p10", 4_000, "s10", DanmakuLocation.TOP, "fixed1", 0x222222),
+                DanmakuInfo("10", "p10", 4_000, "s10", DanmakuLocation.TOP, "fixed1", 0x222222),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("11", "p11", 6_000, "s11", DanmakuLocation.NORMAL, "floating2", 0x333333),
+                DanmakuInfo("11", "p11", 6_000, "s11", DanmakuLocation.NORMAL, "floating2", 0x333333),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("12", "p12", 7_000, "s12", DanmakuLocation.BOTTOM, "fixed2", 0x444444),
+                DanmakuInfo("12", "p12", 7_000, "s12", DanmakuLocation.BOTTOM, "fixed2", 0x444444),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("13", "p13", 8_000, "s13", DanmakuLocation.NORMAL, "floating3", 0x555555),
+                DanmakuInfo("13", "p13", 8_000, "s13", DanmakuLocation.NORMAL, "floating3", 0x555555),
                 false,
             ),
         )
@@ -254,15 +255,15 @@ class DanmakuRepopulatorTest {
         // and one that is borderline >= 0
         val danmakuList = listOf(
             DanmakuPresentation(
-                Danmaku("neg1", "provN1", 5000, "sN1", DanmakuLocation.NORMAL, "Will be negative", 0xCCCCCC),
+                DanmakuInfo("neg1", "provN1", 5000, "sN1", DanmakuLocation.NORMAL, "Will be negative", 0xCCCCCC),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("neg2", "provN2", 6000, "sN2", DanmakuLocation.TOP, "Will also be negative", 0xDDDDDD),
+                DanmakuInfo("neg2", "provN2", 6000, "sN2", DanmakuLocation.TOP, "Will also be negative", 0xDDDDDD),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("pos1", "provP1", 10_000, "sP1", DanmakuLocation.NORMAL, "Should appear", 0xEEEEEE),
+                DanmakuInfo("pos1", "provP1", 10_000, "sP1", DanmakuLocation.NORMAL, "Should appear", 0xEEEEEE),
                 false,
             ),
         )
@@ -289,11 +290,11 @@ class DanmakuRepopulatorTest {
 
         // Two identical times, one isSelf=true, the other isSelf=false
         val d1 = DanmakuPresentation(
-            Danmaku("self1", "pSelf", 15_000, "senderSelf", DanmakuLocation.NORMAL, "I am self", 0xAAAAAA),
+            DanmakuInfo("self1", "pSelf", 15_000, "senderSelf", DanmakuLocation.NORMAL, "I am self", 0xAAAAAA),
             isSelf = true,
         )
         val d2 = DanmakuPresentation(
-            Danmaku("self2", "pSelf", 15_000, "senderSelf", DanmakuLocation.NORMAL, "I am not self", 0xBBBBBB),
+            DanmakuInfo("self2", "pSelf", 15_000, "senderSelf", DanmakuLocation.NORMAL, "I am not self", 0xBBBBBB),
             isSelf = false,
         )
 
@@ -324,11 +325,11 @@ class DanmakuRepopulatorTest {
         // Single floating, single fixed
         val danmakuList = listOf(
             DanmakuPresentation(
-                Danmaku("f1", "provF1", 5_000, "senderF1", DanmakuLocation.NORMAL, "FloatingZero", 0x123456),
+                DanmakuInfo("f1", "provF1", 5_000, "senderF1", DanmakuLocation.NORMAL, "FloatingZero", 0x123456),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("fix1", "provFix1", 5_000, "senderFix1", DanmakuLocation.BOTTOM, "FixedZero", 0xABCDEF),
+                DanmakuInfo("fix1", "provFix1", 5_000, "senderFix1", DanmakuLocation.BOTTOM, "FixedZero", 0xABCDEF),
                 false,
             ),
         )
@@ -367,11 +368,19 @@ class DanmakuRepopulatorTest {
         // We choose playTimeMillis near the middle so that the final place times won't overflow but can be huge
         val danmakuList = listOf(
             DanmakuPresentation(
-                Danmaku("large1", "provL1", 100_000, "senderL1", DanmakuLocation.NORMAL, "LargeTimeFloating", 0xFFFFFF),
+                DanmakuInfo(
+                    "large1",
+                    "provL1",
+                    100_000,
+                    "senderL1",
+                    DanmakuLocation.NORMAL,
+                    "LargeTimeFloating",
+                    0xFFFFFF,
+                ),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("large2", "provL2", 100_000, "senderL2", DanmakuLocation.TOP, "LargeTimeFixed", 0xFFFF00),
+                DanmakuInfo("large2", "provL2", 100_000, "senderL2", DanmakuLocation.TOP, "LargeTimeFixed", 0xFFFF00),
                 false,
             ),
         )
@@ -400,23 +409,23 @@ class DanmakuRepopulatorTest {
         // We'll place 3 floating, 2 fixed at times that may skip
         val danmakuList = listOf(
             DanmakuPresentation(
-                Danmaku("s1", "pS1", 500, "sndS1", DanmakuLocation.NORMAL, "FloatEarly", 0xFF0000),
+                DanmakuInfo("s1", "pS1", 500, "sndS1", DanmakuLocation.NORMAL, "FloatEarly", 0xFF0000),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("s2", "pS2", 700, "sndS2", DanmakuLocation.TOP, "FixedEarly", 0x00FF00),
+                DanmakuInfo("s2", "pS2", 700, "sndS2", DanmakuLocation.TOP, "FixedEarly", 0x00FF00),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("s3", "pS3", 1_000, "sndS3", DanmakuLocation.NORMAL, "FloatMid", 0x0000FF),
+                DanmakuInfo("s3", "pS3", 1_000, "sndS3", DanmakuLocation.NORMAL, "FloatMid", 0x0000FF),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("s4", "pS4", 1_200, "sndS4", DanmakuLocation.BOTTOM, "FixedLater", 0xAAAAAA),
+                DanmakuInfo("s4", "pS4", 1_200, "sndS4", DanmakuLocation.BOTTOM, "FixedLater", 0xAAAAAA),
                 false,
             ),
             DanmakuPresentation(
-                Danmaku("s5", "pS5", 1_300, "sndS5", DanmakuLocation.NORMAL, "FloatLatest", 0xBBBBBB),
+                DanmakuInfo("s5", "pS5", 1_300, "sndS5", DanmakuLocation.NORMAL, "FloatLatest", 0xBBBBBB),
                 false,
             ),
         )
@@ -454,7 +463,7 @@ class DanmakuRepopulatorTest {
 
         val danmakuList = listOf(
             DanmakuPresentation(
-                Danmaku(
+                DanmakuInfo(
                     "negCaseFloat",
                     "pNCF",
                     2_000,
@@ -466,7 +475,7 @@ class DanmakuRepopulatorTest {
                 false,
             ),
             DanmakuPresentation(
-                Danmaku(
+                DanmakuInfo(
                     "negCaseFix",
                     "pNCX",
                     2_000,
@@ -494,4 +503,17 @@ class DanmakuRepopulatorTest {
         // Expect no results
         assertTrue(calls.isEmpty())
     }
+
+    // For compatibility
+    @Suppress("TestFunctionName")
+    private fun DanmakuInfo(
+        id: String,
+        serviceId: String,
+        playTimeMillis: Long, // xx.xx seconds
+        senderId: String,
+        location: DanmakuLocation,
+        text: String,
+        color: Int, // RGB
+    ): DanmakuInfo =
+        DanmakuInfo(id, DanmakuServiceId(serviceId), senderId, DanmakuContent(playTimeMillis, color, text, location))
 }

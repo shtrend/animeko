@@ -80,8 +80,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.DarkMode
 import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
-import me.him188.ani.app.data.network.protocol.DanmakuInfo
-import me.him188.ani.app.data.network.protocol.DanmakuLocation
 import me.him188.ani.app.domain.comment.CommentContext
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.platform.LocalContext
@@ -145,8 +143,10 @@ import me.him188.ani.app.videoplayer.ui.gesture.asLevelController
 import me.him188.ani.app.videoplayer.ui.progress.PlayerControllerDefaults
 import me.him188.ani.app.videoplayer.ui.progress.PlayerControllerDefaults.randomDanmakuPlaceholder
 import me.him188.ani.app.videoplayer.ui.progress.rememberMediaProgressSliderState
-import me.him188.ani.danmaku.api.DanmakuPresentation
+import me.him188.ani.danmaku.api.DanmakuContent
+import me.him188.ani.danmaku.api.DanmakuLocation
 import me.him188.ani.danmaku.ui.DanmakuHostState
+import me.him188.ani.danmaku.ui.DanmakuPresentation
 import me.him188.ani.utils.platform.isDesktop
 import me.him188.ani.utils.platform.isMobile
 import org.openani.mediamp.features.AudioLevelController
@@ -615,7 +615,7 @@ private fun EpisodeScreenContentPhone(
                 onSend = { text ->
                     scope.launch {
                         danmakuEditorState.post(
-                            DanmakuInfo(
+                            DanmakuContent(
                                 vm.player.getCurrentPositionMillis(),
                                 text = text,
                                 color = Color.White.toArgb(),

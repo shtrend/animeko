@@ -11,6 +11,7 @@ package me.him188.ani.app.domain.session
 
 import me.him188.ani.app.domain.foundation.ServerListFeatureConfig
 import me.him188.ani.client.apis.BangumiOAuthAniApi
+import me.him188.ani.client.apis.DanmakuAniApi
 import me.him188.ani.client.apis.ScheduleAniApi
 import me.him188.ani.client.apis.SubjectRelationsAniApi
 import me.him188.ani.client.apis.TrendsAniApi
@@ -25,6 +26,7 @@ class AniApiProvider(
     val scheduleApi = ApiInvoker(client) { ScheduleAniApi(baseurl, it) }
     val oauthApi = ApiInvoker(client) { BangumiOAuthAniApi(baseurl, it) }
     val subjectRelationsApi = ApiInvoker(client) { SubjectRelationsAniApi(baseurl, it) }
+    val danmakuApi = ApiInvoker(client) { DanmakuAniApi(baseurl, it) }
 
     private inline val baseurl get() = ServerListFeatureConfig.MAGIC_ANI_SERVER
 }

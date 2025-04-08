@@ -10,9 +10,10 @@
 package me.him188.ani.danmaku.dandanplay.data
 
 import kotlinx.serialization.Serializable
-import me.him188.ani.danmaku.api.Danmaku
+import me.him188.ani.danmaku.api.DanmakuContent
+import me.him188.ani.danmaku.api.DanmakuInfo
 import me.him188.ani.danmaku.api.DanmakuLocation
-import me.him188.ani.danmaku.dandanplay.DandanplayDanmakuProvider
+import me.him188.ani.danmaku.api.DanmakuServiceId
 
 
 @Serializable
@@ -22,7 +23,7 @@ class DandanplayDanmaku(
     val m: String, // content
 )
 
-fun DandanplayDanmaku.toDanmakuOrNull(): Danmaku? {
+fun DandanplayDanmaku.toDanmakuOrNull(): DanmakuInfo? {
     /*
     p参数格式为出现时间,模式,颜色,用户ID，各个参数之间使用英文逗号分隔
 
@@ -38,19 +39,22 @@ fun DandanplayDanmaku.toDanmakuOrNull(): Danmaku? {
 
     val timeSecs = time.toDoubleOrNull() ?: return null
 
-    return Danmaku(
-        id = cid.toString(),
-        providerId = DandanplayDanmakuProvider.ID,
+    val content = DanmakuContent(
         playTimeMillis = (timeSecs * 1000).toLong(),
-        senderId = userId,
+        color = color.toIntOrNull() ?: return null,
+        text = m,
         location = when (mode.toIntOrNull()) {
             1 -> DanmakuLocation.NORMAL
             4 -> DanmakuLocation.BOTTOM
             5 -> DanmakuLocation.TOP
             else -> return null
         },
-        text = m,
-        color = color.toIntOrNull() ?: return null,
+    )
+    return DanmakuInfo(
+        id = cid.toString(),
+        serviceId = DanmakuServiceId.Dandanplay,
+        senderId = userId,
+        content = content,
     )
 }
 

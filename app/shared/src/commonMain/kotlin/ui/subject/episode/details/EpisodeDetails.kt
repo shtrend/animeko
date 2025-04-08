@@ -90,6 +90,7 @@ import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuMatchInfoSummaryRow
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics
 import me.him188.ani.app.ui.subject.episode.video.DanmakuStatistics
+import me.him188.ani.danmaku.api.DanmakuServiceId
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.isDesktop
 
@@ -130,7 +131,7 @@ fun EpisodeDetails(
     onSwitchEpisode: (episodeId: Int) -> Unit,
     onRefreshMediaSources: () -> Unit,
     onRestartSource: (instanceId: String) -> Unit,
-    onSetDanmakuSourceEnabled: (providerId: String, enabled: Boolean) -> Unit,
+    onSetDanmakuSourceEnabled: (serviceId: DanmakuServiceId, enabled: Boolean) -> Unit,
     onClickLogin: () -> Unit,
     onClickTag: (Tag) -> Unit,
     modifier: Modifier = Modifier,
@@ -155,7 +156,7 @@ fun EpisodeDetails(
                     authState,
                     onPlay = onSwitchEpisode,
                     onLoadErrorRetry = { state.subjectDetailsStateLoader.reload(state.subjectId) },
-                    onClickTag = onClickTag, 
+                    onClickTag = onClickTag,
                     showTopBar = false,
                     showBlurredBackground = false,
                     navigationIcon = {},
@@ -305,7 +306,7 @@ fun EpisodeDetails(
                                     onDismissRequest = { showDropdown = false },
                                     enabled = source.config.enabled,
                                     onSetEnabled = { enabled ->
-                                        onSetDanmakuSourceEnabled(source.matchInfo.providerId, enabled)
+                                        onSetDanmakuSourceEnabled(source.matchInfo.serviceId, enabled)
                                     },
                                 )
                             },

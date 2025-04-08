@@ -34,11 +34,12 @@ import me.him188.ani.app.domain.danmaku.DanmakuLoadingState
 import me.him188.ani.app.domain.media.player.data.filenameOrNull
 import me.him188.ani.app.domain.settings.GetDanmakuRegexFilterListFlowUseCase
 import me.him188.ani.danmaku.api.DanmakuEvent
-import me.him188.ani.danmaku.api.DanmakuMatchInfo
-import me.him188.ani.danmaku.api.DanmakuMatchMethod
+import me.him188.ani.danmaku.api.DanmakuServiceId
 import me.him188.ani.danmaku.api.DanmakuSession
 import me.him188.ani.danmaku.api.TimeBasedDanmakuSession
 import me.him188.ani.danmaku.api.emptyDanmakuCollection
+import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
+import me.him188.ani.danmaku.api.provider.DanmakuMatchMethod
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -114,7 +115,7 @@ class EpisodeDanmakuLoader(
         sharingStarted,
     )
 
-    private val config = MutableStateFlow(persistentMapOf<String, DanmakuOriginConfig>())
+    private val config = MutableStateFlow(persistentMapOf<DanmakuServiceId, DanmakuOriginConfig>())
     val configFlow = config.asStateFlow()
 
     private val danmakuCollectionFlow = combine(danmakuLoader.fetchResultFlow, config) { results, configMap ->
@@ -125,18 +126,20 @@ class EpisodeDanmakuLoader(
 
             TimeBasedDanmakuSession.create(
                 results.asSequence().flatMap { result ->
-                    val config = configMap[result.matchInfo.providerId] ?: DanmakuOriginConfig.Default
+                    val config = configMap[result.matchInfo.serviceId] ?: DanmakuOriginConfig.Default
 
                     if (!config.enabled) {
-                        return@flatMap emptySequence()
+                        return@flatMap emptyList()
                     }
 
                     result.list
                         .mapNotNull { danmaku ->
                             val newText = sanitizeDanmakuText(danmaku.text) ?: return@mapNotNull null
                             danmaku.copy(
-                                playTimeMillis = danmaku.playTimeMillis + config.shiftMillis,
-                                text = newText,
+                                content = danmaku.content.copy(
+                                    playTimeMillis = danmaku.playTimeMillis + config.shiftMillis,
+                                    text = newText,
+                                ),
                             )
                         }
                 },
@@ -160,9 +163,9 @@ class EpisodeDanmakuLoader(
     ) { results, configs ->
         results.orEmpty().map {
             DanmakuFetchResultWithConfig(
-                it.matchInfo.providerId,
+                it.matchInfo.serviceId,
                 it.matchInfo,
-                configs[it.matchInfo.providerId] ?: DanmakuOriginConfig.Default,
+                configs[it.matchInfo.serviceId] ?: DanmakuOriginConfig.Default,
             )
         }
     }.shareIn(flowScope, started = sharingStarted, replay = 1)
@@ -173,25 +176,25 @@ class EpisodeDanmakuLoader(
         danmakuSessionFlow.first().requestRepopulate()
     }
 
-    fun setEnabled(providerId: String, enabled: Boolean) {
+    fun setEnabled(serviceId: DanmakuServiceId, enabled: Boolean) {
         config.update { conf ->
             conf.put(
-                providerId,
-                conf.getConfigOrDefault(providerId).copy(enabled = enabled),
+                serviceId,
+                conf.getConfigOrDefault(serviceId).copy(enabled = enabled),
             )
         }
     }
 
-    fun setShiftMillis(providerId: String, shiftMillis: Long) {
+    fun setShiftMillis(serviceId: DanmakuServiceId, shiftMillis: Long) {
         config.update { conf ->
             conf.put(
-                providerId,
-                conf.getConfigOrDefault(providerId).copy(shiftMillis = shiftMillis),
+                serviceId,
+                conf.getConfigOrDefault(serviceId).copy(shiftMillis = shiftMillis),
             )
         }
     }
 
-    private fun Map<String, DanmakuOriginConfig>.getConfigOrDefault(providerId: String) =
+    private fun Map<DanmakuServiceId, DanmakuOriginConfig>.getConfigOrDefault(providerId: DanmakuServiceId) =
         this[providerId] ?: DanmakuOriginConfig.Default
 
     private fun sanitizeDanmakuText(text: String): String? {
@@ -232,16 +235,16 @@ data class DanmakuOriginConfig(
  * 一个弹幕数据源的结果, 包含了匹配信息和弹幕列表, 还包含本次会话的配置
  */
 data class DanmakuFetchResultWithConfig(
-    val providerId: String,
+    val serviceId: DanmakuServiceId,
     val matchInfo: DanmakuMatchInfo,
     val config: DanmakuOriginConfig,
 )
 
 @TestOnly
 fun createTestDanmakuFetchResultWithConfig(
-    providerId: String,
+    serviceId: String,
     matchInfo: DanmakuMatchInfo = DanmakuMatchInfo(
-        providerId,
+        DanmakuServiceId(serviceId),
         100,
         DanmakuMatchMethod.Exact(
             subjectTitle = "条目标题",
@@ -249,4 +252,4 @@ fun createTestDanmakuFetchResultWithConfig(
         ),
     ),
     config: DanmakuOriginConfig = DanmakuOriginConfig.Default,
-): DanmakuFetchResultWithConfig = DanmakuFetchResultWithConfig(providerId, matchInfo, config)
+): DanmakuFetchResultWithConfig = DanmakuFetchResultWithConfig(DanmakuServiceId(serviceId), matchInfo, config)

@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.subject.episode.details.components.DanmakuSourceCard
 import me.him188.ani.app.ui.subject.episode.statistics.fuzzy
-import me.him188.ani.danmaku.api.DanmakuMatchInfo
+import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Composable

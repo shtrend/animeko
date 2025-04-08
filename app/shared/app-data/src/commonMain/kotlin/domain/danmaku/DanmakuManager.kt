@@ -23,11 +23,8 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withTimeout
-import me.him188.ani.app.data.network.AniDanmakuProvider
-import me.him188.ani.app.data.network.AniDanmakuSender
-import me.him188.ani.app.data.network.AniDanmakuSenderImpl
-import me.him188.ani.app.data.network.SendDanmakuException
-import me.him188.ani.app.data.network.protocol.DanmakuInfo
+import me.him188.ani.app.data.network.danmaku.AniDanmakuProvider
+import me.him188.ani.app.data.network.danmaku.AniDanmakuSender
 import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.foundation.HttpClientProvider
@@ -40,17 +37,21 @@ import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.platform.getAniUserAgent
 import me.him188.ani.app.ui.foundation.BackgroundScope
 import me.him188.ani.app.ui.foundation.HasBackgroundScope
-import me.him188.ani.danmaku.api.Danmaku
-import me.him188.ani.danmaku.api.DanmakuFetchResult
-import me.him188.ani.danmaku.api.DanmakuMatchInfo
-import me.him188.ani.danmaku.api.DanmakuMatchMethod
-import me.him188.ani.danmaku.api.DanmakuProvider
+import me.him188.ani.client.apis.DanmakuAniApi
+import me.him188.ani.danmaku.api.DanmakuContent
+import me.him188.ani.danmaku.api.DanmakuInfo
 import me.him188.ani.danmaku.api.DanmakuProviderConfig
-import me.him188.ani.danmaku.api.DanmakuSearchRequest
+import me.him188.ani.danmaku.api.provider.DanmakuFetchRequest
+import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
+import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
+import me.him188.ani.danmaku.api.provider.DanmakuMatchMethod
+import me.him188.ani.danmaku.api.provider.DanmakuProvider
+import me.him188.ani.danmaku.api.provider.MatchingDanmakuProvider
+import me.him188.ani.danmaku.api.provider.SimpleDanmakuProvider
 import me.him188.ani.danmaku.dandanplay.DandanplayDanmakuProvider
 import me.him188.ani.utils.coroutines.closeOnReplacement
 import me.him188.ani.utils.coroutines.mapAutoClose
-import me.him188.ani.utils.ktor.ScopedHttpClient
+import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -64,37 +65,10 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * 管理多个弹幕源 [DanmakuProvider]
  */
-interface DanmakuManager {
-    val selfId: Flow<String?>
-
-    suspend fun fetch(
-        request: DanmakuSearchRequest,
-    ): List<DanmakuFetchResult>
-
-    @Throws(SendDanmakuException::class, CancellationException::class)
-    suspend fun post(episodeId: Int, danmaku: DanmakuInfo): Danmaku
-}
-
-object DanmakuProviderLoader {
-    fun load(
-        client: ScopedHttpClient,
-        config: (id: String) -> DanmakuProviderConfig,
-    ): List<DanmakuProvider> {
-        // 待 https://youtrack.jetbrains.com/issue/KT-65362/Cannot-resolve-declarations-from-a-dependency-when-there-are-multiple-JVM-only-project-dependencies-in-a-JVM-Android-MPP
-        // 解决后, 才能切换使用 ServiceLoader, 否则 resources META-INF/services 会冲突
-//        val factories = ServiceLoader.load(DanmakuProviderFactory::class.java).toList()
-        val factories = listOf(
-            DandanplayDanmakuProvider.Factory(),
-            AniDanmakuProvider.Factory(),
-        )
-        return factories
-            .map { factory -> factory.create(config(factory.id), client) }
-    }
-}
-
-class DanmakuManagerImpl(
+class DanmakuManager(
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
-) : DanmakuManager, KoinComponent, HasBackgroundScope by BackgroundScope(parentCoroutineContext) {
+    val danmakuApi: ApiInvoker<DanmakuAniApi>,
+) : KoinComponent, HasBackgroundScope by BackgroundScope(parentCoroutineContext) {
     private val settingsRepository: SettingsRepository by inject()
     private val sessionManager: SessionManager by inject()
     private val httpClientProvider: HttpClientProvider by inject()
@@ -108,20 +82,25 @@ class DanmakuManagerImpl(
         )
     }
 
-    /**
-     * @see DanmakuProviderLoader
-     */
     private val providers: Flow<List<DanmakuProvider>> = config.map { config ->
-        DanmakuProviderLoader.load(httpClientProvider.get()) { config }
+        val client = httpClientProvider.get()
+        listOf(
+            AniDanmakuProvider(danmakuApi),
+            DandanplayDanmakuProvider(
+                dandanplayAppId = currentAniBuildConfig.dandanplayAppId,
+                dandanplayAppSecret = currentAniBuildConfig.dandanplayAppSecret,
+                client,
+            ),
+        )
     }.shareInBackground(started = SharingStarted.Lazily)
 
     @OptIn(OpaqueSession::class)
     private val sender: Flow<AniDanmakuSender> = config.mapAutoClose { config ->
-        AniDanmakuSenderImpl(
+        AniDanmakuSender(
             httpClientProvider.get(
                 userAgent = ScopedHttpClientUserAgent.ANI,
             ),
-            config,
+            danmakuApi,
             sessionManager.verifiedAccessToken, // TODO: Handle danmaku sender errors 
             backgroundScope.coroutineContext,
         )
@@ -129,20 +108,25 @@ class DanmakuManagerImpl(
         .shareInBackground(started = SharingStarted.Lazily)
 
     private companion object {
-        private val logger = logger<DanmakuManagerImpl>()
+        private val logger = logger<DanmakuManager>()
     }
 
-    override val selfId: Flow<String?> = sender.flatMapLatest { it.selfId }
+    val selfId: Flow<String?> = sender.flatMapLatest { it.selfId }
 
-    override suspend fun fetch(
-        request: DanmakuSearchRequest,
+    suspend fun fetch(
+        request: DanmakuFetchRequest,
     ): List<DanmakuFetchResult> {
         logger.info { "Search for danmaku with filename='${request.filename}'" }
         val flows = providers.first().map { provider ->
             flow {
                 emit(
                     withTimeout(60.seconds) {
-                        provider.fetch(request = request)
+                        when (provider) {
+                            is MatchingDanmakuProvider -> TODO()
+                            is SimpleDanmakuProvider -> {
+                                provider.fetch(request = request)
+                            }
+                        }
                     },
                 )
             }.retry(1) {
@@ -150,18 +134,18 @@ class DanmakuManagerImpl(
                     // collector was cancelled
                     return@retry false
                 }
-                logger.error(it) { "Failed to fetch danmaku from provider '${provider.id}'" }
+                logger.error(it) { "Failed to fetch danmaku from provider '${provider.mainServiceId}'" }
                 true
             }.catch {
                 emit(
                     listOf(
                         DanmakuFetchResult(
                             DanmakuMatchInfo(
-                                provider.id,
+                                provider.mainServiceId,
                                 0,
                                 DanmakuMatchMethod.NoMatch,
                             ),
-                            list = emptySequence(),
+                            list = emptyList(),
                         ),
                     ),
                 )// 忽略错误, 否则一个源炸了会导致所有弹幕都不发射了
@@ -171,7 +155,10 @@ class DanmakuManagerImpl(
         return flows
     }
 
-    override suspend fun post(episodeId: Int, danmaku: DanmakuInfo): Danmaku {
+    suspend fun post(
+        episodeId: Int,
+        danmaku: DanmakuContent
+    ): DanmakuInfo {
         return try {
             sender.first().send(episodeId, danmaku)
         } catch (e: Throwable) {

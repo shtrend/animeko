@@ -13,8 +13,9 @@ import androidx.compose.runtime.Immutable
 import me.him188.ani.app.domain.danmaku.DanmakuLoadingState
 import me.him188.ani.app.domain.episode.DanmakuFetchResultWithConfig
 import me.him188.ani.app.domain.episode.createTestDanmakuFetchResultWithConfig
-import me.him188.ani.danmaku.api.DanmakuMatchInfo
-import me.him188.ani.danmaku.api.DanmakuMatchMethod
+import me.him188.ani.danmaku.api.DanmakuServiceId
+import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
+import me.him188.ani.danmaku.api.provider.DanmakuMatchMethod
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Immutable
@@ -32,7 +33,7 @@ fun createTestDanmakuStatistics(
         createTestDanmakuFetchResultWithConfig(
             "弹幕源弹幕源弹幕源弹幕源",
             DanmakuMatchInfo(
-                "弹幕源弹幕源弹幕源弹幕源",
+                DanmakuServiceId("弹幕源弹幕源弹幕源弹幕源"),
                 100,
                 DanmakuMatchMethod.Exact(
                     subjectTitle = "条目标题",

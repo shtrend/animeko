@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 package me.him188.ani.danmaku.api
 
 import kotlinx.coroutines.currentCoroutineContext
@@ -15,7 +24,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 internal class TimeBasedDanmakuSessionTest {
     suspend fun create(
-        sequence: Sequence<Danmaku>,
+        sequence: Sequence<DanmakuInfo>,
     ): DanmakuCollection = TimeBasedDanmakuSession.create(
         sequence, coroutineContext = currentCoroutineContext()[ContinuationInterceptor] ?: EmptyCoroutineContext,
     )
@@ -55,5 +64,5 @@ internal class TimeBasedDanmakuSessionTest {
         dummyDanmaku((timeSecs * 1000).toLong(), text)
 
     private fun dummyDanmaku(timeMillis: Long, text: String = "$timeMillis") =
-        Danmaku(text, "dummy", timeMillis, text, DanmakuLocation.NORMAL, text, 0)
+        DanmakuInfo(text, DanmakuServiceId("dummy"), text, DanmakuContent(timeMillis, 0, text, DanmakuLocation.NORMAL))
 }

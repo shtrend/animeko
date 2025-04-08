@@ -50,8 +50,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.domain.episode.DanmakuFetchResultWithConfig
-import me.him188.ani.danmaku.api.DanmakuMatchInfo
-import me.him188.ani.danmaku.api.DanmakuMatchMethod
+import me.him188.ani.danmaku.api.DanmakuServiceId
+import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
+import me.him188.ani.danmaku.api.provider.DanmakuMatchMethod
 
 @Composable
 fun DanmakuMatchInfoGrid(
@@ -107,7 +108,7 @@ fun DanmakuSourceCard(
                 headlineContent = {
                     SelectionContainer {
                         Text(
-                            info.providerId,
+                            renderDanmakuServiceId(info.serviceId),
                             Modifier.basicMarquee(),
                             style = MaterialTheme.typography.titleMedium,
                             maxLines = 1,
@@ -118,7 +119,7 @@ fun DanmakuSourceCard(
                 trailingContent = {
                     Box {
                         IconButton(onClickSettings, Modifier.offset(x = 8.dp)) {
-                            Icon(Icons.Rounded.MoreVert, "设置 ${info.providerId}")
+                            Icon(Icons.Rounded.MoreVert, "设置 ${renderDanmakuServiceId(info.serviceId)}")
                         }
                         dropdown()
                     }
@@ -179,6 +180,18 @@ fun DanmakuSourceCard(
             }
         }
     }
+}
+
+private fun renderDanmakuServiceId(serviceId: DanmakuServiceId): String = when (serviceId) {
+    DanmakuServiceId.Animeko -> "Animeko"
+    DanmakuServiceId.AcFun -> "AcFun"
+    DanmakuServiceId.Baha -> "Baha"
+    DanmakuServiceId.Bilibili -> "哔哩哔哩"
+    DanmakuServiceId.Dandanplay -> "弹弹"
+    DanmakuServiceId.Tucao -> "Tucao"
+
+    // `else` should not reach in production
+    else -> serviceId.value
 }
 
 @Composable

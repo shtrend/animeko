@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.data.network
+package me.him188.ani.app.data.network.danmaku
 
 import io.ktor.client.call.body
 import io.ktor.client.plugins.timeout
@@ -31,16 +31,19 @@ import kotlinx.coroutines.sync.withLock
 import me.him188.ani.app.data.network.protocol.AniUser
 import me.him188.ani.app.data.network.protocol.BangumiLoginRequest
 import me.him188.ani.app.data.network.protocol.BangumiLoginResponse
-import me.him188.ani.app.data.network.protocol.DanmakuInfo
-import me.him188.ani.app.data.network.protocol.DanmakuPostRequest
 import me.him188.ani.app.domain.foundation.ServerListFeatureConfig.Companion.MAGIC_ANI_SERVER
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.BackgroundScope
 import me.him188.ani.app.ui.foundation.HasBackgroundScope
 import me.him188.ani.app.ui.foundation.launchInBackground
-import me.him188.ani.danmaku.api.Danmaku
-import me.him188.ani.danmaku.api.DanmakuProviderConfig
+import me.him188.ani.client.apis.DanmakuAniApi
+import me.him188.ani.client.models.AniDanmakuInfo
+import me.him188.ani.client.models.AniDanmakuLocation
+import me.him188.ani.danmaku.api.DanmakuContent
+import me.him188.ani.danmaku.api.DanmakuInfo
+import me.him188.ani.danmaku.api.DanmakuLocation
 import me.him188.ani.utils.coroutines.retryWithBackoffDelay
+import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.ktor.ScopedHttpClient
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
@@ -49,16 +52,6 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.random.Random
-
-interface AniDanmakuSender : AutoCloseable {
-    val selfId: Flow<String?>
-
-    @Throws(SendDanmakuException::class, CancellationException::class)
-    suspend fun send(
-        episodeId: Int,
-        info: DanmakuInfo
-    ): Danmaku
-}
 
 sealed class SendDanmakuException : Exception()
 class AuthorizationFailureException(override val cause: Throwable?) : SendDanmakuException()
@@ -69,20 +62,21 @@ class RequestFailedException(
 
 class NetworkErrorException(override val cause: Throwable?) : SendDanmakuException()
 
-class AniDanmakuSenderImpl(
+class AniDanmakuSender(
     private val client: ScopedHttpClient,
-    private val config: DanmakuProviderConfig,
+    private val aniDanmakuApi: ApiInvoker<DanmakuAniApi>,
     private val bangumiToken: Flow<String?>,
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
-) : AniDanmakuSender, HasBackgroundScope by BackgroundScope(parentCoroutineContext) {
+) : AutoCloseable, HasBackgroundScope by BackgroundScope(parentCoroutineContext) {
     private fun getBaseUrl() = MAGIC_ANI_SERVER
 
     companion object {
-        private val logger = logger<AniDanmakuSenderImpl>()
+        private val logger = logger<AniDanmakuSender>()
     }
 
     private suspend fun getUserInfo(token: String): AniUser {
         return client.use {
+            @Suppress("LEAKING_HTTP_RESPONSE")
             invokeRequest {
                 get("${getBaseUrl()}/v1/me") {
                     configureTimeout()
@@ -120,6 +114,7 @@ class AniDanmakuSenderImpl(
         bangumiToken: String
     ): String {
         return client.use {
+            @Suppress("LEAKING_HTTP_RESPONSE")
             invokeRequest {
                 post("${getBaseUrl()}/v1/login/bangumi") {
                     contentType(ContentType.Application.Json)
@@ -138,17 +133,21 @@ class AniDanmakuSenderImpl(
 
     private suspend fun sendDanmaku(
         episodeId: Int,
-        info: DanmakuInfo,
+        content: DanmakuContent,
     ) {
         val token = requireSession().token
-        client.use {
-            invokeRequest {
-                post("${getBaseUrl()}/v1/danmaku/$episodeId") {
-                    bearerAuth(token)
-                    contentType(ContentType.Application.Json)
-                    setBody(DanmakuPostRequest(info))
-                }
-            }
+        aniDanmakuApi {
+            postDanmaku(
+                episodeId.toString(),
+                me.him188.ani.client.models.AniDanmakuPostRequest(
+                    AniDanmakuInfo(
+                        color = content.color,
+                        location = content.location.toAniLocation(),
+                        playTime = content.playTimeMillis,
+                        text = content.text,
+                    ),
+                ),
+            ).body()
         }
     }
 
@@ -160,7 +159,7 @@ class AniDanmakuSenderImpl(
     private val session = MutableStateFlow<Session?>(null)
 
     private suspend inline fun requireSession() =
-        session.value ?: kotlin.run {
+        session.value ?: run {
             login()
         }
 
@@ -181,28 +180,32 @@ class AniDanmakuSenderImpl(
         }.first()
     }
 
-    override val selfId = session.map { it?.selfInfo?.id }
+    val selfId = session.map { it?.selfInfo?.id }
 
     private val sendLock = Mutex()
-    override suspend fun send(episodeId: Int, info: DanmakuInfo): Danmaku = sendLock.withLock {
+
+    @Throws(SendDanmakuException::class, CancellationException::class)
+    suspend fun send(episodeId: Int, info: DanmakuContent): DanmakuInfo = sendLock.withLock {
         val selfId = requireSession().selfInfo.id
 
         sendDanmaku(episodeId, info)
 
-        Danmaku(
-            id = "self" + Random.nextInt(),
-            providerId = AniDanmakuProvider.ID,
-            playTimeMillis = info.playTime,
-            senderId = selfId,
-            location = info.location.toApi(),
-            text = info.text,
-            color = info.color,
+        DanmakuInfo(
+            "self" + Random.nextInt(),
+            AniDanmakuProvider.ID,
+            selfId,
+            DanmakuContent(
+                info.playTimeMillis,
+                info.color,
+                info.text,
+                info.location,
+            ),
         )
     }
 
     init {
         launchInBackground {
-            kotlin.runCatching { login() }.onFailure {
+            runCatching { login() }.onFailure {
                 logger.error(it) { "Failed to login to danmaku sever (on startup). Will try later when sending danmaku." }
             }
         }
@@ -210,5 +213,13 @@ class AniDanmakuSenderImpl(
 
     override fun close() {
         backgroundScope.cancel()
+    }
+}
+
+private fun DanmakuLocation.toAniLocation(): AniDanmakuLocation {
+    return when (this) {
+        DanmakuLocation.TOP -> AniDanmakuLocation.TOP
+        DanmakuLocation.BOTTOM -> AniDanmakuLocation.BOTTOM
+        DanmakuLocation.NORMAL -> AniDanmakuLocation.NORMAL
     }
 }

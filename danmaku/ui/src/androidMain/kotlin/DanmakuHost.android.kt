@@ -73,9 +73,10 @@ import androidx.window.core.layout.WindowSizeClass
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import me.him188.ani.danmaku.api.Danmaku
+import me.him188.ani.danmaku.api.DanmakuContent
+import me.him188.ani.danmaku.api.DanmakuInfo
 import me.him188.ani.danmaku.api.DanmakuLocation
-import me.him188.ani.danmaku.api.DanmakuPresentation
+import me.him188.ani.danmaku.api.DanmakuServiceId
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -91,36 +92,38 @@ private class DummyDanmakuGeneratorState(
 
     fun generate(
         playTimeMillis: Long = currentTimeMillis() - startTime
-    ): Danmaku {
-        return Danmaku(
+    ): DanmakuInfo {
+        return DanmakuInfo(
             counter++.toString(),
-            "dummy",
-            playTimeMillis,
-            currentTimeMillis().toString(),
-            DanmakuLocation.entries.random(),
-            text = LoremIpsum(Random.nextInt(1..5)).values.first(),
-            Color.Black.value.toInt(),
+            DanmakuServiceId("dummy"), currentTimeMillis().toString(),
+            DanmakuContent(
+                playTimeMillis,
+                Color.Black.value.toInt(),
+                text = LoremIpsum(Random.nextInt(1..5)).values.first(),
+                location = DanmakuLocation.entries.random(),
+            ),
         )
     }
 
-    fun generateSelf(): Danmaku {
-        return Danmaku(
+    fun generateSelf(): DanmakuInfo {
+        return DanmakuInfo(
             "self${Random.Default.nextLong(100000000L..999999999L)}",
-            "dummy sender",
-            currentTimeMillis() - startTime,
-            "2",
-            DanmakuLocation.entries.random(),
-            text = "this is my danmaku ${currentTimeMillis()}",
-            0xfe1010,
+            DanmakuServiceId("dummy sender"), "2",
+            DanmakuContent(
+                currentTimeMillis() - startTime,
+                0xfe1010,
+                text = "this is my danmaku ${currentTimeMillis()}",
+                location = DanmakuLocation.entries.random(),
+            ),
         )
     }
 
     fun generateRepopulate(
         lastTimeMillis: Long = Random.nextLong(0L..(1000L * 60 * 25))
-    ): List<Danmaku> {
+    ): List<DanmakuInfo> {
         if (lastTimeMillis < 0) return emptyList()
 
-        val list = mutableListOf<Danmaku>()
+        val list = mutableListOf<DanmakuInfo>()
         var current = lastTimeMillis
 
         kotlin.run {

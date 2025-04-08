@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -41,12 +41,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.VideoScaffoldConfig
-import me.him188.ani.app.data.network.protocol.DanmakuInfo
-import me.him188.ani.app.data.network.protocol.DanmakuLocation
 import me.him188.ani.app.ui.foundation.text.ProvideContentColor
 import me.him188.ani.app.videoplayer.ui.PlayerControllerState
 import me.him188.ani.app.videoplayer.ui.progress.PlayerControllerDefaults
 import me.him188.ani.app.videoplayer.ui.rememberAlwaysOnRequester
+import me.him188.ani.danmaku.api.DanmakuContent
+import me.him188.ani.danmaku.api.DanmakuLocation
 import org.openani.mediamp.MediampPlayer
 
 
@@ -77,7 +77,7 @@ fun PlayerDanmakuEditor(
     text: String,
     onTextChange: (String) -> Unit,
     isSending: () -> Boolean,
-    onSend: suspend (DanmakuInfo) -> Unit,
+    onSend: suspend (me.him188.ani.danmaku.api.DanmakuContent) -> Unit,
     danmakuTextPlaceholder: String,
     playerState: MediampPlayer,
     videoScaffoldConfig: VideoScaffoldConfig,
@@ -103,7 +103,7 @@ fun PlayerDanmakuEditor(
                 onTextChange("")
                 scope.launch {
                     onSend(
-                        DanmakuInfo(
+                        DanmakuContent(
                             playerState.getCurrentPositionMillis(),
                             text = text,
                             color = Color.White.toArgb(),

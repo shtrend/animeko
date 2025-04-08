@@ -33,10 +33,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import me.him188.ani.danmaku.api.Danmaku
+import me.him188.ani.danmaku.api.DanmakuInfo
 import me.him188.ani.danmaku.api.DanmakuLocation
-import me.him188.ani.danmaku.api.DanmakuPresentation
-import me.him188.ani.danmaku.ui.DanmakuHostState.UIContext
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 
@@ -762,7 +760,7 @@ internal class DanmakuRepopulator(
      * 清空屏幕并填充[新弹幕列表][list]到屏幕.
      *
      * 以 [currentPlayMillis] 为放置的基准, 换句话说:
-     * 如果 [list] 中最后一条弹幕的[放置时间][Danmaku.playTimeMillis]等于 [currentPlayMillis] 那它就会被放到屏幕最右侧, 然后立刻出现.
+     * 如果 [list] 中最后一条弹幕的[放置时间][DanmakuInfo.playTimeMillis]等于 [currentPlayMillis] 那它就会被放到屏幕最右侧, 然后立刻出现.
      *
      * @param currentPlayMillis 放置到最右侧的弹幕的基准时间戳.
      * 如果不许需要关联实际播放的时间, 可以传入 [list.last().danmaku.placeTimeMillis], 这将会把最后一条弹幕放到最右侧.

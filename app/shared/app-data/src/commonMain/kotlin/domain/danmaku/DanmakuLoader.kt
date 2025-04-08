@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.transformLatest
 import me.him188.ani.app.data.repository.danmaku.SearchDanmakuRequest
 import me.him188.ani.danmaku.api.DanmakuCollection
-import me.him188.ani.danmaku.api.DanmakuFetchResult
+import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
 import org.koin.core.Koin
 
 /**

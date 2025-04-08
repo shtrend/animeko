@@ -9,16 +9,15 @@
 
 package me.him188.ani.danmaku.dandanplay
 
-import me.him188.ani.danmaku.api.AbstractDanmakuProvider
-import me.him188.ani.danmaku.api.Danmaku
-import me.him188.ani.danmaku.api.DanmakuEpisode
-import me.him188.ani.danmaku.api.DanmakuFetchResult
-import me.him188.ani.danmaku.api.DanmakuMatchInfo
-import me.him188.ani.danmaku.api.DanmakuMatchMethod
-import me.him188.ani.danmaku.api.DanmakuMatchers
-import me.him188.ani.danmaku.api.DanmakuProviderConfig
-import me.him188.ani.danmaku.api.DanmakuProviderFactory
-import me.him188.ani.danmaku.api.DanmakuSearchRequest
+import me.him188.ani.danmaku.api.DanmakuInfo
+import me.him188.ani.danmaku.api.DanmakuServiceId
+import me.him188.ani.danmaku.api.provider.DanmakuEpisode
+import me.him188.ani.danmaku.api.provider.DanmakuFetchRequest
+import me.him188.ani.danmaku.api.provider.DanmakuFetchResult
+import me.him188.ani.danmaku.api.provider.DanmakuMatchInfo
+import me.him188.ani.danmaku.api.provider.DanmakuMatchMethod
+import me.him188.ani.danmaku.api.provider.DanmakuMatchers
+import me.him188.ani.danmaku.api.provider.SimpleDanmakuProvider
 import me.him188.ani.danmaku.dandanplay.data.SearchEpisodesAnime
 import me.him188.ani.danmaku.dandanplay.data.toDanmakuOrNull
 import me.him188.ani.datasources.api.EpisodeSort
@@ -26,56 +25,53 @@ import me.him188.ani.datasources.api.seasonMonth
 import me.him188.ani.utils.ktor.ScopedHttpClient
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
+import me.him188.ani.utils.logging.thisLogger
 import me.him188.ani.utils.logging.warn
 import kotlin.coroutines.cancellation.CancellationException
 
 class DandanplayDanmakuProvider(
-    config: DanmakuProviderConfig,
+    dandanplayAppId: String,
+    dandanplayAppSecret: String,
     client: ScopedHttpClient,
-) : AbstractDanmakuProvider() {
+) : SimpleDanmakuProvider {
+    private val logger = thisLogger()
+
     companion object {
-        const val ID = "弹弹play"
+        val ID = DanmakuServiceId.Dandanplay
     }
 
-    class Factory : DanmakuProviderFactory {
-        override val id: String get() = ID
+    override val mainServiceId: DanmakuServiceId get() = ID
 
-        override fun create(config: DanmakuProviderConfig, client: ScopedHttpClient): DandanplayDanmakuProvider =
-            DandanplayDanmakuProvider(config, client)
-    }
+    private val dandanplayClient = DandanplayClient(client, dandanplayAppId, dandanplayAppSecret)
 
-    override val id: String get() = ID
-
-    private val dandanplayClient = DandanplayClient(client, config.dandanplayAppId, config.dandanplayAppSecret)
-
-    private enum class DanmakuOrigin(val displayName: String) {
-        BiliBili("哔哩哔哩"),
-        AcFun("Acfun"),
-        Tucao("Tucao"),
-        Baha("Baha"),
-        DanDanPlay(ID),
+    private enum class DanmakuOrigin(val serviceId: DanmakuServiceId) {
+        BiliBili(DanmakuServiceId.Bilibili),
+        AcFun(DanmakuServiceId.AcFun),
+        Tucao(DanmakuServiceId.Tucao),
+        Baha(DanmakuServiceId.Baha),
+        DanDanPlay(DanmakuServiceId.Dandanplay),
     }
 
     override suspend fun fetch(
-        request: DanmakuSearchRequest,
+        request: DanmakuFetchRequest,
     ): List<DanmakuFetchResult> {
         val raw = fetchImpl(request)
         val rawList = raw.list.toList()
         return rawList.groupBy { it.origin }.map { (origin, list) ->
             DanmakuFetchResult(
                 matchInfo = DanmakuMatchInfo(
-                    providerId = origin.displayName,
+                    serviceId = origin.serviceId,
                     count = list.size,
                     method = raw.matchInfo.method,
                 ),
-                list = list.asSequence(),
+                list = list,
             )
         }.let { results ->
-            if (results.none { it.matchInfo.providerId == ID }) {
+            if (results.none { it.matchInfo.serviceId == DanmakuServiceId.Dandanplay }) {
                 // 保证至少返回 DanDanPlay
                 results + DanmakuFetchResult(
                     matchInfo = raw.matchInfo,
-                    list = rawList.asSequence().filter { it.origin == DanmakuOrigin.DanDanPlay },
+                    list = rawList.filter { it.origin == DanmakuOrigin.DanDanPlay },
                 )
             } else {
                 results
@@ -83,7 +79,7 @@ class DandanplayDanmakuProvider(
         }
     }
 
-    private val Danmaku.origin
+    private val DanmakuInfo.origin
         get() = when {
             senderId.startsWith("[BiliBili]") -> DanmakuOrigin.BiliBili // 这个是确定的, 其他的不确定
             senderId.startsWith("[Acfun]") -> DanmakuOrigin.AcFun
@@ -96,7 +92,7 @@ class DandanplayDanmakuProvider(
             else -> DanmakuOrigin.DanDanPlay
         }
 
-    private suspend fun fetchImpl(request: DanmakuSearchRequest): DanmakuFetchResult {
+    private suspend fun fetchImpl(request: DanmakuFetchRequest): DanmakuFetchResult {
         // 获取剧集流程:
         //
         // 1. 获取该番剧所属季度的所有番的名字, 匹配 bangumi 条目所有别名
@@ -134,11 +130,11 @@ class DandanplayDanmakuProvider(
         if (episodes != null) {
             episodes.firstOrNull { it.epOrSort != null && it.epOrSort == request.episodeSort }?.let {
                 logger.info { "Matched episode by exact episodeSort: ${it.subjectName} - ${it.episodeName}" }
-                return createSession(it.id.toLong(), DanmakuMatchMethod.Exact(it.subjectName, it.episodeName))
+                return createResult(it.id.toLong(), DanmakuMatchMethod.Exact(it.subjectName, it.episodeName))
             }
             episodes.firstOrNull { it.epOrSort != null && it.epOrSort == request.episodeEp }?.let {
                 logger.info { "Matched episode by exact episodeEp: ${it.subjectName} - ${it.episodeName}" }
-                return createSession(it.id.toLong(), DanmakuMatchMethod.Exact(it.subjectName, it.episodeName))
+                return createResult(it.id.toLong(), DanmakuMatchMethod.Exact(it.subjectName, it.episodeName))
             }
 
             // 用名称精确匹配, 标记为 Exact
@@ -148,7 +144,7 @@ class DandanplayDanmakuProvider(
                         ?: episodes.firstOrNull { it.episodeName == prefixedExpectedEpisodeName }
                 match?.let { episode ->
                     logger.info { "Matched episode by exact episodeName: ${episode.subjectName} - ${episode.episodeName}" }
-                    return createSession(
+                    return createResult(
                         episode.id.toLong(),
                         DanmakuMatchMethod.Exact(episode.subjectName, episode.episodeName),
                     )
@@ -160,7 +156,7 @@ class DandanplayDanmakuProvider(
         if (!episodes.isNullOrEmpty()) {
             matcher.match(episodes)?.let {
                 logger.info { "Matched episode by ep search: ${it.subjectName} - ${it.episodeName}" }
-                return createSession(
+                return createResult(
                     it.id.toLong(),
                     DanmakuMatchMethod.ExactSubjectFuzzyEpisode(it.subjectName, it.episodeName),
                 )
@@ -177,7 +173,7 @@ class DandanplayDanmakuProvider(
                 videoDuration = request.videoDuration,
             )
             val match = if (resp.isMatched) {
-                resp.matches.firstOrNull() ?: return DanmakuFetchResult.noMatch(ID)
+                resp.matches.firstOrNull() ?: return DanmakuFetchResult.noMatch(DanmakuServiceId.Dandanplay)
             } else {
                 matcher.match(
                     resp.matches.map {
@@ -190,23 +186,23 @@ class DandanplayDanmakuProvider(
                     },
                 )?.let { match ->
                     resp.matches.first { it.episodeId.toString() == match.id }
-                } ?: return DanmakuFetchResult.noMatch(ID)
+                } ?: return DanmakuFetchResult.noMatch(DanmakuServiceId.Dandanplay)
             }
             logger.info { "Best match by file match: ${match.animeTitle} - ${match.episodeTitle}" }
             val episodeId = match.episodeId
-            return createSession(
+            return createResult(
                 episodeId,
                 DanmakuMatchMethod.Fuzzy(match.animeTitle, match.episodeTitle),
             )
         }
-        return DanmakuFetchResult.noMatch(ID)
+        return DanmakuFetchResult.noMatch(DanmakuServiceId.Dandanplay)
     }
 
     /**
      * 用尝试用 bangumi 给的名字 `SubjectInfo.allNames` 去精准匹配
      */
     private suspend fun DandanplayDanmakuProvider.getEpisodesByExactSubjectMatch(
-        request: DanmakuSearchRequest
+        request: DanmakuFetchRequest
     ): List<DanmakuEpisode>? {
         if (!request.subjectPublishDate.isValid) return null
 
@@ -223,7 +219,7 @@ class DandanplayDanmakuProvider(
             }
     }
 
-    private suspend fun getEpisodesByFuzzyEpisodeSearch(request: DanmakuSearchRequest): List<DanmakuEpisode> {
+    private suspend fun getEpisodesByFuzzyEpisodeSearch(request: DanmakuFetchRequest): List<DanmakuEpisode> {
         val searchEpisodeResponse = request.subjectNames.flatMap { name ->
             kotlin.runCatching {
                 dandanplayClient.searchEpisode(
@@ -251,7 +247,7 @@ class DandanplayDanmakuProvider(
         }
     }
 
-    private suspend fun getDandanplayAnimeIdOrNull(request: DanmakuSearchRequest): SearchEpisodesAnime? {
+    private suspend fun getDandanplayAnimeIdOrNull(request: DanmakuFetchRequest): SearchEpisodesAnime? {
         val date = request.subjectPublishDate
         val mo = date.seasonMonth
         if (mo == 0) return null
@@ -291,15 +287,15 @@ class DandanplayDanmakuProvider(
         return null
     }
 
-    private suspend fun createSession(
+    private suspend fun createResult(
         episodeId: Long,
         matchMethod: DanmakuMatchMethod,
     ): DanmakuFetchResult {
         val list = dandanplayClient.getDanmakuList(episodeId = episodeId)
-        logger.info { "$ID Fetched danmaku list: ${list.size}" }
+        logger.info { "${DanmakuServiceId.Dandanplay} Fetched danmaku list: ${list.size}" }
         return DanmakuFetchResult(
-            matchInfo = DanmakuMatchInfo(ID, list.size, matchMethod),
-            list = list.asSequence().mapNotNull { it.toDanmakuOrNull() },
+            matchInfo = DanmakuMatchInfo(DanmakuServiceId.Dandanplay, list.size, matchMethod),
+            list = list.mapNotNull { it.toDanmakuOrNull() },
         )
     }
 }
