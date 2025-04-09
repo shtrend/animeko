@@ -310,6 +310,9 @@ fun EpisodeDetails(
                                     showDropdown,
                                     onDismissRequest = { showDropdown = false },
                                     enabled = source.config.enabled,
+                                    onClickChange = {
+                                        onManualMatchDanmaku(source.providerId)
+                                    },
                                     onSetEnabled = { enabled ->
                                         onSetDanmakuSourceEnabled(source.matchInfo.serviceId, enabled)
                                     },

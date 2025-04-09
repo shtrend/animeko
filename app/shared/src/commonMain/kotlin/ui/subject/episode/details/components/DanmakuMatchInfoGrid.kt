@@ -200,10 +200,18 @@ fun DanmakuSourceSettingsDropdown(
     expanded: Boolean,
     onDismissRequest: () -> Unit,
     enabled: Boolean,
+    onClickChange: () -> Unit,
     onSetEnabled: (enabled: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     DropdownMenu(expanded, onDismissRequest, modifier) {
+        DropdownMenuItem(
+            text = { Text("更换") },
+            onClick = {
+                onClickChange()
+                onDismissRequest()
+            },
+        )
         DropdownMenuItem(
             text = { Text(if (enabled) "禁用" else "启用") },
             onClick = {
