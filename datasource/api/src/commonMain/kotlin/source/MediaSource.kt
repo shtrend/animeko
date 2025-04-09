@@ -9,10 +9,12 @@
 
 package me.him188.ani.datasources.api.source
 
+import kotlinx.serialization.Serializable
 import me.him188.ani.datasources.api.CachedMedia
 import me.him188.ani.datasources.api.DefaultMedia
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.paging.SizedSource
+import kotlin.jvm.JvmInline
 
 /**
  * 一个查询单个剧集的可下载的资源 [Media] 的服务, 称为数据源 [MediaSource].
@@ -127,4 +129,31 @@ class MediaSourceInfo(
      * 例如本地缓存
      */
     val isSpecial: Boolean = false,
+    val tier: MediaSourceTier? = null,
 )
+
+/**
+ * 数据源的等级.
+ *
+ * 等级主要用来排序, 影响自动选择数据源. 等级的值越低, 越高优先使用.
+ *
+ * 具体算法参考 [DefaultMediaSelector].
+ *
+ * @since 4.7
+ */
+@JvmInline
+@Serializable // serialized as Int
+value class MediaSourceTier(val value: UInt) : Comparable<MediaSourceTier> {
+    override fun compareTo(other: MediaSourceTier): Int = this.value.compareTo(other.value)
+
+    companion object {
+        /**
+         * 当数据源订阅没有指定 tier, 并且用户没有手动设置 tier 时的 fallback 值.
+         *
+         * 默认在范围内 [me.him188.ani.app.domain.media.selector.MediaSelectorAutoSelect.InstantSelectTierThreshold].
+         */
+        val Fallback = MediaSourceTier(2u)
+
+        val MaximumValue = MediaSourceTier(UInt.MAX_VALUE)
+    }
+}

@@ -162,6 +162,7 @@ class SelectorMediaSource(
         description = arguments.description,
         websiteUrl = searchConfig.searchUrl,
         iconUrl = arguments.iconUrl,
+        tier = arguments.tier,
     )
 
     // all-in-one search
