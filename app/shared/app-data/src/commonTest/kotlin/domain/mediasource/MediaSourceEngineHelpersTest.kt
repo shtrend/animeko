@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -33,7 +33,7 @@ class MediaSourceEngineHelpersTest {
         case("天降之物f", "天降之物f")
         case("五等分的新娘＊", "五等分的新娘＊")
         case("邪神与厨二病少女’", "邪神与厨二病少女’")
-        case("打工吧魔王大人", "打工吧！！魔王大人")
+        case("打工吧", "打工吧！！魔王大人")
         case("理科生坠入情网故尝试证明", "理科生坠入情网故尝试证明[r=1-sinθ]♡")
         case("new", "new game!")
         case("new", "new game!!")

@@ -53,11 +53,11 @@ class MediaListFiltersTest {
             assertEquals("Re：从零开始的异世界生活", removeSpecials("Re：从零开始的异世界生活"))
         }
         add("Re:从零开始的异世界生活") {
-            assertEquals("Re从零开始的异世界生活", removeSpecials("Re:从零开始的异世界生活"))
+            assertEquals("Re 从零开始的异世界生活", removeSpecials("Re:从零开始的异世界生活"))
         }
         add("Re: 从零开始的异世界生活") {
             assertEquals(
-                "Re 从零开始的异世界生活",
+                "Re  从零开始的异世界生活",
                 removeSpecials("Re: 从零开始的异世界生活", removeWhitespace = false),
             )
             assertEquals("Re从零开始的异世界生活", removeSpecials("Re: 从零开始的异世界生活", removeWhitespace = true))
@@ -113,8 +113,8 @@ class MediaListFiltersTest {
         }
         add("remove infix specials") {
             // 需要两个非特殊字符后才会开始删除
-            assertEquals("测!!!试 第二季", removeSpecials("测!!!试!!! 第二季"))
-            assertEquals("测试 第二季", removeSpecials("测试!!!!!! 第二季"))
+            assertEquals("测!!!试    第二季", removeSpecials("测!!!试!!! 第二季"))
+            assertEquals("测试       第二季", removeSpecials("测试!!!!!! 第二季"))
         }
     }
 

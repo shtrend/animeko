@@ -103,10 +103,10 @@ object MediaListFilters {
     private val minimumLength: Int = 2
     private val allNumbersRegex = numberMappings.keys.joinToString("|").toRegex()
 
-    val charsToDelete = """!@#$%^&*()_+{}|\;':",.<>/?【】：「」！""".toCharCodeIntSet()
-    val charsToDeleteForSearch get() = charsToDelete // 放在这里, 这样你改 [charsToDelete] 时会注意到
+    val charsToDelete = """""".toCharCodeIntSet()
+    val charsToDeleteForSearch get() = charsToReplaceWithWhitespace // 放在这里, 这样你改 [charsToDelete] 时会注意到
 
-    private val charsToReplaceWithWhitespace = """。、，·・[]～“”~—-""".toCharCodeIntSet()
+    private val charsToReplaceWithWhitespace = """。、，·・[]～“”~—-!@#$%^&*()_+{}|\;':",.<>/?【】：「」！""".toCharCodeIntSet()
     private val whitespaceChars = " \t\u3000".toCharCodeIntSet()
 
     private data class KeepWords(
