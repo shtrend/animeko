@@ -1290,6 +1290,39 @@ jobs:
         run: './gradlew compileDebugKotlinAndroid compileReleaseKotlinAndroid "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "-Pani.android.abis=arm64-v8a"'
         if: '${{ steps.step-19.outcome == ''failure'' }}'
       - id: 'step-21'
+        name: 'Upload Desktop Installers (Attempt #1)'
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          GITHUB_REPOSITORY: '${{ secrets.GITHUB_REPOSITORY }}'
+          CI_RELEASE_ID: '${{ needs.create-release.outputs.id }}'
+          CI_TAG: '${{ steps.step-1.outputs.tag }}'
+          UPLOAD_TO_S3: 'true'
+          AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          AWS_BASEURL: '${{ secrets.AWS_BASEURL }}'
+          AWS_REGION: '${{ secrets.AWS_REGION }}'
+          AWS_BUCKET: '${{ secrets.AWS_BUCKET }}'
+        continue-on-error: true
+        timeout-minutes: 180
+        run: './gradlew :ci-helper:uploadDesktopInstallers "--no-configuration-cache" "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "-Pani.android.abis=arm64-v8a"'
+      - id: 'step-22'
+        name: 'Upload Desktop Installers (Attempt #2)'
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+          GITHUB_REPOSITORY: '${{ secrets.GITHUB_REPOSITORY }}'
+          CI_RELEASE_ID: '${{ needs.create-release.outputs.id }}'
+          CI_TAG: '${{ steps.step-1.outputs.tag }}'
+          UPLOAD_TO_S3: 'true'
+          AWS_ACCESS_KEY_ID: '${{ secrets.AWS_ACCESS_KEY_ID }}'
+          AWS_SECRET_ACCESS_KEY: '${{ secrets.AWS_SECRET_ACCESS_KEY }}'
+          AWS_BASEURL: '${{ secrets.AWS_BASEURL }}'
+          AWS_REGION: '${{ secrets.AWS_REGION }}'
+          AWS_BUCKET: '${{ secrets.AWS_BUCKET }}'
+        continue-on-error: false
+        timeout-minutes: 180
+        run: './gradlew :ci-helper:uploadDesktopInstallers "--no-configuration-cache" "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "-Pani.android.abis=arm64-v8a"'
+        if: '${{ steps.step-21.outcome == ''failure'' }}'
+      - id: 'step-23'
         name: 'Upload compose logs'
         uses: 'actions/upload-artifact@v4'
         with:

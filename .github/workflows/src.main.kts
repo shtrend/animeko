@@ -1740,7 +1740,7 @@ class WithMatrix(
         }
 
         fun JobBuilder<*>.uploadDesktopInstallers() {
-            if (matrix.uploadDesktopInstallers and (!matrix.isMacOSX64)) {
+            if (matrix.uploadDesktopInstallers) {
                 runGradle(
                     name = "Upload Desktop Installers",
                     tasks = [":ci-helper:uploadDesktopInstallers", "\"--no-configuration-cache\""],
