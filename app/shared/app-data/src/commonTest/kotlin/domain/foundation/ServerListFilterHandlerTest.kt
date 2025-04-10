@@ -143,20 +143,20 @@ class ServerListFeatureHandlerTest {
         val client = buildTestClient(aniServerUrls, config) { url ->
             when (url.host) {
                 "fail1.com" -> {
-                    assertEquals(listOf("", "someApi"), url.pathSegments)
+                    assertEquals(listOf("someApi"), url.segments)
                     fail1Requests++
                     HttpStatusCode.InternalServerError to "fail1"
                 }
 
                 "fail2.com" -> {
-                    assertEquals(listOf("", "someApi"), url.pathSegments)
+                    assertEquals(listOf("someApi"), url.segments)
                     fail2Requests++
                     // Let's simulate a 400 for fail2
                     HttpStatusCode.BadRequest to "fail2"
                 }
 
                 "ok.com" -> {
-                    assertEquals(listOf("", "someApi"), url.pathSegments)
+                    assertEquals(listOf("someApi"), url.segments)
                     okRequests++
                     HttpStatusCode.OK to "success from ok.com"
                 }
