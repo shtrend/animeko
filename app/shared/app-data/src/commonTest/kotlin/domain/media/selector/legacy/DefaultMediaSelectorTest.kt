@@ -7,6 +7,8 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
+@file:Suppress("DEPRECATION")
+
 package me.him188.ani.app.domain.media.selector.legacy
 
 import kotlinx.coroutines.CoroutineStart
@@ -42,6 +44,7 @@ import kotlin.test.assertTrue
  * @suppress 已弃用, 新的 test 使用 [me.him188.ani.app.domain.media.selector.testFramework.TestMediaFetchSessionBuilder].
  * @see me.him188.ani.app.domain.media.selector.MediaSelectorAutoSelect
  */
+@Deprecated(MediaSelectorDeprecationMessage)
 class DefaultMediaSelectorTest : AbstractDefaultMediaSelectorTest() {
     ///////////////////////////////////////////////////////////////////////////
     // Select contract
