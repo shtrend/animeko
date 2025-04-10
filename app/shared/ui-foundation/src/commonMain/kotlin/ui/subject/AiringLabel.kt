@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -169,6 +169,7 @@ fun AiringLabel(
 fun renderEpAndSort(ep: EpisodeSort?, sort: EpisodeSort?) = when {
     ep == null -> sort.toString()
     sort == null -> ep.toString()
+    ep.number == 0f -> sort.toString() // 有些 SP 只有 sort, ep 为 0. #1677
     ep != sort -> "$ep ($sort)"
     else -> sort.toString()
 }
