@@ -7,15 +7,14 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-@file:Suppress("SameParameterValue")
-
-package me.him188.ani.app.domain.media.selector.domain.media.selector
+package me.him188.ani.app.domain.media.selector
 
 import me.him188.ani.app.domain.media.selector.testFramework.assertMedias
 import me.him188.ani.app.domain.media.selector.testFramework.runSimpleMediaSelectorTestSuite
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.topic.EpisodeRange
+import me.him188.ani.test.DisabledOnNative
 import me.him188.ani.test.TestContainer
 import kotlin.test.Test
 
@@ -23,6 +22,7 @@ import kotlin.test.Test
  * 测试 [me.him188.ani.datasources.api.EpisodeType.SP]
  */
 @TestContainer
+@DisabledOnNative // TODO: ContextParameters crashes on Native
 class MediaSelectorSpTest {
     @Test
     fun `when watching SP23 - match SP23`() = runSimpleMediaSelectorTestSuite(
@@ -78,8 +78,17 @@ class MediaSelectorSpTest {
         },
     ) {
         assertMedias {
-            onSingle(episodeRange = EpisodeRange.single(EpisodeSort(23, EpisodeType.SP))).assert(included = true)
-            onSingle(episodeRange = EpisodeRange.single(EpisodeSort(23, EpisodeType.MainStory))).assert(included = true)
+            onSingle(
+                episodeRange = EpisodeRange.Companion.single(
+                    EpisodeSort(
+                        23,
+                        EpisodeType.SP,
+                    ),
+                ),
+            ).assert(included = true)
+            onSingle(episodeRange = EpisodeRange.Companion.single(EpisodeSort(23, EpisodeType.MainStory))).assert(
+                included = true,
+            )
         }
     }
 }
