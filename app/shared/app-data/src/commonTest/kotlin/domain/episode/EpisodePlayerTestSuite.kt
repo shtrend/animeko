@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.TestScope
 import me.him188.ani.app.data.models.subject.TestSubjectCollections
-import me.him188.ani.app.domain.media.selector.legacy.MediaSelectorTestBuilder
 import org.koin.core.Koin
 import org.koin.dsl.module
 import org.openani.mediamp.DummyMediampPlayer
@@ -31,7 +30,9 @@ class EpisodePlayerTestSuite(
     val backgroundScope: CoroutineScope = testScope.backgroundScope,
 ) {
     val player = DummyMediampPlayer()
-    val mediaSelectorTestBuilder = MediaSelectorTestBuilder(testScope)
+
+    @Suppress("DEPRECATION")
+    val mediaSelectorTestBuilder = me.him188.ani.app.domain.media.selector.legacy.MediaSelectorTestBuilder(testScope)
 
     val koin = Koin()
 
