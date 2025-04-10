@@ -60,6 +60,7 @@ kotlin {
         api(projects.datasource.datasourceCore)
         api(projects.datasource.bangumi)
         api(projects.datasource.mikan)
+        api(projects.datasource.jellyfin)
         api(projects.danmaku.danmakuApi)
         api(projects.danmaku.dandanplay)
 

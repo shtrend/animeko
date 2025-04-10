@@ -51,6 +51,8 @@ import me.him188.ani.datasources.api.source.MediaSourceConfig
 import me.him188.ani.datasources.api.source.MediaSourceFactory
 import me.him188.ani.datasources.api.source.MediaSourceInfo
 import me.him188.ani.datasources.api.source.serializeArguments
+import me.him188.ani.datasources.jellyfin.EmbyMediaSource
+import me.him188.ani.datasources.jellyfin.JellyfinMediaSource
 import me.him188.ani.datasources.mikan.MikanCNMediaSource
 import me.him188.ani.datasources.mikan.MikanMediaSource
 import me.him188.ani.utils.coroutines.onReplacement
@@ -212,6 +214,8 @@ class MediaSourceManagerImpl(
         add(MikanMediaSource.Factory()) // Kotlin bug, MPP 加载不了 resources
         add(MikanCNMediaSource.Factory())
         add(RssMediaSource.Factory())
+        add(JellyfinMediaSource.Factory())
+        add(EmbyMediaSource.Factory())
         add(SelectorMediaSource.Factory(selectorMediaSourceEpisodeCacheRepository))
     }.toList()
 
