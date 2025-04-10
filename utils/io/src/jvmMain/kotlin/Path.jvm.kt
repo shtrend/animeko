@@ -43,48 +43,55 @@ actual fun SystemPath.isRegularFile(): Boolean {
     return path.file.isFile
 }
 
-fun SystemPath.moveDirectoryRecursively(target: SystemPath, visitor: ((SystemPath) -> Unit)?) {
-    val sourceDir = toNioPath()
+fun SystemPath.moveDirectoryRecursively(target: SystemPath, visitor: ((SystemPath) -> Unit)? = null) {
+    val sourceDir = this.toNioPath()
     val targetDir = target.toNioPath()
 
-    if (!Files.exists(targetDir)) {
-        Files.createDirectories(targetDir)
+    if (!Files.exists(sourceDir)) {
+        throw NoSuchFileException(sourceDir.toFile(), null, "Source directory doesn't exist")
     }
+
+    if (!Files.isDirectory(sourceDir)) {
+        throw IllegalArgumentException("Source path is not a directory")
+    }
+
+    Files.createDirectories(targetDir)
 
     Files.walkFileTree(
         sourceDir,
         object : SimpleFileVisitor<NioPath>() {
-            private fun NioPath.deleteRecursively() {
-                if (Files.isDirectory(this)) {
-                    useDirectoryEntries { entries ->
-                        entries.forEach { it.deleteRecursively() }
-                    }
+            override fun preVisitDirectory(dir: NioPath, attrs: BasicFileAttributes): FileVisitResult {
+                val targetPath = targetDir.resolve(sourceDir.relativize(dir))
+                try {
+                    Files.createDirectories(targetPath)
+                } catch (e: IOException) {
+                    throw IOException("Failed to create directory: $targetPath", e)
                 }
-                Files.delete(this)
+                return FileVisitResult.CONTINUE
             }
 
-            override fun visitFile(file: NioPath?, attrs: BasicFileAttributes?): FileVisitResult {
-                if (file == null) return FileVisitResult.CONTINUE
+            override fun visitFile(file: NioPath, attrs: BasicFileAttributes): FileVisitResult {
                 val targetFile = targetDir.resolve(sourceDir.relativize(file))
-
-                Files.createDirectories(targetFile.parent)
                 visitor?.invoke(file.toKtPath().inSystem)
-                Files.copy(file, targetFile, StandardCopyOption.REPLACE_EXISTING)
-                Files.delete(file)
+
+                try {
+                    Files.move(file, targetFile, StandardCopyOption.REPLACE_EXISTING)
+                } catch (e: IOException) {
+                    throw IOException("Failed to move file: $file to $targetFile", e)
+                }
 
                 return FileVisitResult.CONTINUE
             }
 
-            override fun postVisitDirectory(dir: NioPath?, exc: IOException?): FileVisitResult {
-                if (dir == null) return FileVisitResult.CONTINUE
+            override fun postVisitDirectory(dir: NioPath, exc: IOException?): FileVisitResult {
+                if (exc != null) throw exc
 
-                val targetSubDir = targetDir.resolve(sourceDir.relativize(dir))
-                if (!Files.exists(targetSubDir)) {
-                    Files.copy(dir, targetSubDir, StandardCopyOption.REPLACE_EXISTING)
+                try {
+                    Files.delete(dir)
+                } catch (e: IOException) {
+                    throw IOException("Failed to delete directory: $dir", e)
                 }
-                if (Files.exists(dir)) {
-                    dir.deleteRecursively()
-                }
+
                 return FileVisitResult.CONTINUE
             }
         },
