@@ -163,6 +163,7 @@ object MediaListFilters {
                 deleteInfix("剧场版")
                 deletePrefix("OVA")
                 deleteInfix("OVA")
+                deleteInfix("OAD")
                 deleteInfix("总集篇")
             }
         }

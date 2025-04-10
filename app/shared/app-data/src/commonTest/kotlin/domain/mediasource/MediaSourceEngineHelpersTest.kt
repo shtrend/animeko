@@ -40,5 +40,8 @@ class MediaSourceEngineHelpersTest {
         case("命运石之门", "命运石之门 负荷领域的既视感")
         case("命运石之门", "剧场版 命运石之门 负荷领域的既视感")
         case("OVERLORD", "剧场版总集篇 OVERLORD 漆黑的英雄")
+        case("Test", "Test OAD")
+        case("测试", "测试OAD")
+        case("Test", "OAD Test")
     }
 }
