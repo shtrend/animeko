@@ -30,4 +30,19 @@ object MediaSelectorDebugTools {
             "Dumping subject names: \n\n$joinToString"
         }
     }
+
+    @OptIn(UnsafeOriginalMediaAccess::class)
+    fun dumpEpisodeRanges(filteredCandidates: List<MaybeExcludedMedia>) {
+        val ranges = filteredCandidates
+            .map { it.original }
+            .mapNotNull { it.episodeRange }
+        logger.debug {
+            val joinToString = ranges
+                .distinctBy { it.knownSorts.toList() }
+                .joinToString("\n") { range ->
+                    range.toString()
+                }
+            "Dumping episode ranges: \n\n$joinToString"
+        }
+    }
 }

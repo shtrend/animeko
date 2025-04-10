@@ -211,6 +211,9 @@ private fun LegacyBTSourceColumn(
                         FilledTonalButton(onClick = { MediaSelectorDebugTools.dumpSubjectNames(presentation.filteredCandidates) }) {
                             Text("Dump unique media lists")
                         }
+                        FilledTonalButton(onClick = { MediaSelectorDebugTools.dumpEpisodeRanges(presentation.filteredCandidates) }) {
+                            Text("Dump EpisodeRanges")
+                        }
                     }
                 }
             }

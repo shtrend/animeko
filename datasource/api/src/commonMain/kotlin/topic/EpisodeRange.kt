@@ -12,6 +12,8 @@ package me.him188.ani.datasources.api.topic
 import kotlinx.serialization.Serializable
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.topic.EpisodeRange.Combined
+import me.him188.ani.datasources.api.topic.EpisodeRange.Companion.combined
+import me.him188.ani.datasources.api.topic.EpisodeRange.Companion.unknownSeason
 import me.him188.ani.datasources.api.topic.EpisodeRange.Range
 import me.him188.ani.datasources.api.topic.EpisodeRange.Season
 import me.him188.ani.datasources.api.topic.EpisodeRange.Single
@@ -288,9 +290,24 @@ operator fun EpisodeRange.contains(expected: EpisodeSort): Boolean = contains(ex
  * 判断 [expected] 是否在 [this] 范围内.
  * @param allowSeason 为 `true` 时, 将 [EpisodeRange.unknownSeason] 判定为包含.
  */
-fun EpisodeRange.contains(expected: EpisodeSort, allowSeason: Boolean = true): Boolean {
+fun EpisodeRange.contains(
+    expected: EpisodeSort,
+    allowSeason: Boolean = true,
+    allowSpecial: Boolean = true,
+): Boolean {
     if (allowSeason && this is Season) return true
-    return knownSorts.any { it == expected } // TODO: optimize  EpisodeRange.contains
+    if (knownSorts.any { it == expected }) {
+        // exact match
+        return true
+    }
+    if (allowSpecial && expected is EpisodeSort.Special) {
+        val expectedNumber = expected.number
+        return knownSorts.any {
+            val number = it.number // This property has custom getter, so cache it
+            number != null && number == expectedNumber
+        }
+    }
+    return false
 }
 
 /**
