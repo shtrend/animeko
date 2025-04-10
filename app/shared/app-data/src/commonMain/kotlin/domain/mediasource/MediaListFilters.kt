@@ -18,6 +18,8 @@ import me.him188.ani.app.domain.mediasource.MediaListFilters.minimumLength
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.topic.contains
 import me.him188.ani.utils.platform.deleteAnyCharIn
+import me.him188.ani.utils.platform.deleteInfix
+import me.him188.ani.utils.platform.deletePrefix
 import me.him188.ani.utils.platform.replaceMatches
 import me.him188.ani.utils.platform.trimSB
 
@@ -139,11 +141,13 @@ object MediaListFilters {
      *
      * @param removeWhitespace 如果为 true, 则会删除所有空格（包括通过 replaceWithWhitespace 替换出来的空格）
      * @param replaceNumbers 如果为 true, 则会将中文数字替换成阿拉伯数字 (例如 “三” -> “3”)
+     * @param removeMarkers 如果为 true, 则会删除 "电影", "剧场版", "OVA" 等仅有标记作用的词. 注意, 不能在搜索到之后做匹配的时候使用. 详见 #1794
      */
     fun removeSpecials(
         string: String,
         removeWhitespace: Boolean,
-        replaceNumbers: Boolean
+        replaceNumbers: Boolean,
+        removeMarkers: Boolean = false,
     ): String {
         // 1. 将 keepWords 替换成掩码
         var result = keepWords.fold(string) { acc, keepWord ->
@@ -152,12 +156,14 @@ object MediaListFilters {
 
         // 2. 无条件删除 "电影", "剧场版", "OVA" 等
         val sb = StringBuilder(result).apply {
-//            deletePrefix("电影")
-//            deleteInfix("电影")
-//            deletePrefix("剧场版")
-//            deleteInfix("剧场版")
-            // deletePrefix("OVA")
-            // deleteInfix("OVA")
+            if (removeMarkers) {
+                deletePrefix("电影")
+                deleteInfix("电影")
+                deletePrefix("剧场版")
+                deleteInfix("剧场版")
+                deletePrefix("OVA")
+                deleteInfix("OVA")
+            }
         }
 
         // 3. 基于位置要求，处理特殊字符

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -22,6 +22,7 @@ object MediaSourceEngineHelpers {
                 subjectName,
                 removeWhitespace = false,
                 replaceNumbers = false,
+                removeMarkers = true, // Note: 删除 "剧场版" 等标记, 否则 "剧场版 命运石之门" 会变为 "剧场版"
             ) // keep whitespace for getFirstWord
         } else {
             subjectName
