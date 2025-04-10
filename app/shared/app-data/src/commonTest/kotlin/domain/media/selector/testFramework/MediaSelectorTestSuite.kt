@@ -295,15 +295,27 @@ class SimpleMediaSelectorTestSuite : MediaSelectorTestSuite() {
 
         fun addSimpleWebMedia(
             subjectName: String,
-            episodeSort: EpisodeSort = EpisodeSort(1),
+            episodeSort: EpisodeSort? = null,
+            episodeRange: EpisodeRange? = null,
         ) {
+            val finalRange = if (episodeSort == null && episodeRange == null) {
+                EpisodeRange.single(EpisodeSort(1))
+            } else if (episodeSort != null) {
+                require(episodeRange == null) {
+                    "episodeSort and episodeRange cannot be both set."
+                }
+                EpisodeRange.single(episodeSort)
+            } else {
+                episodeRange!!
+            }
+
             addMedia(
                 media(
                     // kept
                     alliance = "简中",
-                    episodeRange = EpisodeRange.single(episodeSort), kind = MediaSourceKind.WEB,
+                    episodeRange = finalRange, kind = MediaSourceKind.WEB,
                     subjectName = subjectName,
-                    originalTitle = "$subjectName $episodeSort",
+                    originalTitle = "$subjectName $finalRange",
                     subtitleLanguages = listOf(SubtitleLanguage.ChineseSimplified.id),
                 ),
             )

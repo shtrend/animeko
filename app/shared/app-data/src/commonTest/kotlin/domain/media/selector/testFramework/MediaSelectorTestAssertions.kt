@@ -19,6 +19,7 @@ import me.him188.ani.app.domain.media.selector.testFramework.MaybeExcludedMediaA
 import me.him188.ani.app.domain.media.selector.testFramework.MaybeExcludedMediaAssertions.Filter.FilterType
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.source.MediaSourceKind
+import me.him188.ani.datasources.api.topic.EpisodeRange
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.jvm.JvmName
@@ -39,16 +40,18 @@ inline fun List<Media>.assert(
     block: MaybeExcludedMediaAssertions.() -> Unit,
 ) {
     contract { callsInPlace(block, InvocationKind.EXACTLY_ONCE) }
-    MaybeExcludedMediaAssertions().apply(block).runOn(this.map {
-        MaybeExcludedMedia.Included(
-            it,
-            metadata = MatchMetadata(
-                MatchMetadata.SubjectMatchKind.EXACT,
-                episodeMatchKind = MatchMetadata.EpisodeMatchKind.SORT,
-                similarity = 100,
+    MaybeExcludedMediaAssertions().apply(block).runOn(
+        this.map {
+            MaybeExcludedMedia.Included(
+                it,
+                metadata = MatchMetadata(
+                    MatchMetadata.SubjectMatchKind.EXACT,
+                    episodeMatchKind = MatchMetadata.EpisodeMatchKind.SORT,
+                    similarity = 100,
+                ),
             )
-        )
-    })
+        },
+    )
 }
 
 class MaybeExcludedMediaAssertions {
@@ -95,15 +98,17 @@ class MaybeExcludedMediaAssertions {
     fun onSingle(
         sourceId: String? = null,
         mediaId: String? = null,
+        episodeRange: EpisodeRange? = null,
     ): Filter {
-        require(sourceId != null || mediaId != null)
+        require(sourceId != null || mediaId != null || episodeRange != null)
         return Filter(
             getCodeSource("filter"),
             FilterType.SINGLE,
             failOnNoMatch = true,
             failIfMoreElement = false,
             sourceId,
-            mediaId
+            mediaId,
+            episodeRange,
         ).also {
             unusedTargets.add(it)
         }
@@ -116,15 +121,17 @@ class MaybeExcludedMediaAssertions {
     fun onOneOrMore(
         sourceId: String? = null,
         mediaId: String? = null,
+        episodeRange: EpisodeRange? = null,
     ): Filter {
-        require(sourceId != null || mediaId != null)
+        require(sourceId != null || mediaId != null || episodeRange != null)
         return Filter(
             getCodeSource("filter"),
             FilterType.ALL,
             failOnNoMatch = true,
             failIfMoreElement = false,
             sourceId,
-            mediaId
+            mediaId,
+            episodeRange,
         ).also {
             unusedTargets.add(it)
         }
@@ -137,15 +144,17 @@ class MaybeExcludedMediaAssertions {
     fun onZeroOrMore(
         sourceId: String? = null,
         mediaId: String? = null,
+        episodeRange: EpisodeRange? = null,
     ): Filter {
-        require(sourceId != null || mediaId != null)
+        require(sourceId != null || mediaId != null || episodeRange != null)
         return Filter(
             getCodeSource("filter"),
             FilterType.ALL,
             failOnNoMatch = false,
             failIfMoreElement = false,
             sourceId,
-            mediaId
+            mediaId,
+            episodeRange,
         ).also {
             unusedTargets.add(it)
         }
@@ -235,6 +244,7 @@ class MaybeExcludedMediaAssertions {
         val failIfMoreElement: Boolean,
         val sourceId: String? = null,
         val mediaId: String? = null,
+        val episodeRange: EpisodeRange? = null,
     ) : Target() {
         enum class FilterType {
             ALL,
@@ -416,6 +426,12 @@ private class MaybeExcludedMediaAssertionsExecutor(
 
         filter.sourceId?.let {
             if (mediaSourceId != it) {
+                return false
+            }
+        }
+
+        filter.episodeRange?.let {
+            if (episodeRange != it) {
                 return false
             }
         }
