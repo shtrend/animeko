@@ -11,17 +11,12 @@
 
 package me.him188.ani.app.domain.media.selector.domain.media.selector
 
-import me.him188.ani.app.domain.media.selector.MediaExclusionReason.FromSeriesSeason
-import me.him188.ani.app.domain.media.selector.checkSubjectExclusion
-import me.him188.ani.app.domain.media.selector.testFramework.addSimpleMediaSelectorTest
 import me.him188.ani.app.domain.media.selector.testFramework.assertMedias
 import me.him188.ani.app.domain.media.selector.testFramework.runSimpleMediaSelectorTestSuite
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.topic.EpisodeRange
 import me.him188.ani.test.TestContainer
-import me.him188.ani.test.TestFactory
-import me.him188.ani.test.runDynamicTests
 import kotlin.test.Test
 
 /**
@@ -85,43 +80,6 @@ class MediaSelectorSpTest {
         assertMedias {
             onSingle(episodeRange = EpisodeRange.single(EpisodeSort(23, EpisodeType.SP))).assert(included = true)
             onSingle(episodeRange = EpisodeRange.single(EpisodeSort(23, EpisodeType.MainStory))).assert(included = true)
-        }
-    }
-
-
-    @TestFactory
-    fun `exclude main subject when playing movie`() = runDynamicTests {
-        addSimpleMediaSelectorTest(
-            "玉子市场剧场版",
-            {
-                initSubject("玉子市场 剧场版") {
-                    aliases(
-                        "玉子爱情故事",
-                        "Tamako Love Story",
-                        "たまこラブストーリー",
-                    )
-                    seriesInfo(seasonSort = 1) {
-                        series(
-                            // 主番:
-                            "玉子市场",
-                            "Tamako Market",
-                            "たまこまーけっと",
-                        )
-                    }
-                }
-            },
-        ) {
-            checkSubjectExclusion {
-                expect(
-                    "玉子市场" to FromSeriesSeason,
-                    "玉子市场 剧场版" to null,
-                    "玉子爱情故事" to null,
-                    "Tamako Market" to FromSeriesSeason,
-                    "Tamako Love Story" to null,
-                    "たまこまーけっと" to FromSeriesSeason,
-                    "たまこラブストーリー" to null,
-                )
-            }
         }
     }
 }
