@@ -1,44 +1,27 @@
+/*
+ * Copyright (C) 2024-2025 OpenAni and contributors.
+ *
+ * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+ * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+ *
+ * https://github.com/open-ani/ani/blob/main/LICENSE
+ */
+
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
+    `android-library`
     kotlin("plugin.serialization")
     idea
-    `flatten-source-sets`
+    `ani-mpp-lib-targets`
 }
 
-sourceSets.main {
-    kotlin.srcDir("gen")
-}
-
-idea {
-    module {
-        generatedSourceDirs.add(file("gen"))
-    }
+android {
+    namespace = "me.him188.ani.datasources.ikaros"
 }
 
 dependencies {
-    api(projects.datasource.datasourceApi)
-    implementation(projects.utils.serialization)
-    implementation(projects.utils.logging)
-
-    api(libs.kotlinx.coroutines.core)
-    api(libs.ktor.client.core)
-
-    implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.jsoup)
-    implementation(libs.slf4j.api)
-    implementation(projects.utils.logging)
-
-    implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
-    implementation("com.squareup.moshi:moshi-adapters:1.14.0")
-
-
-    testImplementation(libs.slf4j.simple)
+    commonMainApi(projects.datasource.datasourceApi)
+    commonMainImplementation(projects.utils.logging)
 }
 
 tasks.withType<Jar> {

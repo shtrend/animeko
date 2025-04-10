@@ -51,6 +51,7 @@ import me.him188.ani.datasources.api.source.MediaSourceConfig
 import me.him188.ani.datasources.api.source.MediaSourceFactory
 import me.him188.ani.datasources.api.source.MediaSourceInfo
 import me.him188.ani.datasources.api.source.serializeArguments
+import me.him188.ani.datasources.ikaros.IkarosMediaSource
 import me.him188.ani.datasources.jellyfin.EmbyMediaSource
 import me.him188.ani.datasources.jellyfin.JellyfinMediaSource
 import me.him188.ani.datasources.mikan.MikanCNMediaSource
@@ -216,6 +217,7 @@ class MediaSourceManagerImpl(
         add(RssMediaSource.Factory())
         add(JellyfinMediaSource.Factory())
         add(EmbyMediaSource.Factory())
+        add(IkarosMediaSource.Factory())
         add(SelectorMediaSource.Factory(selectorMediaSourceEpisodeCacheRepository))
     }.toList()
 
