@@ -39,5 +39,6 @@ class MediaSourceEngineHelpersTest {
         case("new", "new game!!")
         case("命运石之门", "命运石之门 负荷领域的既视感")
         case("命运石之门", "剧场版 命运石之门 负荷领域的既视感")
+        case("OVERLORD", "剧场版总集篇 OVERLORD 漆黑的英雄")
     }
 }
