@@ -345,7 +345,7 @@ internal fun SelectorSearchConfig.createFiltersForSubject(): List<MediaListFilte
 //    if (filterBySubjectName) add(MediaListFilters.ContainsSubjectName)
 }
 
-internal fun SelectorSearchConfig.createFiltersForEpisode() = buildList {
+internal fun SelectorSearchConfig.createFiltersForEpisode(): List<MediaListFilter<MediaListFilterContext>> = buildList {
     // 不使用 filterBySubjectName, 因为 web 的剧集名称通常为 "第x集", 不包含 subject
     if (filterByEpisodeSort) add(MediaListFilters.ContainsAnyEpisodeInfo)
 }

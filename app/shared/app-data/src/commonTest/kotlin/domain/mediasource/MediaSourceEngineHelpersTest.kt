@@ -37,5 +37,6 @@ class MediaSourceEngineHelpersTest {
         case("理科生坠入情网故尝试证明", "理科生坠入情网故尝试证明[r=1-sinθ]♡")
         case("new", "new game!")
         case("new", "new game!!")
+        case("命运石之门", "命运石之门 负荷领域的既视感")
     }
 }
