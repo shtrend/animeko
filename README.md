@@ -36,6 +36,8 @@ Animeko 支持云同步观看记录 ([Bangumi][Bangumi])、多视频数据源、
 
 [立即下载](https://github.com/open-ani/animeko/releases/latest)
 
+https://github.com/user-attachments/assets/e63636c9-30b7-411c-aa6b-e5b78b900726
+
 ## 主要功能
 
 ### 浏览来自 [Bangumi][Bangumi] 的番剧信息以及社区评价
@@ -81,8 +83,6 @@ Animeko 支持云同步观看记录 ([Bangumi][Bangumi])、多视频数据源、
 
 | <img src=".readme/images/features/player-fullscreen.png" alt="" width="600"/> |
 |:-----------------------------------------------------------------------------:|
-
-https://github.com/user-attachments/assets/e63636c9-30b7-411c-aa6b-e5b78b900726
 
 - 适配平板和大屏设备
 
