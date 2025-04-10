@@ -197,13 +197,12 @@ class MainActivity : AniComponentActivity() {
                 val clipboard = LocalClipboardManager.current
                 TextButton(
                     {
-                        val errorMessage = status.throwable?.toString()
+                        val errorMessage = status.throwable?.stackTraceToString()
                         if (errorMessage != null) {
                             clipboard.setText(AnnotatedString(errorMessage))
                         }
-                        appTerminator.exitApp(this, 0)
                     },
-                ) { Text(text = "复制并退出") }
+                ) { Text(text = "复制") }
             },
         )
     }
@@ -220,12 +219,11 @@ class MainActivity : AniComponentActivity() {
 
         is TorrentCacheMigrator.Status.Error ->
             """
-            迁移时发生错误，可能会导致 Ani 后续的闪退等意料之外的问题.
+            迁移时发生错误，将会忽略迁移。
+            请进入 APP 设置中将日志反馈到 GitHub。
             
             错误信息:
             ${status.throwable}
-            
-            请点击下方复制按钮复制完整错误日志，随后前往 GitHub 反馈错误信息.
         """.trimIndent()
     }
 }
