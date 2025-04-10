@@ -279,7 +279,7 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
             episodeCollectionDao = database.episodeCollection(),
             sessionManager = get(),
             nsfwModeSettingsFlow = settingsRepository.uiSettings.flow.map { it.searchSettings.nsfwMode },
-            enableAllEpisodeTypes = settingsRepository.debugSettings.flow.map { it.showAllEpisodes },
+            getEpisodeTypeFiltersUseCase = get(),
         )
     }
     single<FollowedSubjectsRepository> {
@@ -347,7 +347,7 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
             bangumiEpisodeService = get(),
             animeScheduleRepository = get(),
             subjectCollectionRepository = inject(),
-            enableAllEpisodeTypes = settingsRepository.debugSettings.flow.map { it.showAllEpisodes },
+            getEpisodeTypeFiltersUseCase = get(),
         )
     }
     single<EpisodeProgressRepository> {

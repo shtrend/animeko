@@ -9,6 +9,8 @@
 
 package me.him188.ani.app.domain.usecase
 
+import me.him188.ani.app.data.repository.subject.GetEpisodeTypeFiltersUseCase
+import me.him188.ani.app.data.repository.subject.GetEpisodeTypeFiltersUseCaseImpl
 import me.him188.ani.app.domain.comment.PostCommentUseCase
 import me.him188.ani.app.domain.comment.PostCommentUseCaseImpl
 import me.him188.ani.app.domain.danmaku.GetDanmakuFetcherUseCase
@@ -68,6 +70,7 @@ fun KoinApplication.useCaseModules() = module {
     single<GetPreferredMediaSourceSortingUseCase> { GetPreferredMediaSourceSortingUseCaseImpl(get()) }
     single<GetMediaSelectorSourceTiersUseCase> { GetMediaSelectorSourceTiersUseCaseImpl(get()) }
     single<GetDanmakuFetcherUseCase> { GetDanmakuFetcherUseCaseImpl(get()) }
+    single<GetEpisodeTypeFiltersUseCase> { GetEpisodeTypeFiltersUseCaseImpl(get()) }
 }
 
 val GlobalKoin get() = KoinPlatform.getKoin()

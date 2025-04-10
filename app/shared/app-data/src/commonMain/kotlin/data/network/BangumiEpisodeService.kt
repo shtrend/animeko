@@ -283,8 +283,8 @@ internal fun BangumiEpisode.toEpisodeInfo(): EpisodeInfo {
 //        duration = this.duration,
         desc = this.desc,
 //        disc = this.disc,
-        sort = EpisodeSort(this.sort),
-        ep = EpisodeSort(this.ep ?: BigNum.ONE),
+        sort = EpisodeSort(this.sort, getEpisodeTypeByBangumiCode(this.type)),
+        ep = EpisodeSort(this.ep ?: BigNum.ONE, getEpisodeTypeByBangumiCode(this.type)),
 //        durationSeconds = this.durationSeconds
     )
 }
@@ -301,7 +301,7 @@ internal fun BangumiEpisodeDetail.toEpisodeInfo(): EpisodeInfo {
 //        duration = duration,
         desc = desc,
 //        disc = disc,
-        ep = EpisodeSort(this.ep ?: BigNum.ONE),
+        ep = EpisodeSort(this.ep ?: BigNum.ONE, getEpisodeTypeByBangumiCode(this.type)),
     )
 }
 

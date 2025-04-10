@@ -35,12 +35,11 @@ import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
-import me.him188.ani.app.data.persistent.database.dao.filterBySubjectId
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.data.repository.subject.GetEpisodeTypeFiltersUseCase
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
 import me.him188.ani.app.domain.episode.EpisodeCollections
-import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.platform.currentTimeMillis
@@ -56,11 +55,10 @@ class EpisodeCollectionRepository(
     private val bangumiEpisodeService: BangumiEpisodeService,
     private val animeScheduleRepository: AnimeScheduleRepository,
     subjectCollectionRepository: Lazy<SubjectCollectionRepository>,
-    private val enableAllEpisodeTypes: Flow<Boolean>,
+    private val getEpisodeTypeFiltersUseCase: GetEpisodeTypeFiltersUseCase,
     defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val cacheExpiry: Duration = 1.hours,
 ) : Repository(defaultDispatcher) {
-    private val epTypeFilter get() = enableAllEpisodeTypes.map { if (it) null else MainStory }
 
     private val subjectCollectionRepository by subjectCollectionRepository
 
@@ -99,9 +97,9 @@ class EpisodeCollectionRepository(
     fun subjectEpisodeCollectionInfosFlow(
         subjectId: Int,
         allowCached: Boolean = true,
-    ): Flow<List<EpisodeCollectionInfo>> = epTypeFilter.flatMapLatest { epType ->
+    ): Flow<List<EpisodeCollectionInfo>> = getEpisodeTypeFiltersUseCase().flatMapLatest { epTypes ->
         episodeCollectionDao
-            .filterBySubjectId(subjectId, epType)
+            .filterBySubjectId(subjectId, epTypes)
             .distinctUntilChanged()
             .transformLatest { cachedEpisodes ->
                 if (shouldUseCache(allowCached, cachedEpisodes, subjectId)) {
@@ -122,8 +120,7 @@ class EpisodeCollectionRepository(
                             }
                             // 过滤需要的类型
                             .let { list ->
-                                if (epType == null) list
-                                else list.filter { it.episodeInfo.type == epType }
+                                list.filter { it.episodeInfo.type in epTypes }
                             },
                     )
                 } catch (e: CancellationException) {
@@ -276,14 +273,16 @@ class EpisodeCollectionRepository(
             }
 
             try {
-                val episodeType = epTypeFilter.first()
+                val episodeTypes = getEpisodeTypeFiltersUseCase().first()
                 val episodes = episodeService.getEpisodeCollectionInfosPaged(
                     subjectId,
-                    episodeType = episodeType?.toBangumiEpType(),
+                    // TODO: 2025/4/10 这里实际上不可以用 singleOrNull.
+                    //  为 null 时会查询所有类型, 然后再过滤, 导致结果数量可能少于服务器数量, UI paging 反馈的 index 可能错误, 导致无限加载某一页.
+                    episodeType = episodeTypes.singleOrNull()?.toBangumiEpType(),
                     offset = offset,
                     limit = state.config.pageSize,
                 )
-                episodes.page.takeIf { it.isNotEmpty() }?.let { list ->
+                episodes.page.filter { it.episodeInfo.type in episodeTypes }.takeIf { it.isNotEmpty() }?.let { list ->
                     episodeCollectionDao.upsert(
                         list.map { it.toEntity(subjectId) },
                     )

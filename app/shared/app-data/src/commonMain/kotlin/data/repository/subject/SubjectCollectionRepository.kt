@@ -76,7 +76,6 @@ import me.him188.ani.app.domain.search.SubjectType
 import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
 import me.him188.ani.app.domain.session.verifiedAccessToken
-import me.him188.ani.datasources.api.EpisodeType.MainStory
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.UTC9
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -176,15 +175,13 @@ class SubjectCollectionRepositoryImpl(
     private val sessionManager: SessionManager,
     private val nsfwModeSettingsFlow: Flow<NsfwMode>,
     private val getCurrentDate: () -> PackedDate = { PackedDate.now() },
-    private val enableAllEpisodeTypes: Flow<Boolean>,
+    private val getEpisodeTypeFiltersUseCase: GetEpisodeTypeFiltersUseCase,
     defaultDispatcher: CoroutineContext = Dispatchers.Default,
     private val cacheExpiry: Duration = 1.hours,
 ) : SubjectCollectionRepository(defaultDispatcher) {
     @OptIn(OpaqueSession::class)
     private fun <T> Flow<T>.restartOnNewLogin(): Flow<T> =
         sessionManager.verifiedAccessToken.flatMapLatest { this }
-
-    private val epTypeFilter get() = enableAllEpisodeTypes.map { if (it) null else MainStory }
 
     override fun subjectCollectionCountsFlow(): Flow<SubjectCollectionCounts?> {
         return (bangumiSubjectService.subjectCollectionCountsFlow() as Flow<SubjectCollectionCounts?>)
@@ -319,9 +316,9 @@ class SubjectCollectionRepositoryImpl(
         query: CollectionsFilterQuery,
         pagingConfig: PagingConfig,
     ): Flow<PagingData<SubjectCollectionInfo>> =
-        combine(epTypeFilter, nsfwModeSettingsFlow) { epType, nsfwModeSettings ->
-            epType to nsfwModeSettings
-        }.restartOnNewLogin().flatMapLatest { (epType, nsfwModeSettings) ->
+        combine(getEpisodeTypeFiltersUseCase(), nsfwModeSettingsFlow) { epTypes, nsfwModeSettings ->
+            epTypes to nsfwModeSettings
+        }.restartOnNewLogin().flatMapLatest { (epTypes, nsfwModeSettings) ->
             Pager(
                 config = pagingConfig,
                 initialKey = 0,
@@ -339,11 +336,7 @@ class SubjectCollectionRepositoryImpl(
                         episodes = episodesOfAnyType
                             .asSequence()
                             .let { sequence ->
-                                if (epType == null) {
-                                    sequence
-                                } else {
-                                    sequence.filter { it.episodeType == epType }
-                                }
+                                sequence.filter { it.episodeType in epTypes }
                             }
                             .map { it.toEpisodeCollectionInfo() }
                             .toList(),
