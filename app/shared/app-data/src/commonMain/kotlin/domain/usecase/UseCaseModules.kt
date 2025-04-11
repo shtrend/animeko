@@ -41,10 +41,14 @@ import me.him188.ani.app.domain.mediasource.GetMediaSelectorSourceTiersUseCase
 import me.him188.ani.app.domain.mediasource.GetMediaSelectorSourceTiersUseCaseImpl
 import me.him188.ani.app.domain.mediasource.GetWebMediaSourceInstanceFlowUseCase
 import me.him188.ani.app.domain.mediasource.GetWebMediaSourceInstanceFlowUseCaseImpl
+import me.him188.ani.app.domain.mediasource.instance.GetMediaSourceInstancesUseCase
+import me.him188.ani.app.domain.mediasource.instance.GetMediaSourceInstancesUseCaseImpl
 import me.him188.ani.app.domain.settings.GetDanmakuRegexFilterListFlowUseCase
 import me.him188.ani.app.domain.settings.GetDanmakuRegexFilterListFlowUseCaseImpl
 import me.him188.ani.app.domain.settings.GetMediaSelectorSettingsFlowUseCase
 import me.him188.ani.app.domain.settings.GetMediaSelectorSettingsFlowUseCaseImpl
+import me.him188.ani.app.domain.settings.GetMediaSelectorSettingsUseCase
+import me.him188.ani.app.domain.settings.GetMediaSelectorSettingsUseCaseImpl
 import me.him188.ani.app.domain.settings.GetVideoScaffoldConfigUseCase
 import me.him188.ani.app.domain.settings.GetVideoScaffoldConfigUseCaseImpl
 import org.koin.core.KoinApplication
@@ -71,6 +75,8 @@ fun KoinApplication.useCaseModules() = module {
     single<GetMediaSelectorSourceTiersUseCase> { GetMediaSelectorSourceTiersUseCaseImpl(get()) }
     single<GetDanmakuFetcherUseCase> { GetDanmakuFetcherUseCaseImpl(get()) }
     single<GetEpisodeTypeFiltersUseCase> { GetEpisodeTypeFiltersUseCaseImpl(get()) }
+    single<GetMediaSelectorSettingsUseCase> { GetMediaSelectorSettingsUseCaseImpl(get()) }
+    single<GetMediaSourceInstancesUseCase> { GetMediaSourceInstancesUseCaseImpl(get()) }
 }
 
 val GlobalKoin get() = KoinPlatform.getKoin()

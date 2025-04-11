@@ -19,11 +19,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.domain.media.TestMediaList
@@ -45,6 +43,7 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 /**
  * 单个数据源的搜索结果.
  *
+ * @see MediaSourceFetchResult
  * @see MediaSourceResultListPresentation
  */
 @Stable
@@ -83,7 +82,6 @@ data class MediaSourceResultListPresentation(
 
 class MediaSourceResultListPresenter(
     resultListFlow: Flow<List<MediaSourceFetchResult>>,
-    flowScope: CoroutineScope,
 ) {
     val presentationFlow: Flow<List<MediaSourceResultPresentation>> = resultListFlow
         .flatMapLatest { list ->
@@ -102,7 +100,6 @@ class MediaSourceResultListPresenter(
                 }
             }
         }
-        .shareIn(flowScope, SharingStarted.WhileSubscribed(), replay = 1)
 
     private fun MediaSourceFetchResult.toPresentation(
         state: MediaSourceFetchState,
@@ -129,7 +126,6 @@ fun createTestMediaSourceResultsPresenter(
 ): MediaSourceResultListPresenter {
     return MediaSourceResultListPresenter(
         createTestMediaSourceResultsFilterer(flowScope).filteredSourceResults,
-        flowScope = flowScope,
     )
 }
 

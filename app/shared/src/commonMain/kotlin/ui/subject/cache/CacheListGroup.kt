@@ -65,7 +65,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.domain.media.cache.EpisodeCacheStatus
@@ -158,6 +160,7 @@ fun SettingsScope.EpisodeCacheListGroup(
                 settings = mediaSelectorSettingsProvider(),
                 flowScope = scope,
             ).filteredSourceResults
+                .shareIn(scope, started = SharingStarted.WhileSubscribed(5000), replay = 1)
         }
 
         // 注意, 这里会一直 collect mediaSourceResults
@@ -170,10 +173,9 @@ fun SettingsScope.EpisodeCacheListGroup(
             // TODO: shit
             MediaSourceResultListPresenter(
                 filteredResults,
-                scope,
             ).presentationFlow.map {
                 MediaSourceResultListPresentation(it)
-            }
+            }.shareIn(scope, SharingStarted.WhileSubscribed(), replay = 1)
         }.collectAsStateWithLifecycle(MediaSourceResultListPresentation.Empty)
         if (!hideMediaSelector) {
             ModalBottomSheet(
