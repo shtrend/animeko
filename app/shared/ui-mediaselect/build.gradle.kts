@@ -15,6 +15,7 @@ plugins {
 
     `ani-mpp-lib-targets`
     kotlin("plugin.serialization")
+    org.jetbrains.kotlinx.atomicfu
 }
 
 kotlin {

@@ -18,11 +18,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorView
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultsView
-import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
+import me.him188.ani.app.ui.mediafetch.MediaSelectorState
+import me.him188.ani.app.ui.mediafetch.MediaSelectorView
+import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresentation
+import me.him188.ani.app.ui.mediafetch.MediaSourceResultsView
+import me.him188.ani.app.ui.mediafetch.ViewKind
 import me.him188.ani.datasources.api.Media
 
 /**

@@ -70,6 +70,9 @@ import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
+import me.him188.ani.app.ui.mediafetch.MediaSelectorState
+import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresentation
+import me.him188.ani.app.ui.mediafetch.ViewKind
 import me.him188.ani.app.ui.mediaselect.summary.MediaSelectorSummary
 import me.him188.ani.app.ui.mediaselect.summary.MediaSelectorSummaryCard
 import me.him188.ani.app.ui.subject.AiringLabel
@@ -84,9 +87,6 @@ import me.him188.ani.app.ui.subject.episode.details.components.DanmakuMatchInfoG
 import me.him188.ani.app.ui.subject.episode.details.components.DanmakuSourceCard
 import me.him188.ani.app.ui.subject.episode.details.components.DanmakuSourceSettingsDropdown
 import me.him188.ani.app.ui.subject.episode.details.components.PlayingEpisodeItemDefaults
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
-import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuMatchInfoSummaryRow
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuStatistics
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics

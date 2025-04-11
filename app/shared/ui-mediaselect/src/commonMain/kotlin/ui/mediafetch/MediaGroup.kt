@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.ui.subject.episode.mediaFetch
+package me.him188.ani.app.ui.mediafetch
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable

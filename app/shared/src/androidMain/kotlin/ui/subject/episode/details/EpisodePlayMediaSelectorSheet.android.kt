@@ -19,9 +19,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
-import me.him188.ani.app.ui.subject.episode.mediaFetch.TestMediaSourceResultListPresentation
-import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
-import me.him188.ani.app.ui.subject.episode.mediaFetch.rememberTestMediaSelectorState
+import me.him188.ani.app.ui.mediafetch.TestMediaSourceResultListPresentation
+import me.him188.ani.app.ui.mediafetch.ViewKind
+import me.him188.ani.app.ui.mediafetch.rememberTestMediaSelectorState
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Preview(name = "progress = null")

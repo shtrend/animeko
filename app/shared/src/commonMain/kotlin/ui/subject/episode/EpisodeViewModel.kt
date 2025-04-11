@@ -107,6 +107,13 @@ import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.foundation.HasBackgroundScope
 import me.him188.ani.app.ui.foundation.launchInBackground
 import me.him188.ani.app.ui.foundation.stateOf
+import me.him188.ani.app.ui.mediafetch.MediaSelectorState
+import me.him188.ani.app.ui.mediafetch.MediaSourceInfoProvider
+import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresentation
+import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresenter
+import me.him188.ani.app.ui.mediafetch.MediaSourceResultPresentation
+import me.him188.ani.app.ui.mediafetch.ViewKind
+import me.him188.ani.app.ui.mediafetch.createTestMediaSelectorState
 import me.him188.ani.app.ui.mediaselect.summary.MediaSelectorSummary
 import me.him188.ani.app.ui.mediaselect.summary.QueriedSourcePresentation
 import me.him188.ani.app.ui.settings.danmaku.DanmakuRegexFilterState
@@ -116,13 +123,6 @@ import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateFactory
 import me.him188.ani.app.ui.subject.details.state.SubjectDetailsStateLoader
 import me.him188.ani.app.ui.subject.episode.details.EpisodeCarouselState
 import me.him188.ani.app.ui.subject.episode.details.EpisodeDetailsState
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSelectorState
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceInfoProvider
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresentation
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultListPresenter
-import me.him188.ani.app.ui.subject.episode.mediaFetch.MediaSourceResultPresentation
-import me.him188.ani.app.ui.subject.episode.mediaFetch.ViewKind
-import me.him188.ani.app.ui.subject.episode.mediaFetch.createTestMediaSelectorState
 import me.him188.ani.app.ui.subject.episode.statistics.DanmakuStatistics
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatisticsCollector
