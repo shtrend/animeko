@@ -42,7 +42,6 @@ import me.him188.ani.utils.ktor.ScopedHttpClient
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import models.IkarosAttachment
-import java.util.Collections
 
 class IkarosClient(
     private val baseUrl: String,
@@ -73,7 +72,7 @@ class IkarosClient(
 
     suspend fun getSubjectSyncsWithBgmTvSubjectId(bgmTvSubjectId: String): List<IkarosSubjectSync> {
         if (bgmTvSubjectId.isBlank() || bgmTvSubjectId.toInt() <= 0) {
-            return Collections.emptyList()
+            return emptyList()
         }
         val url = "$baseUrl/api/v1alpha1/subject/syncs/platform?platform=BGM_TV&platformId=$bgmTvSubjectId"
         val responseText = client.use {
@@ -121,7 +120,9 @@ class IkarosClient(
                             uri = getResUrl(epRes.url),
                         ),
                         originalTitle = epRes.name,
-                        publishedTime = DateFormater.default.utcDateStr2timeStamp(attachment?.updateTime ?: ""),
+                        publishedTime = kotlin.runCatching {
+                            DateFormater.utcDateStr2timeStamp(attachment?.updateTime ?: "")
+                        }.getOrElse { 0 },
                         properties = MediaProperties(
                             subjectName = null, // Ikaros is exact match and hence does not need these properties.
                             episodeName = null,
@@ -150,7 +151,7 @@ class IkarosClient(
 
     suspend fun getEpisodeRecordsWithId(subjectId: String): List<IkarosEpisodeRecord> {
         if (subjectId.isBlank() || subjectId.toInt() <= 0) {
-            return Collections.emptyList()
+            return emptyList()
         }
         val url = "$baseUrl/api/v1alpha1/episode/records/subjectId/$subjectId"
         val responseText = client.use {

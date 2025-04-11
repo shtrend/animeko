@@ -12,6 +12,7 @@ package me.him188.ani.datasources.ikaros
 import io.ktor.client.request.header
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.utils.io.core.toByteArray
 import kotlinx.coroutines.flow.flowOf
 import me.him188.ani.datasources.api.paging.SizedSource
 import me.him188.ani.datasources.api.source.ConnectionStatus
@@ -28,8 +29,8 @@ import me.him188.ani.datasources.api.source.get
 import me.him188.ani.datasources.api.source.parameter.MediaSourceParameters
 import me.him188.ani.datasources.api.source.parameter.MediaSourceParametersBuilder
 import me.him188.ani.utils.ktor.ScopedHttpClient
-import java.nio.charset.StandardCharsets
-import java.util.Base64
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 
 class IkarosMediaSource(
     override val mediaSourceId: String,
@@ -46,6 +47,7 @@ class IkarosMediaSource(
         )
     }
 
+    @OptIn(ExperimentalEncodingApi::class)
     private val client = IkarosClient(
         config[Parameters.baseUrl],
         httpClient,
@@ -54,12 +56,9 @@ class IkarosMediaSource(
             val password = config[Parameters.password]
             header(
                 HttpHeaders.Authorization,
-                "Basic " + Base64.getEncoder()
-                    .encodeToString(
-                        "$username:$password".toByteArray(
-                            StandardCharsets.UTF_8,
-                        ),
-                    ),
+                "Basic " + Base64.encode(
+                    "$username:$password".toByteArray(),
+                ),
             )
         },
     )
@@ -111,7 +110,7 @@ class IkarosMediaSource(
             }
             return client.episodeRecords2SizeSource(subjectId.toString(), episodeRecords, episodeSort)
         } catch (exception: RuntimeException) {
-            logger.error("Request fail: ", exception);
+            logger.error("Request fail: ", exception)
         }
         return emptySizeSource
     }
