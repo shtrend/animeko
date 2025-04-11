@@ -180,7 +180,7 @@ val zipDesktopDistribution = tasks.register("zipDesktopDistribution", Zip::class
 tasks.register("uploadDesktopInstallers") {
     dependsOn(zipDesktopDistribution)
 
-    if (hostOS == OS.MACOS) {
+    if (hostOS == OS.MACOS && hostArch == "x86_64") {
         dependsOn(
             ":app:desktop:packageReleaseDistributionForCurrentOS",
         )
