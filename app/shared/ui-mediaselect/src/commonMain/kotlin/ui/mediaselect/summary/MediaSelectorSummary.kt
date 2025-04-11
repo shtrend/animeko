@@ -153,68 +153,74 @@ fun MediaSelectorSummaryCard(
                 animationState.currentSummary,
                 transitionSpec = transitionSpec,
             ) { state ->
-                when (state) {
-                    is MediaSelectorSummary.AutoSelecting -> {
-                        ListItem(
-                            headlineContent = { Text("正在自动选择数据源") },
-                            commonModifiers,
-                            leadingContent = {
-                                LoadingIndicator(
-                                    Modifier.size(24.dp),
-                                )
-                            },
-                            colors = listItemColors,
-                        )
+                val button = @Composable {
+                    val buttonLabel = when (state) {
+                        is MediaSelectorSummary.AutoSelecting -> "手动选择"
+                        is MediaSelectorSummary.RequiresManualSelection -> "手动选择"
+                        is MediaSelectorSummary.Selected -> "更换"
                     }
 
-                    is MediaSelectorSummary.RequiresManualSelection -> {
-                        ListItem(
-                            headlineContent = { Text("请选择数据源") },
-                            commonModifiers,
-                            colors = listItemColors,
+                    OutlinedButton(
+                        onClickManualSelect,
+                        contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
+                    ) {
+                        Icon(
+                            Icons.Rounded.SyncAlt,
+                            contentDescription = null,
+                            Modifier.size(ButtonDefaults.IconSize),
                         )
-                    }
-
-                    is MediaSelectorSummary.Selected -> {
-                        ListItem(
-                            headlineContent = { Text(state.source.sourceName, softWrap = true, maxLines = 2) },
-                            commonModifiers,
-                            overlineContent = { Text("数据源") },
-                            leadingContent = {
-                                SourceIcon(
-                                    state.source,
-                                    Modifier.size(24.dp),
-                                )
-                            },
-                            colors = listItemColors,
-                        )
+                        Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                        Text(buttonLabel, softWrap = false)
                     }
                 }
-            }
-        },
-        button = {
-            AnimatedContent(
-                animationState.currentSummary,
-                contentAlignment = Alignment.CenterEnd,
-                transitionSpec = transitionSpec,
-            ) { state ->
-                val buttonLabel = when (state) {
-                    is MediaSelectorSummary.AutoSelecting -> "手动选择"
-                    is MediaSelectorSummary.RequiresManualSelection -> "手动选择"
-                    is MediaSelectorSummary.Selected -> "更换"
+
+                val description = @Composable {
+                    when (state) {
+                        is MediaSelectorSummary.AutoSelecting -> {
+                            ListItem(
+                                headlineContent = { Text("正在自动选择数据源") },
+                                commonModifiers,
+                                leadingContent = {
+                                    LoadingIndicator(
+                                        Modifier.size(24.dp),
+                                    )
+                                },
+                                colors = listItemColors,
+                            )
+                        }
+
+                        is MediaSelectorSummary.RequiresManualSelection -> {
+                            ListItem(
+                                headlineContent = { Text("请选择数据源") },
+                                commonModifiers,
+                                colors = listItemColors,
+                            )
+                        }
+
+                        is MediaSelectorSummary.Selected -> {
+                            ListItem(
+                                headlineContent = { Text(state.source.sourceName, softWrap = true, maxLines = 2) },
+                                commonModifiers,
+                                overlineContent = { Text("数据源") },
+                                leadingContent = {
+                                    SourceIcon(
+                                        state.source,
+                                        Modifier.size(24.dp),
+                                    )
+                                },
+                                colors = listItemColors,
+                            )
+                        }
+                    }
                 }
 
-                OutlinedButton(
-                    onClickManualSelect,
-                    contentPadding = ButtonDefaults.ButtonWithIconContentPadding,
-                ) {
-                    Icon(
-                        Icons.Rounded.SyncAlt,
-                        contentDescription = null,
-                        Modifier.size(ButtonDefaults.IconSize),
-                    )
-                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                    Text(buttonLabel, softWrap = false)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.weight(1f)) {
+                        description()
+                    }
+                    Row(Modifier.padding(end = 16.dp)) {
+                        button()
+                    }
                 }
             }
         },
@@ -409,13 +415,11 @@ private fun QueriedSources(
 
 /**
  * @param header ListItem
- * @param button OutlinedButton
  * @param content should have 16.dp all around padding
  */
 @Composable
 private fun MediaSelectorSummaryLayout(
     header: @Composable () -> Unit,
-    button: @Composable () -> Unit,
     headerContainerColor: Color,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
@@ -428,12 +432,7 @@ private fun MediaSelectorSummaryLayout(
                 Modifier.fillMaxWidth().heightIn(min = 72.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(Modifier.weight(1f)) {
-                    header()
-                }
-                Box(Modifier.padding(end = 16.dp)) {
-                    button()
-                }
+                header()
             }
         }
 
