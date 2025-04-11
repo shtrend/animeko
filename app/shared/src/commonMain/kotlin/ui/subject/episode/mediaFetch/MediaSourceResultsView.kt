@@ -78,7 +78,7 @@ fun MediaSourceResultsView(
         sourceSelected = { presentation.finalSelected == it },
         onClickEnabled = {
             scope.launch {
-                mediaSelector.mediaSource.preferOrRemove(it).join()
+                mediaSelector.mediaSource.preferOrRemove(it)
                 mediaSelector.removePreferencesUntilFirstCandidate()
             }
         },

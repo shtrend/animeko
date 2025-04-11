@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import me.him188.ani.app.domain.media.selector.UnsafeOriginalMediaAccess
 import me.him188.ani.app.platform.currentAniBuildConfig
@@ -310,6 +311,7 @@ private fun LazyItemScope.MediaItemGroup(
                 }
             }
         }
+        val scope = rememberCoroutineScope()
         MediaSelectorItem(
             group,
             groupState = state.getGroupState(group.groupId),
@@ -320,9 +322,9 @@ private fun LazyItemScope.MediaItemGroup(
                 onClickItem(state.getGroupState(group.groupId).selectedItem ?: it)
             },
             preferredResolution = { presentation.resolution.finalSelected },
-            onPreferResolution = { state.resolution.preferOrRemove(it) },
+            onPreferResolution = { scope.launch { state.resolution.preferOrRemove(it) } },
             preferredSubtitleLanguageId = { presentation.subtitleLanguageId.finalSelected },
-            onPreferSubtitleLanguageId = { state.subtitleLanguageId.preferOrRemove(it) },
+            onPreferSubtitleLanguageId = { scope.launch { state.subtitleLanguageId.preferOrRemove(it) } },
             Modifier
                 .animateItem()
                 .fillMaxWidth()

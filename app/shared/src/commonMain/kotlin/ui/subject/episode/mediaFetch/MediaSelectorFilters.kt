@@ -34,6 +34,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -43,6 +44,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import me.him188.ani.app.ui.foundation.dialogs.PlatformPopupProperties
 import me.him188.ani.app.ui.media.renderSubtitleLanguage
 
@@ -61,13 +63,14 @@ fun MediaSelectorFilters(
     modifier: Modifier = Modifier,
     singleLine: Boolean = false,
 ) {
+    val scope = rememberCoroutineScope()
     val content = @Composable {
         val resolutionPresentation by resolution.presentationFlow.collectAsStateWithLifecycle()
         MediaSelectorFilterChip(
             selected = resolutionPresentation.finalSelected,
             allValues = { resolutionPresentation.available },
-            onSelect = { resolution.prefer(it) },
-            onDeselect = { resolution.removePreference() },
+            onSelect = { scope.launch { resolution.prefer(it) } },
+            onDeselect = { scope.launch { resolution.removePreference() } },
             name = { Text("分辨率") },
             Modifier.widthIn(min = minWidth, max = maxWidth),
         )
@@ -75,8 +78,8 @@ fun MediaSelectorFilters(
         MediaSelectorFilterChip(
             selected = subtitleLanguagePresentation.finalSelected,
             allValues = { subtitleLanguagePresentation.available },
-            onSelect = { subtitleLanguageId.prefer(it) },
-            onDeselect = { subtitleLanguageId.removePreference() },
+            onSelect = { scope.launch { subtitleLanguageId.prefer(it) } },
+            onDeselect = { scope.launch { subtitleLanguageId.removePreference() } },
             name = { Text("字幕") },
             Modifier.widthIn(min = minWidth, max = maxWidth),
             label = { MediaSelectorFilterChipText(renderSubtitleLanguage(it)) },
@@ -85,8 +88,8 @@ fun MediaSelectorFilters(
         MediaSelectorFilterChip(
             selected = alliancePresentation.finalSelected,
             allValues = { alliancePresentation.available },
-            onSelect = { alliance.prefer(it) },
-            onDeselect = { alliance.removePreference() },
+            onSelect = { scope.launch { alliance.prefer(it) } },
+            onDeselect = { scope.launch { alliance.removePreference() } },
             name = { Text("字幕组") },
             Modifier.widthIn(min = minWidth, max = maxWidth),
         )

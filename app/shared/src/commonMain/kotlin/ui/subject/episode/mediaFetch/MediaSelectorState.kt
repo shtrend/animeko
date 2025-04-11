@@ -19,8 +19,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,14 +39,12 @@ import me.him188.ani.app.domain.media.fetch.isFailedOrAbandoned
 import me.him188.ani.app.domain.media.fetch.isWorking
 import me.him188.ani.app.domain.media.selector.DefaultMediaSelector
 import me.him188.ani.app.domain.media.selector.GetPreferredMediaSourceSortingUseCase
-import me.him188.ani.app.domain.media.selector.MatchMetadata
 import me.him188.ani.app.domain.media.selector.MaybeExcludedMedia
 import me.him188.ani.app.domain.media.selector.MediaPreferenceItem
 import me.him188.ani.app.domain.media.selector.MediaSelector
 import me.him188.ani.app.domain.media.selector.MediaSelectorContext
 import me.him188.ani.app.domain.media.selector.isPerfectMatch
 import me.him188.ani.app.domain.usecase.GlobalKoin
-import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.foundation.rememberBackgroundScope
 import me.him188.ani.app.ui.mediaselect.selector.WebSource
 import me.him188.ani.app.ui.mediaselect.selector.WebSourceChannel
@@ -92,7 +88,7 @@ class MediaPreferenceItemState<T : Any>(
     data class Presentation<T : Any>(
         val available: List<T>,
         val finalSelected: T?,
-        val isWorking: Boolean,
+        val isWorking: Boolean = false,
         val isPlaceholder: Boolean = false,
     ) {
         companion object {
@@ -103,34 +99,31 @@ class MediaPreferenceItemState<T : Any>(
         }
     }
 
-    private val tasker = MonoTasker(backgroundScope)
-
     val presentationFlow = combine(
         item.available,
         item.finalSelected,
-        tasker.isRunning,
         transform = ::Presentation,
     ).stateIn(
         backgroundScope, started = SharingStarted.WhileSubscribed(),
-        Presentation<T>(emptyList(), null, isWorking = false, isPlaceholder = true),
+        Presentation.placeholder(),
     )
 
     /**
      * 用户选择
      */
-    fun prefer(value: T): Job {
-        return tasker.launch(start = CoroutineStart.UNDISPATCHED) { item.prefer(value) }
+    suspend fun prefer(value: T) {
+        item.prefer(value)
     }
 
     /**
      * 删除已有的选择
      */
-    fun removePreference(): Job {
-        return tasker.launch(start = CoroutineStart.UNDISPATCHED) { item.removePreference() }
+    suspend fun removePreference() {
+        item.removePreference()
     }
 }
 
-fun <T : Any> MediaPreferenceItemState<T>.preferOrRemove(value: T?): Job {
+suspend fun <T : Any> MediaPreferenceItemState<T>.preferOrRemove(value: T?) {
     return if (value == null || value == presentationFlow.value.finalSelected) {
         removePreference()
     } else {
@@ -307,7 +300,7 @@ class MediaSelectorState(
 
         when {
             state is MediaSourceFetchState.Disabled -> {
-                // 禁用的数据源一直排除. TODO: 考虑增加某种方法临时启用数据源
+                // 禁用的数据源一直排除.
                 null
             }
 

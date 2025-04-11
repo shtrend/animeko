@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaPreference.Companion.ANY_FILTER
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
@@ -753,8 +754,10 @@ class DefaultMediaSelector(
         }.flowOn(flowCoroutineContext)
 
         override suspend fun removePreference() {
-            overridePreference.value = OptionalPreference.preferNoValue()
-            broadcastChangePreference(null)
+            withContext(flowCoroutineContext) {
+                overridePreference.value = OptionalPreference.preferNoValue()
+                broadcastChangePreference(null)
+            }
         }
 
         override fun preferWithoutBroadcast(value: T) {
@@ -762,8 +765,10 @@ class DefaultMediaSelector(
         }
 
         override suspend fun prefer(value: T) {
-            preferWithoutBroadcast(value)
-            broadcastChangePreference(null)
+            withContext(flowCoroutineContext) {
+                preferWithoutBroadcast(value)
+                broadcastChangePreference(null)
+            }
         }
 
         override fun toString(): String = "MediaPreferenceItem($debugName)"
