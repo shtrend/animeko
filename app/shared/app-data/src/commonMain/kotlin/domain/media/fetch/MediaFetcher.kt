@@ -153,7 +153,7 @@ class MediaSourceMediaFetcher(
         private val config: MediaFetcherConfig,
         val disabled: Boolean,
         pagedSources: Flow<SizedSource<MediaMatch>>,
-        flowContext: CoroutineContext, 
+        flowContext: CoroutineContext,
     ) : MediaSourceFetchResult, SynchronizedObject() {
         /**
          * 为了确保线程安全, 对 [state] 的写入必须谨慎.
@@ -205,6 +205,11 @@ class MediaSourceMediaFetcher(
                     }
                     .map { list ->
                         list.distinctBy { it.mediaId }
+                    }
+                    .onStart {
+                        // 启动时 emit emptyList, 更新 replayCache 为 empty. 
+                        // 这是为了处理 cancellation. 如果 results collect 在 emit 第一个 list 之前就被 cancel, 就会记忆一个 MediaSourceFetchState.Failed, 并且下次重新 collect 也不会重试.
+                        emit(emptyList())
                     }
                     .onCompletion { exception ->
                         if (exception == null) {
