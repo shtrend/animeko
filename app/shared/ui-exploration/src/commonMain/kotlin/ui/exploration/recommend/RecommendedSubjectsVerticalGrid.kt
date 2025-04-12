@@ -9,12 +9,15 @@
 
 package me.him188.ani.app.ui.exploration.recommend
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.adaptive.WindowAdaptiveInfo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
@@ -27,11 +30,15 @@ import me.him188.ani.app.data.models.recommend.RecommendedSubjectInfo
 import me.him188.ani.app.data.models.recommend.TestRecommendedItemInfos
 import me.him188.ani.app.data.models.recommend.id
 import me.him188.ani.app.data.models.recommend.type
+import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.layout.CarouselItemDefaults
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.minimumHairlineSize
+import me.him188.ani.app.ui.search.LoadErrorCard
 import me.him188.ani.app.ui.search.createTestPager
+import me.him188.ani.app.ui.search.rememberLoadErrorState
 import me.him188.ani.app.ui.subject.SubjectCoverCard
 import me.him188.ani.app.ui.subject.SubjectGridDefaults
 import me.him188.ani.app.ui.subject.SubjectGridLayoutParams
@@ -40,9 +47,17 @@ import org.jetbrains.compose.ui.tooling.preview.PreviewScreenSizes
 
 fun LazyGridScope.recommendationItems(
     data: LazyPagingItems<RecommendedItemInfo>,
+    loadError: LoadError?,
     onClick: (RecommendedItemInfo) -> Unit,
     layoutParams: RecommendationLayoutParams,
 ) {
+    if (loadError != null) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Box(Modifier.minimumHairlineSize()) {
+                LoadErrorCard(loadError, { data.refresh() })
+            }
+        }
+    }
     items(
         data.itemCount,
         key = data.itemKey { it.id },
@@ -102,8 +117,8 @@ object RecommendationDefaults {
 private fun PreviewRecommendationVerticalGrid() {
     ProvideCompositionLocalsForPreview {
         val layoutParams = RecommendationDefaults.layoutParameters()
-        val aniMotionScheme = LocalAniMotionScheme.current
         val data = createTestPager(TestRecommendedItemInfos).collectAsLazyPagingItems()
+        val loadError by data.rememberLoadErrorState()
         LazyVerticalGrid(
             layoutParams.gridCells,
             contentPadding = PaddingValues(0.dp),
@@ -112,6 +127,7 @@ private fun PreviewRecommendationVerticalGrid() {
         ) {
             recommendationItems(
                 data = data,
+                loadError = loadError,
                 onClick = {},
                 layoutParams = layoutParams,
             )

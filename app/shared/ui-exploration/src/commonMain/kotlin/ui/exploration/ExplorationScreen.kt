@@ -98,6 +98,7 @@ import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.search.createTestPager
 import me.him188.ani.app.ui.search.isLoadingFirstPageOrRefreshing
+import me.him188.ani.app.ui.search.rememberLoadErrorState
 import me.him188.ani.utils.platform.annotations.TestOnly
 import me.him188.ani.utils.platform.hasScrollingBug
 import org.jetbrains.compose.ui.tooling.preview.PreviewLightDark
@@ -209,6 +210,7 @@ fun ExplorationScreen(
         val scope = rememberCoroutineScope()
 
         val recommendationPager = state.recommendationPager.collectAsLazyPagingItemsWithLifecycle()
+        val recommendationPagerLoadError by recommendationPager.rememberLoadErrorState()
         val aniMotionScheme = LocalAniMotionScheme.current
         val layoutParams = RecommendationDefaults.layoutParameters()
         LazyVerticalGrid(
@@ -335,6 +337,7 @@ fun ExplorationScreen(
 
             recommendationItems(
                 recommendationPager,
+                loadError = recommendationPagerLoadError,
                 onClick = { info ->
                     when (info) {
                         is RecommendedSubjectInfo -> {
