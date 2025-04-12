@@ -119,7 +119,10 @@ sealed class SubjectCollectionRepository(
 
     abstract fun subjectCollectionsPager(
         query: CollectionsFilterQuery = CollectionsFilterQuery.Empty,
-        pagingConfig: PagingConfig = defaultPagingConfig,
+        pagingConfig: PagingConfig = PagingConfig(
+            pageSize = 10,
+            enablePlaceholders = false,
+        ),
     ): Flow<PagingData<SubjectCollectionInfo>>
 
     /**
