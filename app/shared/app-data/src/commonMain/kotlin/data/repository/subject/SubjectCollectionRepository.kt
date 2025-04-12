@@ -667,7 +667,7 @@ internal fun BatchSubjectCollection.toEntity(
     return subject.toEntity(
         collection?.type.toCollectionType(),
         collection.toSelfRatingInfo(),
-        lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: lastFetched,
+        lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
         lastFetched = lastFetched,
         recurrence = recurrence,
     )

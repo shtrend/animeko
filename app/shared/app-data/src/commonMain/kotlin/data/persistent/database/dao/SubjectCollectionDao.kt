@@ -82,7 +82,7 @@ data class SubjectCollectionEntity(
     /**
      * 此条目最后被修改的时间 (如修改收藏状态). 与服务器同步.
      */
-    @ColumnInfo(defaultValue = "CURRENT_TIMESTAMP")
+    @ColumnInfo(defaultValue = "0")
     val lastUpdated: Long,
     /**
      * 此条目从 bangumi 服务器上查询到的时间. 用于判断是否需要自动刷新

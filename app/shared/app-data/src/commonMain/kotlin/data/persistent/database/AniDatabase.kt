@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -64,7 +64,7 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectReviewEntity
         WebSearchSubjectInfoEntity::class,
         WebSearchEpisodeInfoEntity::class,
     ],
-    version = 13,
+    version = 14,
     autoMigrations = [
         AutoMigration(from = 1, to = 2, spec = Migrations.Migration_1_2::class),
         AutoMigration(from = 2, to = 3, spec = Migrations.Migration_2_3::class),
@@ -78,6 +78,7 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectReviewEntity
         AutoMigration(from = 10, to = 11, spec = Migrations.Migration_10_11::class),
         AutoMigration(from = 11, to = 12, spec = Migrations.Migration_11_12::class),
         AutoMigration(from = 12, to = 13, spec = Migrations.Migration_12_13::class),
+        AutoMigration(from = 13, to = 14, spec = Migrations.Migration_13_14::class),
     ],
 )
 @ConstructedBy(AniDatabaseConstructor::class)
@@ -245,6 +246,16 @@ internal object Migrations {
      * @since 4.1.0-alpha03
      */
     class Migration_12_13 : AutoMigrationSpec {
+        override fun onPostMigrate(connection: SQLiteConnection) {
+        }
+    }
+
+    /**
+     * [SubjectCollectionEntity.lastUpdated] now defaults to `0` instead of `CURRENT_TIMESTAMP`.
+     *
+     * @since 4.9.0-alpha03
+     */
+    class Migration_13_14 : AutoMigrationSpec {
         override fun onPostMigrate(connection: SQLiteConnection) {
         }
     }
