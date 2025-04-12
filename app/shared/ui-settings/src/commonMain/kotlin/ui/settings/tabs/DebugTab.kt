@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -14,11 +14,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.toRoute
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.preference.DebugSettings
 import me.him188.ani.app.data.models.preference.UISettings
 import me.him188.ani.app.data.models.preference.supportsLimitUploadOnMeteredNetwork
+import me.him188.ani.app.domain.session.OpaqueSession
+import me.him188.ani.app.domain.session.SessionManager
+import me.him188.ani.app.domain.session.unverifiedAccessToken
+import me.him188.ani.app.domain.usecase.GlobalKoin
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.navigation.NavRoutes
 import me.him188.ani.app.navigation.findLast
@@ -31,6 +39,7 @@ import me.him188.ani.app.ui.settings.framework.components.SwitchItem
 import me.him188.ani.app.ui.settings.framework.components.TextItem
 import org.koin.mp.KoinPlatform
 
+@OptIn(OpaqueSession::class)
 @Composable
 fun DebugTab(
     debugSettingsState: SettingsState<DebugSettings>,
@@ -42,6 +51,7 @@ fun DebugTab(
     val toaster = LocalToaster.current
     val navigator = LocalNavigator.current
     val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboardManager.current
 
     SettingsTab(modifier) {
         Group(
@@ -102,6 +112,30 @@ fun DebugTab(
                 onClick = {
                     uiSettingsState.update(uiSettingsState.value.copy(onboardingCompleted = false))
                     toaster.toast("已重置新手引导状态")
+                },
+            )
+        }
+        Group(title = { Text("其他") }, useThinHeader = true) {
+            TextItem(
+                title = { Text("获取 Bangumi access token") },
+                onClick = {
+                    scope.launch {
+                        val value =
+                            GlobalKoin.get<SessionManager>().unverifiedAccessToken.firstOrNull()?.bangumiAccessToken
+                        toaster.toast("已复制: $value")
+                        clipboard.setText(AnnotatedString(value.toString()))
+                    }
+                },
+            )
+            TextItem(
+                title = { Text("获取 Ani access token") },
+                onClick = {
+                    scope.launch {
+                        val value =
+                            GlobalKoin.get<SessionManager>().unverifiedAccessToken.firstOrNull()?.aniAccessToken
+                        toaster.toast("已复制: $value")
+                        clipboard.setText(AnnotatedString(value.toString()))
+                    }
                 },
             )
         }
