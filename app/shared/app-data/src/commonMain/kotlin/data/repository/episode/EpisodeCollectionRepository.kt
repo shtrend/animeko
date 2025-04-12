@@ -37,11 +37,12 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.data.repository.RepositoryUnknownException
 import me.him188.ani.app.data.repository.subject.GetEpisodeTypeFiltersUseCase
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
 import me.him188.ani.app.domain.episode.EpisodeCollections
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
-import me.him188.ani.utils.logging.error
+import me.him188.ani.utils.logging.warn
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.cancellation.CancellationException
@@ -127,7 +128,12 @@ class EpisodeCollectionRepository(
                     throw e
                 } catch (e: Exception) {
                     // 失败则返回缓存
-                    logger.error(e) { "Failed to get episode collection infos for subject $subjectId" }
+                    val errorToLog = if (e is RepositoryException && e !is RepositoryUnknownException) {
+                        null
+                    } else {
+                        e
+                    }
+                    logger.warn(errorToLog) { "Failed to get episode collection infos for subject $subjectId with $e" }
                     emit(cachedEpisodes.map { it.toEpisodeCollectionInfo() })
                     return@transformLatest
                 }
