@@ -121,7 +121,7 @@ sealed class SubjectCollectionRepository(
         query: CollectionsFilterQuery = CollectionsFilterQuery.Empty,
         pagingConfig: PagingConfig = PagingConfig(
             pageSize = 10,
-            enablePlaceholders = false,
+            prefetchDistance = 30,
         ),
     ): Flow<PagingData<SubjectCollectionInfo>>
 
