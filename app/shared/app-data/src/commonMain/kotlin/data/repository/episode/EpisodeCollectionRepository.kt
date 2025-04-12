@@ -205,8 +205,8 @@ class EpisodeCollectionRepository(
         if (subjectCollectionRepository.subjectCollectionFlow(subjectId)
                 .first().collectionType == UnifiedCollectionType.NOT_COLLECTED
         ) {
-            // 未收藏, 先收藏
-            subjectCollectionRepository.setSubjectCollectionTypeOrDelete(subjectId, UnifiedCollectionType.DOING)
+            logger.warn { "User has not yet collected subject $subjectId when we want to setEpisodeCollectionType, ignoring." }
+//            subjectCollectionRepository.setSubjectCollectionTypeOrDelete(subjectId, UnifiedCollectionType.DOING)
         }
         bangumiEpisodeService.setEpisodeCollection(subjectId, listOf(episodeId), collectionType)
         episodeCollectionDao.updateSelfCollectionType(subjectId, episodeId, collectionType)
