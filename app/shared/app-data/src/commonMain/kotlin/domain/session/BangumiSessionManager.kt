@@ -334,11 +334,18 @@ class BangumiSessionManager(
             )
             processingRequest.value = req
             try {
-                req.invoke() // This won't throw
+                req.invoke()
+            } catch (e: RepositoryException) {
+                logger.trace { "requireAuthorize: ExternalOAuthRequestImpl failed with $e" }
+                throw AuthorizationFailedException(
+                    currentStatus,
+                    "Exception during invoking ExternalOAuthRequestImpl, see cause",
+                    cause = e,
+                )
             } finally {
                 processingRequest.value = null
             }
-            logger.trace { "requireAuthorize: ExternalOAuthRequestImpl completed (This does not imply it succeed)" }
+            logger.trace { "requireAuthorize: ExternalOAuthRequestImpl succeed" }
 
             // Throw exceptions according to state
             val state = req.state.value

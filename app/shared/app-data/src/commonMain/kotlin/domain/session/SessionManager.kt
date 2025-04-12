@@ -165,9 +165,6 @@ class AuthorizationCancelledException(
 class AuthorizationFailedException(
     val status: SessionStatus,
     override val message: String? = null,
-    /**
-     * May be [SessionStatus.UnknownError.exception] or [ExternalOAuthRequest.State.Failed.throwable].
-     */
     override val cause: Throwable? = null,
 ) : AuthorizationException()
 

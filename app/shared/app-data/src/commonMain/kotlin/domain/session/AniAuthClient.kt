@@ -24,25 +24,21 @@ import me.him188.ani.client.models.AniBangumiUserToken
 import me.him188.ani.client.models.AniRefreshBangumiTokenRequest
 import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.platform.currentPlatform
-import kotlin.coroutines.cancellation.CancellationException
 
 interface AniAuthClient {
     /**
      * 获取使用 Ani OAuth 登录的结果. 同时返回 bangumi 和 ani tokens.
      */
-    @Throws(RepositoryException::class, CancellationException::class)
     suspend fun getResult(requestId: String): AniAuthResult?
 
     /**
      * 使用 refresh token 刷新得到新的 bangumi 和 ani tokens.
      */
-    @Throws(RepositoryException::class, CancellationException::class)
     suspend fun refreshAccessToken(refreshToken: String): AniAuthResult
 
     /**
      * 用 [bangumiAccessToken] 登录 ani 账户, 返回 tokens.
      */
-    @Throws(RepositoryException::class, CancellationException::class)
     suspend fun getAccessTokensByBangumiToken(bangumiAccessToken: String): AccessTokenPair
 }
 
