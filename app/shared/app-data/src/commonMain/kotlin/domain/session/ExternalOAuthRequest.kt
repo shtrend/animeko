@@ -37,7 +37,7 @@ interface ExternalOAuthRequest {
     fun cancel(reason: CancellationException? = null)
 
     /**
-     * @param
+     * @param reason becomes [ExternalOAuthRequest.State.Failed.throwable]
      */
     fun completeExceptionally(reason: Throwable)
 
@@ -65,6 +65,9 @@ interface ExternalOAuthRequest {
          * Failed to obtain access token using the code
          */
         data class Failed(
+            /**
+             * @see completeExceptionally
+             */
             val throwable: Throwable
         ) : Result()
 

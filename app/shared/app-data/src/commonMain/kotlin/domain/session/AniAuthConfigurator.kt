@@ -33,8 +33,12 @@ import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
-import me.him188.ani.app.data.models.ApiFailure
+import me.him188.ani.app.data.repository.RepositoryAuthorizationException
 import me.him188.ani.app.data.repository.RepositoryException
+import me.him188.ani.app.data.repository.RepositoryNetworkException
+import me.him188.ani.app.data.repository.RepositoryRateLimitedException
+import me.him188.ani.app.data.repository.RepositoryServiceUnavailableException
+import me.him188.ani.app.data.repository.RepositoryUnknownException
 import me.him188.ani.app.data.repository.user.AccessTokenSession
 import me.him188.ani.app.data.repository.user.GuestSession
 import me.him188.ani.app.tools.MonoTasker
@@ -43,6 +47,7 @@ import me.him188.ani.utils.coroutines.update
 import me.him188.ani.utils.logging.debug
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.trace
 import me.him188.ani.utils.platform.Uuid
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
@@ -114,6 +119,12 @@ class AniAuthConfigurator(
     private val currentRequestAuthorizeId: MutableStateFlow<String?> = MutableStateFlow(REFRESH)
 
     private val launchedExternalRequests = MutableStateFlow<PersistentList<String>>(persistentListOf())
+
+    /**
+     * Can be:
+     * - [AuthorizationFailedException]
+     * - [Throwable] if unknown error
+     */
     private val lastAuthException: MutableStateFlow<Throwable?> = MutableStateFlow(null)
 
     override val state: SharedFlow<AuthState> = currentRequestAuthorizeId
@@ -125,11 +136,11 @@ class AniAuthConfigurator(
                 sessionManager.processingRequest.flatMapConcat { it?.state ?: flowOf(null) },
                 lastAuthException,
             ) { sessionState, requestState, lastAuthEx ->
-                val combinedReqState = requestState ?: (lastAuthEx?.let { ExternalOAuthRequest.State.Failed(it) })
+                val combinedReqState = requestState
                 logger.debug {
                     "[AuthState][${requestId.idStr}] sessionStatus: $sessionState, requestState: $combinedReqState"
                 }
-                convertCombinedAuthState(requestId, sessionState, combinedReqState)
+                convertCombinedAuthState(requestId, sessionState, combinedReqState, lastAuthEx)
             }
                 .collectLatest { authStateNew -> emit(authStateNew) }
         }
@@ -140,11 +151,11 @@ class AniAuthConfigurator(
      * 启动授权请求检查循环.
      *
      * 会启动两个协程:
-     * * [checkAuthorizeRequestLoop] 用于检查授权请求状态.
+     * * [handleOAuthCallbackLoop] 用于检查授权请求状态.
      * * [requireAuthorizeStarterTaskLoop] 用于启动 [SessionManager.requireAuthorize].
      */
     suspend fun authorizeRequestCheckLoop() = coroutineScope {
-        launch(start = CoroutineStart.UNDISPATCHED) { checkAuthorizeRequestLoop() }
+        launch(start = CoroutineStart.UNDISPATCHED) { handleOAuthCallbackLoop() }
         launch { requireAuthorizeStarterTaskLoop() }
     }
 
@@ -193,12 +204,13 @@ class AniAuthConfigurator(
                         skipOnGuest = true,
                     )
                 } catch (_: AuthorizationCancelledException) {
+                    // 游客身份登录
                 } catch (e: AuthorizationFailedException) {
-                    lastAuthException.update { e.cause }
+                    lastAuthException.update { e }
                 } catch (e: CancellationException) {
                     throw e // don't prevent cancellation
                 } catch (e: Throwable) {
-                    lastAuthException.update { e.cause }
+                    lastAuthException.update { e }
                     throw IllegalStateException("Unknown exception during requireAuthorize, see cause", e)
                 }
             }
@@ -206,11 +218,14 @@ class AniAuthConfigurator(
     }
 
     /**
-     * loop 获取授权状态.
-     * 如果授权成功了, 会调用 [ExternalOAuthRequest.onCallback] 来恢复 [SessionManager.requireAuthorize] 继续执行.
-     * 如果出现了未知异常, 会调用 [ExternalOAuthRequest.completeExceptionally] 来终止 [SessionManager.requireAuthorize].
+     * 无限循环, 从 Ani 服务器获取授权结果, 并将结果传递给 [ExternalOAuthRequest.onCallback], 来完成 [SessionManager.processingRequest].
+     *
+     * - 如果授权成功了, 会调用 [ExternalOAuthRequest.onCallback] 来恢复 [SessionManager.requireAuthorize] 继续执行.
+     * - 如果出现了未知异常, 会调用 [ExternalOAuthRequest.completeExceptionally] 来终止 [SessionManager.requireAuthorize].
+     *
+     * 此函数不会抛出异常, 除了 [CancellationException].
      */
-    private suspend fun checkAuthorizeRequestLoop() {
+    private suspend fun handleOAuthCallbackLoop() {
         currentRequestAuthorizeId
             .flatMapLatest { requestAuthorizeId ->
                 if (requestAuthorizeId == null) return@flatMapLatest flowOf(null)
@@ -227,20 +242,59 @@ class AniAuthConfigurator(
                     "[AuthCheckLoop][${requestAuthorizeId.idStr}] Current processing request: $processingRequest"
                 }
 
-                suspend {
-                    val result = getAccessTokenFromAniServer(requestAuthorizeId)
+                // 不断尝试从 ani 服务器获取授权结果. 自动延迟重试.
+
+                // 特殊的 exception, 用来控制重试.
+                class RetryException() : Exception()
+
+                val retryException = RetryException()
+
+                /**
+                 * 获取一次登录结果.
+                 *
+                 * - 获取成功时函数正常返回.
+                 * - 服务器还未完成时抛出 [retryException]
+                 * - 网络错误时抛出 [retryException]
+                 * - 遇到其他错误时抛出 [RepositoryException]
+                 */
+                suspend fun eachAttempt() {
+                    val result = try {
+                        authClient.getAuthResultFromAniServer(requestAuthorizeId)
+                    } catch (e: RepositoryException) {
+                        when (e) {
+                            // 网络错误, 重试
+                            is RepositoryNetworkException,
+                            is RepositoryRateLimitedException,
+                            is RepositoryServiceUnavailableException -> {
+                                logger.trace { "[OAuthCallbackLoop][$requestAuthorizeId] Attempt failed with $e, retrying" }
+                                throw retryException
+                            }
+
+                            // 其他错误, 不要重试
+                            is RepositoryAuthorizationException, // This should not happen
+                            is RepositoryUnknownException -> {
+                                logger.trace { "[OAuthCallbackLoop][$requestAuthorizeId] Attempt failed with $e, THROWING" }
+                                throw e
+                            }
+                        }
+                    }
+                    if (result == null) { // 服务器还未完成请求
+                        throw retryException
+                    }
                     logger.debug {
-                        "[AuthCheckLoop][$requestAuthorizeId] " +
-                                "Check OAuth result success, request is $processingRequest, " +
+                        "[OAuthCallbackLoop][$requestAuthorizeId] " +
+                                "Success, request was $processingRequest, " +
                                 "token expires in ${result.expiresIn}"
                     }
                     // resume sessionManager.requireAuthorize
                     processingRequest.onCallback(Result.success(result))
                 }
-                    .asFlow()
+
+                ::eachAttempt.asFlow()
                     .retry { e ->
                         when (e) {
-                            is NotAuthorizedException -> {
+                            retryException -> {
+                                // 服务器还没完成授权, 等一会再试
                                 delay(awaitRetryInterval)
                                 true
                             }
@@ -250,9 +304,17 @@ class AniAuthConfigurator(
                             }
 
                             else -> {
-                                logger.error(e) {
-                                    "[AuthCheckLoop][${requestAuthorizeId.idStr}] Failed to check authorize status."
+                                val exceptionToLog = if (e is RepositoryException && e !is RepositoryUnknownException) {
+                                    // Known exception, don't log stacktrace
+                                    null
+                                } else {
+                                    // Unknown exception, include stacktrace
+                                    e
                                 }
+                                logger.error(exceptionToLog) {
+                                    "[AuthCheckLoop][${requestAuthorizeId.idStr}] Failed to get access token from AniServer with unexpected error: $e"
+                                }
+
                                 // cancel processingRequest 会间接 cancel 整个 requireAuthorize
                                 processingRequest.completeExceptionally(GetAuthTokenFromAniServerException(e))
                                 false
@@ -303,49 +365,19 @@ class AniAuthConfigurator(
     }
 
     /**
-     * 验证成功了返回 [OAuthResult], 否则抛出异常,
-     * 若异常不是 [NotAuthorizedException] 则视为出现了意外问题.
-     *
-     * 这个函数支持 cancellation
-     *
-     * @throws NotAuthorizedException 还未完成验证, 需要捕获并重试
-     * @return [OAuthResult]
-     */
-    @Throws(NotAuthorizedException::class, CancellationException::class)
-    private suspend fun getAccessTokenFromAniServer(
-        requestId: String,
-    ): OAuthResult {
-        try {
-            val result = authClient
-                .getResult(requestId) ?: throw NotAuthorizedException()
-            return OAuthResult(
-                tokens = result.tokens,
-                refreshToken = result.refreshToken,
-                expiresIn = result.expiresInSeconds.seconds,
-            )
-        } catch (_: RepositoryException) {
-            throw NotAuthorizedException()
-        } catch (e: kotlin.coroutines.cancellation.CancellationException) {
-            throw e
-        } catch (e: NotAuthorizedException) {
-            throw e
-        } catch (e: Exception) {
-            val ex = GetAuthTokenFromAniServerException(e)
-            logger.error(ex) {
-                "[AuthCheckLoop][$requestId] Failed to get access token from AniServer."
-            }
-            throw ex
-        }
-    }
-
-    /**
      * Combine [SessionStatus] and [ExternalOAuthRequest.State] to [AuthState]
+     *
+     * @param lastAuthEx See [lastAuthException]
      */
     private fun convertCombinedAuthState(
         requestId: String,
         sessionState: SessionStatus,
         requestState: ExternalOAuthRequest.State?,
+        lastAuthEx: Throwable?,
     ): AuthState {
+        if (lastAuthEx != null) {
+            return convertExceptionToAuthState(sessionState, lastAuthEx)
+        }
         return when (sessionState) {
             is SessionStatus.Verified -> {
                 val userInfo = sessionState.userInfo
@@ -422,16 +454,68 @@ class AniAuthConfigurator(
         }
     }
 
+    private fun convertExceptionToAuthState(
+        sessionState: SessionStatus,
+        lastAuthEx: Throwable,
+        rootException: Throwable = lastAuthEx
+    ): AuthState = when (lastAuthEx) {
+        is RepositoryException -> {
+            when (lastAuthEx) {
+                is RepositoryAuthorizationException -> AuthState.TokenExpired
+                is RepositoryNetworkException -> AuthState.NetworkError
+                is RepositoryRateLimitedException -> AuthState.NetworkError
+                is RepositoryServiceUnavailableException -> AuthState.NetworkError
+                is RepositoryUnknownException -> AuthState.UnknownError(lastAuthEx)
+            }
+        }
+
+        is RefreshTokenFailedException -> {
+            if (sessionState.unverifiedAccessTokenOrNull == null) {
+                AuthState.NotAuthed
+            } else {
+                AuthState.TokenExpired
+            }
+        }
+
+//        is AuthorizationFailedException,
+        else -> {
+            lastAuthEx.cause
+                ?.let {
+                    convertExceptionToAuthState(sessionState, it, rootException)
+                }
+                ?: AuthState.UnknownError(lastAuthEx)
+        }
+    }
+
+    /**
+     * 验证成功了返回 [OAuthResult], 否则抛出异常.
+     *
+     * 这个函数支持 cancellation
+     *
+     * @return `null` if 服务器还未完成验证.
+     * @throws RepositoryException 其他错误
+     */
+    @Throws(RepositoryException::class, CancellationException::class)
+    private suspend fun AniAuthClient.getAuthResultFromAniServer(
+        requestId: String,
+    ): OAuthResult? {
+        try {
+            val result = getResult(requestId) ?: return null
+            return OAuthResult(
+                tokens = result.tokens,
+                refreshToken = result.refreshToken,
+                expiresIn = result.expiresInSeconds.seconds,
+            )
+        } catch (e: Throwable) {
+            throw RepositoryException.wrapOrThrowCancellation(e)
+        }
+    }
+
     companion object {
         private const val REFRESH = "-1"
         private val String.idStr get() = if (equals(REFRESH)) "REFRESH" else this
     }
 }
-
-/**
- * 还未完成验证, API 返回 null 或 [ApiFailure.Unauthorized]
- */
-private class NotAuthorizedException : Exception()
 
 /**
  * getAccessTokenFromAniServer 时出现了未知问题
