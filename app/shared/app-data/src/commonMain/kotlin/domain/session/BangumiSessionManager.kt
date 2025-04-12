@@ -277,11 +277,12 @@ class BangumiSessionManager(
         onLaunch: suspend () -> Unit,
         skipOnGuest: Boolean
     ) {
-        logger.trace { "requireOnline" }
+        logger.trace { "requireAuthorize is called" }
 
         singleAuthLock.withLock {
             // 查看当前状态
             val currentStatus = state.filterNot { it is SessionStatus.Loading }.first()
+            logger.trace { "requireAuthorize: currentStatus=$currentStatus" }
 
             // Explicitly check all branches
             when (currentStatus) {
@@ -321,6 +322,7 @@ class BangumiSessionManager(
                     )
                 }
             }
+            logger.trace { "requireAuthorize: Launching ExternalOAuthRequestImpl" }
 
             // Launch external oauth (e.g. browser)
             val req = ExternalOAuthRequestImpl(
@@ -334,6 +336,7 @@ class BangumiSessionManager(
             try {
                 req.invoke()
             } catch (e: RepositoryException) {
+                logger.trace { "requireAuthorize: ExternalOAuthRequestImpl failed with $e" }
                 throw AuthorizationFailedException(
                     currentStatus,
                     "Exception during invoking ExternalOAuthRequestImpl, see cause",
@@ -342,6 +345,7 @@ class BangumiSessionManager(
             } finally {
                 processingRequest.value = null
             }
+            logger.trace { "requireAuthorize: ExternalOAuthRequestImpl succeed" }
 
             // Throw exceptions according to state
             val state = req.state.value
