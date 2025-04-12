@@ -80,6 +80,7 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectReviewEntity
         AutoMigration(from = 12, to = 13, spec = Migrations.Migration_12_13::class),
         AutoMigration(from = 13, to = 14, spec = Migrations.Migration_13_14::class),
     ],
+    exportSchema = true,
 )
 @ConstructedBy(AniDatabaseConstructor::class)
 @TypeConverters(ProtoConverters::class, EpisodeSortConverter::class)
