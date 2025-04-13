@@ -17,7 +17,7 @@ import kotlin.contracts.contract
  * 表示登录会话的状态.
  *
  * 状态主要分为这几类:
- * - [NoToken]: 没有保存的 access token, 也就是用户还没尝试过登录, 或者点击了退出登录.
+ * - [Guest]: 没有保存的 access token, 视为游客模式.
  * - [Verifying]: 正在进行初次登录, 或者正在使用 refresh token 更换新 access token, 或者正在验证 access token 的有效性.
  * - [Refreshing]: 正在使用 refresh token 更换新 access token
  * - [Verified]: 登录完全成功. 这意味着已经连接到服务器测试过 token 是有效的.
@@ -98,11 +98,6 @@ sealed interface SessionStatus {
     data class UnknownError(
         val exception: Throwable,
     ) : VerificationFailed()
-
-    /**
-     * 没有 (保存的) token
-     */
-    data object NoToken : VerificationFailed()
 }
 
 /**

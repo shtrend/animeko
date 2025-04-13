@@ -250,8 +250,7 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
         RepositoryUsernameProvider {
             when (val finalState = get<SessionManager>().finalState.first()) {
                 SessionStatus.Guest,
-                is SessionStatus.Expired,
-                SessionStatus.NoToken -> throw RepositoryAuthorizationException()
+                is SessionStatus.Expired -> throw RepositoryAuthorizationException()
 
                 SessionStatus.NetworkError -> throw RepositoryNetworkException()
                 SessionStatus.ServiceUnavailable -> throw RepositoryServiceUnavailableException()

@@ -48,7 +48,7 @@ class BangumiSessionManagerTest : AbstractBangumiSessionManagerTest() {
             getSelfInfo = { noCall() },
             refreshAccessToken = { noCall() },
         )
-        assertEquals(SessionStatus.NoToken, manager.awaitState())
+        assertEquals(SessionStatus.Guest, manager.awaitState())
     }
 
     @Test

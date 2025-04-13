@@ -190,7 +190,7 @@ class AniAuthConfigurator(
                             }
                         },
                         // 游客模式下不能启动 external oauth 授权, 因为肯定是用户手动设置的游客模式
-                        skipOnGuest = true,
+                        skipOnGuest = false,
                     )
                 } catch (_: AuthorizationCancelledException) {
                 } catch (e: AuthorizationFailedException) {
@@ -370,7 +370,7 @@ class AniAuthConfigurator(
                 AuthState.TokenExpired
             }
 
-            SessionStatus.NoToken -> when (requestState) {
+            SessionStatus.Guest -> when (requestState) {
                 ExternalOAuthRequest.State.Launching,
                 ExternalOAuthRequest.State.AwaitingCallback -> {
                     AuthState.AwaitingToken(requestId)
@@ -416,9 +416,11 @@ class AniAuthConfigurator(
                 }
             }
 
-            SessionStatus.Guest -> AuthState.Success("", null, isGuest = true)
-
             is SessionStatus.UnknownError -> AuthState.UnknownError(sessionState.exception)
+
+            else -> {
+                AuthState.NotAuthed
+            }
         }
     }
 
@@ -440,7 +442,7 @@ private class GetAuthTokenFromAniServerException(cause: Throwable? = null) : Exc
 
 /**
  * [currentRequestAuthorizeId][AniAuthConfigurator.currentRequestAuthorizeId] 为 [REFRESH][AniAuthConfigurator.REFRESH] 时,
- * [SessionStatus.NoToken] 和 [SessionStatus.Expired], 需要 launch external oauth.
+ * [SessionStatus.Guest] 和 [SessionStatus.Expired], 需要 launch external oauth.
  * 但我们不 launch, 而是直接抛出异常, 统一处理为没有 token.
  */
 private class RefreshTokenFailedException : Exception()

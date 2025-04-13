@@ -224,7 +224,7 @@ class BangumiSessionManager(
         val refreshToken = tokenRepository.refreshToken.first()
         if (refreshToken == null) {
             if (savedSession == null) { // 没有保存的 token 时才 emit NoToken
-                emit(SessionStatus.NoToken)
+                emit(SessionStatus.Guest)
             } else {
                 emit(
                     SessionStatus.Expired(
@@ -309,7 +309,6 @@ class BangumiSessionManager(
                 }
 
                 is SessionStatus.Expired,
-                SessionStatus.NoToken
                     -> {
                     // continue, smart casts should work
                 }

@@ -252,11 +252,7 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
 
             configurator.setGuestSession()
 
-            advanceUntilIdle()
-
-            val successState = awaitItem()
-            assertIs<AuthState.Success>(successState, "Should success if set guest session.")
-            assertTrue(successState.isGuest, "Set guest session, should be guest.")
+            // 本来就是 GuestSession (NotAuthed), 不会 emit 新的
 
             advanceUntilIdle()
             expectNoEvents()
