@@ -24,6 +24,7 @@ import me.him188.ani.app.data.models.preference.ProxyConfig
 import me.him188.ani.app.data.models.preference.VideoResolverSettings
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.media.player.data.MediaDataProvider
+import me.him188.ani.app.domain.media.resolver.WebViewVideoExtractor.Companion.DEFAULT_TIMEOUT
 import me.him188.ani.app.domain.media.resolver.WebViewVideoExtractor.Instruction
 import me.him188.ani.app.domain.settings.ProxyProvider
 import me.him188.ani.app.platform.AniCefApp
@@ -52,7 +53,6 @@ import org.cef.network.CefRequest
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * 用 WebView 加载网站, 拦截 WebView 加载资源, 用各数据源提供的 [WebVideoMatcher]
@@ -235,7 +235,7 @@ class CefVideoExtractor(
                 browser.createImmediately()
             }
 
-            withTimeoutOrNull(15.seconds) {
+            withTimeoutOrNull(DEFAULT_TIMEOUT) {
                 deferred.await()
             }
         } catch (e: CancellationException) {

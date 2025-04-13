@@ -17,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import me.him188.ani.app.domain.media.player.data.MediaDataProvider
+import me.him188.ani.app.domain.media.resolver.WebViewVideoExtractor.Companion.DEFAULT_TIMEOUT
 import me.him188.ani.app.platform.Context
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.matcher.MediaSourceWebVideoMatcherLoader
@@ -49,7 +50,6 @@ import platform.WebKit.WKWebViewConfiguration
 import platform.WebKit.WKWebpagePreferences
 import platform.darwin.NSObject
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.time.Duration.Companion.seconds
 
 class IosWebMediaResolver(
     private val matcherLoader: MediaSourceWebVideoMatcherLoader,
@@ -261,7 +261,7 @@ class IosWebViewVideoExtractor : WebViewVideoExtractor {
                 logger.info { "Loading page: $pageUrl" }
                 webView.loadRequest(NSURLRequest.requestWithURL(NSURL(string = pageUrl)))
 
-                val result = withTimeoutOrNull(15.seconds) {
+                val result = withTimeoutOrNull(DEFAULT_TIMEOUT) {
                     deferred.await()
                 }
                 return result

@@ -27,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import me.him188.ani.app.domain.media.player.data.MediaDataProvider
+import me.him188.ani.app.domain.media.resolver.WebViewVideoExtractor.Companion.DEFAULT_TIMEOUT
 import me.him188.ani.app.domain.media.resolver.WebViewVideoExtractor.Instruction
 import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.datasources.api.Media
@@ -40,7 +41,6 @@ import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import java.io.ByteArrayInputStream
 import java.util.concurrent.ConcurrentSkipListSet
-import kotlin.time.Duration.Companion.seconds
 
 
 /**
@@ -191,7 +191,7 @@ class AndroidWebViewVideoExtractor : WebViewVideoExtractor {
             //            }
 
             try {
-                withTimeoutOrNull(15.seconds) {
+                withTimeoutOrNull(DEFAULT_TIMEOUT) {
                     deferred.await()
                 }
             } catch (e: Throwable) {
