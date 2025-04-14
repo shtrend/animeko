@@ -76,7 +76,8 @@ uploaded.
 
 |                  | 下载                                               | 常见问题                                        |
 |------------------|--------------------------------------------------|---------------------------------------------|
-| 安卓 手机/平板/电视      | [主线][cf-android] / [备线][ghproxy-android]         |                                             |
+| 安卓 手机/平板         | [主线][cf-android] / [备线][ghproxy-android]         |                                             |
+| 安卓 电视            | 仍在开发中                                            | 现在可以使用平板版接鼠标使用                              |
 | iOS              | [主线][cf-ios] / [备线][ghproxy-ios]                 | 需要自签                                        |
 | Windows          | [主线][cf-win-x64] / [备线][ghproxy-win-x64]         | 1. 目录不要有中文或者空格 <br/> 2. [显示异常][windows解决方案] |
 | macOS (M 系列芯片)   | [主线][cf-mac-aarch64] / [备线][ghproxy-mac-aarch64] | ⚠️ [安装后打不开][macos解决方案]                      |
@@ -89,7 +90,7 @@ uploaded.
 
 [cf-ios-qr]: https://d.myani.org/$GIT_TAG/ani-$TAG_VERSION.ipa.cloudflare.qrcode.png
 
-| 安卓 手机/平板/电视                  | iOS IPA (需要自签)           | 
+| 安卓 手机/平板                     | iOS IPA (需要自签)           | 
 |------------------------------|--------------------------|
 | ![Cloudflare][cf-android-qr] | ![Cloudflare][cf-ios-qr] |
 
@@ -109,7 +110,7 @@ uploaded.
 |--------------------|-----------------|---------------------------------------------------------------------------------------------------------|
 | universal (推荐)     | 所有设备            | [主线][cf-android] / [备线][ghproxy-android] / [GitHub][github-android]                                     |
 | arm64-v8a (64 位)   | 几乎所有手机和平板       | [主线][cf-android-arm64-v8a] / [备线][ghproxy-android-arm64-v8a] / [GitHub][github-android-arm64-v8a]       |
-| armeabi-v7a (32 位) | 旧手机和部分电视        | [主线][cf-android-armeabi-v7a] / [备线][ghproxy-android-armeabi-v7a] / [GitHub][github-android-armeabi-v7a] |
+| armeabi-v7a (32 位) | 旧手机             | [主线][cf-android-armeabi-v7a] / [备线][ghproxy-android-armeabi-v7a] / [GitHub][github-android-armeabi-v7a] |
 | x86_64             | Chromebook 及模拟器 | [主线][cf-android-x86_64] / [备线][ghproxy-android-x86_64] / [GitHub][github-android-x86_64]                |
 
 </details>
