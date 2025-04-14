@@ -30,7 +30,7 @@ uploaded.
 
 [cf-linux-x64]: https://d.myani.org/$GIT_TAG/ani-$TAG_VERSION-linux-x86_64.appimage
 
-[cf-mac-x64]: https://d.myani.org/$GIT_TAG/ani-$TAG_VERSION-macos-x86_64.dmg
+[cf-mac-x64]: https://d.myani.org/$GIT_TAG/ani-$TAG_VERSION-macos-x86_64.zip
 
 [cf-mac-aarch64]: https://d.myani.org/$GIT_TAG/ani-$TAG_VERSION-macos-aarch64.dmg
 
@@ -46,7 +46,7 @@ uploaded.
 
 [ghproxy-win-x64]: https://mirror.ghproxy.com/?q=https%3A%2F%2Fgithub.com%2Fopen-ani%2Fani%2Freleases%2Fdownload%2F$GIT_TAG%2Fani-$TAG_VERSION-windows-x86_64.zip
 
-[ghproxy-mac-x64]: https://mirror.ghproxy.com/?q=https%3A%2F%2Fgithub.com%2Fopen-ani%2Fani%2Freleases%2Fdownload%2F$GIT_TAG%2Fani-$TAG_VERSION-macos-x86_64.dmg
+[ghproxy-mac-x64]: https://mirror.ghproxy.com/?q=https%3A%2F%2Fgithub.com%2Fopen-ani%2Fani%2Freleases%2Fdownload%2F$GIT_TAG%2Fani-$TAG_VERSION-macos-x86_64.zip
 
 [ghproxy-linux-x64]: https://mirror.ghproxy.com/?q=https%3A%2F%2Fgithub.com%2Fopen-ani%2Fani%2Freleases%2Fdownload%2F$GIT_TAG%2Fani-$TAG_VERSION-linux-x86_64.appimage
 
@@ -68,6 +68,8 @@ uploaded.
 
 [linux安装说明]: https://github.com/open-ani/animeko/wiki/Linux-%E5%AE%89%E8%A3%85%E8%AF%B4%E6%98%8E
 
+[macos-x64安装说明]: https://github.com/open-ani/animeko/wiki/macOS-Intel-%E8%8A%AF%E7%89%87%E7%89%88%E6%9C%AC%E5%AE%89%E8%A3%85%E6%95%99%E7%A8%8B
+
 [macos-intel-issue]: https://github.com/open-ani/animeko/issues/1345
 
 [linux-issue]: https://github.com/open-ani/animeko/issues/944
@@ -78,7 +80,7 @@ uploaded.
 | iOS              | [主线][cf-ios] / [备线][ghproxy-ios]                 | 需要自签                                        |
 | Windows          | [主线][cf-win-x64] / [备线][ghproxy-win-x64]         | 1. 目录不要有中文或者空格 <br/> 2. [显示异常][windows解决方案] |
 | macOS (M 系列芯片)   | [主线][cf-mac-aarch64] / [备线][ghproxy-mac-aarch64] | ⚠️ [安装后打不开][macos解决方案]                      |
-| macOS (Intel 芯片) | 正在开发。<br/>点赞[此 issue][macos-intel-issue] 以加快开发速度 |                                             |
+| macOS (Intel 芯片) | [主线][cf-mac-x64] / [备线][ghproxy-mac-x64]         | ⚠️ [安装教程][macos-x64安装说明]                    |
 | Linux AppImage   | [主线][cf-linux-x64] / [备线][ghproxy-linux-x64]     | ⚠️ [安装教程][linux安装说明]                        |
 
 [github-android-qr]: https://github.com/open-ani/ani/releases/download/$GIT_TAG/ani-$TAG_VERSION-universal.apk.github.qrcode.png
