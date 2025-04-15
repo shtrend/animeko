@@ -24,6 +24,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ import me.him188.ani.app.ui.settings.btmuli
 import me.him188.ani.app.ui.settings.him188
 import me.him188.ani.app.ui.settings.jerryz233
 import me.him188.ani.app.ui.settings.misakatat
+import me.him188.ani.app.ui.settings.nekoouo
 import me.him188.ani.app.ui.settings.nick
 import me.him188.ani.app.ui.settings.nier4ever
 import me.him188.ani.app.ui.settings.rdlwicked
@@ -73,7 +75,7 @@ fun DevelopersTab(
             Image(
                 painterResource(res),
                 null,
-                modifier.clip(CircleShape).size(24.dp),
+                modifier.clip(CircleShape).size(48.dp),
             )
         }
 
@@ -86,7 +88,7 @@ fun DevelopersTab(
             description: String? = null,
         ) {
             ListItem(
-                headlineContent = { Text(name) },
+                headlineContent = { Text(name, style = MaterialTheme.typography.bodyLarge) },
                 modifier = modifier.ifNotNullThen(url) {
                     clickable(onClick = { uriHandler.openUri(it) }, role = Role.Button)
                 },
@@ -96,60 +98,95 @@ fun DevelopersTab(
             )
         }
 
+        @Composable
+        fun Header(title: String) {
+            ListItem(
+                headlineContent = {
+                    Text(
+                        title,
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                },
+                colors = listItemColors,
+            )
+        }
+
+        Header("主要贡献者")
+
         DeveloperItem(
             "Him188", "https://github.com/him188",
+            description = "项目发起者",
             avatar = { LocalImage(Res.drawable.him188) },
         )
 
         DeveloperItem(
             "StageGuard", "https://github.com/StageGuard",
+            description = "日常维护",
             avatar = { LocalImage(Res.drawable.stageguard) },
         )
 
+        Header("卓越贡献者 (按字母排序)")
+
         DeveloperItem(
             "JerryZ233", "https://github.com/JerryZ233",
+            description = "服务端开发",
             avatar = { LocalImage(Res.drawable.jerryz233) },
         )
 
         DeveloperItem(
             "MisakaTAT", "https://github.com/MisakaTAT",
+            description = "Banugmi 上游贡献",
             avatar = { LocalImage(Res.drawable.misakatat) },
         )
 
         DeveloperItem(
-            "NieR4ever", "https://github.com/NieR4ever",
-            avatar = { LocalImage(Res.drawable.nier4ever) },
+            "NeKoOuO", "https://github.com/NeKoOuO",
+            description = "图标绘制",
+            avatar = { LocalImage(Res.drawable.nekoouo) },
         )
 
         DeveloperItem(
             "NickChenヰ", "https://github.com/nick-cjyx9",
+            description = "官网开发",
             avatar = { LocalImage(Res.drawable.nick) },
         )
 
         DeveloperItem(
+            "NieR4ever", "https://github.com/NieR4ever",
+            description = "贡献者",
+            avatar = { LocalImage(Res.drawable.nier4ever) },
+        )
+
+        DeveloperItem(
+            "rdlwicked", "https://github.com/rdlwicked",
+            description = "机器学习研发",
+            avatar = { LocalImage(Res.drawable.rdlwicked) },
+        )
+
+        DeveloperItem(
             "Sanlorng", "https://github.com/Sanlorng",
+            description = "贡献者",
             avatar = { LocalImage(Res.drawable.sanlorng) },
         )
 
         DeveloperItem(
             "WoLeo-Z", "https://github.com/WoLeo-Z",
+            description = "贡献者",
             avatar = { LocalImage(Res.drawable.woleoz) },
         )
 
         DeveloperItem(
             "目棃", "https://github.com/BTMuli",
+            description = "官网开发",
             avatar = { LocalImage(Res.drawable.btmuli) },
-        )
-
-        DeveloperItem(
-            "rdlwicked", "https://github.com/rdlwicked",
-            avatar = { LocalImage(Res.drawable.rdlwicked) },
         )
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
         DeveloperItem(
             "OpenAni", "https://github.com/open-ani",
+            description = "Organization",
             avatar = { LocalImage(me.him188.ani.app.ui.foundation.Res.drawable.a) },
         )
 
