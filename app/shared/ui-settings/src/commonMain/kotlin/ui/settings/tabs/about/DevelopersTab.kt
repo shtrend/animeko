@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.a
 import me.him188.ani.app.ui.foundation.ifNotNullThen
+import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.settings.Res
 import me.him188.ani.app.ui.settings.btmuli
 import me.him188.ani.app.ui.settings.him188
@@ -200,6 +202,8 @@ fun DevelopersTab(
             },
             colors = listItemColors,
         )
+
+        Spacer(Modifier.height(currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding))
     }
 }
 
