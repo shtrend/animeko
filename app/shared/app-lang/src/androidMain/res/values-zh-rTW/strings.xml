@@ -1,0 +1,39 @@
+<!--
+  ~ Copyright (C) 2024-2025 OpenAni and contributors.
+  ~
+  ~ 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
+  ~ Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
+  ~
+  ~ https://github.com/open-ani/ani/blob/main/LICENSE
+  -->
+
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="star_rating">Check out our 5
+    <xliff:g id="star">\u2605</xliff:g>
+    </string>
+    <string name="test">Check out our 5
+    <xliff:g id="star">\u2605</xliff:g>
+    </string>
+    <string name="developer_list">开发者名单</string>
+    <string name="acknowledgements">鸣谢</string>
+    <string name="settings">设置</string>
+    <string name="settings_category_app_ui">应用与界面</string>
+    <string name="settings_category_data_playback">数据源与播放</string>
+    <string name="settings_category_network_storage">网络与存储</string>
+    <string name="settings_category_others">其他</string>
+    <string name="settings_debug_mode_enabled">已进入调试模式</string>
+    <string name="settings_tab_appearance">界面</string>
+    <string name="settings_tab_theme">主题与色彩</string>
+    <string name="settings_tab_player">播放器和弹幕过滤</string>
+    <string name="settings_tab_media_source">数据源管理</string>
+    <string name="settings_tab_media_selector">观看偏好</string>
+    <string name="settings_tab_danmaku">弹幕源</string>
+    <string name="settings_tab_proxy">代理</string>
+    <string name="settings_tab_bt">BitTorrent</string>
+    <string name="settings_tab_cache">自动缓存</string>
+    <string name="settings_tab_storage">存储空间</string>
+    <string name="settings_tab_log">日志</string>
+    <string name="settings_tab_update">软件更新</string>
+    <string name="settings_tab_about">关于</string>
+    <string name="settings_tab_debug">调试</string>
+</resources>

@@ -93,6 +93,7 @@ import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.*
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.rendering.P2p
 import me.him188.ani.app.ui.settings.tabs.AniHelpNavigator
@@ -114,6 +115,8 @@ import me.him188.ani.app.ui.settings.tabs.network.DanmakuGroup
 import me.him188.ani.app.ui.settings.tabs.network.GlobalProxyGroup
 import me.him188.ani.app.ui.settings.tabs.theme.ThemeGroup
 import me.him188.ani.utils.platform.hasScrollingBug
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * @see getName 查看名称
@@ -164,23 +167,23 @@ fun SettingsScreen(
             }
         },
         navItems = {
-            Title("应用与界面", paddingTop = 0.dp)
+            Title(stringResource(Lang.settings_category_app_ui), paddingTop = 0.dp)
             Item(SettingsTab.APPEARANCE)
             Item(SettingsTab.THEME)
 
-            Title("数据源与播放")
+            Title(stringResource(Lang.settings_category_data_playback))
             Item(SettingsTab.PLAYER)
             Item(SettingsTab.MEDIA_SOURCE)
             Item(SettingsTab.MEDIA_SELECTOR)
             Item(SettingsTab.DANMAKU)
 
-            Title("网络与存储")
+            Title(stringResource(Lang.settings_category_network_storage))
             Item(SettingsTab.PROXY)
             Item(SettingsTab.BT)
             Item(SettingsTab.CACHE)
             Item(SettingsTab.STORAGE)
 
-            Title("其他")
+            Title(stringResource(Lang.settings_category_others))
             Item(SettingsTab.UPDATE)
             Item(SettingsTab.LOG)
             Item(SettingsTab.ABOUT)
@@ -191,14 +194,17 @@ fun SettingsScreen(
         tabContent = { currentTab ->
             val tabModifier = Modifier
             val toaster = LocalToaster.current
+            val scope = rememberCoroutineScope()
 
             Column {
                 when (currentTab) {
                     SettingsTab.ABOUT -> AboutTab(
                         vm.aboutTabInfo,
                         {
-                            if (vm.debugTriggerState.triggerDebugMode()) {
-                                toaster.toast("已进入调试模式")
+                            scope.launch {
+                                if (vm.debugTriggerState.triggerDebugMode()) {
+                                    toaster.toast(getString(Lang.settings_debug_mode_enabled))
+                                }
                             }
                         },
                         onClickReleaseNotes = { AniHelpNavigator.openGitHubRelease(context, vm.aboutTabInfo.version) },
@@ -330,7 +336,7 @@ internal fun SettingsPageLayout(
         navigator,
         listPaneTopAppBar = {
             AniTopAppBar(
-                title = { AniTopAppBarDefaults.Title("设置") },
+                title = { AniTopAppBarDefaults.Title(stringResource(Lang.settings)) },
                 navigationIcon = {
                     if (navigator.canNavigateBack()) {
                         BackNavigationIconButton(
@@ -472,7 +478,7 @@ internal fun SettingsPageLayout(
                         DetailPaneRoute(
                             topAppBar = {
                                 AniTopAppBar(
-                                    title = { AniTopAppBarDefaults.Title("鸣谢") },
+                                    title = { AniTopAppBarDefaults.Title(stringResource(Lang.acknowledgements)) },
                                     navigationIcon = {
                                         BackNavigationIconButton({ detailPaneNavController.navigateUp() })
                                     },
@@ -493,7 +499,7 @@ internal fun SettingsPageLayout(
                         DetailPaneRoute(
                             topAppBar = {
                                 AniTopAppBar(
-                                    title = { AniTopAppBarDefaults.Title("开发者名单") },
+                                    title = { AniTopAppBarDefaults.Title(stringResource(Lang.developer_list)) },
                                     navigationIcon = {
                                         BackNavigationIconButton({ detailPaneNavController.navigateUp() })
                                     },
@@ -604,22 +610,23 @@ private fun getIcon(tab: SettingsTab): ImageVector {
 }
 
 @Stable
+@Composable
 private fun getName(tab: SettingsTab): String {
     return when (tab) {
-        SettingsTab.APPEARANCE -> "界面"
-        SettingsTab.THEME -> "主题与色彩"
-        SettingsTab.PLAYER -> "播放器和弹幕过滤"
-        SettingsTab.MEDIA_SOURCE -> "数据源管理"
-        SettingsTab.MEDIA_SELECTOR -> "观看偏好"
-        SettingsTab.DANMAKU -> "弹幕源"
-        SettingsTab.PROXY -> "代理"
-        SettingsTab.BT -> "BitTorrent"
-        SettingsTab.CACHE -> "自动缓存"
-        SettingsTab.STORAGE -> "存储空间"
-        SettingsTab.LOG -> "日志"
-        SettingsTab.UPDATE -> "软件更新"
-        SettingsTab.ABOUT -> "关于"
-        SettingsTab.DEBUG -> "调试"
+        SettingsTab.APPEARANCE -> stringResource(Lang.settings_tab_appearance)
+        SettingsTab.THEME -> stringResource(Lang.settings_tab_theme)
+        SettingsTab.PLAYER -> stringResource(Lang.settings_tab_player)
+        SettingsTab.MEDIA_SOURCE -> stringResource(Lang.settings_tab_media_source)
+        SettingsTab.MEDIA_SELECTOR -> stringResource(Lang.settings_tab_media_selector)
+        SettingsTab.DANMAKU -> stringResource(Lang.settings_tab_danmaku)
+        SettingsTab.PROXY -> stringResource(Lang.settings_tab_proxy)
+        SettingsTab.BT -> stringResource(Lang.settings_tab_bt)
+        SettingsTab.CACHE -> stringResource(Lang.settings_tab_cache)
+        SettingsTab.STORAGE -> stringResource(Lang.settings_tab_storage)
+        SettingsTab.LOG -> stringResource(Lang.settings_tab_log)
+        SettingsTab.UPDATE -> stringResource(Lang.settings_tab_update)
+        SettingsTab.ABOUT -> stringResource(Lang.settings_tab_about)
+        SettingsTab.DEBUG -> stringResource(Lang.settings_tab_debug)
     }
 }
 
