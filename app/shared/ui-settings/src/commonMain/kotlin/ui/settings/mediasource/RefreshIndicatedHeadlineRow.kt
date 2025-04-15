@@ -45,6 +45,21 @@ import me.him188.ani.app.data.repository.RepositoryUnknownException
 import me.him188.ani.app.domain.mediasource.test.RefreshResult
 import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_cancel
+import me.him188.ani.app.ui.lang.settings_mediasource_copied
+import me.him188.ani.app.ui.lang.settings_mediasource_copy
+import me.him188.ani.app.ui.lang.settings_mediasource_error_info
+import me.him188.ani.app.ui.lang.settings_mediasource_error_title
+import me.him188.ani.app.ui.lang.settings_mediasource_invalid_config
+import me.him188.ani.app.ui.lang.settings_mediasource_network_error
+import me.him188.ani.app.ui.lang.settings_mediasource_rate_limited
+import me.him188.ani.app.ui.lang.settings_mediasource_refresh
+import me.him188.ani.app.ui.lang.settings_mediasource_retry
+import me.him188.ani.app.ui.lang.settings_mediasource_server_error
+import me.him188.ani.app.ui.lang.settings_mediasource_unauthorized
+import me.him188.ani.app.ui.lang.settings_mediasource_unknown_error
+import org.jetbrains.compose.resources.stringResource
 
 
 /**
@@ -88,7 +103,7 @@ object RefreshIndicationDefaults {
             onClick = onClick,
             modifier = modifier,
         ) {
-            Icon(Icons.Rounded.Refresh, "刷新")
+            Icon(Icons.Rounded.Refresh, stringResource(Lang.settings_mediasource_refresh))
         }
     }
 
@@ -118,16 +133,23 @@ object RefreshIndicationDefaults {
                 when (result) {
                     is RefreshResult.ApiError -> {
                         when (result.exception) {
-                            is RepositoryAuthorizationException -> "未授权"
-                            is RepositoryNetworkException -> "网络错误"
-                            is RepositoryRateLimitedException -> "请求过快"
-                            is RepositoryServiceUnavailableException -> "服务器错误"
-                            is RepositoryUnknownException -> "未知错误: ${result.exception}"
+                            is RepositoryAuthorizationException -> stringResource(Lang.settings_mediasource_unauthorized)
+                            is RepositoryNetworkException -> stringResource(Lang.settings_mediasource_network_error)
+                            is RepositoryRateLimitedException -> stringResource(Lang.settings_mediasource_rate_limited)
+                            is RepositoryServiceUnavailableException -> stringResource(Lang.settings_mediasource_server_error)
+                            is RepositoryUnknownException -> stringResource(
+                                Lang.settings_mediasource_unknown_error,
+                                result.exception.toString(),
+                            )
                         }
                     }
 
-                    is RefreshResult.UnknownError -> "未知错误: ${result.exception}"
-                    is RefreshResult.InvalidConfig -> "配置不完整"
+                    is RefreshResult.UnknownError -> stringResource(
+                        Lang.settings_mediasource_unknown_error,
+                        result.exception.toString(),
+                    )
+
+                    is RefreshResult.InvalidConfig -> stringResource(Lang.settings_mediasource_invalid_config)
                 },
                 Modifier.padding(start = 8.dp).align(Alignment.CenterVertically),
             )
@@ -135,7 +157,7 @@ object RefreshIndicationDefaults {
         if (showErrorDialog) {
             AlertDialog(
                 { showErrorDialog = false },
-                title = { Text("未知错误") },
+                title = { Text(stringResource(Lang.settings_mediasource_error_title)) },
                 text = {
                     val clipboard = LocalClipboardManager.current
                     val text by derivedStateOf {
@@ -145,29 +167,30 @@ object RefreshIndicationDefaults {
                     OutlinedTextField(
                         value = text,
                         onValueChange = {},
-                        label = { Text("错误信息") },
+                        label = { Text(stringResource(Lang.settings_mediasource_error_info)) },
                         readOnly = true,
                         maxLines = 2,
                         trailingIcon = {
+                            val copied = stringResource(Lang.settings_mediasource_copied)
                             IconButton(
                                 {
                                     clipboard.setText(AnnotatedString(text))
-                                    toaster.toast("已复制")
+                                    toaster.toast(copied)
                                 },
                             ) {
-                                Icon(Icons.Rounded.ContentCopy, "复制")
+                                Icon(Icons.Rounded.ContentCopy, stringResource(Lang.settings_mediasource_copy))
                             }
                         },
                     )
                 },
                 confirmButton = {
                     TextButton(onRefresh) {
-                        Text("重试")
+                        Text(stringResource(Lang.settings_mediasource_retry))
                     }
                 },
                 dismissButton = {
                     TextButton({ showErrorDialog = false }) {
-                        Text("取消")
+                        Text(stringResource(Lang.settings_mediasource_cancel))
                     }
                 },
             )

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -39,6 +39,23 @@ import me.him188.ani.app.domain.mediasource.codec.decodeFromStringOrNull
 import me.him188.ani.app.domain.mediasource.codec.serializeToString
 import me.him188.ani.app.ui.foundation.isInDebugMode
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_cancel
+import me.him188.ani.app.ui.lang.settings_mediasource_clipboard_empty
+import me.him188.ani.app.ui.lang.settings_mediasource_close
+import me.him188.ani.app.ui.lang.settings_mediasource_copied_to_clipboard
+import me.him188.ani.app.ui.lang.settings_mediasource_export
+import me.him188.ani.app.ui.lang.settings_mediasource_export_failed
+import me.him188.ani.app.ui.lang.settings_mediasource_export_single
+import me.him188.ani.app.ui.lang.settings_mediasource_import_from_clipboard
+import me.him188.ani.app.ui.lang.settings_mediasource_import_title
+import me.him188.ani.app.ui.lang.settings_mediasource_import_warning
+import me.him188.ani.app.ui.lang.settings_mediasource_invalid_content
+import me.him188.ani.app.ui.lang.settings_mediasource_multiple_configs
+import me.him188.ani.app.ui.lang.settings_mediasource_override
+import me.him188.ani.app.ui.lang.settings_mediasource_unsupported_factory
+import me.him188.ani.app.ui.lang.settings_mediasource_unsupported_version
+import org.jetbrains.compose.resources.stringResource
 
 @Stable
 object MediaSourceConfigurationDefaults {
@@ -153,7 +170,7 @@ fun <T : MediaSourceArguments> MediaSourceConfigurationDefaults.DropdownMenuImpo
 ) {
     val clipboard = LocalClipboardManager.current
     DropdownMenuItem(
-        text = { Text("从剪贴板导入配置") },
+        text = { Text(stringResource(Lang.settings_mediasource_import_from_clipboard)) },
         onClick = { state.parseContent(clipboard.getText()?.text) },
         modifier,
         leadingIcon = { Icon(Icons.Rounded.ContentPaste, null) },
@@ -164,22 +181,23 @@ fun <T : MediaSourceArguments> MediaSourceConfigurationDefaults.DropdownMenuImpo
         AlertDialog(
             onDismissRequest = { state.cancelOverride() },
             icon = { Icon(Icons.Rounded.ContentPaste, null) },
-            title = { Text("导入配置") },
-            text = { Text("将会覆盖现有配置，且不能撤销") },
+            title = { Text(stringResource(Lang.settings_mediasource_import_title)) },
+            text = { Text(stringResource(Lang.settings_mediasource_import_warning)) },
             confirmButton = {
+                val copied = stringResource(Lang.settings_mediasource_copied_to_clipboard)
                 TextButton(
                     {
                         state.confirmImport()
-                        toaster.toast("已导入配置")
+                        toaster.toast(copied)
                         onImported()
                     },
                 ) {
-                    Text("覆盖", color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(Lang.settings_mediasource_override), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton({ state.cancelOverride() }) {
-                    Text("取消")
+                    Text(stringResource(Lang.settings_mediasource_cancel))
                 }
             },
         )
@@ -191,16 +209,16 @@ fun <T : MediaSourceArguments> MediaSourceConfigurationDefaults.DropdownMenuImpo
             icon = { Icon(Icons.Rounded.Error, null) },
             title = {
                 when (error) {
-                    ParseResult.EmptyContent -> Text("剪贴板内容为空")
-                    ParseResult.HasMoreThanOneArgument -> Text("剪贴板内容包含多个数据源配置，当前导入功能只支持单个配置")
-                    ParseResult.InvalidContent -> Text("剪贴板内容无效，请检查数据源类型 (Selector 还是 RSS) 以及导出时使用的 Ani 的版本")
-                    ParseResult.UnsupportedFactory -> Text("数据源类型不受支持，请先升级软件")
-                    ParseResult.UnsupportedVersion -> Text("数据源版本不受支持，请先升级软件")
+                    ParseResult.EmptyContent -> Text(stringResource(Lang.settings_mediasource_clipboard_empty))
+                    ParseResult.HasMoreThanOneArgument -> Text(stringResource(Lang.settings_mediasource_multiple_configs))
+                    ParseResult.InvalidContent -> Text(stringResource(Lang.settings_mediasource_invalid_content))
+                    ParseResult.UnsupportedFactory -> Text(stringResource(Lang.settings_mediasource_unsupported_factory))
+                    ParseResult.UnsupportedVersion -> Text(stringResource(Lang.settings_mediasource_unsupported_version))
                 }
             },
             confirmButton = {
                 TextButton({ state.dismissError() }) {
-                    Text("关闭")
+                    Text(stringResource(Lang.settings_mediasource_close))
                 }
             },
         )
@@ -234,14 +252,16 @@ fun MediaSourceConfigurationDefaults.DropdownMenuExport(
 ) {
     val clipboard = LocalClipboardManager.current
     val toaster = LocalToaster.current
+    val copiedToClipboard = stringResource(Lang.settings_mediasource_copied_to_clipboard)
+    val cannotExport = stringResource(Lang.settings_mediasource_export_failed)
     DropdownMenuItem(
-        text = { Text("导出配置") },
+        text = { Text(stringResource(Lang.settings_mediasource_export)) },
         onClick = {
             state.serializeToString()?.let {
                 clipboard.setText(AnnotatedString(it))
-                toaster.toast("已复制到剪贴板")
+                toaster.toast(copiedToClipboard)
             } ?: kotlin.run {
-                toaster.toast("目前无法导出，请稍后再试")
+                toaster.toast(cannotExport)
             }
             onDismissRequest()
         },
@@ -251,13 +271,13 @@ fun MediaSourceConfigurationDefaults.DropdownMenuExport(
     )
     if (isInDebugMode()) {
         DropdownMenuItem(
-            text = { Text("导出单个配置 (仅限开发者)") },
+            text = { Text(stringResource(Lang.settings_mediasource_export_single)) },
             onClick = {
                 state.serializeSingleToString()?.let {
                     clipboard.setText(AnnotatedString(it))
-                    toaster.toast("已复制到剪贴板")
+                    toaster.toast(copiedToClipboard)
                 } ?: kotlin.run {
-                    toaster.toast("目前无法导出，请稍后再试")
+                    toaster.toast(cannotExport)
                 }
                 onDismissRequest()
             },

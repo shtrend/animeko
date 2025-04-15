@@ -204,4 +204,35 @@
     <string name="settings_media_source_no_config">无配置项</string>
     <string name="settings_media_source_add_button">添加</string>
     <string name="settings_media_source_save_button">保存</string>
+
+    <!-- MediaSourceConfigurationDefaults -->
+    <string name="settings_mediasource_import_from_clipboard">从剪贴板导入配置</string>
+    <string name="settings_mediasource_import_title">导入配置</string>
+    <string name="settings_mediasource_import_warning">将会覆盖现有配置，且不能撤销</string>
+    <string name="settings_mediasource_override">覆盖</string>
+    <string name="settings_mediasource_cancel">取消</string>
+    <string name="settings_mediasource_clipboard_empty">剪贴板内容为空</string>
+    <string name="settings_mediasource_multiple_configs">剪贴板内容包含多个数据源配置，当前导入功能只支持单个配置</string>
+    <string name="settings_mediasource_invalid_content">剪贴板内容无效，请检查数据源类型 (Selector 还是 RSS) 以及导出时使用的 Ani 的版本</string>
+    <string name="settings_mediasource_unsupported_factory">数据源类型不受支持，请先升级软件</string>
+    <string name="settings_mediasource_unsupported_version">数据源版本不受支持，请先升级软件</string>
+    <string name="settings_mediasource_close">关闭</string>
+    <string name="settings_mediasource_export">导出配置</string>
+    <string name="settings_mediasource_copied_to_clipboard">已复制到剪贴板</string>
+    <string name="settings_mediasource_export_failed">目前无法导出，请稍后再试</string>
+    <string name="settings_mediasource_export_single">导出单个配置 (仅限开发者)</string>
+
+    <!-- RefreshIndicatedHeadlineRow -->
+    <string name="settings_mediasource_refresh">刷新</string>
+    <string name="settings_mediasource_unauthorized">未授权</string>
+    <string name="settings_mediasource_network_error">网络错误</string>
+    <string name="settings_mediasource_rate_limited">请求过快</string>
+    <string name="settings_mediasource_server_error">服务器错误</string>
+    <string name="settings_mediasource_unknown_error">未知错误: %1$s</string>
+    <string name="settings_mediasource_invalid_config">配置不完整</string>
+    <string name="settings_mediasource_error_title">未知错误</string>
+    <string name="settings_mediasource_error_info">错误信息</string>
+    <string name="settings_mediasource_copied">已复制</string>
+    <string name="settings_mediasource_copy">复制</string>
+    <string name="settings_mediasource_retry">重试</string>
 </resources>
