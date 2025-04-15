@@ -87,44 +87,7 @@ fun AboutTab(
 ) {
     Column(modifier.fillMaxWidth()) {
         // Centered HeroIcon at the top
-        Column(Modifier.padding(vertical = 36.dp)) {
-            HeroIcon(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                ),
-            ) {
-                Icon(
-                    painterResource(Res.drawable.a),
-                    contentDescription = "Animeko Icon",
-                    Modifier
-                        .clip(CircleShape)
-                        .size(HeroIconDefaults.iconSize),
-                    tint = Color.Unspecified,
-                )
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                text = "Animeko",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                text = "集找番、追番、看番的一站式弹幕追番平台",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
+        AniHeroIconAndDescriptions()
 
         Spacer(Modifier.height(36.dp))
 
@@ -234,6 +197,48 @@ fun AboutTab(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun AniHeroIconAndDescriptions(modifier: Modifier = Modifier) {
+    Column(modifier.padding(vertical = 36.dp)) {
+        HeroIcon(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(
+                start = 16.dp,
+                end = 16.dp,
+            ),
+        ) {
+            Icon(
+                painterResource(Res.drawable.a),
+                contentDescription = "Animeko Icon",
+                Modifier
+                    .clip(CircleShape)
+                    .size(HeroIconDefaults.iconSize),
+                tint = Color.Unspecified,
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        Text(
+            text = "Animeko",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(Modifier.height(8.dp))
+
+        Text(
+            text = "集找番、追番、看番的一站式弹幕追番平台",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 

@@ -98,6 +98,7 @@ import me.him188.ani.app.ui.settings.rendering.P2p
 import me.him188.ani.app.ui.settings.tabs.AniHelpNavigator
 import me.him188.ani.app.ui.settings.tabs.DebugTab
 import me.him188.ani.app.ui.settings.tabs.about.AboutTab
+import me.him188.ani.app.ui.settings.tabs.about.DevelopersTab
 import me.him188.ani.app.ui.settings.tabs.app.AppearanceGroup
 import me.him188.ani.app.ui.settings.tabs.app.PlayerGroup
 import me.him188.ani.app.ui.settings.tabs.app.SoftwareUpdateGroup
@@ -204,8 +205,7 @@ fun SettingsScreen(
                         onClickFeedback = { AniHelpNavigator.openIssueTracker(context) },
                         onClickSource = { AniHelpNavigator.openGitHubHome(context) },
                         onClickDevelopers = {
-                            AniHelpNavigator.openGitHubContributors(context)
-//                            detailPaneNavController.navigate(DetailPaneRoutes.Developers)
+                            detailPaneNavController.navigate(DetailPaneRoutes.Developers)
                         },
                         onClickAcknowledgements = {
 //                            detailPaneNavController.navigate(DetailPaneRoutes.Acknowledgements)
@@ -505,7 +505,7 @@ internal fun SettingsPageLayout(
                             detailPaneTopAppBarScrollBehavior,
                         ) {
                             RouteContent {
-                                Text("haha")
+                                DevelopersTab(Modifier.fillMaxSize())
                             }
                         }
                     }
