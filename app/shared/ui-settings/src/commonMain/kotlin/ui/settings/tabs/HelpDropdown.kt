@@ -17,6 +17,13 @@ import androidx.compose.ui.Modifier
 import me.him188.ani.app.navigation.BrowserNavigator
 import me.him188.ani.app.platform.ContextMP
 import me.him188.ani.app.platform.LocalContext
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_help_feedback
+import me.him188.ani.app.ui.lang.settings_help_github
+import me.him188.ani.app.ui.lang.settings_help_qq
+import me.him188.ani.app.ui.lang.settings_help_telegram
+import me.him188.ani.app.ui.lang.settings_help_website
+import org.jetbrains.compose.resources.stringResource
 import org.koin.mp.KoinPlatform
 
 object AniHelpNavigator {
@@ -72,27 +79,27 @@ fun HelpDropdown(
     val context = LocalContext.current
     DropdownMenu(expanded, onDismissRequest, modifier) {
         DropdownMenuItem(
-            text = { Text("QQ") },
+            text = { Text(stringResource(Lang.settings_help_qq)) },
             onClick = {
                 AniHelpNavigator.openJoinQQGroup(context)
             },
         )
         DropdownMenuItem(
-            text = { Text("Telegram") },
+            text = { Text(stringResource(Lang.settings_help_telegram)) },
             onClick = {
                 AniHelpNavigator.openTelegram(context)
             },
         )
         DropdownMenuItem(
-            text = { Text("GitHub") },
+            text = { Text(stringResource(Lang.settings_help_github)) },
             onClick = { AniHelpNavigator.openGitHubHome(context) },
         )
         DropdownMenuItem(
-            text = { Text("反馈问题") },
+            text = { Text(stringResource(Lang.settings_help_feedback)) },
             onClick = { AniHelpNavigator.openIssueTracker(context) },
         )
         DropdownMenuItem(
-            text = { Text("Ani 官网") },
+            text = { Text(stringResource(Lang.settings_help_website)) },
             onClick = { AniHelpNavigator.openAniWebsite(context) },
         )
     }

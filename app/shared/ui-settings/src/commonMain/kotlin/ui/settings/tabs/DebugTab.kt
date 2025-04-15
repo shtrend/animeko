@@ -33,10 +33,29 @@ import me.him188.ani.app.navigation.findLast
 import me.him188.ani.app.platform.MeteredNetworkDetector
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_debug_copied
+import me.him188.ani.app.ui.lang.settings_debug_enter_onboarding
+import me.him188.ani.app.ui.lang.settings_debug_episodes
+import me.him188.ani.app.ui.lang.settings_debug_get_ani_token
+import me.him188.ani.app.ui.lang.settings_debug_get_bangumi_token
+import me.him188.ani.app.ui.lang.settings_debug_metered_network
+import me.him188.ani.app.ui.lang.settings_debug_mode
+import me.him188.ani.app.ui.lang.settings_debug_mode_description
+import me.him188.ani.app.ui.lang.settings_debug_onboarding
+import me.him188.ani.app.ui.lang.settings_debug_others
+import me.him188.ani.app.ui.lang.settings_debug_reset_onboarding
+import me.him188.ani.app.ui.lang.settings_debug_reset_onboarding_description
+import me.him188.ani.app.ui.lang.settings_debug_reset_onboarding_toast
+import me.him188.ani.app.ui.lang.settings_debug_show_all_episodes
+import me.him188.ani.app.ui.lang.settings_debug_show_all_episodes_description
+import me.him188.ani.app.ui.lang.settings_debug_status
 import me.him188.ani.app.ui.settings.SettingsTab
 import me.him188.ani.app.ui.settings.framework.SettingsState
 import me.him188.ani.app.ui.settings.framework.components.SwitchItem
 import me.him188.ani.app.ui.settings.framework.components.TextItem
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import org.koin.mp.KoinPlatform
 
 @OptIn(OpaqueSession::class)
@@ -55,7 +74,7 @@ fun DebugTab(
 
     SettingsTab(modifier) {
         Group(
-            title = { Text("调试模式状态") },
+            title = { Text(stringResource(Lang.settings_debug_status)) },
             useThinHeader = true,
         ) {
             SwitchItem(
@@ -64,12 +83,12 @@ fun DebugTab(
                     if (!checked) onDisableDebugMode()
                     debugSettingsState.update(debugSettings.copy(enabled = checked))
                 },
-                title = { Text("调试模式") },
-                description = { Text("已开启调试模式，点击关闭") },
+                title = { Text(stringResource(Lang.settings_debug_mode)) },
+                description = { Text(stringResource(Lang.settings_debug_mode_description)) },
             )
         }
         Group(
-            title = { Text("条目选集") },
+            title = { Text(stringResource(Lang.settings_debug_episodes)) },
             useThinHeader = true,
         ) {
             SwitchItem(
@@ -77,11 +96,11 @@ fun DebugTab(
                 onCheckedChange = { checked ->
                     debugSettingsState.update(debugSettings.copy(showAllEpisodes = checked))
                 },
-                title = { Text("显示所有剧集") },
-                description = { Text("显示所有剧集，包括SP、OP、ED等，目前仅部分在线源支持，请谨慎启用") },
+                title = { Text(stringResource(Lang.settings_debug_show_all_episodes)) },
+                description = { Text(stringResource(Lang.settings_debug_show_all_episodes_description)) },
             )
         }
-        Group(title = { Text("计费网络信息") }, useThinHeader = true) {
+        Group(title = { Text(stringResource(Lang.settings_debug_metered_network)) }, useThinHeader = true) {
             TextItem {
                 val networkDetector = LocalPlatform.current.supportsLimitUploadOnMeteredNetwork()
                 Text("supportsLimitUploadOnMeteredNetwork: $networkDetector")
@@ -92,7 +111,7 @@ fun DebugTab(
                 Text("isMetered: $isMetered")
             }
         }
-        Group(title = { Text("新手引导设置") }, useThinHeader = true) {
+        Group(title = { Text(stringResource(Lang.settings_debug_onboarding)) }, useThinHeader = true) {
             TextItem(
                 onClick = {
                     val navController = navigator.currentNavigator
@@ -104,36 +123,38 @@ fun DebugTab(
                     )
                 },
             ) {
-                Text("进入新手向导")
+                Text(stringResource(Lang.settings_debug_enter_onboarding))
             }
             TextItem(
-                title = { Text("重置新手引导状态") },
-                description = { Text("重置后，下次启动 APP 会进入新手引导") },
+                title = { Text(stringResource(Lang.settings_debug_reset_onboarding)) },
+                description = { Text(stringResource(Lang.settings_debug_reset_onboarding_description)) },
                 onClick = {
                     uiSettingsState.update(uiSettingsState.value.copy(onboardingCompleted = false))
-                    toaster.toast("已重置新手引导状态")
+                    scope.launch {
+                        toaster.toast(getString(Lang.settings_debug_reset_onboarding_toast))
+                    }
                 },
             )
         }
-        Group(title = { Text("其他") }, useThinHeader = true) {
+        Group(title = { Text(stringResource(Lang.settings_debug_others)) }, useThinHeader = true) {
             TextItem(
-                title = { Text("获取 Bangumi access token") },
+                title = { Text(stringResource(Lang.settings_debug_get_bangumi_token)) },
                 onClick = {
                     scope.launch {
                         val value =
                             GlobalKoin.get<SessionManager>().unverifiedAccessToken.firstOrNull()?.bangumiAccessToken
-                        toaster.toast("已复制: $value")
+                        toaster.toast(getString(Lang.settings_debug_copied, value.toString()))
                         clipboard.setText(AnnotatedString(value.toString()))
                     }
                 },
             )
             TextItem(
-                title = { Text("获取 Ani access token") },
+                title = { Text(stringResource(Lang.settings_debug_get_ani_token)) },
                 onClick = {
                     scope.launch {
                         val value =
                             GlobalKoin.get<SessionManager>().unverifiedAccessToken.firstOrNull()?.aniAccessToken
-                        toaster.toast("已复制: $value")
+                        toaster.toast(getString(Lang.settings_debug_copied, value.toString()))
                         clipboard.setText(AnnotatedString(value.toString()))
                     }
                 },

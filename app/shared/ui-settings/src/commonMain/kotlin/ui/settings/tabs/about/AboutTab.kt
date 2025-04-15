@@ -60,11 +60,26 @@ import me.him188.ani.app.ui.foundation.icons.QqRoundedOutline
 import me.him188.ani.app.ui.foundation.icons.Telegram
 import me.him188.ani.app.ui.foundation.widgets.HeroIcon
 import me.him188.ani.app.ui.foundation.widgets.HeroIconDefaults
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.acknowledgements
+import me.him188.ani.app.ui.lang.developer_list
+import me.him188.ani.app.ui.lang.settings_about_app_description
+import me.him188.ani.app.ui.lang.settings_about_app_name
+import me.him188.ani.app.ui.lang.settings_about_chat_groups
+import me.him188.ani.app.ui.lang.settings_about_feedback
+import me.him188.ani.app.ui.lang.settings_about_icon_description
+import me.him188.ani.app.ui.lang.settings_about_qq_group
+import me.him188.ani.app.ui.lang.settings_about_release_notes
+import me.him188.ani.app.ui.lang.settings_about_source_code
+import me.him188.ani.app.ui.lang.settings_about_version
+import me.him188.ani.app.ui.lang.settings_about_website
+import me.him188.ani.app.ui.lang.settings_help_telegram
 import me.him188.ani.app.ui.settings.rendering.ReleaseClassIcon
 import me.him188.ani.app.ui.settings.rendering.guessReleaseClass
 import me.him188.ani.app.ui.settings.tabs.AniHelpNavigator
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Immutable
@@ -99,14 +114,14 @@ fun AboutTab(
         )
 
         ListItem(
-            headlineContent = { Text("版本号") },
+            headlineContent = { Text(stringResource(Lang.settings_about_version)) },
             modifier = Modifier.clickable(onClick = onTriggerDebugMode, role = Role.Button),
             leadingContent = { ReleaseClassIcon(state.releaseClass) },
             supportingContent = { Text(state.version) },
             colors = listItemColors,
         )
         ListItem(
-            headlineContent = { Text("更新说明") },
+            headlineContent = { Text(stringResource(Lang.settings_about_release_notes)) },
             modifier = Modifier.clickable(onClick = onClickReleaseNotes, role = Role.Button),
             leadingContent = {
                 Icon(Icons.Outlined.News, contentDescription = null)
@@ -114,7 +129,7 @@ fun AboutTab(
             colors = listItemColors,
         )
         ListItem(
-            headlineContent = { Text("官网") },
+            headlineContent = { Text(stringResource(Lang.settings_about_website)) },
             modifier = Modifier.clickable(onClick = onClickWebsite),
             leadingContent = {
                 Icon(Icons.Outlined.Home, contentDescription = null)
@@ -122,7 +137,7 @@ fun AboutTab(
             colors = listItemColors,
         )
         ListItem(
-            headlineContent = { Text("反馈建议") },
+            headlineContent = { Text(stringResource(Lang.settings_about_feedback)) },
             modifier = Modifier.clickable(onClick = onClickFeedback),
             leadingContent = {
                 Icon(Icons.Outlined.Feedback, contentDescription = null)
@@ -130,7 +145,7 @@ fun AboutTab(
             colors = listItemColors,
         )
         ListItem(
-            headlineContent = { Text("源代码") },
+            headlineContent = { Text(stringResource(Lang.settings_about_source_code)) },
             modifier = Modifier.clickable(onClick = onClickSource),
             leadingContent = {
                 Icon(Icons.Outlined.Code, contentDescription = null)
@@ -138,7 +153,7 @@ fun AboutTab(
             colors = listItemColors,
         )
         ListItem(
-            headlineContent = { Text("开发者名单") },
+            headlineContent = { Text(stringResource(Lang.developer_list)) },
             modifier = Modifier.clickable(onClick = onClickDevelopers),
             leadingContent = {
                 Icon(Icons.Outlined.DeployedCodeAccount, contentDescription = null)
@@ -146,7 +161,7 @@ fun AboutTab(
             colors = listItemColors,
         )
         ListItem(
-            headlineContent = { Text("鸣谢") },
+            headlineContent = { Text(stringResource(Lang.acknowledgements)) },
             modifier = Modifier.clickable(onClick = onClickAcknowledgements),
             leadingContent = {
                 Icon(Icons.Outlined.AwardStar, null)
@@ -156,7 +171,7 @@ fun AboutTab(
 
         var showChatGroups by rememberSaveable { mutableStateOf(false) }
         ListItem(
-            headlineContent = { Text("交流群") },
+            headlineContent = { Text(stringResource(Lang.settings_about_chat_groups)) },
             modifier = Modifier.clickable { showChatGroups = !showChatGroups },
             leadingContent = {
                 Icon(Icons.Outlined.Forum, null)
@@ -179,7 +194,7 @@ fun AboutTab(
                     { AniHelpNavigator.openJoinQQGroup(context) },
                     icon = {
                         Icon(
-                            AniIcons.QqRoundedOutline, "QQ 群",
+                            AniIcons.QqRoundedOutline, stringResource(Lang.settings_about_qq_group),
                             Modifier.size(20.dp),
                         )
                     },
@@ -190,11 +205,11 @@ fun AboutTab(
                     { AniHelpNavigator.openTelegram(context) },
                     icon = {
                         Image(
-                            AniIcons.Telegram, "Telegram",
+                            AniIcons.Telegram, stringResource(Lang.settings_help_telegram),
                             Modifier.size(20.dp),
                         )
                     },
-                    label = { Text("Telegram") },
+                    label = { Text(stringResource(Lang.settings_help_telegram)) },
                 )
             }
         }
@@ -213,7 +228,7 @@ fun AniHeroIconAndDescriptions(modifier: Modifier = Modifier) {
         ) {
             Icon(
                 painterResource(Res.drawable.a),
-                contentDescription = "Animeko Icon",
+                contentDescription = stringResource(Lang.settings_about_icon_description),
                 Modifier
                     .clip(CircleShape)
                     .size(HeroIconDefaults.iconSize),
@@ -224,7 +239,7 @@ fun AniHeroIconAndDescriptions(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(16.dp))
 
         Text(
-            text = "Animeko",
+            text = stringResource(Lang.settings_about_app_name),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
@@ -234,7 +249,7 @@ fun AniHeroIconAndDescriptions(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(8.dp))
 
         Text(
-            text = "集找番、追番、看番的一站式弹幕追番平台",
+            text = stringResource(Lang.settings_about_app_description),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
