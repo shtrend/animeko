@@ -98,6 +98,7 @@ import me.him188.ani.app.ui.settings.rendering.P2p
 import me.him188.ani.app.ui.settings.tabs.AniHelpNavigator
 import me.him188.ani.app.ui.settings.tabs.DebugTab
 import me.him188.ani.app.ui.settings.tabs.about.AboutTab
+import me.him188.ani.app.ui.settings.tabs.about.AcknowledgementsTab
 import me.him188.ani.app.ui.settings.tabs.about.DevelopersTab
 import me.him188.ani.app.ui.settings.tabs.app.AppearanceGroup
 import me.him188.ani.app.ui.settings.tabs.app.PlayerGroup
@@ -208,7 +209,7 @@ fun SettingsScreen(
                             detailPaneNavController.navigate(DetailPaneRoutes.Developers)
                         },
                         onClickAcknowledgements = {
-//                            detailPaneNavController.navigate(DetailPaneRoutes.Acknowledgements)
+                            detailPaneNavController.navigate(DetailPaneRoutes.Acknowledgements)
                         },
                         modifier = tabModifier,
                     )
@@ -484,7 +485,7 @@ internal fun SettingsPageLayout(
                             detailPaneTopAppBarScrollBehavior,
                         ) {
                             RouteContent {
-                                Text("haha")
+                                AcknowledgementsTab(Modifier.fillMaxSize())
                             }
                         }
                     }

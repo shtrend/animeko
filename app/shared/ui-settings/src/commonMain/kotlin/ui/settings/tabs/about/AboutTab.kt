@@ -53,6 +53,7 @@ import me.him188.ani.app.ui.foundation.Res
 import me.him188.ani.app.ui.foundation.a
 import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.foundation.icons.AniIcons
+import me.him188.ani.app.ui.foundation.icons.AwardStar
 import me.him188.ani.app.ui.foundation.icons.DeployedCodeAccount
 import me.him188.ani.app.ui.foundation.icons.News
 import me.him188.ani.app.ui.foundation.icons.QqRoundedOutline
@@ -144,14 +145,14 @@ fun AboutTab(
             },
             colors = listItemColors,
         )
-//        ListItem(
-//            headlineContent = { Text("鸣谢") },
-//            modifier = Modifier.clickable(onClick = onClickAcknowledgements),
-//            leadingContent = {
-//                Icon(Icons.Outlined.AwardStar, null)
-//            },
-//            colors = listItemColors,
-//        )
+        ListItem(
+            headlineContent = { Text("鸣谢") },
+            modifier = Modifier.clickable(onClick = onClickAcknowledgements),
+            leadingContent = {
+                Icon(Icons.Outlined.AwardStar, null)
+            },
+            colors = listItemColors,
+        )
 
         var showChatGroups by rememberSaveable { mutableStateOf(false) }
         ListItem(
