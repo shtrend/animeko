@@ -48,6 +48,11 @@ import kotlinx.coroutines.flow.map
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.foundation.BackgroundScope
 import me.him188.ani.app.ui.foundation.HasBackgroundScope
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_media_source_add_button
+import me.him188.ani.app.ui.lang.settings_media_source_cancel
+import me.him188.ani.app.ui.lang.settings_media_source_no_config
+import me.him188.ani.app.ui.lang.settings_media_source_save_button
 import me.him188.ani.app.ui.settings.rendering.MediaSourceIcon
 import me.him188.ani.datasources.api.source.FactoryId
 import me.him188.ani.datasources.api.source.MediaSourceConfig
@@ -57,6 +62,7 @@ import me.him188.ani.datasources.api.source.parameter.MediaSourceParameter
 import me.him188.ani.datasources.api.source.parameter.MediaSourceParameters
 import me.him188.ani.datasources.api.source.parameter.SimpleEnumParameter
 import me.him188.ani.datasources.api.source.parameter.StringParameter
+import org.jetbrains.compose.resources.stringResource
 import kotlin.coroutines.CoroutineContext
 
 
@@ -222,7 +228,7 @@ internal fun EditMediaSourceDialog(
         },
         text = {
             if (state.arguments.isEmpty()) {
-                Text("无配置项")
+                Text(stringResource(Lang.settings_media_source_no_config))
                 return@AlertDialog
             }
 
@@ -265,13 +271,20 @@ internal fun EditMediaSourceDialog(
                 }
             }
             when (state.editMediaSourceMode) {
-                is EditMediaSourceMode.Add -> Button({ state.save() }, enabled = canSave) { Text("添加") }
-                is EditMediaSourceMode.Edit -> Button({ state.save() }, enabled = canSave) { Text("保存") }
+                is EditMediaSourceMode.Add -> Button(
+                    { state.save() },
+                    enabled = canSave,
+                ) { Text(stringResource(Lang.settings_media_source_add_button)) }
+
+                is EditMediaSourceMode.Edit -> Button(
+                    { state.save() },
+                    enabled = canSave,
+                ) { Text(stringResource(Lang.settings_media_source_save_button)) }
             }
         },
         dismissButton = {
             TextButton(onDismissRequest) {
-                Text("取消")
+                Text(stringResource(Lang.settings_media_source_cancel))
             }
         },
         modifier = modifier,

@@ -78,6 +78,27 @@ import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.interaction.onRightClickIfSupported
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_media_source_add
+import me.him188.ani.app.ui.lang.settings_media_source_cancel
+import me.him188.ani.app.ui.lang.settings_media_source_cancel_sort
+import me.him188.ani.app.ui.lang.settings_media_source_delete
+import me.him188.ani.app.ui.lang.settings_media_source_delete_can_readd
+import me.him188.ani.app.ui.lang.settings_media_source_delete_confirm
+import me.him188.ani.app.ui.lang.settings_media_source_delete_no_config
+import me.him188.ani.app.ui.lang.settings_media_source_delete_with_config
+import me.him188.ani.app.ui.lang.settings_media_source_disable
+import me.him188.ani.app.ui.lang.settings_media_source_disabled
+import me.him188.ani.app.ui.lang.settings_media_source_edit
+import me.him188.ani.app.ui.lang.settings_media_source_enable
+import me.him188.ani.app.ui.lang.settings_media_source_from_subscription
+import me.him188.ani.app.ui.lang.settings_media_source_list
+import me.him188.ani.app.ui.lang.settings_media_source_list_description
+import me.him188.ani.app.ui.lang.settings_media_source_save_sort
+import me.him188.ani.app.ui.lang.settings_media_source_select_template
+import me.him188.ani.app.ui.lang.settings_media_source_sort
+import me.him188.ani.app.ui.lang.settings_media_source_start_test
+import me.him188.ani.app.ui.lang.settings_media_source_stop_test
 import me.him188.ani.app.ui.settings.framework.ConnectionTesterResultIndicator
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.framework.components.TextButtonItem
@@ -91,6 +112,7 @@ import org.burnoutcrew.reorderable.ReorderableItem
 import org.burnoutcrew.reorderable.detectReorder
 import org.burnoutcrew.reorderable.detectReorderAfterLongPress
 import org.burnoutcrew.reorderable.reorderable
+import org.jetbrains.compose.resources.stringResource
 
 @Stable
 internal val MediaSourcesUsingNewSettings = listOf(
@@ -150,15 +172,18 @@ internal fun SettingsScope.MediaSourceGroup(
     )
 
     Group(
-        title = { Text("数据源列表 (${state.mediaSources.size})") },
-        description = { Text("在播放时，禁用的数据源不会自动查询，但可手动点击临时启用。注意，排序将优先采用云端顺序，同数据源订阅之内的手动排序可能无效") },
+        title = { Text(stringResource(Lang.settings_media_source_list, state.mediaSources.size)) },
+        description = { Text(stringResource(Lang.settings_media_source_list_description)) },
         actions = {
             AniAnimatedVisibility(
                 visible = sorter.isSorting,
             ) {
                 Row {
                     IconButton({ sorter.cancel() }) {
-                        Icon(Icons.Rounded.Close, contentDescription = "取消排序")
+                        Icon(
+                            Icons.Rounded.Close,
+                            contentDescription = stringResource(Lang.settings_media_source_cancel_sort),
+                        )
                     }
                 }
             }
@@ -172,7 +197,7 @@ internal fun SettingsScope.MediaSourceGroup(
                             showSelectTemplate = true
                         },
                     ) {
-                        Icon(Icons.Rounded.Add, contentDescription = "添加数据源")
+                        Icon(Icons.Rounded.Add, contentDescription = stringResource(Lang.settings_media_source_add))
                     }
                 }
             }
@@ -183,7 +208,10 @@ internal fun SettingsScope.MediaSourceGroup(
                             sorter.complete()
                         },
                     ) {
-                        Icon(Icons.Rounded.Check, contentDescription = "保存排序")
+                        Icon(
+                            Icons.Rounded.Check,
+                            contentDescription = stringResource(Lang.settings_media_source_save_sort),
+                        )
                     }
                 } else {
                     IconButton(
@@ -192,7 +220,10 @@ internal fun SettingsScope.MediaSourceGroup(
                             sorter.start(state.mediaSources)
                         },
                     ) {
-                        Icon(Icons.AutoMirrored.Rounded.Sort, contentDescription = "排序")
+                        Icon(
+                            Icons.AutoMirrored.Rounded.Sort,
+                            contentDescription = stringResource(Lang.settings_media_source_sort),
+                        )
                     }
                 }
             }
@@ -223,12 +254,12 @@ internal fun SettingsScope.MediaSourceGroup(
                         AlertDialog(
                             onDismissRequest = { showConfirmDeletionDialog = false },
                             icon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
-                            title = { Text("删除数据源") },
+                            title = { Text(stringResource(Lang.settings_media_source_delete)) },
                             text = {
                                 if (item.parameters.isEmpty()) {
-                                    Text("该数据源无特殊配置，删除后可以重新从模板直接添加，确认删除吗？")
+                                    Text(stringResource(Lang.settings_media_source_delete_no_config))
                                 } else {
-                                    Text("该数据源有配置，删除后将丢失配置，之后从模板添加时需要重新配置，确认删除吗？")
+                                    Text(stringResource(Lang.settings_media_source_delete_with_config))
                                 }
                             },
                             confirmButton = {
@@ -239,7 +270,7 @@ internal fun SettingsScope.MediaSourceGroup(
                                     },
                                 ) {
                                     Text(
-                                        "删除",
+                                        stringResource(Lang.settings_media_source_delete_confirm),
                                         color = MaterialTheme.colorScheme.error,
                                     )
                                 }
@@ -249,7 +280,7 @@ internal fun SettingsScope.MediaSourceGroup(
                                     {
                                         showConfirmDeletionDialog = false
                                     },
-                                ) { Text("取消") }
+                                ) { Text(stringResource(Lang.settings_media_source_cancel)) }
                             },
                         )
                     }
@@ -346,9 +377,9 @@ internal fun SettingsScope.MediaSourceGroup(
             enabled = !sorter.isSorting,
             title = {
                 if (state.mediaSourceTesters.anyTesting) {
-                    Text("终止测试")
+                    Text(stringResource(Lang.settings_media_source_stop_test))
                 } else {
-                    Text("开始测试")
+                    Text(stringResource(Lang.settings_media_source_start_test))
                 }
             },
         )
@@ -375,8 +406,9 @@ internal fun SettingsScope.MediaSourceItem(
         modifier = modifier,
         description = {
             SelectionContainer {
+                val fromSubscriptionText = stringResource(Lang.settings_media_source_from_subscription)
                 Text(
-                    remember(item) {
+                    remember(item, fromSubscriptionText) {
                         buildString {
                             val desc = item.info.description.orEmpty()
                             val subUrl = item.ownerSubscriptionUrl
@@ -384,7 +416,7 @@ internal fun SettingsScope.MediaSourceItem(
                                 if (desc.isNotBlank()) {
                                     appendLine(desc)
                                 }
-                                append("来自订阅，不可编辑 ")
+                                append(fromSubscriptionText)
                                 append(subUrl)
                             } else {
                                 append(desc)
@@ -409,8 +441,9 @@ internal fun SettingsScope.MediaSourceItem(
             }
         },
         title = {
+            val disabledText = stringResource(Lang.settings_media_source_disabled)
             val name = if (!isEnabled) {
-                item.info.displayName + "（已禁用）"
+                item.info.displayName + disabledText
             } else {
                 item.info.displayName
             }
@@ -458,9 +491,9 @@ private fun MoreOptionsDropdown(
             },
             text = {
                 if (item.isEnabled) {
-                    Text("禁用")
+                    Text(stringResource(Lang.settings_media_source_disable))
                 } else {
-                    Text("启用")
+                    Text(stringResource(Lang.settings_media_source_enable))
                 }
             },
             onClick = {
@@ -470,7 +503,7 @@ private fun MoreOptionsDropdown(
         )
         DropdownMenuItem(
             leadingIcon = { Icon(Icons.Rounded.Edit, null) },
-            text = { Text("编辑") }, // 直接点击数据源一行也可以编辑, 但还是在这里放一个按钮以免有人不知道
+            text = { Text(stringResource(Lang.settings_media_source_edit)) }, // 直接点击数据源一行也可以编辑, 但还是在这里放一个按钮以免有人不知道
             onClick = {
                 onEdit()
                 onDismissRequest()
@@ -478,7 +511,12 @@ private fun MoreOptionsDropdown(
         )
         DropdownMenuItem(
             leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
-            text = { Text("删除（可重新添加）", color = MaterialTheme.colorScheme.error) },
+            text = {
+                Text(
+                    stringResource(Lang.settings_media_source_delete_can_readd),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            },
             onClick = {
                 onDeleteRequest()
                 onDismissRequest()
@@ -497,11 +535,11 @@ internal fun SelectMediaSourceTemplateDialog(
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            Text("选择模板")
+            Text(stringResource(Lang.settings_media_source_select_template))
         },
         confirmButton = {
             TextButton(onDismissRequest) {
-                Text("取消")
+                Text(stringResource(Lang.settings_media_source_cancel))
             }
         },
         text = {

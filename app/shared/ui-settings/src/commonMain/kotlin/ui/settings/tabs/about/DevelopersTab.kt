@@ -39,6 +39,19 @@ import me.him188.ani.app.ui.foundation.a
 import me.him188.ani.app.ui.foundation.ifNotNullThen
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_developers_bangumi_upstream
+import me.him188.ani.app.ui.lang.settings_developers_contributor
+import me.him188.ani.app.ui.lang.settings_developers_daily_maintenance
+import me.him188.ani.app.ui.lang.settings_developers_icon_drawing
+import me.him188.ani.app.ui.lang.settings_developers_main_contributors
+import me.him188.ani.app.ui.lang.settings_developers_ml_research
+import me.him188.ani.app.ui.lang.settings_developers_organization
+import me.him188.ani.app.ui.lang.settings_developers_outstanding_contributors
+import me.him188.ani.app.ui.lang.settings_developers_project_initiator
+import me.him188.ani.app.ui.lang.settings_developers_server_development
+import me.him188.ani.app.ui.lang.settings_developers_view_more_on_github
+import me.him188.ani.app.ui.lang.settings_developers_website_development
 import me.him188.ani.app.ui.settings.Res
 import me.him188.ani.app.ui.settings.btmuli
 import me.him188.ani.app.ui.settings.him188
@@ -53,6 +66,7 @@ import me.him188.ani.app.ui.settings.stageguard
 import me.him188.ani.app.ui.settings.woleoz
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -114,73 +128,73 @@ fun DevelopersTab(
             )
         }
 
-        Header("主要贡献者")
+        Header(stringResource(Lang.settings_developers_main_contributors))
 
         DeveloperItem(
             "Him188", "https://github.com/him188",
-            description = "项目发起者",
+            description = stringResource(Lang.settings_developers_project_initiator),
             avatar = { LocalImage(Res.drawable.him188) },
         )
 
         DeveloperItem(
             "StageGuard", "https://github.com/StageGuard",
-            description = "日常维护",
+            description = stringResource(Lang.settings_developers_daily_maintenance),
             avatar = { LocalImage(Res.drawable.stageguard) },
         )
 
-        Header("卓越贡献者 (按字母排序)")
+        Header(stringResource(Lang.settings_developers_outstanding_contributors))
 
         DeveloperItem(
             "JerryZ233", "https://github.com/JerryZ233",
-            description = "服务端开发",
+            description = stringResource(Lang.settings_developers_server_development),
             avatar = { LocalImage(Res.drawable.jerryz233) },
         )
 
         DeveloperItem(
             "MisakaTAT", "https://github.com/MisakaTAT",
-            description = "Banugmi 上游贡献",
+            description = stringResource(Lang.settings_developers_bangumi_upstream),
             avatar = { LocalImage(Res.drawable.misakatat) },
         )
 
         DeveloperItem(
             "NeKoOuO", "https://github.com/NeKoOuO",
-            description = "图标绘制",
+            description = stringResource(Lang.settings_developers_icon_drawing),
             avatar = { LocalImage(Res.drawable.nekoouo) },
         )
 
         DeveloperItem(
             "NickChenヰ", "https://github.com/nick-cjyx9",
-            description = "官网开发",
+            description = stringResource(Lang.settings_developers_website_development),
             avatar = { LocalImage(Res.drawable.nick) },
         )
 
         DeveloperItem(
             "NieR4ever", "https://github.com/NieR4ever",
-            description = "贡献者",
+            description = stringResource(Lang.settings_developers_contributor),
             avatar = { LocalImage(Res.drawable.nier4ever) },
         )
 
         DeveloperItem(
             "rdlwicked", "https://github.com/rdlwicked",
-            description = "机器学习研发",
+            description = stringResource(Lang.settings_developers_ml_research),
             avatar = { LocalImage(Res.drawable.rdlwicked) },
         )
 
         DeveloperItem(
             "Sanlorng", "https://github.com/Sanlorng",
-            description = "贡献者",
+            description = stringResource(Lang.settings_developers_contributor),
             avatar = { LocalImage(Res.drawable.sanlorng) },
         )
 
         DeveloperItem(
             "WoLeo-Z", "https://github.com/WoLeo-Z",
-            description = "贡献者",
+            description = stringResource(Lang.settings_developers_contributor),
             avatar = { LocalImage(Res.drawable.woleoz) },
         )
 
         DeveloperItem(
             "目棃", "https://github.com/BTMuli",
-            description = "官网开发",
+            description = stringResource(Lang.settings_developers_website_development),
             avatar = { LocalImage(Res.drawable.btmuli) },
         )
 
@@ -188,12 +202,12 @@ fun DevelopersTab(
 
         DeveloperItem(
             "OpenAni", "https://github.com/open-ani",
-            description = "Organization",
+            description = stringResource(Lang.settings_developers_organization),
             avatar = { LocalImage(me.him188.ani.app.ui.foundation.Res.drawable.a) },
         )
 
         ListItem(
-            headlineContent = { Text("在 GitHub 上查看更多") },
+            headlineContent = { Text(stringResource(Lang.settings_developers_view_more_on_github)) },
             modifier = Modifier.clickable {
                 uriHandler.openUri("https://github.com/open-ani/animeko/graphs/contributors")
             },

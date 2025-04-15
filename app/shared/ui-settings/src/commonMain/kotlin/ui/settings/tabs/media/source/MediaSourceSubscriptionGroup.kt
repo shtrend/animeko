@@ -58,8 +58,34 @@ import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.tools.formatDateTime
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_media_source_cancel
+import me.him188.ani.app.ui.lang.settings_media_source_delete_confirm
+import me.him188.ani.app.ui.lang.settings_media_source_subscription
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_add
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_add_confirm
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_add_dialog
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_cancel
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_copied
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_copy_link
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_delete
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_delete_description
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_delete_dialog
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_description
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_export_all
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_network_error
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_not_updated
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_refresh_all
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_service_unavailable
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_unauthorized
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_unknown_error
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_update_failed
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_update_success
+import me.him188.ani.app.ui.lang.settings_media_source_subscription_url
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.utils.platform.Uuid
+import org.jetbrains.compose.resources.getString
+import org.jetbrains.compose.resources.stringResource
 import kotlin.jvm.JvmName
 
 @Stable
@@ -128,11 +154,14 @@ internal fun SettingsScope.MediaSourceSubscriptionGroup(
 ) {
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
     Group(
-        title = { Text("数据源订阅") },
-        description = { Text("可通过订阅添加多个数据源，自动定时更新订阅") },
+        title = { Text(stringResource(Lang.settings_media_source_subscription)) },
+        description = { Text(stringResource(Lang.settings_media_source_subscription_description)) },
         actions = {
             IconButton({ showAddDialog = true }) {
-                Icon(Icons.Rounded.Add, contentDescription = "添加")
+                Icon(
+                    Icons.Rounded.Add,
+                    contentDescription = stringResource(Lang.settings_media_source_subscription_add),
+                )
             }
 
             AnimatedContent(
@@ -144,7 +173,10 @@ internal fun SettingsScope.MediaSourceSubscriptionGroup(
                     CircularProgressIndicator(Modifier.size(24.dp))
                 } else {
                     IconButton({ state.updateAll() }) {
-                        Icon(Icons.Rounded.Refresh, contentDescription = "刷新全部")
+                        Icon(
+                            Icons.Rounded.Refresh,
+                            contentDescription = stringResource(Lang.settings_media_source_subscription_refresh_all),
+                        )
                     }
                 }
             }
@@ -176,18 +208,18 @@ internal fun SettingsScope.MediaSourceSubscriptionGroup(
                             CircularProgressIndicator(Modifier.size(24.dp))
                         } else {
                             TextButton(confirmAdd) {
-                                Text("添加")
+                                Text(stringResource(Lang.settings_media_source_subscription_add_confirm))
                             }
                         }
                     }
                 },
                 dismissButton = {
                     TextButton({ showAddDialog = false }) {
-                        Text("取消")
+                        Text(stringResource(Lang.settings_media_source_subscription_cancel))
                     }
                 },
                 title = {
-                    Text("添加订阅")
+                    Text(stringResource(Lang.settings_media_source_subscription_add_dialog))
                 },
                 text = {
                     OutlinedTextField(
@@ -198,7 +230,7 @@ internal fun SettingsScope.MediaSourceSubscriptionGroup(
                         enabled = !isAddInProgressState.value,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
                         keyboardActions = KeyboardActions(onDone = { confirmAdd() }),
-                        label = { Text("URL (HTTP)") },
+                        label = { Text(stringResource(Lang.settings_media_source_subscription_url)) },
                     )
                     SideEffect {
                         textFieldFocus.requestFocus()
@@ -238,24 +270,26 @@ private fun SettingsScope.SubscriptionItem(
 
                 DropdownMenuItem(
                     leadingIcon = { Icon(Icons.Rounded.Share, null) },
-                    text = { Text("复制链接") },
+                    text = { Text(stringResource(Lang.settings_media_source_subscription_copy_link)) },
                     onClick = {
                         clipboard.setText(AnnotatedString(subscription.url))
                         showDropdown = false
-                        toaster.toast("已复制")
+                        uiScope.launch {
+                            toaster.toast(getString(Lang.settings_media_source_subscription_copied))
+                        }
                     },
                 )
 
                 val enableActions = !state.isExportInProgress.collectAsStateWithLifecycle().value
                 DropdownMenuItem(
                     leadingIcon = { Icon(Icons.Rounded.Share, null) },
-                    text = { Text("全部导出到剪贴板") },
+                    text = { Text(stringResource(Lang.settings_media_source_subscription_export_all)) },
                     onClick = {
                         uiScope.launch {
                             val string = state.exportToString(subscription)
                             clipboard.setText(AnnotatedString(string))
                             showDropdown = false
-                            toaster.toast("已复制")
+                            toaster.toast(getString(Lang.settings_media_source_subscription_copied))
                         }
                     },
                     enabled = enableActions,
@@ -263,7 +297,12 @@ private fun SettingsScope.SubscriptionItem(
 
                 DropdownMenuItem(
                     leadingIcon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
-                    text = { Text("删除", color = MaterialTheme.colorScheme.error) },
+                    text = {
+                        Text(
+                            stringResource(Lang.settings_media_source_subscription_delete),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    },
                     onClick = {
                         showDropdown = false
                         showConfirmDelete = true
@@ -277,9 +316,14 @@ private fun SettingsScope.SubscriptionItem(
         AlertDialog(
             onDismissRequest = { showConfirmDelete = false },
             icon = { Icon(Icons.Rounded.Delete, null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("删除数据源订阅") },
+            title = { Text(stringResource(Lang.settings_media_source_subscription_delete_dialog)) },
             text = {
-                Text("将会同时删除来自该订阅的所有数据源 (共 ${subscription.lastUpdated?.mediaSourceCount ?: 0} 个)")
+                Text(
+                    stringResource(
+                        Lang.settings_media_source_subscription_delete_description,
+                        subscription.lastUpdated?.mediaSourceCount ?: 0,
+                    ),
+                )
             },
             confirmButton = {
                 TextButton(
@@ -289,12 +333,18 @@ private fun SettingsScope.SubscriptionItem(
                     },
                 ) {
                     Text(
-                        "删除",
+                        stringResource(Lang.settings_media_source_delete_confirm),
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
             },
-            dismissButton = { TextButton({ showConfirmDelete = false }) { Text("取消") } },
+            dismissButton = {
+                TextButton(
+                    {
+                        showConfirmDelete = false
+                    },
+                ) { Text(stringResource(Lang.settings_media_source_cancel)) }
+            },
         )
 
     }
@@ -302,31 +352,37 @@ private fun SettingsScope.SubscriptionItem(
 
 @Composable
 private fun formatLastUpdated(lastUpdated: MediaSourceSubscription.LastUpdated?): String {
-    if (lastUpdated == null) return "还未更新"
+    if (lastUpdated == null) return stringResource(Lang.settings_media_source_subscription_not_updated)
     val mediaSourceCount = lastUpdated.mediaSourceCount
     val error = lastUpdated.error
     return when {
         error != null || mediaSourceCount == null -> {
-            "${formatDateTime(lastUpdated.timeMillis)}更新失败：${formatError(error)}"
+            "${formatDateTime(lastUpdated.timeMillis)}${stringResource(Lang.settings_media_source_subscription_update_failed)}${
+                formatError(
+                    error,
+                )
+            }"
         }
 
         else -> {
-            "${formatDateTime(lastUpdated.timeMillis)}更新成功，包含 $mediaSourceCount 个数据源"
+            "${formatDateTime(lastUpdated.timeMillis)}${
+                stringResource(
+                    Lang.settings_media_source_subscription_update_success,
+                    mediaSourceCount,
+                )
+            }"
         }
     }
-//    return when (lastUpdated.error) {
-//        MediaSourceSubscription.UpdateError.NETWORK_ERROR -> "${formatDateTime(lastUpdated.timeMillis)}因网络错误更新失败"
-//        MediaSourceSubscription.UpdateError.INVALID_CONFIG -> "${formatDateTime(lastUpdated.timeMillis)}因远程配置有误更新失败"
-//        null -> "${formatDateTime(lastUpdated.timeMillis)}更新成功"
-//    }
 }
 
+@Composable
 private fun formatError(error: MediaSourceSubscription.UpdateError?): String {
-    if (error == null) return "未知错误"
-    val failre = error.failure ?: return error.message ?: "未知错误"
+    if (error == null) return stringResource(Lang.settings_media_source_subscription_unknown_error)
+    val failre =
+        error.failure ?: return error.message ?: stringResource(Lang.settings_media_source_subscription_unknown_error)
     return when (failre) {
-        ApiFailure.NetworkError -> "网络错误，请检查网络连接"
-        ApiFailure.ServiceUnavailable -> "服务暂不可用，请稍后重试"
-        ApiFailure.Unauthorized -> "服务禁止访问，请联系服务提供商"
+        ApiFailure.NetworkError -> stringResource(Lang.settings_media_source_subscription_network_error)
+        ApiFailure.ServiceUnavailable -> stringResource(Lang.settings_media_source_subscription_service_unavailable)
+        ApiFailure.Unauthorized -> stringResource(Lang.settings_media_source_subscription_unauthorized)
     }
 }

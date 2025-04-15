@@ -25,6 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_about_feedback
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -38,7 +41,7 @@ fun LogTab(
         )
 
         ListItem(
-            headlineContent = { Text("反馈建议") },
+            headlineContent = { Text(stringResource(Lang.settings_about_feedback)) },
             modifier = Modifier.clickable(onClick = onClickFeedback),
             leadingContent = {
                 Icon(Icons.Outlined.Feedback, contentDescription = null)

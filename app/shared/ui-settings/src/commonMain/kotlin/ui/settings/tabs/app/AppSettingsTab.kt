@@ -40,6 +40,59 @@ import me.him188.ani.app.navigation.getText
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_app_episode_playback
+import me.him188.ani.app.ui.lang.settings_app_initial_page
+import me.him188.ani.app.ui.lang.settings_app_initial_page_description
+import me.him188.ani.app.ui.lang.settings_app_light_up_mode
+import me.him188.ani.app.ui.lang.settings_app_light_up_mode_description
+import me.him188.ani.app.ui.lang.settings_app_list_animation
+import me.him188.ani.app.ui.lang.settings_app_list_animation_description
+import me.him188.ani.app.ui.lang.settings_app_my_collections
+import me.him188.ani.app.ui.lang.settings_app_nsfw_blur
+import me.him188.ani.app.ui.lang.settings_app_nsfw_content
+import me.him188.ani.app.ui.lang.settings_app_nsfw_display
+import me.him188.ani.app.ui.lang.settings_app_nsfw_hide
+import me.him188.ani.app.ui.lang.settings_app_search
+import me.him188.ani.app.ui.lang.settings_app_use_new_search_api
+import me.him188.ani.app.ui.lang.settings_app_use_new_search_api_description
+import me.him188.ani.app.ui.lang.settings_player
+import me.him188.ani.app.ui.lang.settings_player_auto_fullscreen_on_landscape
+import me.him188.ani.app.ui.lang.settings_player_auto_mark_done
+import me.him188.ani.app.ui.lang.settings_player_auto_play_next
+import me.him188.ani.app.ui.lang.settings_player_auto_skip_op_ed
+import me.him188.ani.app.ui.lang.settings_player_auto_skip_op_ed_description
+import me.him188.ani.app.ui.lang.settings_player_auto_switch_media_on_error
+import me.him188.ani.app.ui.lang.settings_player_enable_regex_filter
+import me.him188.ani.app.ui.lang.settings_player_fullscreen_always_show
+import me.him188.ani.app.ui.lang.settings_player_fullscreen_auto_hide
+import me.him188.ani.app.ui.lang.settings_player_fullscreen_button
+import me.him188.ani.app.ui.lang.settings_player_fullscreen_button_description
+import me.him188.ani.app.ui.lang.settings_player_fullscreen_only_in_controller
+import me.him188.ani.app.ui.lang.settings_player_hide_selector_on_select
+import me.him188.ani.app.ui.lang.settings_player_pause_on_edit_danmaku
+import me.him188.ani.app.ui.lang.settings_update_auto_check
+import me.him188.ani.app.ui.lang.settings_update_auto_check_description
+import me.him188.ani.app.ui.lang.settings_update_auto_download
+import me.him188.ani.app.ui.lang.settings_update_auto_download_description
+import me.him188.ani.app.ui.lang.settings_update_check
+import me.him188.ani.app.ui.lang.settings_update_check_failed
+import me.him188.ani.app.ui.lang.settings_update_checking
+import me.him188.ani.app.ui.lang.settings_update_current_version
+import me.him188.ani.app.ui.lang.settings_update_in_app_download
+import me.him188.ani.app.ui.lang.settings_update_in_app_download_disabled
+import me.him188.ani.app.ui.lang.settings_update_in_app_download_enabled
+import me.him188.ani.app.ui.lang.settings_update_new_version
+import me.him188.ani.app.ui.lang.settings_update_software
+import me.him188.ani.app.ui.lang.settings_update_type
+import me.him188.ani.app.ui.lang.settings_update_type_alpha
+import me.him188.ani.app.ui.lang.settings_update_type_alpha_short
+import me.him188.ani.app.ui.lang.settings_update_type_beta
+import me.him188.ani.app.ui.lang.settings_update_type_beta_short
+import me.him188.ani.app.ui.lang.settings_update_type_stable
+import me.him188.ani.app.ui.lang.settings_update_type_stable_short
+import me.him188.ani.app.ui.lang.settings_update_up_to_date
+import me.him188.ani.app.ui.lang.settings_update_view_changelog
 import me.him188.ani.app.ui.settings.SettingsTab
 import me.him188.ani.app.ui.settings.danmaku.DanmakuRegexFilterGroup
 import me.him188.ani.app.ui.settings.danmaku.DanmakuRegexFilterState
@@ -63,6 +116,7 @@ import me.him188.ani.app.ui.update.UpdateChecker
 import me.him188.ani.utils.platform.isDesktop
 import me.him188.ani.utils.platform.isIos
 import me.him188.ani.utils.platform.isMobile
+import org.jetbrains.compose.resources.stringResource
 import kotlin.coroutines.cancellation.CancellationException
 
 sealed class CheckVersionResult {
@@ -115,11 +169,11 @@ fun SettingsScope.AppearanceGroup(
             state.update(uiSettings.copy(mainSceneInitialPage = it))
         },
         itemIcon = { Icon(it.getIcon(), null) },
-        title = { Text("初始页面") },
-        description = { Text("启动 APP 时进入的页面") },
+        title = { Text(stringResource(Lang.settings_app_initial_page)) },
+        description = { Text(stringResource(Lang.settings_app_initial_page_description)) },
     )
 
-    Group(title = { Text("搜索") }, useThinHeader = true) {
+    Group(title = { Text(stringResource(Lang.settings_app_search)) }, useThinHeader = true) {
         SwitchItem(
             checked = uiSettings.searchSettings.enableNewSearchSubjectApi,
             onCheckedChange = {
@@ -131,17 +185,17 @@ fun SettingsScope.AppearanceGroup(
                     ),
                 )
             },
-            title = { Text("使用新版条目查询接口") },
-            description = { Text("实验性接口，可能会缺失部分条目，谨慎启用") },
+            title = { Text(stringResource(Lang.settings_app_use_new_search_api)) },
+            description = { Text(stringResource(Lang.settings_app_use_new_search_api_description)) },
         )
         DropdownItem(
             selected = { uiSettings.searchSettings.nsfwMode },
             values = { NsfwMode.entries },
             itemText = {
                 when (it) {
-                    NsfwMode.HIDE -> Text("隐藏")
-                    NsfwMode.BLUR -> Text("模糊")
-                    NsfwMode.DISPLAY -> Text("显示")
+                    NsfwMode.HIDE -> Text(stringResource(Lang.settings_app_nsfw_hide))
+                    NsfwMode.BLUR -> Text(stringResource(Lang.settings_app_nsfw_blur))
+                    NsfwMode.DISPLAY -> Text(stringResource(Lang.settings_app_nsfw_display))
                 }
             },
             onSelect = {
@@ -151,11 +205,11 @@ fun SettingsScope.AppearanceGroup(
                     ),
                 )
             },
-            title = { Text("NSFW 内容") },
+            title = { Text(stringResource(Lang.settings_app_nsfw_content)) },
         )
     }
 
-    Group(title = { Text("我的追番") }, useThinHeader = true) {
+    Group(title = { Text(stringResource(Lang.settings_app_my_collections)) }, useThinHeader = true) {
         SwitchItem(
             checked = uiSettings.myCollections.enableListAnimation1,
             onCheckedChange = {
@@ -167,12 +221,12 @@ fun SettingsScope.AppearanceGroup(
                     ),
                 )
             },
-            title = { Text("列表滚动动画") },
-            description = { Text("如遇到显示重叠问题，可尝试关闭") },
+            title = { Text(stringResource(Lang.settings_app_list_animation)) },
+            description = { Text(stringResource(Lang.settings_app_list_animation_description)) },
         )
     }
 
-    Group(title = { Text("选集播放") }, useThinHeader = true) {
+    Group(title = { Text(stringResource(Lang.settings_app_episode_playback)) }, useThinHeader = true) {
         val episode by remember { derivedStateOf { uiSettings.episodeProgress } }
         SwitchItem(
             checked = episode.theme == EpisodeListProgressTheme.LIGHT_UP,
@@ -185,8 +239,8 @@ fun SettingsScope.AppearanceGroup(
                     ),
                 )
             },
-            title = { Text("点亮模式") },
-            description = { Text("高亮已经看过的剧集，而不是将要看的剧集") },
+            title = { Text(stringResource(Lang.settings_app_light_up_mode)) },
+            description = { Text(stringResource(Lang.settings_app_light_up_mode_description)) },
         )
     }
 }
@@ -232,9 +286,9 @@ fun SettingsScope.SoftwareUpdateGroup(
     state: SoftwareUpdateGroupState,
     modifier: Modifier = Modifier,
 ) {
-    Group(title = { Text("软件更新") }, modifier = modifier) {
+    Group(title = { Text(stringResource(Lang.settings_update_software)) }, modifier = modifier) {
         TextItem(
-            description = { Text("当前版本") },
+            description = { Text(stringResource(Lang.settings_update_current_version)) },
             icon = { ReleaseClassIcon(state.releaseClass) },
             title = { Text(state.currentVersion) },
         )
@@ -247,7 +301,7 @@ fun SettingsScope.SoftwareUpdateGroup(
                 )
             },
             icon = { Icon(Icons.Rounded.ArrowOutward, null) },
-        ) { Text("查看更新日志") }
+        ) { Text(stringResource(Lang.settings_update_view_changelog)) }
         HorizontalDividerItem()
         val updateSettings by state.updateSettings
         SwitchItem(
@@ -255,8 +309,8 @@ fun SettingsScope.SoftwareUpdateGroup(
             onCheckedChange = {
                 state.updateSettings.update(updateSettings.copy(autoCheckUpdate = !updateSettings.autoCheckUpdate))
             },
-            title = { Text("自动检查更新") },
-            description = { Text("只会显示一个更新图标，不会自动下载") },
+            title = { Text(stringResource(Lang.settings_update_auto_check)) },
+            description = { Text(stringResource(Lang.settings_update_auto_check_description)) },
         )
         HorizontalDividerItem()
         DropdownItem(
@@ -264,18 +318,18 @@ fun SettingsScope.SoftwareUpdateGroup(
             values = { ReleaseClass.enabledEntries },
             itemText = {
                 when (it) {
-                    ReleaseClass.ALPHA -> Text("每日构建 (最早体验新功能)")
-                    ReleaseClass.BETA -> Text("测试版 (兼顾新功能和一定稳定性)")
+                    ReleaseClass.ALPHA -> Text(stringResource(Lang.settings_update_type_alpha))
+                    ReleaseClass.BETA -> Text(stringResource(Lang.settings_update_type_beta))
                     ReleaseClass.RC, // RC 实际上不会有
-                    ReleaseClass.STABLE -> Text("正式版 (最稳定)")
+                    ReleaseClass.STABLE -> Text(stringResource(Lang.settings_update_type_stable))
                 }
             },
             exposedItemText = {
                 when (it) {
-                    ReleaseClass.ALPHA -> Text("每日构建")
-                    ReleaseClass.BETA -> Text("测试版")
+                    ReleaseClass.ALPHA -> Text(stringResource(Lang.settings_update_type_alpha_short))
+                    ReleaseClass.BETA -> Text(stringResource(Lang.settings_update_type_beta_short))
                     ReleaseClass.RC, // RC 实际上不会有
-                    ReleaseClass.STABLE -> Text("正式版")
+                    ReleaseClass.STABLE -> Text(stringResource(Lang.settings_update_type_stable_short))
                 }
             },
             onSelect = {
@@ -284,19 +338,19 @@ fun SettingsScope.SoftwareUpdateGroup(
             itemIcon = {
                 ReleaseClassIcon(it)
             },
-            title = { Text("更新类型") },
+            title = { Text(stringResource(Lang.settings_update_type)) },
         )
         if (!LocalPlatform.current.isIos()) {
             HorizontalDividerItem()
             SwitchItem(
                 updateSettings.inAppDownload,
                 { state.updateSettings.update(updateSettings.copy(inAppDownload = it)) },
-                title = { Text("应用内下载") },
+                title = { Text(stringResource(Lang.settings_update_in_app_download)) },
                 description = {
                     if (updateSettings.inAppDownload) {
-                        Text("省去跳转浏览器步骤")
+                        Text(stringResource(Lang.settings_update_in_app_download_enabled))
                     } else {
-                        Text("已关闭，将会跳转到外部浏览器完成下载")
+                        Text(stringResource(Lang.settings_update_in_app_download_disabled))
                     }
                 },
                 enabled = updateSettings.autoCheckUpdate,
@@ -307,8 +361,8 @@ fun SettingsScope.SoftwareUpdateGroup(
                     SwitchItem(
                         updateSettings.autoDownloadUpdate,
                         { state.updateSettings.update(updateSettings.copy(autoDownloadUpdate = it)) },
-                        title = { Text("自动下载更新") },
-                        description = { Text("下载完成后会提示，确认后才会安装") },
+                        title = { Text(stringResource(Lang.settings_update_auto_download)) },
+                        description = { Text(stringResource(Lang.settings_update_auto_download_description)) },
                         enabled = updateSettings.autoCheckUpdate,
                     )
                 }
@@ -342,14 +396,18 @@ fun SettingsScope.SoftwareUpdateGroup(
             },
             title = {
                 if (state.updateCheckerTester.tester.isTesting) {
-                    Text("检查中...")
+                    Text(stringResource(Lang.settings_update_checking))
                     return@TextButtonItem
                 }
                 when (val result = state.updateCheckerTester.tester.result) {
-                    is CheckVersionResult.Failed -> Text("检查失败")
-                    is CheckVersionResult.UpToDate -> Text("已是最新")
-                    is CheckVersionResult.HasNewVersion -> Text(remember(result.newVersion.name) { "有新版本: ${result.newVersion.name}" })
-                    null -> Text("检查更新")
+                    is CheckVersionResult.Failed -> Text(stringResource(Lang.settings_update_check_failed))
+                    is CheckVersionResult.UpToDate -> Text(stringResource(Lang.settings_update_up_to_date))
+                    is CheckVersionResult.HasNewVersion -> {
+                        val versionName = result.newVersion.name
+                        Text(stringResource(Lang.settings_update_new_version, versionName))
+                    }
+
+                    null -> Text(stringResource(Lang.settings_update_check))
                 }
             },
         )
@@ -375,7 +433,7 @@ fun SettingsScope.PlayerGroup(
     danmakuRegexFilterState: DanmakuRegexFilterState,
     showDebug: Boolean
 ) {
-    Group(title = { Text("播放器") }) {
+    Group(title = { Text(stringResource(Lang.settings_player)) }) {
         val config by videoScaffoldConfig
         DropdownItem(
             selected = { config.fullscreenSwitchMode },
@@ -383,17 +441,17 @@ fun SettingsScope.PlayerGroup(
             itemText = {
                 Text(
                     when (it) {
-                        FullscreenSwitchMode.ALWAYS_SHOW_FLOATING -> "总是显示"
-                        FullscreenSwitchMode.AUTO_HIDE_FLOATING -> "显示五秒后隐藏"
-                        FullscreenSwitchMode.ONLY_IN_CONTROLLER -> "不显示"
+                        FullscreenSwitchMode.ALWAYS_SHOW_FLOATING -> stringResource(Lang.settings_player_fullscreen_always_show)
+                        FullscreenSwitchMode.AUTO_HIDE_FLOATING -> stringResource(Lang.settings_player_fullscreen_auto_hide)
+                        FullscreenSwitchMode.ONLY_IN_CONTROLLER -> stringResource(Lang.settings_player_fullscreen_only_in_controller)
                     },
                 )
             },
             onSelect = {
                 videoScaffoldConfig.update(config.copy(fullscreenSwitchMode = it))
             },
-            title = { Text("竖屏模式下显示全屏按钮") },
-            description = { Text("总是显示播放器右下角的切换全屏按钮，方便切换") },
+            title = { Text(stringResource(Lang.settings_player_fullscreen_button)) },
+            description = { Text(stringResource(Lang.settings_player_fullscreen_button_description)) },
         )
         HorizontalDividerItem()
         SwitchItem(
@@ -401,7 +459,7 @@ fun SettingsScope.PlayerGroup(
             onCheckedChange = {
                 danmakuFilterConfig.update(danmakuFilterConfig.value.copy(enableRegexFilter = it))
             },
-            title = { Text("启用正则弹幕过滤器") },
+            title = { Text(stringResource(Lang.settings_player_enable_regex_filter)) },
         )
         HorizontalDividerItem()
         DanmakuRegexFilterGroup(
@@ -413,7 +471,7 @@ fun SettingsScope.PlayerGroup(
             onCheckedChange = {
                 videoScaffoldConfig.update(config.copy(pauseVideoOnEditDanmaku = it))
             },
-            title = { Text("发送弹幕时自动暂停播放") },
+            title = { Text(stringResource(Lang.settings_player_pause_on_edit_danmaku)) },
         )
         HorizontalDividerItem()
         SwitchItem(
@@ -421,7 +479,7 @@ fun SettingsScope.PlayerGroup(
             onCheckedChange = {
                 videoScaffoldConfig.update(config.copy(autoMarkDone = it))
             },
-            title = { Text("观看 90% 后自动标记为看过") },
+            title = { Text(stringResource(Lang.settings_player_auto_mark_done)) },
         )
         HorizontalDividerItem()
         SwitchItem(
@@ -429,7 +487,7 @@ fun SettingsScope.PlayerGroup(
             onCheckedChange = {
                 videoScaffoldConfig.update(config.copy(hideSelectorOnSelect = it))
             },
-            title = { Text("选择数据源后自动关闭弹窗") },
+            title = { Text(stringResource(Lang.settings_player_hide_selector_on_select)) },
         )
         if (LocalPlatform.current.isMobile()) {
             HorizontalDividerItem()
@@ -438,7 +496,7 @@ fun SettingsScope.PlayerGroup(
                 onCheckedChange = {
                     videoScaffoldConfig.update(config.copy(autoFullscreenOnLandscapeMode = it))
                 },
-                title = { Text("旋转屏幕时自动全屏") },
+                title = { Text(stringResource(Lang.settings_player_auto_fullscreen_on_landscape)) },
             )
         }
         HorizontalDividerItem()
@@ -447,7 +505,7 @@ fun SettingsScope.PlayerGroup(
             onCheckedChange = {
                 videoScaffoldConfig.update(config.copy(autoPlayNext = it))
             },
-            title = { Text("自动连播") },
+            title = { Text(stringResource(Lang.settings_player_auto_play_next)) },
         )
         if (LocalPlatform.current.isDesktop()) {
             HorizontalDividerItem()
@@ -456,8 +514,8 @@ fun SettingsScope.PlayerGroup(
                 onCheckedChange = {
                     videoScaffoldConfig.update(config.copy(autoSkipOpEd = it))
                 },
-                title = { Text("自动跳过 OP 和 ED") },
-                description = { Text("只对 BT 数据源的部分资源有效") },
+                title = { Text(stringResource(Lang.settings_player_auto_skip_op_ed)) },
+                description = { Text(stringResource(Lang.settings_player_auto_skip_op_ed_description)) },
             )
         }
         HorizontalDividerItem()
@@ -466,7 +524,7 @@ fun SettingsScope.PlayerGroup(
             onCheckedChange = {
                 videoScaffoldConfig.update(config.copy(autoSwitchMediaOnPlayerError = it))
             },
-            title = { Text("播放失败时自动切换资源") },
+            title = { Text(stringResource(Lang.settings_player_auto_switch_media_on_error)) },
         )
         PlayerGroupPlatform(videoScaffoldConfig)
     }

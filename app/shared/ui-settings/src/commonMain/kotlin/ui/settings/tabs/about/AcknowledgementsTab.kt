@@ -27,7 +27,13 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.Res
 import me.him188.ani.app.ui.foundation.bangumi
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_acknowledgements_bangumi
+import me.him188.ani.app.ui.lang.settings_acknowledgements_bangumi_description
+import me.him188.ani.app.ui.lang.settings_acknowledgements_dandanplay
+import me.him188.ani.app.ui.lang.settings_acknowledgements_dandanplay_description
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -39,11 +45,11 @@ fun AcknowledgementsTab(modifier: Modifier = Modifier) {
         )
 
         ListItem(
-            headlineContent = { Text("Bangumi") },
+            headlineContent = { Text(stringResource(Lang.settings_acknowledgements_bangumi)) },
             Modifier.clickable {
                 uriHandler.openUri("https://bangumi.tv")
             },
-            supportingContent = { Text("条目数据与收藏服务") },
+            supportingContent = { Text(stringResource(Lang.settings_acknowledgements_bangumi_description)) },
             leadingContent = {
                 Image(
                     painterResource(Res.drawable.bangumi),
@@ -55,11 +61,11 @@ fun AcknowledgementsTab(modifier: Modifier = Modifier) {
         )
 
         ListItem(
-            headlineContent = { Text("弹弹play") },
+            headlineContent = { Text(stringResource(Lang.settings_acknowledgements_dandanplay)) },
             Modifier.clickable {
                 uriHandler.openUri("https://www.dandanplay.com")
             },
-            supportingContent = { Text("弹幕聚合") },
+            supportingContent = { Text(stringResource(Lang.settings_acknowledgements_dandanplay_description)) },
             colors = listItemColors,
         )
     }
