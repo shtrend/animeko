@@ -24,6 +24,7 @@ kotlin {
         api(projects.app.shared.appPlatform)
         api(projects.utils.uiPreview)
         api(projects.utils.platform)
+        api(projects.app.shared.appLang)
         api(libs.kotlinx.coroutines.core)
         implementation(projects.danmaku.danmakuApi)
         api(libs.kotlinx.collections.immutable)
