@@ -389,7 +389,7 @@ run {
         uploadApk = true,
         runAndroidInstrumentedTests = false,
         composeResourceTriple = "linux-x64",
-        runTests = false,
+        runTests = true,
         uploadDesktopInstallers = true,
         extraGradleArgs = listOf(
         ),
