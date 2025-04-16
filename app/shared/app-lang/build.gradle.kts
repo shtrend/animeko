@@ -72,6 +72,7 @@ tasks.matching {
             || it.name.startsWith("copyNonXmlValueResources")
             // android, `generateDebugResources`
             || (it.name.startsWith("generate") && it.name.endsWith("Resources"))
+            || it.name.startsWith("extractDeepLinks")
 }.configureEach {
     dependsOn(populateStringsLocales)
 }
