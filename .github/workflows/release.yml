@@ -1279,17 +1279,6 @@ jobs:
         run: './gradlew compileKotlin compileCommonMainKotlinMetadata compileJvmMainKotlinMetadata compileKotlinDesktop compileKotlinMetadata "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "-Pani.android.abis=arm64-v8a"'
         if: '${{ steps.step-17.outcome == ''failure'' }}'
       - id: 'step-19'
-        name: 'Compile Kotlin Android (Attempt #1)'
-        continue-on-error: true
-        timeout-minutes: 180
-        run: './gradlew compileDebugKotlinAndroid compileReleaseKotlinAndroid "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "-Pani.android.abis=arm64-v8a"'
-      - id: 'step-20'
-        name: 'Compile Kotlin Android (Attempt #2)'
-        continue-on-error: false
-        timeout-minutes: 180
-        run: './gradlew compileDebugKotlinAndroid compileReleaseKotlinAndroid "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "-Pani.android.abis=arm64-v8a"'
-        if: '${{ steps.step-19.outcome == ''failure'' }}'
-      - id: 'step-21'
         name: 'Upload Desktop Installers (Attempt #1)'
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
@@ -1305,7 +1294,7 @@ jobs:
         continue-on-error: true
         timeout-minutes: 180
         run: './gradlew :ci-helper:uploadDesktopInstallers "--no-configuration-cache" "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "-Pani.android.abis=arm64-v8a"'
-      - id: 'step-22'
+      - id: 'step-20'
         name: 'Upload Desktop Installers (Attempt #2)'
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
@@ -1321,8 +1310,8 @@ jobs:
         continue-on-error: false
         timeout-minutes: 180
         run: './gradlew :ci-helper:uploadDesktopInstallers "--no-configuration-cache" "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Pkotlin.native.ignoreDisabledTargets=true" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx6g" "-Dkotlin.daemon.jvm.options=-Xmx6g" "-Pani.dandanplay.app.id=${{ secrets.DANDANPLAY_APP_ID }}" "-Pani.dandanplay.app.secret=${{ secrets.DANDANPLAY_APP_SECRET }}" "-Pani.sentry.dsn=${{ secrets.SENTRY_DSN }}" "-Pani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" "-Pani.analytics.key=${{ secrets.ANALYTICS_KEY }}" "-Pani.android.abis=arm64-v8a"'
-        if: '${{ steps.step-21.outcome == ''failure'' }}'
-      - id: 'step-23'
+        if: '${{ steps.step-19.outcome == ''failure'' }}'
+      - id: 'step-21'
         name: 'Upload compose logs'
         uses: 'actions/upload-artifact@v4'
         with:

@@ -406,6 +406,7 @@ run {
         extraGradleArgs = listOf(
             "-P$ANI_ANDROID_ABIS=arm64-v8a",
         ),
+        runTests = false,
         buildIosFramework = false,
         buildAllAndroidAbis = false,
         gradleHeap = "6g",
