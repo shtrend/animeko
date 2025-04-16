@@ -7,6 +7,8 @@
   ~ https://github.com/open-ani/ani/blob/main/LICENSE
   -->
 
+<!--@formatter:off-->
+
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="developer_list">開發者名單</string>
     <string name="acknowledgements">鳴謝</string>
@@ -36,9 +38,7 @@
     <string name="settings_debug_mode_description">已開啟除錯模式，點擊關閉</string>
     <string name="settings_debug_episodes">條目選集</string>
     <string name="settings_debug_show_all_episodes">顯示所有劇集</string>
-    <string name="settings_debug_show_all_episodes_description">
-        顯示所有劇集，包括SP、OP、ED等，目前僅部分線上源支援，請謹慎啟用
-    </string>
+    <string name="settings_debug_show_all_episodes_description">顯示所有劇集，包括SP、OP、ED等，目前僅部分線上源支援，請謹慎啟用</string>
     <string name="settings_debug_metered_network">計費網路資訊</string>
     <string name="settings_debug_onboarding">新手引導設定</string>
     <string name="settings_debug_enter_onboarding">進入新手嚮導</string>
@@ -93,67 +93,33 @@
     <string name="settings_mediasource_selector_step2">步驟 2：搜尋劇集</string>
     <string name="settings_mediasource_selector_step3">步驟 3：匹配影片</string>
     <string name="settings_mediasource_selector_enable_nested_link">啟用巢狀連結</string>
-    <string name="settings_mediasource_selector_enable_nested_link_description">
-        當遇到匹配的連結時，終止父頁面載入並跳轉到匹配的連結，在巢狀頁面中繼續尋找影片連結。支援任意次數的巢狀
-    </string>
+    <string name="settings_mediasource_selector_enable_nested_link_description">當遇到匹配的連結時，終止父頁面載入並跳轉到匹配的連結，在巢狀頁面中繼續尋找影片連結。支援任意次數的巢狀</string>
     <string name="settings_mediasource_selector_match_nested_link">匹配巢狀連結</string>
-    <string name="settings_mediasource_selector_match_nested_link_description">
-        正規表示式，從播放頁面中載入的所有資源連結中匹配出需要跳轉進入的連結。若正則包含名為 v 的分組則使用該分組，否則使用整個
-        URL
-    </string>
+    <string name="settings_mediasource_selector_match_nested_link_description">正規表示式，從播放頁面中載入的所有資源連結中匹配出需要跳轉進入的連結。若正則包含名為 v 的分組則使用該分組，否則使用整個 URL</string>
     <string name="settings_mediasource_selector_match_video_link">匹配影片連結</string>
-    <string name="settings_mediasource_selector_match_video_link_description">正規表示式，從播放頁面中載入的所有資源連結中匹配出影片連結。若正則包含名為
-        v 的分組則使用該分組，否則使用整個 URL
-    </string>
+    <string name="settings_mediasource_selector_match_video_link_description">正規表示式，從播放頁面中載入的所有資源連結中匹配出影片連結。若正則包含名為 v 的分組則使用該分組，否則使用整個 URL</string>
     <string name="settings_mediasource_selector_cookies">Cookies (可選)</string>
-    <string name="settings_mediasource_selector_cookies_description">key=value 格式的 cookies，每行一個，留空則不添加
-    </string>
+    <string name="settings_mediasource_selector_cookies_description">key=value 格式的 cookies，每行一個，留空則不添加</string>
     <string name="settings_mediasource_selector_test">測試</string>
     <string name="settings_mediasource_selector_more">更多</string>
-    <string name="settings_mediasource_selector_channel_format_index_grouped_description">
-        先提取線路名稱列表，再提取劇集面板列表，按順序對應後，再分別從每個劇集面板中提取劇集
-    </string>
+    <string name="settings_mediasource_selector_channel_format_index_grouped_description">先提取線路名稱列表，再提取劇集面板列表，按順序對應後，再分別從每個劇集面板中提取劇集</string>
     <string name="settings_mediasource_selector_channel_names_label">從頁面中提取線路名稱列表</string>
-    <string name="settings_mediasource_selector_channel_names_supporting">CSS Selector 表達式。期望回傳一些任意類型元素，每個對應一個線路，將會讀取其
-        text 作為線路名稱
-    </string>
+    <string name="settings_mediasource_selector_channel_names_supporting">CSS Selector 表達式。期望回傳一些任意類型元素，每個對應一個線路，將會讀取其 text 作為線路名稱</string>
     <string name="settings_mediasource_selector_match_channel_name_label">匹配線路名稱 (可選)</string>
-    <string name="settings_mediasource_selector_match_channel_name_supporting">正規表示式。從上面提取到的元素 text
-        中，匹配線路名稱。期望名為 ch 的分組，留空則使用整個 text。
-    </string>
+    <string name="settings_mediasource_selector_match_channel_name_supporting">正規表示式。從上面提取到的元素 text 中，匹配線路名稱。期望名為 ch 的分組，留空則使用整個 text。</string>
     <string name="settings_mediasource_selector_episode_lists_label">從頁面中提取劇集面板列表</string>
-    <string name="settings_mediasource_selector_episode_lists_supporting">CSS Selector 表達式。期望回傳一些 &lt;div&gt;，每個對應一個劇集面板。劇集面板內通常包含
-        1–12 集按鈕
-    </string>
+    <string name="settings_mediasource_selector_episode_lists_supporting">CSS Selector 表達式。期望回傳一些 &lt;div&gt;，每個對應一個劇集面板。劇集面板內通常包含 1–12 集按鈕</string>
     <string name="settings_mediasource_selector_episodes_from_list_label">從每個劇集面板中提取劇集列表</string>
-    <string name="settings_mediasource_selector_episodes_from_list_supporting">CSS Selector 表達式。期望回傳一些元素，將會提取每個元素的
-        text 作為劇集名稱。
-        如果元素是 &lt;a&gt;，則還會預設讀取 href 作為劇集的連結。也可以在下面的設定中用其他方式提取連結。
-        如果元素不是 &lt;a&gt;，即名稱和連結不在相同元素的情況，則需配置下面的設定來提取連結
-    </string>
-    <string name="settings_mediasource_selector_episode_links_from_list_label">從劇集面板中提取劇集連結列表 (可選)
-    </string>
-    <string name="settings_mediasource_selector_episode_links_from_list_supporting">可選的 CSS Selector
-        表達式。如果上個設定中提取到的劇集元素不是 &lt;a&gt;，則需要配置此項提取連結
-    </string>
+    <string name="settings_mediasource_selector_episodes_from_list_supporting">CSS Selector 表達式。期望回傳一些元素，將會提取每個元素的 text 作為劇集名稱。 如果元素是 &lt;a&gt;，則還會預設讀取 href 作為劇集的連結。也可以在下面的設定中用其他方式提取連結。 如果元素不是 &lt;a&gt;，即名稱和連結不在相同元素的情況，則需配置下面的設定來提取連結</string>
+    <string name="settings_mediasource_selector_episode_links_from_list_label">從劇集面板中提取劇集連結列表 (可選)</string>
+    <string name="settings_mediasource_selector_episode_links_from_list_supporting">可選的 CSS Selector 表達式。如果上個設定中提取到的劇集元素不是 &lt;a&gt;，則需要配置此項提取連結</string>
     <string name="settings_mediasource_selector_match_episode_sort_from_name_label">從劇集名稱中匹配序號</string>
-    <string name="settings_mediasource_selector_match_episode_sort_from_name_supporting">正規表示式尋找。期望名為 ep
-        的分組，數字為佳
-    </string>
+    <string name="settings_mediasource_selector_match_episode_sort_from_name_supporting">正規表示式尋找。期望名為 ep 的分組，數字為佳</string>
     <string name="settings_mediasource_selector_episodes_label">提取劇集列表</string>
-    <string name="settings_mediasource_selector_episodes_supporting">CSS Selector 表達式。期望回傳一些元素，將會提取每個元素的
-        text 作為劇集名稱。如果元素是 &lt;a&gt;，則還會預設讀取 href 作為劇集的連結。也可以在下面的設定中用其他方式提取連結。如果元素不是
-        &lt;a&gt;，即名稱和連結不在相同元素的情況，則需配置下面的設定來提取連結
-    </string>
+    <string name="settings_mediasource_selector_episodes_supporting">CSS Selector 表達式。期望回傳一些元素，將會提取每個元素的 text 作為劇集名稱。如果元素是 &lt;a&gt;，則還會預設讀取 href 作為劇集的連結。也可以在下面的設定中用其他方式提取連結。如果元素不是&lt;a&gt;，即名稱和連結不在相同元素的情況，則需配置下面的設定來提取連結</string>
     <string name="settings_mediasource_selector_episode_links_label">提取劇集連結列表 (可選)</string>
-    <string name="settings_mediasource_selector_episode_links_supporting">可選的 CSS Selector 表達式。如果上個設定中提取到的劇集元素不是
-        &lt;a&gt;，則需要配置此項提取連結
-    </string>
-    <string name="settings_mediasource_selector_unsupported_format">目前版本不支援該配置類型：%1$s
-
-        這可能是匯入了在更高版本編輯的配置導致的
-        可升級 Ani 或切換到其他配置類型
-    </string>
+    <string name="settings_mediasource_selector_episode_links_supporting">可選的 CSS Selector 表達式。如果上個設定中提取到的劇集元素不是&lt;a&gt;，則需要配置此項提取連結</string>
+    <string name="settings_mediasource_selector_unsupported_format">目前版本不支援該配置類型：%1$s \n\n這可能是匯入了在更高版本編輯的配置導致的\n可升級 Ani 或切換到其他配置類型</string>
     <string name="settings_mediasource_test_keyword">關鍵字</string>
     <string name="settings_mediasource_test_random">隨機</string>
     <string name="settings_mediasource_test_episode_sort">劇集序號</string>
@@ -225,11 +191,7 @@
     <!-- Storage Settings -->
     <string name="settings_storage_title">儲存設定</string>
     <string name="settings_storage_bt_cache_location">BT 視訊快取位置</string>
-    <string name="settings_storage_bt_cache_location_description">修改後不會自動遷移資料，也不會自動刪除舊資料。
-        如需刪除舊資料，請在修改之前點擊 "打開 BT 快取目錄" 並刪除該目錄下的所有檔案。
-
-        重新啟動生效
-    </string>
+    <string name="settings_storage_bt_cache_location_description">修改後不會自動遷移資料，也不會自動刪除舊資料。\n如需刪除舊資料，請在修改之前點擊 "打開 BT 快取目錄" 並刪除該目錄下的所有檔案。\n\n重新啟動生效</string>
     <string name="settings_storage_choose_directory">選擇視訊儲存目錄</string>
     <string name="settings_storage_open_directory_chooser">打開目錄選擇</string>
     <string name="settings_storage_open_bt_cache_directory">打開 BT 快取目錄</string>
@@ -237,9 +199,7 @@
 
     <!-- MediaSourceGroup -->
     <string name="settings_media_source_list">資料源列表 (%1$d)</string>
-    <string name="settings_media_source_list_description">
-        在播放時，停用的資料源不會自動查詢，但可手動點擊臨時啟用。注意，排序將優先採用雲端順序，同資料源訂閱之內的手動排序可能無效
-    </string>
+    <string name="settings_media_source_list_description">在播放時，停用的資料源不會自動查詢，但可手動點擊臨時啟用。注意，排序將優先採用雲端順序，同資料源訂閱之內的手動排序可能無效</string>
     <string name="settings_media_source_cancel_sort">取消排序</string>
     <string name="settings_media_source_add">新增資料源</string>
     <string name="settings_media_source_save_sort">儲存排序</string>
@@ -247,11 +207,8 @@
     <string name="settings_media_source_stop_test">終止測試</string>
     <string name="settings_media_source_start_test">開始測試</string>
     <string name="settings_media_source_delete">刪除資料源</string>
-    <string name="settings_media_source_delete_no_config">該資料源無特殊配置，刪除後可以重新從模板直接添加，確認刪除嗎？
-    </string>
-    <string name="settings_media_source_delete_with_config">
-        該資料源有配置，刪除後將遺失配置，之後從模板添加時需要重新配置，確認刪除嗎？
-    </string>
+    <string name="settings_media_source_delete_no_config">該資料源無特殊配置，刪除後可以重新從模板直接添加，確認刪除嗎？</string>
+    <string name="settings_media_source_delete_with_config">該資料源有配置，刪除後將遺失配置，之後從模板添加時需要重新配置，確認刪除嗎？</string>
     <string name="settings_media_source_delete_confirm">刪除</string>
     <string name="settings_media_source_cancel">取消</string>
     <string name="settings_media_source_from_subscription">來自訂閱，不可編輯</string>
@@ -280,9 +237,7 @@
     <string name="settings_media_source_subscription_export_all">全部匯出到剪貼簿</string>
     <string name="settings_media_source_subscription_delete">刪除</string>
     <string name="settings_media_source_subscription_delete_dialog">刪除資料源訂閱</string>
-    <string name="settings_media_source_subscription_delete_description">將會同時刪除來自該訂閱的所有資料源 (共 %1$d
-        個)
-    </string>
+    <string name="settings_media_source_subscription_delete_description">將會同時刪除來自該訂閱的所有資料源 (共 %1$d 個)</string>
     <string name="settings_media_source_subscription_not_updated">還未更新</string>
     <string name="settings_media_source_subscription_update_failed">更新失敗：</string>
     <string name="settings_media_source_subscription_update_success">更新成功，包含 %1$d 個資料源</string>
@@ -308,11 +263,8 @@
     <string name="settings_mediasource_override">覆蓋</string>
     <string name="settings_mediasource_cancel">取消</string>
     <string name="settings_mediasource_clipboard_empty">剪貼簿內容為空</string>
-    <string name="settings_mediasource_multiple_configs">剪貼簿內容包含多個資料源配置，目前的匯入功能只支援單個配置
-    </string>
-    <string name="settings_mediasource_invalid_content">剪貼簿內容無效，請檢查資料源類型 (Selector 還是 RSS) 以及匯出時使用的
-        Ani 的版本
-    </string>
+    <string name="settings_mediasource_multiple_configs">剪貼簿內容包含多個資料源配置，目前的匯入功能只支援單個配置</string>
+    <string name="settings_mediasource_invalid_content">剪貼簿內容無效，請檢查資料源類型 (Selector 還是 RSS) 以及匯出時使用的 Ani 的版本</string>
     <string name="settings_mediasource_unsupported_factory">資料源類型不受支援，請先升級軟體</string>
     <string name="settings_mediasource_unsupported_version">資料源版本不受支援，請先升級軟體</string>
     <string name="settings_mediasource_close">關閉</string>
@@ -347,21 +299,12 @@
     <string name="settings_mediasource_rss_icon_link">圖示連結</string>
     <string name="settings_mediasource_rss_query_settings">查詢設定</string>
     <string name="settings_mediasource_rss_search_link">搜尋連結*</string>
-    <string name="settings_mediasource_rss_search_link_placeholder">
-        範例：https://acg.rip/page/{page}.xml?term={keyword}
-    </string>
-    <string name="settings_mediasource_rss_search_link_supporting_text">取代規則：
-        {keyword} 取代為條目 (番劇) 名稱
-        {page} 取代為頁碼, 如果不需要分頁則忽略
-    </string>
+    <string name="settings_mediasource_rss_search_link_placeholder">範例：https://acg.rip/page/{page}.xml?term={keyword}</string>
+    <string name="settings_mediasource_rss_search_link_supporting_text">取代規則：\n{keyword} 取代為條目 (番劇) 名稱\n{page} 取代為頁碼, 如果不需要分頁則忽略</string>
     <string name="settings_mediasource_rss_filter_by_episode">使用劇集序號過濾</string>
-    <string name="settings_mediasource_rss_filter_by_episode_description">
-        要求資源標題包含劇集序號。適用於資料源可能搜到無關內容的情況
-    </string>
+    <string name="settings_mediasource_rss_filter_by_episode_description">要求資源標題包含劇集序號。適用於資料源可能搜到無關內容的情況</string>
     <string name="settings_mediasource_rss_filter_by_subject">使用條目名稱過濾</string>
-    <string name="settings_mediasource_rss_filter_by_subject_description">要求資源標題包含條目名稱。適用於資料源可能搜到無關內容的情況。此功能只對
-        4.4.0 以前版本有效，對其他版本無效
-    </string>
+    <string name="settings_mediasource_rss_filter_by_subject_description">要求資源標題包含條目名稱。適用於資料源可能搜到無關內容的情況。\n此功能只對 4.4.0 以前版本有效，對其他版本無效</string>
     <string name="settings_mediasource_rss_auto_save_hint">提示：修改自動儲存</string>
 
     <!-- OutlinedMatchTag -->
@@ -404,3 +347,5 @@
     <string name="settings_mediasource_rss_enclosure_url">enclosure.url</string>
     <string name="settings_mediasource_rss_enclosure_type">enclosure.type</string>
 </resources>
+
+<!--@formatter:on-->
