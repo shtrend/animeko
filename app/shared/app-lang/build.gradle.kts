@@ -73,6 +73,7 @@ tasks.matching {
             // android, `generateDebugResources`
             || (it.name.startsWith("generate") && it.name.endsWith("Resources"))
             || it.name.startsWith("extractDeepLinks")
+            || (it.name.startsWith("map") && it.name.endsWith("SourceSetPaths")) // mapReleaseSourceSetPaths
 }.configureEach {
     dependsOn(populateStringsLocales)
 }
