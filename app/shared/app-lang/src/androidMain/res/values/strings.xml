@@ -165,7 +165,7 @@
     <string name="settings_update_in_app_download_disabled">已关闭，将会跳转到外部浏览器完成下载</string>
     <string name="settings_update_auto_download">自动下载更新</string>
     <string name="settings_update_auto_download_description">下载完成后会提示，确认后才会安装</string>
-    <string name="settings_update_checking">检查中...</string>
+    <string name="settings_update_checking">检查中…</string>
     <string name="settings_update_check_failed">检查失败</string>
     <string name="settings_update_up_to_date">已是最新</string>
     <string name="settings_update_new_version">有新版本: %1$s</string>
