@@ -32,6 +32,11 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.effects.moveFocusOnEnter
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isWidthCompact
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_test_episode_sort
+import me.him188.ani.app.ui.lang.settings_mediasource_test_keyword
+import me.him188.ani.app.ui.lang.settings_mediasource_test_random
+import org.jetbrains.compose.resources.stringResource
 
 @Stable
 object EditMediaSourceTestDataCardDefaults {
@@ -80,7 +85,7 @@ object EditMediaSourceTestDataCardDefaults {
             value = state.searchKeyword,
             onValueChange = { state.searchKeyword = it.trim() },
             modifier.moveFocusOnEnter(),
-            label = { Text("关键词") },
+            label = { Text(stringResource(Lang.settings_mediasource_test_keyword)) },
             placeholder = {
                 Text(
                     state.searchKeywordPlaceholder,
@@ -89,7 +94,10 @@ object EditMediaSourceTestDataCardDefaults {
             },
             trailingIcon = {
                 IconButton(onClick = { state.randomKeyword() }) {
-                    Icon(Icons.Rounded.RestartAlt, contentDescription = "随机")
+                    Icon(
+                        Icons.Rounded.RestartAlt,
+                        contentDescription = stringResource(Lang.settings_mediasource_test_random),
+                    )
                 }
             },
             singleLine = true,
@@ -106,7 +114,7 @@ object EditMediaSourceTestDataCardDefaults {
             value = state.sort,
             onValueChange = { state.sort = it.trim() },
             modifier.moveFocusOnEnter(),
-            label = { Text("剧集序号") },
+            label = { Text(stringResource(Lang.settings_mediasource_test_episode_sort)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions.Default.copy(
                 imeAction = ImeAction.Next,

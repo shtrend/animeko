@@ -123,6 +123,9 @@
     <string name="settings_mediasource_selector_episode_links_label">提取剧集链接列表 (可选)</string>
     <string name="settings_mediasource_selector_episode_links_supporting">可选的 CSS Selector 表达式。如果上一个设置中提取到的剧集元素不为 &lt;a&gt;，则需要配置此项提取链接</string>
     <string name="settings_mediasource_selector_unsupported_format">当前版本不支持该配置类型：%1$s\n\n这可能是导入了一个在更高版本编辑的配置导致的\n可升级 Ani 或切换到其他配置类型</string>
+    <string name="settings_mediasource_test_keyword">关键词</string>
+    <string name="settings_mediasource_test_random">随机</string>
+    <string name="settings_mediasource_test_episode_sort">剧集序号</string>
 
     <!-- AcknowledgementsTab -->
     <string name="settings_acknowledgements_bangumi">Bangumi</string>
