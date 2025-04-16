@@ -21,15 +21,24 @@ import androidx.compose.runtime.remember
 import io.github.vinceglb.filekit.compose.rememberDirectoryPickerLauncher
 import me.him188.ani.app.platform.LocalDesktopContext
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_storage_bt_cache_location
+import me.him188.ani.app.ui.lang.settings_storage_bt_cache_location_description
+import me.him188.ani.app.ui.lang.settings_storage_choose_directory
+import me.him188.ani.app.ui.lang.settings_storage_directory_not_exist
+import me.him188.ani.app.ui.lang.settings_storage_open_bt_cache_directory
+import me.him188.ani.app.ui.lang.settings_storage_open_directory_chooser
+import me.him188.ani.app.ui.lang.settings_storage_title
 import me.him188.ani.app.ui.settings.framework.components.RowButtonItem
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.framework.components.TextFieldItem
+import org.jetbrains.compose.resources.stringResource
 import java.awt.Desktop
 import java.io.File
 
 @Composable
 actual fun SettingsScope.CacheDirectoryGroup(state: CacheDirectoryGroupState) {
-    Group({ Text("存储设置") }) {
+    Group({ Text(stringResource(Lang.settings_storage_title)) }) {
         val mediaCacheSettings by state.mediaCacheSettingsState
 
         val context = LocalDesktopContext.current
@@ -42,16 +51,16 @@ actual fun SettingsScope.CacheDirectoryGroup(state: CacheDirectoryGroupState) {
         }
         TextFieldItem(
             currentSaveDir,
-            title = { Text("BT 视频缓存位置") },
+            title = { Text(stringResource(Lang.settings_storage_bt_cache_location)) },
             onValueChangeCompleted = {
                 state.mediaCacheSettingsState.update(mediaCacheSettings.copy(saveDir = it))
             },
             textFieldDescription = {
-                Text("修改后不会自动迁移数据，也不会自动删除旧数据。\n如需删除旧数据，请在修改之前点击 \"打开 BT 缓存目录\" 并删除该目录下的所有文件。\n\n重启生效")
+                Text(stringResource(Lang.settings_storage_bt_cache_location_description))
             },
             extra = { textFieldValue ->
                 val directoryPicker = rememberDirectoryPickerLauncher(
-                    "选择视频保存目录",
+                    stringResource(Lang.settings_storage_choose_directory),
                     currentSaveDir,
                 ) {
                     it?.let {
@@ -59,20 +68,21 @@ actual fun SettingsScope.CacheDirectoryGroup(state: CacheDirectoryGroupState) {
                     }
                 }
                 OutlinedButton({ directoryPicker.launch() }) {
-                    Text("打开目录选择")
+                    Text(stringResource(Lang.settings_storage_open_directory_chooser))
                 }
             },
         )
         val toaster = LocalToaster.current
+        val directoryNotExistMessage = stringResource(Lang.settings_storage_directory_not_exist)
         RowButtonItem(
-            title = { Text("打开 BT 缓存目录") },
+            title = { Text(stringResource(Lang.settings_storage_open_bt_cache_directory)) },
             icon = { Icon(Icons.Rounded.ArrowOutward, null) },
             onClick = {
                 val file = File(mediaCacheSettings.saveDir ?: context.torrentDataCacheDir.absolutePath)
                 if (file.exists()) {
                     Desktop.getDesktop().open(file)
                 } else {
-                    toaster.toast("该目录不存在")
+                    toaster.toast(directoryNotExistMessage)
                 }
             },
         )

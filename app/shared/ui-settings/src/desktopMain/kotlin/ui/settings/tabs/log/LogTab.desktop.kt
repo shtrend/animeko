@@ -18,6 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import me.him188.ani.app.platform.DesktopContext
 import me.him188.ani.app.platform.LocalContext
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_log_open_directory
+import org.jetbrains.compose.resources.stringResource
 import java.awt.Desktop
 
 @Composable
@@ -25,7 +28,7 @@ internal actual fun ColumnScope.PlatformLoggingItems(listItemColors: ListItemCol
     val context = LocalContext.current
     ListItem(
         {
-            Text("打开日志目录")
+            Text(stringResource(Lang.settings_log_open_directory))
         },
         Modifier.clickable {
             Desktop.getDesktop().open((context as DesktopContext).logsDir)
