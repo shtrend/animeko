@@ -45,3 +45,40 @@ compose.resources {
         },
     )
 }
+
+val populateStringsLocales by tasks.registering(Copy::class) {
+    group = "ani"
+    description =
+        "Populate string resources for all locales. This will copy values-zh-rTW/strings.xml to other locales speaking Traditional Chinese."
+
+    val chtLocales = listOf(
+        "values-zh-rHK",
+        "values-zh-rMO",
+        "values-zh-rSG",
+    )
+    destinationDir = file("src/androidMain/res")
+
+    // Copy rTW to chtLocales
+    for (locale in chtLocales) {
+        from(file("src/androidMain/res/values-zh-rTW/strings.xml")) {
+            into(locale)
+            rename { "strings.xml" }
+        }
+    }
+
+    // Copy 
+    from(file("src/androidMain/res/values/strings.xml")) {
+        into("values-zh-rCN")
+        rename { "strings.xml" }
+    }
+}
+
+tasks.matching {
+    // desktop, `generateResourceAccessorsForCommonMain`
+    it.name.startsWith("convertXmlValueResources")
+            || it.name.startsWith("copyNonXmlValueResources")
+            // android, `generateDebugResources`
+            || (it.name.startsWith("generate") && it.name.endsWith("Resources"))
+}.configureEach {
+    dependsOn(populateStringsLocales)
+}
