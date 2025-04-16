@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -36,7 +36,27 @@ import me.him188.ani.app.ui.foundation.effects.moveFocusOnEnter
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_channel_format_index_grouped_description
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_channel_names_label
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_channel_names_supporting
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episode_links_from_list_label
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episode_links_from_list_supporting
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episode_links_label
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episode_links_supporting
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episode_lists_label
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episode_lists_supporting
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episodes_from_list_label
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episodes_from_list_supporting
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episodes_label
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_episodes_supporting
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_match_channel_name_label
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_match_channel_name_supporting
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_match_episode_sort_from_name_label
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_match_episode_sort_from_name_supporting
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_unsupported_format
 import me.him188.ani.app.ui.settings.mediasource.MediaSourceConfigurationDefaults
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun SelectorChannelFormatColumn(
@@ -51,7 +71,7 @@ internal fun SelectorChannelFormatColumn(
                 verticalArrangement = Arrangement.spacedBy(currentWindowAdaptiveInfo1().windowSizeClass.cardVerticalPadding),
             ) {
                 Text(
-                    "先提取线路名称列表，再提取剧集面板列表，按顺序对应后，再分别从每个剧集面板中提取剧集",
+                    stringResource(Lang.settings_mediasource_selector_channel_format_index_grouped_description),
                     Modifier,
                     style = MaterialTheme.typography.labelLarge,
                 )
@@ -60,20 +80,20 @@ internal fun SelectorChannelFormatColumn(
                 OutlinedTextField(
                     conf.selectChannelNames, { conf.selectChannelNames = it },
                     Modifier.fillMaxWidth().moveFocusOnEnter(),
-                    label = { Text("从页面中提取线路名称列表") },
+                    label = { Text(stringResource(Lang.settings_mediasource_selector_channel_names_label)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
-                    supportingText = { Text("CSS Selector 表达式。期望返回一些任意类型元素，每个对应一个线路，将会读取其 text 作为线路名称") },
+                    supportingText = { Text(stringResource(Lang.settings_mediasource_selector_channel_names_supporting)) },
                     isError = conf.selectChannelNamesIsError,
                     enabled = state.enableEdit,
                 )
                 OutlinedTextField(
                     conf.matchChannelName, { conf.matchChannelName = it },
                     Modifier.fillMaxWidth().moveFocusOnEnter(),
-                    label = { Text("匹配线路名称 (可选)") },
+                    label = { Text(stringResource(Lang.settings_mediasource_selector_match_channel_name_label)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
-                    supportingText = { Text("正则表达式。从上面提取到的元素 text 中，匹配线路名称。期望名为 ch 的分组，留空则使用整个 text。") },
+                    supportingText = { Text(stringResource(Lang.settings_mediasource_selector_match_channel_name_supporting)) },
                     isError = conf.matchChannelNameIsError,
                     enabled = state.enableEdit,
                 )
@@ -81,10 +101,10 @@ internal fun SelectorChannelFormatColumn(
                 OutlinedTextField(
                     conf.selectEpisodeLists, { conf.selectEpisodeLists = it },
                     Modifier.fillMaxWidth().moveFocusOnEnter().padding(top = 8.dp),
-                    label = { Text("从页面中提取剧集面板列表") },
+                    label = { Text(stringResource(Lang.settings_mediasource_selector_episode_lists_label)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
-                    supportingText = { Text("CSS Selector 表达式。期望返回一些 <div>，每个对应一个剧集面板。剧集面板内通常包含 1-12 集按钮") },
+                    supportingText = { Text(stringResource(Lang.settings_mediasource_selector_episode_lists_supporting)) },
                     isError = conf.selectEpisodeListsIsError,
                     enabled = state.enableEdit,
                 )
@@ -92,37 +112,29 @@ internal fun SelectorChannelFormatColumn(
                 OutlinedTextField(
                     conf.selectEpisodesFromList, { conf.selectEpisodesFromList = it },
                     Modifier.fillMaxWidth().moveFocusOnEnter().padding(top = 8.dp),
-                    label = { Text("从每个剧集面板中提取剧集列表") },
+                    label = { Text(stringResource(Lang.settings_mediasource_selector_episodes_from_list_label)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
-                    supportingText = {
-                        Text(
-                            """
-                                CSS Selector 表达式。期望返回一些元素，将会提取每个元素的 text 作为剧集名称。
-                                如果元素是 <a>，则还会默认读取 href 作为剧集的链接。也可以在下面的设置中用其他方式提取链接。
-                                如果元素不为 <a>，即名称和链接不在相同元素的情况，则需配置下面的设置来提取链接
-                            """.trimIndent(),
-                        )
-                    },
+                    supportingText = { Text(stringResource(Lang.settings_mediasource_selector_episodes_from_list_supporting)) },
                     isError = conf.selectEpisodesFromListIsError,
                     enabled = state.enableEdit,
                 )
                 OutlinedTextField(
                     conf.selectEpisodeLinksFromList, { conf.selectEpisodeLinksFromList = it },
                     Modifier.fillMaxWidth().moveFocusOnEnter().padding(top = 8.dp),
-                    label = { Text("从剧集面板中提取剧集链接列表 (可选)") },
+                    label = { Text(stringResource(Lang.settings_mediasource_selector_episode_links_from_list_label)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
-                    supportingText = { Text("可选的 CSS Selector 表达式。如果上一个设置中提取到的剧集元素不为 <a>，则需要配置此项提取链接") },
+                    supportingText = { Text(stringResource(Lang.settings_mediasource_selector_episode_links_from_list_supporting)) },
                     enabled = state.enableEdit,
                 )
                 OutlinedTextField(
                     conf.matchEpisodeSortFromName, { conf.matchEpisodeSortFromName = it },
                     Modifier.fillMaxWidth().moveFocusOnEnter(),
-                    label = { Text("从剧集名称中匹配序号") },
+                    label = { Text(stringResource(Lang.settings_mediasource_selector_match_episode_sort_from_name_label)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
-                    supportingText = { Text("正则表达式查找。期望名为 ep 的分组，数字为佳") },
+                    supportingText = { Text(stringResource(Lang.settings_mediasource_selector_match_episode_sort_from_name_supporting)) },
                     isError = conf.matchEpisodeSortFromNameIsError,
                     enabled = state.enableEdit,
                 )
@@ -135,35 +147,29 @@ internal fun SelectorChannelFormatColumn(
                 OutlinedTextField(
                     conf.selectEpisodes, { conf.selectEpisodes = it },
                     Modifier.fillMaxWidth().moveFocusOnEnter(),
-                    label = { Text("提取剧集列表") },
+                    label = { Text(stringResource(Lang.settings_mediasource_selector_episodes_label)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
-                    supportingText = {
-                        Text(
-                            "CSS Selector 表达式。期望返回一些元素，将会提取每个元素的 text 作为剧集名称。" +
-                                    "如果元素是 <a>，则还会默认读取 href 作为剧集的链接。也可以在下面的设置中用其他方式提取链接。" +
-                                    "如果元素不为 <a>，即名称和链接不在相同元素的情况，则需配置下面的设置来提取链接",
-                        )
-                    },
+                    supportingText = { Text(stringResource(Lang.settings_mediasource_selector_episodes_supporting)) },
                     isError = conf.selectEpisodesIsError,
                     enabled = state.enableEdit,
                 )
                 OutlinedTextField(
                     conf.selectEpisodeLinks, { conf.selectEpisodeLinks = it },
                     Modifier.fillMaxWidth().moveFocusOnEnter(),
-                    label = { Text("提取剧集链接列表 (可选)") },
+                    label = { Text(stringResource(Lang.settings_mediasource_selector_episode_links_label)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
-                    supportingText = { Text("可选的 CSS Selector 表达式。如果上一个设置中提取到的剧集元素不为 <a>，则需要配置此项提取链接") },
+                    supportingText = { Text(stringResource(Lang.settings_mediasource_selector_episode_links_supporting)) },
                     enabled = state.enableEdit,
                 )
                 OutlinedTextField(
                     conf.matchEpisodeSortFromName, { conf.matchEpisodeSortFromName = it },
                     Modifier.fillMaxWidth().moveFocusOnEnter(),
-                    label = { Text("从剧集名称中匹配序号") },
+                    label = { Text(stringResource(Lang.settings_mediasource_selector_match_episode_sort_from_name_label)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                     shape = textFieldShape,
-                    supportingText = { Text("正则表达式查找。期望名为 ep 的分组，数字为佳") },
+                    supportingText = { Text(stringResource(Lang.settings_mediasource_selector_match_episode_sort_from_name_supporting)) },
                     isError = conf.matchEpisodeSortFromNameIsError,
                     enabled = state.enableEdit,
                 )
@@ -185,11 +191,10 @@ internal fun UnsupportedFormatIdHint(formatId: SelectorFormatId, modifier: Modif
                 Modifier.align(Alignment.CenterHorizontally).size(48.dp),
             )
             Text(
-                "当前版本不支持该配置类型：${formatId.value}\n\n这可能是导入了一个在更高版本编辑的配置导致的\n可升级 Ani 或切换到其他配置类型",
+                stringResource(Lang.settings_mediasource_selector_unsupported_format, formatId.value),
                 Modifier.padding(top = 24.dp),
                 textAlign = TextAlign.Center,
             )
         }
     }
 }
-
