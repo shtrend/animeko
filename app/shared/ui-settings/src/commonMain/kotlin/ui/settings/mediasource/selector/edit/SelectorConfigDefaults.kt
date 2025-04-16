@@ -31,14 +31,27 @@ import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.foundation.effects.moveFocusOnEnter
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_cookies
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_cookies_description
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_enable_nested_link
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_enable_nested_link_description
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_match_nested_link
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_match_nested_link_description
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_match_video_link
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_match_video_link_description
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_step1
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_step2
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_step3
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * @see me.him188.ani.app.domain.mediasource.web.SelectorMediaSourceArguments
  */
 object SelectorConfigurationDefaults {
-    const val STEP_NAME_1 = "步骤 1：搜索条目"
-    const val STEP_NAME_2 = "步骤 2：搜索剧集"
-    const val STEP_NAME_3 = "步骤 3：匹配视频"
+    val STEP_NAME_1 @Composable get() = stringResource(Lang.settings_mediasource_selector_step1)
+    val STEP_NAME_2 @Composable get() = stringResource(Lang.settings_mediasource_selector_step2)
+    val STEP_NAME_3 @Composable get() = stringResource(Lang.settings_mediasource_selector_step3)
 
     val verticalSpacing: Dp
         @Composable
@@ -60,13 +73,13 @@ internal fun SelectorConfigurationDefaults.MatchVideoSection(
     Column(modifier) {
         val matchVideoConfig = state.matchVideoConfig
         ListItem(
-            headlineContent = { Text("启用嵌套链接") },
+            headlineContent = { Text(stringResource(Lang.settings_mediasource_selector_enable_nested_link)) },
             Modifier
                 .padding(bottom = (verticalSpacing - 8.dp).coerceAtLeast(0.dp))
                 .clickable(
                     enabled = state.enableEdit,
                 ) { matchVideoConfig.enableNestedUrl = !matchVideoConfig.enableNestedUrl },
-            supportingContent = { Text("当遇到匹配的链接时，终止父页面加载并跳转到匹配的链接，在嵌套页面中继续查找视频链接。支持任意次数嵌套") },
+            supportingContent = { Text(stringResource(Lang.settings_mediasource_selector_enable_nested_link_description)) },
             trailingContent = {
                 Switch(
                     matchVideoConfig.enableNestedUrl, { matchVideoConfig.enableNestedUrl = it },
@@ -83,8 +96,8 @@ internal fun SelectorConfigurationDefaults.MatchVideoSection(
                     .fillMaxWidth()
                     .moveFocusOnEnter()
                     .padding(bottom = verticalSpacing),
-                label = { Text("匹配嵌套链接") },
-                supportingText = { Text("正则表达式，从播放页面中加载的所有资源链接中匹配出需要跳转进入的链接。若正则包含名为 v 的分组则使用该分组，否则使用整个 URL") },
+                label = { Text(stringResource(Lang.settings_mediasource_selector_match_nested_link)) },
+                supportingText = { Text(stringResource(Lang.settings_mediasource_selector_match_nested_link_description)) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                 shape = textFieldShape,
                 isError = matchVideoConfig.matchNestedUrlIsError,
@@ -95,8 +108,8 @@ internal fun SelectorConfigurationDefaults.MatchVideoSection(
         OutlinedTextField(
             matchVideoConfig.matchVideoUrl, { matchVideoConfig.matchVideoUrl = it },
             Modifier.fillMaxWidth().moveFocusOnEnter().padding(bottom = verticalSpacing),
-            label = { Text("匹配视频链接") },
-            supportingText = { Text("正则表达式，从播放页面中加载的所有资源链接中匹配出视频链接。若正则包含名为 v 的分组则使用该分组，否则使用整个 URL") },
+            label = { Text(stringResource(Lang.settings_mediasource_selector_match_video_link)) },
+            supportingText = { Text(stringResource(Lang.settings_mediasource_selector_match_video_link_description)) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             shape = textFieldShape,
             isError = matchVideoConfig.matchVideoUrlIsError,
@@ -105,8 +118,8 @@ internal fun SelectorConfigurationDefaults.MatchVideoSection(
         OutlinedTextField(
             matchVideoConfig.cookies, { matchVideoConfig.cookies = it },
             Modifier.fillMaxWidth(),
-            label = { Text("Cookies (可选)") },
-            supportingText = { Text("key=value 格式的 cookies，一行一个，留空则不添加") },
+            label = { Text(stringResource(Lang.settings_mediasource_selector_cookies)) },
+            supportingText = { Text(stringResource(Lang.settings_mediasource_selector_cookies_description)) },
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
             shape = textFieldShape,
             enabled = state.enableEdit,

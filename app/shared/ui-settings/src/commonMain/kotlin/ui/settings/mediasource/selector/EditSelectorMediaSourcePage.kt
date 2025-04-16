@@ -78,6 +78,8 @@ import me.him188.ani.app.ui.settings.mediasource.selector.episode.SelectorEpisod
 import me.him188.ani.app.ui.settings.mediasource.selector.episode.SelectorTestAndEpisodePane
 import me.him188.ani.app.ui.settings.mediasource.selector.test.SelectorTestState
 import kotlin.coroutines.CoroutineContext
+import me.him188.ani.app.ui.lang.*
+import org.jetbrains.compose.resources.stringResource
 
 class EditSelectorMediaSourcePageState(
     private val argumentsStorage: SaveableStorage<SelectorMediaSourceArguments>,
@@ -214,13 +216,16 @@ fun EditSelectorMediaSourceScreen(
                                         }
                                     },
                                 ) {
-                                    Text("测试")
+                                    Text(stringResource(Lang.settings_mediasource_selector_test))
                                 }
                             }
                             Box {
                                 var showDropdown by remember { mutableStateOf(false) }
                                 IconButton({ showDropdown = true }) {
-                                    Icon(Icons.Rounded.MoreVert, "更多")
+                                    Icon(
+                                        Icons.Rounded.MoreVert,
+                                        stringResource(Lang.settings_mediasource_selector_more),
+                                    )
                                 }
                                 DropdownMenu(showDropdown, { showDropdown = false }) {
                                     MediaSourceConfigurationDefaults.DropdownMenuImport(

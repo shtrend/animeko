@@ -33,7 +33,10 @@ import me.him188.ani.app.domain.mediasource.test.web.SelectorTestEpisodePresenta
 import me.him188.ani.app.ui.foundation.layout.cardHorizontalPadding
 import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_test_empty_name
 import me.him188.ani.app.ui.settings.mediasource.rss.test.OutlinedMatchTag
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun SelectorTestEpisodeListGrid(
@@ -68,7 +71,7 @@ object SelectorTestEpisodeListGridDefaults {
         modifier: Modifier = Modifier,
     ) {
         EpisodeCard(
-            title = { Text(episode.name.ifEmpty { "<名称为空>" }) },
+            title = { Text(episode.name.ifEmpty { stringResource(Lang.settings_mediasource_selector_test_empty_name) }) },
             { onClick() },
             modifier,
         ) {

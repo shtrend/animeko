@@ -57,9 +57,16 @@ import me.him188.ani.app.ui.foundation.layout.cardVerticalPadding
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.widgets.FastLinearProgressIndicator
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_test_channels
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_test_copied
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_test_copy_link
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_test_open_page
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_test_title
 import me.him188.ani.app.ui.settings.mediasource.EditMediaSourceTestDataCardDefaults
 import me.him188.ani.app.ui.settings.mediasource.RefreshIndicatedHeadlineRow
 import me.him188.ani.app.ui.settings.mediasource.selector.edit.SelectorConfigurationDefaults
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * 测试数据源. 编辑
@@ -86,7 +93,7 @@ fun SharedTransitionScope.SelectorTestPane(
         item(span = { GridItemSpan(maxLineSpan) }) {
             Column {
                 Text(
-                    "测试数据源",
+                    stringResource(Lang.settings_mediasource_selector_test_title),
                     style = MaterialTheme.typography.headlineSmall,
                 )
 
@@ -144,11 +151,12 @@ fun SharedTransitionScope.SelectorTestPane(
                     val url = selectedSubject.subjectDetailsPageUrl
                     val clipboard = LocalClipboardManager.current
                     val toaster = LocalToaster.current
+                    val copiedText = stringResource(Lang.settings_mediasource_selector_test_copied)
                     Row(
                         Modifier.fillMaxWidth()
-                            .clickable(onClickLabel = "复制条目链接") {
+                            .clickable(onClickLabel = stringResource(Lang.settings_mediasource_selector_test_copy_link)) {
                                 clipboard.setText(AnnotatedString(url))
-                                toaster.toast("已复制")
+                                toaster.toast(copiedText)
                             },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -166,7 +174,7 @@ fun SharedTransitionScope.SelectorTestPane(
                         IconButton({ uriHandler.openUri(url) }, Modifier.padding(start = 8.dp)) {
                             Icon(
                                 Icons.Rounded.ArrowOutward,
-                                contentDescription = "打开条目页面",
+                                contentDescription = stringResource(Lang.settings_mediasource_selector_test_open_page),
                             )
                         }
                     }
@@ -193,7 +201,7 @@ fun SharedTransitionScope.SelectorTestPane(
                             horizontalArrangement = Arrangement.spacedBy(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text("${channels.size} 线路")
+                            Text(stringResource(Lang.settings_mediasource_selector_test_channels, channels.size))
                             LazyRow(
                                 Modifier,
                                 horizontalArrangement = Arrangement.spacedBy(16.dp),

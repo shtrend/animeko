@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.layout.cardHorizontalPadding
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 
-
 /**
  * @see selectedItemIndex `-1` for no selection
  */

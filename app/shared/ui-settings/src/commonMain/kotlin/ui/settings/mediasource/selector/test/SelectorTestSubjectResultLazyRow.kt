@@ -31,7 +31,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.domain.mediasource.test.web.SelectorTestSubjectPresentation
 import me.him188.ani.app.ui.foundation.Tag
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_test_dummy_line
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_test_dummy_tag
+import me.him188.ani.app.ui.lang.settings_mediasource_selector_test_dummy_url
 import me.him188.ani.app.ui.settings.mediasource.rss.test.OutlinedMatchTag
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * @see selectedItemIndex `-1` for no selection
@@ -48,12 +53,12 @@ internal fun SelectorTestSubjectResultLazyRow(
         // measure 一个卡片的高度
         val (measurable) = subcompose(0) {
             SelectorTestResultCard(
-                title = { Text("1\n2") },
+                title = { Text(stringResource(Lang.settings_mediasource_selector_test_dummy_line)) },
                 isSelected = false,
                 onClick = {},
                 tags = {
-                    Tag { Text("Dummy") }
-                    Tag { Text("https://example.com/example/example") }
+                    Tag { Text(stringResource(Lang.settings_mediasource_selector_test_dummy_tag)) }
+                    Tag { Text(stringResource(Lang.settings_mediasource_selector_test_dummy_url)) }
                 },
             )
         }

@@ -82,6 +82,30 @@
     <string name="settings_developers_organization">Organization</string>
     <string name="settings_developers_view_more_on_github">在 GitHub 上查看更多</string>
 
+    <!-- SelectorMediaSource settings -->
+    <string name="settings_mediasource_selector_test_dummy_line">1\n2</string>
+    <string name="settings_mediasource_selector_test_dummy_tag">Dummy</string>
+    <string name="settings_mediasource_selector_test_dummy_url">https://example.com/example/example</string>
+    <string name="settings_mediasource_selector_test_empty_name">&lt;名称为空&gt;</string>
+    <string name="settings_mediasource_selector_test_title">测试数据源</string>
+    <string name="settings_mediasource_selector_test_copy_link">复制条目链接</string>
+    <string name="settings_mediasource_selector_test_copied">已复制</string>
+    <string name="settings_mediasource_selector_test_open_page">打开条目页面</string>
+    <string name="settings_mediasource_selector_test_channels">%1$d 线路</string>
+    <string name="settings_mediasource_selector_step1">步骤 1：搜索条目</string>
+    <string name="settings_mediasource_selector_step2">步骤 2：搜索剧集</string>
+    <string name="settings_mediasource_selector_step3">步骤 3：匹配视频</string>
+    <string name="settings_mediasource_selector_enable_nested_link">启用嵌套链接</string>
+    <string name="settings_mediasource_selector_enable_nested_link_description">当遇到匹配的链接时，终止父页面加载并跳转到匹配的链接，在嵌套页面中继续查找视频链接。支持任意次数嵌套</string>
+    <string name="settings_mediasource_selector_match_nested_link">匹配嵌套链接</string>
+    <string name="settings_mediasource_selector_match_nested_link_description">正则表达式，从播放页面中加载的所有资源链接中匹配出需要跳转进入的链接。若正则包含名为 v 的分组则使用该分组，否则使用整个 URL</string>
+    <string name="settings_mediasource_selector_match_video_link">匹配视频链接</string>
+    <string name="settings_mediasource_selector_match_video_link_description">正则表达式，从播放页面中加载的所有资源链接中匹配出视频链接。若正则包含名为 v 的分组则使用该分组，否则使用整个 URL</string>
+    <string name="settings_mediasource_selector_cookies">Cookies (可选)</string>
+    <string name="settings_mediasource_selector_cookies_description">key=value 格式的 cookies，一行一个，留空则不添加</string>
+    <string name="settings_mediasource_selector_test">测试</string>
+    <string name="settings_mediasource_selector_more">更多</string>
+
     <!-- AcknowledgementsTab -->
     <string name="settings_acknowledgements_bangumi">Bangumi</string>
     <string name="settings_acknowledgements_bangumi_description">条目数据与收藏服务</string>
