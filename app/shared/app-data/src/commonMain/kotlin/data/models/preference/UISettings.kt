@@ -11,13 +11,29 @@ package me.him188.ani.app.data.models.preference
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import androidx.compose.ui.text.intl.Locale
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import me.him188.ani.app.navigation.MainScreenPage
+
 
 @Serializable
 @Immutable
 data class UISettings(
+    /**
+     * APP 语言 (如果系统支持设置).
+     *
+     * 如果为 `null`, 则使用系统默认语言.
+     *
+     * @since 4.9
+     * @see me.him188.ani.app.ui.lang.SupportedLocales
+     */
+    val appLanguage: @Serializable(LocaleSerializer::class) Locale? = null,
+
     /**
      * 启动 App 时的初始页面
      */
@@ -128,5 +144,26 @@ enum class EpisodeListProgressTheme {
     companion object {
         @Stable
         val Default = ACTION
+    }
+}
+
+internal object LocaleSerializer : KSerializer<Locale> {
+    @Serializable
+    data class Delegate(
+        val languageTag: String,
+    )
+
+    override val descriptor: SerialDescriptor = Delegate.serializer().descriptor
+
+    override fun serialize(
+        encoder: Encoder,
+        value: Locale
+    ) {
+        Delegate.serializer().serialize(encoder, Delegate(value.toLanguageTag()))
+    }
+
+    override fun deserialize(decoder: Decoder): Locale {
+        val delegate = Delegate.serializer().deserialize(decoder)
+        return Locale(delegate.languageTag)
     }
 }

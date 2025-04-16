@@ -107,6 +107,7 @@ import org.jetbrains.compose.reload.DevelopmentEntryPoint
 import org.jetbrains.compose.resources.painterResource
 import org.koin.core.context.startKoin
 import org.openani.mediamp.vlc.VlcMediampPlayer
+import java.util.Locale
 import kotlin.io.path.absolutePathString
 import kotlin.system.exitProcess
 import kotlin.time.measureTime
@@ -244,6 +245,13 @@ object AniDesktop {
         }
         val settingsRepository = koin.koin.get<SettingsRepository>()
 
+        val setLocaleJob = coroutineScope.launch {
+            settingsRepository.uiSettings.flow.first().appLanguage?.platformLocale?.let {
+                logger.info { "Set locale to $it" }
+                Locale.setDefault(it)
+            }
+        }
+
         val analyticsInitializer = coroutineScope.launch {
             val settings = settingsRepository.analyticsSettings.flow.first()
             if (settings.isInit) {
@@ -350,8 +358,12 @@ object AniDesktop {
 
         val systemThemeDetector = SystemThemeDetector()
 
-        if (analyticsInitializer.isActive) {
-            runBlocking { analyticsInitializer.join() }
+        val jobsToWait = listOf(
+            setLocaleJob,
+            analyticsInitializer,
+        )
+        if (jobsToWait.any { it.isActive }) {
+            runBlocking { jobsToWait.forEach { it.join() } }
         }
 
         application {

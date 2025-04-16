@@ -23,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.text.intl.Locale
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CoroutineScope
 import me.him188.ani.app.data.models.danmaku.DanmakuFilterConfig
@@ -41,6 +42,7 @@ import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.SupportedLocales
 import me.him188.ani.app.ui.lang.settings_app_episode_playback
 import me.him188.ani.app.ui.lang.settings_app_initial_page
 import me.him188.ani.app.ui.lang.settings_app_initial_page_description
@@ -160,6 +162,23 @@ fun SettingsScope.AppearanceGroup(
     state: SettingsState<UISettings>,
 ) {
     val uiSettings by state
+
+    if (LocalPlatform.current.isDesktop()) {
+        DropdownItem(
+            selected = { uiSettings.appLanguage },
+            values = { SupportedLocales },
+            itemText = {
+                Text(renderLocale(it))
+            },
+            onSelect = {
+                state.update(uiSettings.copy(appLanguage = it))
+            },
+            title = { Text("语言") },
+            description = if (LocalPlatform.current.isDesktop()) {
+                { Text("重启软件生效") }
+            } else null,
+        )
+    }
 
     DropdownItem(
         selected = { uiSettings.mainSceneInitialPage },
@@ -537,3 +556,23 @@ internal expect fun SettingsScope.AppSettingsTabPlatform()
 internal expect fun SettingsScope.PlayerGroupPlatform(
     videoScaffoldConfig: SettingsState<VideoScaffoldConfig>,
 )
+
+@Composable
+private fun renderLocale(it: Locale?): String {
+    if (it == null) {
+        return "系统语言"
+    }
+
+    // The following code does not need to be localized
+    return when (it.language) {
+        "en", "eng" -> "English"
+        "zh", "chi", "zho" -> when (it.region) {
+            "CN" -> "简体中文"
+            "HK" -> "繁體中文(香港)"
+            "TW" -> "正體中文"
+            else -> "繁體中文"
+        }
+
+        else -> """${it.language}-${it.region}"""
+    }
+}
