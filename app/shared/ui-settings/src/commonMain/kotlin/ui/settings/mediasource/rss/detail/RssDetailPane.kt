@@ -46,9 +46,28 @@ import androidx.compose.ui.unit.dp
 import me.him188.ani.app.domain.mediasource.test.rss.RssItemInfo
 import me.him188.ani.app.tools.formatDateTime
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_close
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_copied
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_copy_content
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_description
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_details
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_enclosure_type
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_enclosure_url
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_episode_range
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_guid
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_link_label
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_not_available
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_open_link
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_original_xml
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_publish_time
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_resolution
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_subtitle_language
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_unknown
 import me.him188.ani.app.ui.settings.mediasource.rss.test.subtitleLanguageRendered
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.topic.isSingleEpisode
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun SideSheetPane(
@@ -63,14 +82,14 @@ fun SideSheetPane(
         Column {
             Row(Modifier.padding(all = 16.dp)) {
                 Text(
-                    "详情",
+                    stringResource(Lang.settings_mediasource_rss_details),
                     Modifier.weight(1f).align(Alignment.CenterVertically),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
 
                 IconButton(onClose, Modifier.padding(start = 4.dp)) {
-                    Icon(Icons.Rounded.Close, contentDescription = "关闭")
+                    Icon(Icons.Rounded.Close, contentDescription = stringResource(Lang.settings_mediasource_rss_close))
                 }
             }
 
@@ -106,25 +125,35 @@ private fun RssItemDetailColumn(
 ) {
     val browser = LocalUriHandler.current
     val clipboard = LocalClipboardManager.current
+    val toaster = LocalToaster.current
+
+    // Load string resources in composable context
+    val copiedText = stringResource(Lang.settings_mediasource_rss_copied)
+    val unknownText = stringResource(Lang.settings_mediasource_rss_unknown)
 
     LazyVerticalGrid(
         GridCells.Adaptive(minSize = 300.dp),
         modifier,
     ) {
         val copyContent = @Composable { value: () -> String ->
-            val toaster = LocalToaster.current
             IconButton(
                 {
                     clipboard.setText(AnnotatedString(value()))
-                    toaster.toast("已复制")
+                    toaster.toast(copiedText)
                 },
             ) {
-                Icon(Icons.Rounded.ContentCopy, contentDescription = "复制")
+                Icon(
+                    Icons.Rounded.ContentCopy,
+                    contentDescription = stringResource(Lang.settings_mediasource_rss_copy_content),
+                )
             }
         }
         val browseContent = @Composable { url: () -> String ->
             IconButton({ browser.openUri(url()) }) {
-                Icon(Icons.Rounded.ArrowOutward, contentDescription = "打开链接")
+                Icon(
+                    Icons.Rounded.ArrowOutward,
+                    contentDescription = stringResource(Lang.settings_mediasource_rss_open_link),
+                )
             }
         }
 
@@ -137,7 +166,7 @@ private fun RssItemDetailColumn(
         if (item.rss.description.isNotBlank()) {
             item {
                 ListItem(
-                    headlineContent = { Text("描述") },
+                    headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_description)) },
                     supportingContent = { SelectionContainer { Text(item.rss.description, maxLines = 4) } },
                     trailingContent = { copyContent { item.rss.description } },
                 )
@@ -145,14 +174,14 @@ private fun RssItemDetailColumn(
         }
         item {
             ListItem(
-                headlineContent = { Text("剧集范围") },
+                headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_episode_range)) },
                 leadingContent = { Icon(Icons.Rounded.Layers, contentDescription = null) },
                 supportingContent = {
                     val range = item.parsed.episodeRange
                     SelectionContainer {
                         Text(
                             when {
-                                range == null -> "未知"
+                                range == null -> unknownText
                                 range.isSingleEpisode() -> range.knownSorts.firstOrNull().toString()
                                 else -> range.toString()
                             },
@@ -163,25 +192,25 @@ private fun RssItemDetailColumn(
         }
         item {
             ListItem(
-                headlineContent = { Text("分辨率") },
+                headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_resolution)) },
                 leadingContent = { Icon(Icons.Outlined.Hd, contentDescription = null) },
-                supportingContent = { SelectionContainer { Text(item.parsed.resolution?.displayName ?: "未知") } },
+                supportingContent = { SelectionContainer { Text(item.parsed.resolution?.displayName ?: unknownText) } },
             )
         }
         item {
             ListItem(
-                headlineContent = { Text("字幕语言") },
+                headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_subtitle_language)) },
                 leadingContent = { Icon(Icons.Rounded.Subtitles, contentDescription = null) },
                 supportingContent = { SelectionContainer { Text(item.subtitleLanguageRendered) } },
             )
         }
         item {
             ListItem(
-                headlineContent = { Text("发布时间") },
+                headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_publish_time)) },
                 leadingContent = { Icon(Icons.Rounded.Event, contentDescription = null) },
                 supportingContent = {
                     SelectionContainer {
-                        Text(item.rss.pubDate?.let { formatDateTime(it) } ?: "未知")
+                        Text(item.rss.pubDate?.let { formatDateTime(it) } ?: unknownText)
                     }
                 },
                 trailingContent = { copyContent { item.rss.title } },
@@ -192,7 +221,7 @@ private fun RssItemDetailColumn(
         }
         item {
             ListItem(
-                headlineContent = { Text("link") },
+                headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_link_label)) },
                 supportingContent = {
                     SelectionContainer { Text(item.rss.link) }
                 },
@@ -201,7 +230,7 @@ private fun RssItemDetailColumn(
         }
         item {
             ListItem(
-                headlineContent = { Text("guid") },
+                headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_guid)) },
                 supportingContent = {
                     SelectionContainer { Text(item.rss.guid) }
                 },
@@ -211,14 +240,14 @@ private fun RssItemDetailColumn(
         item.rss.enclosure?.let { enclosure ->
             item {
                 ListItem(
-                    headlineContent = { Text("enclosure.url") },
+                    headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_enclosure_url)) },
                     supportingContent = { SelectionContainer { Text(enclosure.url) } },
                     trailingContent = { copyContent { enclosure.url } },
                 )
             }
             item {
                 ListItem(
-                    headlineContent = { Text("enclosure.type") },
+                    headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_enclosure_type)) },
                     supportingContent = { SelectionContainer { Text(enclosure.type) } },
                     trailingContent = { copyContent { enclosure.type } },
                 )
@@ -226,10 +255,10 @@ private fun RssItemDetailColumn(
         }
         item {
             ListItem(
-                headlineContent = { Text("原始 XML") },
+                headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_original_xml)) },
                 supportingContent = {
                     if (item.rss.origin == null) {
-                        Text("不可用")
+                        Text(stringResource(Lang.settings_mediasource_rss_not_available))
                     } else {
                         OutlinedTextField(
                             value = remember(item) {

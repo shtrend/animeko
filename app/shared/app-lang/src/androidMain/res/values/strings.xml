@@ -235,4 +235,64 @@
     <string name="settings_mediasource_copied">已复制</string>
     <string name="settings_mediasource_copy">复制</string>
     <string name="settings_mediasource_retry">重试</string>
+
+    <!-- EditRssMediaSource -->
+    <string name="settings_mediasource_rss_test_data_source">测试数据源</string>
+    <string name="settings_mediasource_rss_details">详情</string>
+    <string name="settings_mediasource_rss_test">测试</string>
+    <string name="settings_mediasource_rss_more">更多</string>
+
+    <!-- RssEditPane -->
+    <string name="settings_mediasource_rss_name">名称*</string>
+    <string name="settings_mediasource_rss_name_placeholder">设置显示在列表中的名称</string>
+    <string name="settings_mediasource_rss_icon_link">图标链接</string>
+    <string name="settings_mediasource_rss_query_settings">查询设置</string>
+    <string name="settings_mediasource_rss_search_link">搜索链接*</string>
+    <string name="settings_mediasource_rss_search_link_placeholder">示例：https://acg.rip/page/{page}.xml?term={keyword}</string>
+    <string name="settings_mediasource_rss_search_link_supporting_text">替换规则：\n{keyword} 替换为条目 (番剧) 名称\n{page} 替换为页码, 如果不需要分页则忽略</string>
+    <string name="settings_mediasource_rss_filter_by_episode">使用剧集序号过滤</string>
+    <string name="settings_mediasource_rss_filter_by_episode_description">要求资源标题包含剧集序号。适用于数据源可能搜到无关内容的情况</string>
+    <string name="settings_mediasource_rss_filter_by_subject">使用条目名称过滤</string>
+    <string name="settings_mediasource_rss_filter_by_subject_description">要求资源标题包含条目名称。适用于数据源可能搜到无关内容的情况。此功能只对 4.4.0 以前版本有效，对其他版本无效</string>
+    <string name="settings_mediasource_rss_auto_save_hint">提示：修改自动保存</string>
+
+    <!-- OutlinedMatchTag -->
+    <string name="settings_mediasource_rss_match_tag_match">符合匹配</string>
+    <string name="settings_mediasource_rss_match_tag_not_match">不符合匹配</string>
+    <string name="settings_mediasource_rss_match_tag_missing">缺失</string>
+
+    <!-- OverviewTab -->
+    <string name="settings_mediasource_rss_copied_to_clipboard">已复制到剪贴板</string>
+    <string name="settings_mediasource_rss_copy">复制</string>
+    <string name="settings_mediasource_rss_encoded_query_url">Encoded Query URL</string>
+    <string name="settings_mediasource_rss_query_url">Query URL</string>
+    <string name="settings_mediasource_rss_title">Title</string>
+    <string name="settings_mediasource_rss_description">Description</string>
+    <string name="settings_mediasource_rss_link">Link</string>
+    <string name="settings_mediasource_rss_item_count">RSS Item Count</string>
+    <string name="settings_mediasource_rss_parsed_media_count">Parsed Media Count</string>
+    <string name="settings_mediasource_rss_original_xml">原始 XML</string>
+    <string name="settings_mediasource_rss_not_available">不可用</string>
+
+    <!-- RssTestPane -->
+    <string name="settings_mediasource_rss_query_result">查询结果</string>
+    <string name="settings_mediasource_rss_overview">总览</string>
+    <string name="settings_mediasource_rss_rss_info">RSS 信息</string>
+    <string name="settings_mediasource_rss_final_result">最终结果</string>
+    <string name="settings_mediasource_rss_page_number">页码</string>
+
+    <!-- RssDetailPane -->
+    <string name="settings_mediasource_rss_close">关闭</string>
+    <string name="settings_mediasource_rss_copied">已复制</string>
+    <string name="settings_mediasource_rss_copy_content">复制</string>
+    <string name="settings_mediasource_rss_open_link">打开链接</string>
+    <string name="settings_mediasource_rss_episode_range">剧集范围</string>
+    <string name="settings_mediasource_rss_unknown">未知</string>
+    <string name="settings_mediasource_rss_resolution">分辨率</string>
+    <string name="settings_mediasource_rss_subtitle_language">字幕语言</string>
+    <string name="settings_mediasource_rss_publish_time">发布时间</string>
+    <string name="settings_mediasource_rss_link_label">link</string>
+    <string name="settings_mediasource_rss_guid">guid</string>
+    <string name="settings_mediasource_rss_enclosure_url">enclosure.url</string>
+    <string name="settings_mediasource_rss_enclosure_type">enclosure.type</string>
 </resources>

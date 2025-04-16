@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -36,6 +36,9 @@ import androidx.compose.ui.unit.dp
 import io.ktor.http.decodeURLQueryComponent
 import me.him188.ani.app.ui.foundation.interaction.onRightClickIfSupported
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_copied_to_clipboard
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 @Suppress("UnusedReceiverParameter")
@@ -69,9 +72,10 @@ fun RssOverviewCard(
     Card(modifier, colors = colors, shape = MaterialTheme.shapes.large) {
         val toaster = LocalToaster.current
         val clipboard = LocalClipboardManager.current
+        val textCopied = stringResource(Lang.settings_mediasource_rss_copied_to_clipboard)
         val copy = { str: String ->
             clipboard.setText(AnnotatedString(str))
-            toaster.toast("已复制到剪贴板")
+            toaster.toast(textCopied)
         }
 
         fun Modifier.copyable(value: () -> String): Modifier {

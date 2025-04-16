@@ -64,6 +64,11 @@ import me.him188.ani.app.ui.foundation.layout.panePadding
 import me.him188.ani.app.ui.foundation.navigation.BackHandler
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_details
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_more
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_test
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_test_data_source
 import me.him188.ani.app.ui.settings.mediasource.DropdownMenuExport
 import me.him188.ani.app.ui.settings.mediasource.DropdownMenuImport
 import me.him188.ani.app.ui.settings.mediasource.ExportMediaSourceState
@@ -76,6 +81,7 @@ import me.him188.ani.app.ui.settings.mediasource.rss.edit.RssEditPane
 import me.him188.ani.app.ui.settings.mediasource.rss.test.RssTestPane
 import me.him188.ani.app.ui.settings.mediasource.rss.test.RssTestPaneState
 import me.him188.ani.datasources.api.Media
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * 整个编辑 RSS 数据源页面的状态. 对于测试部分: [RssTestPaneState]
@@ -189,8 +195,8 @@ fun EditRssMediaSourceScreen(
                         ) {
                             when (it) {
                                 ListDetailPaneScaffoldRole.List -> Text(state.displayName)
-                                ListDetailPaneScaffoldRole.Detail -> Text("测试数据源")
-                                ListDetailPaneScaffoldRole.Extra -> Text("详情")
+                                ListDetailPaneScaffoldRole.Detail -> Text(stringResource(Lang.settings_mediasource_rss_test_data_source))
+                                ListDetailPaneScaffoldRole.Extra -> Text(stringResource(Lang.settings_mediasource_rss_details))
                                 else -> Text(state.displayName)
                             }
                         }
@@ -219,13 +225,13 @@ fun EditRssMediaSourceScreen(
                                     }
                                 },
                             ) {
-                                Text("测试")
+                                Text(stringResource(Lang.settings_mediasource_rss_test))
                             }
                         }
                         Box {
                             var showDropdown by remember { mutableStateOf(false) }
                             IconButton({ showDropdown = true }) {
-                                Icon(Icons.Rounded.MoreVert, "更多")
+                                Icon(Icons.Rounded.MoreVert, stringResource(Lang.settings_mediasource_rss_more))
                             }
                             DropdownMenu(showDropdown, { showDropdown = false }) {
                                 MediaSourceConfigurationDefaults.DropdownMenuImport(
@@ -320,4 +326,3 @@ fun EditRssMediaSourceScreen(
         )
     }
 }
-

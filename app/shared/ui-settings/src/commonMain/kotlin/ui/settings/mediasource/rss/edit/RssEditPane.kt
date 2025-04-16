@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -35,8 +35,22 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_auto_save_hint
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_filter_by_episode
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_filter_by_episode_description
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_filter_by_subject
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_filter_by_subject_description
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_icon_link
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_name
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_name_placeholder
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_query_settings
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_search_link
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_search_link_placeholder
+import me.him188.ani.app.ui.lang.settings_mediasource_rss_search_link_supporting_text
 import me.him188.ani.app.ui.settings.mediasource.MediaSourceConfigurationDefaults
 import me.him188.ani.app.ui.settings.mediasource.rss.EditRssMediaSourceState
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun RssEditPane(
@@ -62,8 +76,8 @@ fun RssEditPane(
                         state.displayName, { state.displayName = it },
                         Modifier
                             .fillMaxWidth(),
-                        label = { Text("名称*") },
-                        placeholder = { Text("设置显示在列表中的名称") },
+                        label = { Text(stringResource(Lang.settings_mediasource_rss_name)) },
+                        placeholder = { Text(stringResource(Lang.settings_mediasource_rss_name_placeholder)) },
                         isError = state.displayNameIsError,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         shape = outlinedTextFieldShape,
@@ -73,7 +87,7 @@ fun RssEditPane(
                         state.iconUrl, { state.iconUrl = it.trim() },
                         Modifier
                             .fillMaxWidth(),
-                        label = { Text("图标链接") },
+                        label = { Text(stringResource(Lang.settings_mediasource_rss_icon_link)) },
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
                         shape = outlinedTextFieldShape,
                         enabled = state.enableEdit,
@@ -85,7 +99,7 @@ fun RssEditPane(
                         MaterialTheme.typography.titleMedium,
                         MaterialTheme.colorScheme.primary,
                     ) {
-                        Text("查询设置")
+                        Text(stringResource(Lang.settings_mediasource_rss_query_settings))
                     }
                 }
 
@@ -93,20 +107,16 @@ fun RssEditPane(
                     OutlinedTextField(
                         state.searchUrl, { state.searchUrl = it },
                         Modifier.fillMaxWidth(),
-                        label = { Text("搜索链接*") },
+                        label = { Text(stringResource(Lang.settings_mediasource_rss_search_link)) },
                         placeholder = {
                             Text(
-                                "示例：https://acg.rip/page/{page}.xml?term={keyword}",
+                                stringResource(Lang.settings_mediasource_rss_search_link_placeholder),
                                 color = MaterialTheme.colorScheme.outline,
                             )
                         },
                         supportingText = {
                             Text(
-                                """
-                                    替换规则：
-                                    {keyword} 替换为条目 (番剧) 名称
-                                    {page} 替换为页码, 如果不需要分页则忽略
-                                """.trimIndent(),
+                                stringResource(Lang.settings_mediasource_rss_search_link_supporting_text),
                             )
                         },
                         isError = state.searchUrlIsError,
@@ -116,11 +126,11 @@ fun RssEditPane(
                     )
 
                     ListItem(
-                        headlineContent = { Text("使用剧集序号过滤") },
+                        headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_filter_by_episode)) },
                         Modifier.clickable(
                             enabled = state.enableEdit,
                         ) { state.filterByEpisodeSort = !state.filterByEpisodeSort },
-                        supportingContent = { Text("要求资源标题包含剧集序号。适用于数据源可能搜到无关内容的情况") },
+                        supportingContent = { Text(stringResource(Lang.settings_mediasource_rss_filter_by_episode_description)) },
                         trailingContent = {
                             Switch(
                                 state.filterByEpisodeSort, { state.filterByEpisodeSort = it },
@@ -131,11 +141,11 @@ fun RssEditPane(
                     )
 
                     ListItem(
-                        headlineContent = { Text("使用条目名称过滤") },
+                        headlineContent = { Text(stringResource(Lang.settings_mediasource_rss_filter_by_subject)) },
                         Modifier.clickable(
                             enabled = state.enableEdit,
                         ) { state.filterBySubjectName = !state.filterBySubjectName },
-                        supportingContent = { Text("要求资源标题包含条目名称。适用于数据源可能搜到无关内容的情况。此功能只对 4.4.0 以前版本有效，对其他版本无效") },
+                        supportingContent = { Text(stringResource(Lang.settings_mediasource_rss_filter_by_subject_description)) },
                         trailingContent = {
                             Switch(
                                 state.filterBySubjectName, { state.filterBySubjectName = it },
@@ -151,7 +161,7 @@ fun RssEditPane(
                         MaterialTheme.typography.labelMedium,
                         MaterialTheme.colorScheme.outline,
                     ) {
-                        Text("提示：修改自动保存")
+                        Text(stringResource(Lang.settings_mediasource_rss_auto_save_hint))
                     }
                 }
             }
