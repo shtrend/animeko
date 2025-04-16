@@ -49,10 +49,9 @@ compose.resources {
 val populateStringsLocales by tasks.registering(Copy::class) {
     group = "ani"
     description =
-        "Populate string resources for all locales. This will copy values-zh-rTW/strings.xml to other locales speaking Traditional Chinese."
+        "Populate string resources for all locales. This will copy values-zh-rHK/strings.xml to other locales speaking Traditional Chinese."
 
     val chtLocales = listOf(
-        "values-zh-rHK",
         "values-zh-rMO",
         "values-zh-rSG",
     )
@@ -60,7 +59,7 @@ val populateStringsLocales by tasks.registering(Copy::class) {
 
     // Copy rTW to chtLocales
     for (locale in chtLocales) {
-        from(file("src/androidMain/res/values-zh-rTW/strings.xml")) {
+        from(file("src/androidMain/res/values-zh-rHK/strings.xml")) {
             into(locale)
             rename { "strings.xml" }
         }
