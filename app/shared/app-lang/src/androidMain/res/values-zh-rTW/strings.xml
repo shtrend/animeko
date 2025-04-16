@@ -1,20 +1,12 @@
 <!--
   ~ Copyright (C) 2024-2025 OpenAni and contributors.
   ~
-  ~ 此原始碼的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 授權條款的約束, 可以在以下連結找到該授權條款.
+  ~ 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
   ~ Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
   ~
   ~ https://github.com/open-ani/ani/blob/main/LICENSE
   -->
 
-<!--
-  ~ 版權所有 (C) 2024-2025 OpenAni 及其貢獻者.
-  ~
-  ~ 此原始程式碼的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 之限制，可在以下連結找到該授權條款。
-  ~ Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
-  ~
-  ~ https://github.com/open-ani/ani/blob/main/LICENSE
-  -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="developer_list">開發者名單</string>
     <string name="acknowledgements">鳴謝</string>
