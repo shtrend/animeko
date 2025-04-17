@@ -267,7 +267,7 @@ open class ReleaseEnvironment {
             ?: runCatching { ext.get(name) }.getOrNull()?.toString()
 
     private val tag: String by lazy {
-        (findProperty("CI_TAG") ?: "3.0.0-dev").also { println("tag = $it") }
+        (findProperty("CI_TAG") ?: "5.0.0-dev").also { println("tag = $it") }
     }
     private val branch by lazy {
         getProperty("GITHUB_REF").substringAfterLast("/").also { println("branch = $it") }
