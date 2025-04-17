@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -71,6 +72,7 @@ import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
 import me.him188.ani.app.ui.foundation.layout.paddingIfNotEmpty
 import me.him188.ani.app.ui.mediafetch.MediaSelectorState
+import me.him188.ani.app.ui.mediafetch.MediaSelectorView
 import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.mediafetch.ViewKind
 import me.him188.ani.app.ui.mediaselect.summary.MediaSelectorSummary
@@ -251,16 +253,21 @@ fun EpisodeDetails(
                     contentWindowInsets = { BottomSheetDefaults.windowInsets.add(WindowInsets.desktopTitleBar()) },
                 ) {
                     val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(initialMediaSelectorViewKind) }
-                    EpisodePlayMediaSelector(
+                    MediaSelectorView(
                         mediaSelectorState,
                         viewKind,
                         onViewKindChange,
-                        mediaSourceResultListPresentation,
-                        onDismissRequest = { showMediaSelector = false },
-                        onRefresh = onRefreshMediaSources,
+                        mediaSourceResultListPresentation(),
                         onRestartSource = onRestartSource,
+                        onRefresh = onRefreshMediaSources,
+                        modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)
+                            .fillMaxWidth()
+                            .navigationBarsPadding(),
                         stickyHeaderBackgroundColor = BottomSheetDefaults.ContainerColor,
-                        onSelected = { showMediaSelector = false },
+                        onClickItem = {
+                            mediaSelectorState.select(it)
+                            showMediaSelector = false
+                        },
                         scrollable = sheetState.targetValue == SheetValue.Expanded,
                     )
                 }

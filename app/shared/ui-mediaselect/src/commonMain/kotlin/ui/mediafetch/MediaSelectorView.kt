@@ -94,8 +94,9 @@ fun MediaSelectorView(
     state: MediaSelectorState,
     viewKind: ViewKind,
     onViewKindChange: (ViewKind) -> Unit,
-    sourceResults: @Composable LazyItemScope.() -> Unit,
+    sourceResults: MediaSourceResultListPresentation,
     onRestartSource: (instanceId: String) -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
     stickyHeaderBackgroundColor: Color = Color.Unspecified,
     onClickItem: ((Media) -> Unit) = { state.select(it) },
@@ -157,7 +158,14 @@ fun MediaSelectorView(
                         LegacyBTSourceColumn(
                             lazyListState,
                             presentation,
-                            sourceResults,
+                            sourceResults = {
+                                MediaSourceResultsView(
+                                    sourceResults,
+                                    state,
+                                    onRefresh,
+                                    onRestartSource,
+                                )
+                            },
                             stickyHeaderBackgroundColor,
                             state,
                             singleLineFilter,
@@ -363,14 +371,8 @@ private fun PreviewMediaSelector() {
                 state = mediaSelector,
                 viewKind = viewKind,
                 onViewKindChange = onViewKindChange,
-                sourceResults = {
-                    MediaSourceResultsView(
-                        TestMediaSourceResultListPresentation,
-                        mediaSelector,
-                        onRefresh = {},
-                        onRestartSource = {},
-                    )
-                },
+                sourceResults = TestMediaSourceResultListPresentation,
+                onRefresh = {},
                 onRestartSource = {
                 },
             )

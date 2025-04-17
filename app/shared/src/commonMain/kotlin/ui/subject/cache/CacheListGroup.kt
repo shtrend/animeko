@@ -83,7 +83,6 @@ import me.him188.ani.app.ui.mediafetch.MediaSelectorView
 import me.him188.ani.app.ui.mediafetch.MediaSourceInfoProvider
 import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresenter
-import me.him188.ani.app.ui.mediafetch.MediaSourceResultsView
 import me.him188.ani.app.ui.mediafetch.ViewKind
 import me.him188.ani.app.ui.mediafetch.rememberMediaSelectorState
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
@@ -194,17 +193,11 @@ fun SettingsScope.EpisodeCacheListGroup(
                     selectorPresentation,
                     viewKind,
                     onViewKindChange,
-                    sourceResults = {
-                        MediaSourceResultsView(
-                            sourceResults,
-                            selectorPresentation,
-                            onRefresh = { task.fetchSession.restartAll() },
-                            onRestartSource = { task.fetchSession.restart(it) },
-                        )
-                    },
+                    sourceResults,
                     onRestartSource = {
                         task.fetchSession.restart(it)
                     },
+                    onRefresh = { task.fetchSession.restartAll() },
                     modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp)
                         .navigationBarsPadding()
                         .fillMaxHeight() // 防止添加筛选后数量变少导致 bottom sheet 高度变化

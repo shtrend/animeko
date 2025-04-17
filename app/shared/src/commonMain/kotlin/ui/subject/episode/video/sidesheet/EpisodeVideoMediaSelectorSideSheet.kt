@@ -28,7 +28,6 @@ import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.mediafetch.MediaSelectorState
 import me.him188.ani.app.ui.mediafetch.MediaSelectorView
 import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresentation
-import me.him188.ani.app.ui.mediafetch.MediaSourceResultsView
 import me.him188.ani.app.ui.mediafetch.TestMediaSourceResultListPresentation
 import me.him188.ani.app.ui.mediafetch.ViewKind
 import me.him188.ani.app.ui.mediafetch.rememberTestMediaSelectorState
@@ -65,15 +64,9 @@ fun EpisodeVideoSideSheets.MediaSelectorSheet(
             mediaSelectorState,
             viewKind,
             onViewKindChange,
-            sourceResults = {
-                MediaSourceResultsView(
-                    mediaSourceResultListPresentation,
-                    mediaSelectorState,
-                    onRefresh,
-                    onRestartSource,
-                )
-            },
+            mediaSourceResultListPresentation,
             onRestartSource = onRestartSource,
+            onRefresh,
             modifier.padding(horizontal = 16.dp)
                 .fillMaxWidth()
                 .navigationBarsPadding(),
