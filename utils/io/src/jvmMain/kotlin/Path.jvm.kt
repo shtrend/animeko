@@ -62,11 +62,8 @@ fun SystemPath.moveDirectoryRecursively(target: SystemPath, visitor: ((SystemPat
         object : SimpleFileVisitor<NioPath>() {
             override fun preVisitDirectory(dir: NioPath, attrs: BasicFileAttributes): FileVisitResult {
                 val targetPath = targetDir.resolve(sourceDir.relativize(dir))
-                try {
-                    Files.createDirectories(targetPath)
-                } catch (e: IOException) {
-                    throw IOException("Failed to create directory: $targetPath", e)
-                }
+
+                Files.createDirectories(targetPath)
                 return FileVisitResult.CONTINUE
             }
 
@@ -74,12 +71,7 @@ fun SystemPath.moveDirectoryRecursively(target: SystemPath, visitor: ((SystemPat
                 val targetFile = targetDir.resolve(sourceDir.relativize(file))
                 visitor?.invoke(file.toKtPath().inSystem)
 
-                try {
-                    Files.move(file, targetFile, StandardCopyOption.REPLACE_EXISTING)
-                } catch (e: IOException) {
-                    throw IOException("Failed to move file: $file to $targetFile", e)
-                }
-
+                Files.move(file, targetFile, StandardCopyOption.REPLACE_EXISTING)
                 return FileVisitResult.CONTINUE
             }
 
@@ -88,8 +80,8 @@ fun SystemPath.moveDirectoryRecursively(target: SystemPath, visitor: ((SystemPat
 
                 try {
                     Files.delete(dir)
-                } catch (e: IOException) {
-                    throw IOException("Failed to delete directory: $dir", e)
+                } catch (_: IOException) {
+                    // we just ignore deletion exception.
                 }
 
                 return FileVisitResult.CONTINUE
