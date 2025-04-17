@@ -41,7 +41,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -213,11 +212,6 @@ fun SettingsScope.EpisodeCacheListGroup(
                     stickyHeaderBackgroundColor = BottomSheetDefaults.ContainerColor,
                     onClickItem = {
                         state.selectMedia(it)
-                    },
-                    bottomActions = {
-                        TextButton({ state.cancelRequest() }) {
-                            Text("取消")
-                        }
                     },
                 )
             }

@@ -14,7 +14,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -31,7 +30,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
@@ -90,8 +88,6 @@ private inline val WINDOW_VERTICAL_PADDING get() = 8.dp
 // For search: "数据源"
 /**
  * 通用的数据源选择器. See preview
- *
- * @param bottomActions shown at the bottom
  */
 @Composable
 fun MediaSelectorView(
@@ -103,7 +99,6 @@ fun MediaSelectorView(
     modifier: Modifier = Modifier,
     stickyHeaderBackgroundColor: Color = Color.Unspecified,
     onClickItem: ((Media) -> Unit) = { state.select(it) },
-    bottomActions: (@Composable RowScope.() -> Unit)? = null,
     singleLineFilter: Boolean = false,
     scrollable: Boolean = true,
 ) {
@@ -174,19 +169,6 @@ fun MediaSelectorView(
                                 .fillMaxWidth()
                                 .weight(1f, fill = false),
                         )
-
-                        if (bottomActions != null) {
-                            HorizontalDivider(Modifier.padding(bottom = 8.dp))
-
-                            Row(
-                                Modifier.align(Alignment.End).padding(bottom = 8.dp).padding(horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                ProvideTextStyle(MaterialTheme.typography.labelLarge) {
-                                    bottomActions()
-                                }
-                            }
-                        }
                     }
                 }
             }

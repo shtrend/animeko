@@ -12,8 +12,6 @@ package me.him188.ani.app.ui.subject.episode.details
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -61,11 +59,6 @@ fun EpisodePlayMediaSelector(
         onClickItem = {
             mediaSelector.select(it)
             onSelected(it)
-        },
-        bottomActions = {
-            TextButton(onDismissRequest) {
-                Text("取消")
-            }
         },
         scrollable = scrollable,
     )
