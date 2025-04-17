@@ -19,17 +19,25 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.mediafetch.MediaSelectorState
 import me.him188.ani.app.ui.mediafetch.MediaSelectorView
 import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.mediafetch.MediaSourceResultsView
+import me.him188.ani.app.ui.mediafetch.TestMediaSourceResultListPresentation
 import me.him188.ani.app.ui.mediafetch.ViewKind
+import me.him188.ani.app.ui.mediafetch.rememberTestMediaSelectorState
 import me.him188.ani.app.ui.subject.episode.TAG_MEDIA_SELECTOR_SHEET
 import me.him188.ani.app.ui.subject.episode.video.components.EpisodeVideoSideSheets
 import me.him188.ani.app.ui.subject.episode.video.settings.SideSheetLayout
+import me.him188.ani.utils.platform.annotations.TestOnly
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.jetbrains.compose.ui.tooling.preview.PreviewLightDark
 
 @Suppress("UnusedReceiverParameter")
 @Composable
@@ -75,6 +83,26 @@ fun EpisodeVideoSideSheets.MediaSelectorSheet(
                 onDismissRequest()
             },
             singleLineFilter = true,
+        )
+    }
+}
+
+
+@OptIn(TestOnly::class)
+@Composable
+@Preview
+@PreviewLightDark
+private fun PreviewEpisodeVideoMediaSelectorSideSheet() {
+    ProvideCompositionLocalsForPreview {
+        val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(ViewKind.WEB) }
+        EpisodeVideoSideSheets.MediaSelectorSheet(
+            mediaSelectorState = rememberTestMediaSelectorState(),
+            mediaSourceResultListPresentation = TestMediaSourceResultListPresentation,
+            viewKind = viewKind,
+            onViewKindChange = onViewKindChange,
+            onDismissRequest = {},
+            onRefresh = {},
+            onRestartSource = {},
         )
     }
 }
