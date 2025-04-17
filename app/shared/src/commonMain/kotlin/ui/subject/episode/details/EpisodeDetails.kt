@@ -94,6 +94,7 @@ import me.him188.ani.app.ui.subject.episode.statistics.DanmakuStatistics
 import me.him188.ani.app.ui.subject.episode.statistics.VideoStatistics
 import me.him188.ani.danmaku.api.DanmakuServiceId
 import me.him188.ani.danmaku.api.provider.DanmakuProviderId
+import me.him188.ani.datasources.api.source.MediaFetchRequest
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.isDesktop
 
@@ -124,6 +125,8 @@ fun EpisodeDetails(
     mediaSelectorSummary: MediaSelectorSummary,
     state: EpisodeDetailsState,
     initialMediaSelectorViewKind: ViewKind,
+    fetchRequest: MediaFetchRequest?,
+    onFetchRequestChange: (MediaFetchRequest) -> Unit,
     episodeCarouselState: EpisodeCarouselState,
     editableSubjectCollectionTypeState: EditableSubjectCollectionTypeState,
     danmakuStatistics: DanmakuStatistics,
@@ -131,10 +134,10 @@ fun EpisodeDetails(
     mediaSelectorState: MediaSelectorState,
     mediaSourceResultListPresentation: () -> MediaSourceResultListPresentation,
     authState: AuthState,
-    onSwitchEpisode: (episodeId: Int) -> Unit,
+    onSwitchEpisode: (Int) -> Unit,
     onRefreshMediaSources: () -> Unit,
-    onRestartSource: (instanceId: String) -> Unit,
-    onSetDanmakuSourceEnabled: (serviceId: DanmakuServiceId, enabled: Boolean) -> Unit,
+    onRestartSource: (String) -> Unit,
+    onSetDanmakuSourceEnabled: (DanmakuServiceId, Boolean) -> Unit,
     onClickLogin: () -> Unit,
     onClickTag: (Tag) -> Unit,
     onManualMatchDanmaku: (DanmakuProviderId) -> Unit,
@@ -257,6 +260,8 @@ fun EpisodeDetails(
                         mediaSelectorState,
                         viewKind,
                         onViewKindChange,
+                        fetchRequest,
+                        onFetchRequestChange,
                         mediaSourceResultListPresentation(),
                         onRestartSource = onRestartSource,
                         onRefresh = onRefreshMediaSources,

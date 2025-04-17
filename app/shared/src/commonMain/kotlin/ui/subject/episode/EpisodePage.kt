@@ -148,6 +148,7 @@ import me.him188.ani.danmaku.api.DanmakuContent
 import me.him188.ani.danmaku.api.DanmakuLocation
 import me.him188.ani.danmaku.ui.DanmakuHostState
 import me.him188.ani.danmaku.ui.DanmakuPresentation
+import me.him188.ani.datasources.api.source.MediaFetchRequest
 import me.him188.ani.utils.platform.isDesktop
 import me.him188.ani.utils.platform.isMobile
 import org.openani.mediamp.features.AudioLevelController
@@ -322,10 +323,12 @@ private fun EpisodeScreenContent(
                                 page,
                                 vm.danmakuHostState,
                                 danmakuEditorState,
-                                modifier = Modifier.fillMaxSize(),
+                                page.fetchRequest,
+                                { vm.updateFetchRequest(it) },
                                 pauseOnPlaying = pauseOnPlaying,
                                 tryUnpause = tryUnpause,
                                 setShowEditCommentSheet = { showEditCommentSheet = it },
+                                modifier = Modifier.fillMaxSize(),
                                 windowInsets = windowInsets,
                             )
 
@@ -374,6 +377,8 @@ private fun EpisodeScreenTabletVeryWide(
     page: EpisodePageState,
     danmakuHostState: DanmakuHostState,
     danmakuEditorState: DanmakuEditorState,
+    fetchRequest: MediaFetchRequest?,
+    onFetchRequestChange: (MediaFetchRequest) -> Unit,
     pauseOnPlaying: () -> Unit,
     tryUnpause: () -> Unit,
     setShowEditCommentSheet: (Boolean) -> Unit,
@@ -456,6 +461,8 @@ private fun EpisodeScreenTabletVeryWide(
                                     page.mediaSelectorSummary,
                                     vm.episodeDetailsState,
                                     page.initialMediaSelectorViewKind,
+                                    fetchRequest,
+                                    onFetchRequestChange,
                                     vm.episodeCarouselState,
                                     vm.editableSubjectCollectionTypeState,
                                     page.danmakuStatistics,
@@ -579,6 +586,8 @@ private fun EpisodeScreenContentPhone(
                     page.mediaSelectorSummary,
                     vm.episodeDetailsState,
                     page.initialMediaSelectorViewKind,
+                    page.fetchRequest,
+                    { vm.updateFetchRequest(it) },
                     vm.episodeCarouselState,
                     vm.editableSubjectCollectionTypeState,
                     page.danmakuStatistics,
@@ -926,6 +935,8 @@ private fun EpisodeVideo(
                             page.mediaSourceResultListPresentation,
                             viewKind,
                             onViewKindChange,
+                            page.fetchRequest,
+                            { vm.updateFetchRequest(it) },
                             onDismissRequest = { goBack() },
                             onRefresh = { vm.refreshFetch() },
                             onRestartSource = { vm.restartSource(it) },

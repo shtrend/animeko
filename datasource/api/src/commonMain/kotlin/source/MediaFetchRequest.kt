@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -35,7 +35,9 @@ data class MediaFetchRequest(
      * 条目的主简体中文名称.
      * 建议使用 [subjectNames] 用所有已知名称去匹配.
      */
-    val subjectNameCN: String? = null,
+    // Note: this is soft-deprecated. Don't use it. Use the subjectNames.first() instead.
+    // UI 内不支持编辑此项
+    val subjectNameCN: String? = null, 
     /**
      * 已知的该条目的所有名称. 包含季度信息.
      *

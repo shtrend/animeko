@@ -87,6 +87,11 @@ interface MediaFetchSession {
      */
     val hasCompleted: Flow<CompletedConditions>
 
+    /**
+     * Override the [me.him188.ani.app.domain.media.fetch.MediaFetchSession.request] of this session.
+     */
+    fun setFetchRequest(request: MediaFetchRequest)
+
     fun restartAll() {
         mediaSourceResults.forEach {
             it.restart()

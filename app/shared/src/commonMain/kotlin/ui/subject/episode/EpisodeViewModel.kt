@@ -139,6 +139,7 @@ import me.him188.ani.danmaku.ui.DanmakuHostState
 import me.him188.ani.danmaku.ui.DanmakuPresentation
 import me.him188.ani.danmaku.ui.DanmakuTrackProperties
 import me.him188.ani.datasources.api.PackedDate
+import me.him188.ani.datasources.api.source.MediaFetchRequest
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.topic.isDoneOrDropped
 import me.him188.ani.utils.coroutines.flows.FlowRestarter
@@ -177,6 +178,7 @@ data class EpisodePageState(
     val initialMediaSelectorViewKind: ViewKind,
     val matchingDanmakuPresenter: MatchingDanmakuPresenter?,
     val matchingDanmakuUiState: MatchingDanmakuUiState?,
+    val fetchRequest: MediaFetchRequest?,
 )
 
 /**
@@ -684,6 +686,7 @@ class EpisodeViewModel(
                 matchingDanmakuUiState = matchingDanmaku?.copy(
                     initialQuery = subjectEpisodeBundle?.subjectInfo?.nameCnOrName ?: "",
                 ),
+                fetchRequest = fetchSelect?.mediaFetchSession?.request?.first(),
             )
         }
     }
@@ -801,5 +804,16 @@ class EpisodeViewModel(
     fun onMatchingDanmakuComplete(provider: DanmakuProviderId, result: List<DanmakuFetchResult>) {
         danmakuLoader.overrideResults(provider, result)
         cancelMatchingDanmaku()
+    }
+
+    fun updateFetchRequest(request: MediaFetchRequest) {
+        launchInBackground {
+            fetchPlayState.episodeSessionFlow
+                .firstOrNull()
+                ?.fetchSelectFlow
+                ?.firstOrNull()
+                ?.mediaFetchSession
+                ?.setFetchRequest(request)
+        }
     }
 }

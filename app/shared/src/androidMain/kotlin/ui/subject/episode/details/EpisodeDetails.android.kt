@@ -37,6 +37,7 @@ import me.him188.ani.app.ui.mediafetch.MediaSelectorState
 import me.him188.ani.app.ui.mediafetch.TestMediaSourceResultListPresentation
 import me.him188.ani.app.ui.mediafetch.ViewKind
 import me.him188.ani.app.ui.mediafetch.rememberTestMediaSelectorState
+import me.him188.ani.app.ui.mediafetch.request.TestMediaFetchRequest
 import me.him188.ani.app.ui.mediaselect.summary.createTestMediaSelectorSummaryAutoSelecting
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.components.rememberTestEditableSubjectCollectionTypeState
@@ -187,6 +188,8 @@ private fun PreviewEpisodeDetailsImpl(
             mediaSelectorSummary = createTestMediaSelectorSummaryAutoSelecting(),
             state,
             initialMediaSelectorViewKind = ViewKind.WEB,
+            TestMediaFetchRequest,
+            { },
             episodeCarouselState = remember {
                 EpisodeCarouselState(
                     mutableStateOf(TestEpisodeCollections),

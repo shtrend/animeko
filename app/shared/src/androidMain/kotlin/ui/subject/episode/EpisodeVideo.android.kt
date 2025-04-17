@@ -32,6 +32,7 @@ import me.him188.ani.app.ui.foundation.preview.PHONE_LANDSCAPE
 import me.him188.ani.app.ui.mediafetch.TestMediaSourceResultListPresentation
 import me.him188.ani.app.ui.mediafetch.ViewKind
 import me.him188.ani.app.ui.mediafetch.rememberTestMediaSelectorState
+import me.him188.ani.app.ui.mediafetch.request.TestMediaFetchRequest
 import me.him188.ani.app.ui.settings.danmaku.createTestDanmakuRegexFilterState
 import me.him188.ani.app.ui.subject.episode.video.components.DanmakuSettingsSheet
 import me.him188.ani.app.ui.subject.episode.video.components.EpisodeVideoSideSheetPage
@@ -190,6 +191,8 @@ private fun PreviewVideoScaffoldImpl(
                         mediaSourceResultListPresentation = TestMediaSourceResultListPresentation,
                         viewKind = viewKind,
                         onViewKindChange = onViewKindChange,
+                        fetchRequest = TestMediaFetchRequest,
+                        onFetchRequestChange = {},
                         onDismissRequest = { goBack() },
                         onRefresh = {},
                         onRestartSource = {},

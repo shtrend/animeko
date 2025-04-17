@@ -12,6 +12,7 @@ package me.him188.ani.app.ui.mediafetch
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,8 +28,14 @@ import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -36,6 +43,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -74,12 +82,24 @@ import me.him188.ani.app.domain.media.selector.UnsafeOriginalMediaAccess
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
+import me.him188.ani.app.ui.foundation.icons.EditSquare
 import me.him188.ani.app.ui.foundation.ifThen
+import me.him188.ani.app.ui.foundation.saveable.mutableStateSaver
+import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_media_source_more
+import me.him188.ani.app.ui.mediafetch.request.EditingMediaFetchRequest
+import me.him188.ani.app.ui.mediafetch.request.MediaFetchRequestEditor
+import me.him188.ani.app.ui.mediafetch.request.TestMediaFetchRequest
+import me.him188.ani.app.ui.mediafetch.request.toEditingMediaFetchRequest
+import me.him188.ani.app.ui.mediafetch.request.toMediaFetchRequestOrNull
 import me.him188.ani.app.ui.mediaselect.selector.MediaSelectorWebSourcesColumn
 import me.him188.ani.datasources.api.CachedMedia
 import me.him188.ani.datasources.api.Media
+import me.him188.ani.datasources.api.source.MediaFetchRequest
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.utils.platform.annotations.TestOnly
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.PreviewLightDark
 
 
@@ -94,42 +114,32 @@ fun MediaSelectorView(
     state: MediaSelectorState,
     viewKind: ViewKind,
     onViewKindChange: (ViewKind) -> Unit,
+    fetchRequest: MediaFetchRequest?,
+    onFetchRequestChange: (MediaFetchRequest) -> Unit,
     sourceResults: MediaSourceResultListPresentation,
-    onRestartSource: (instanceId: String) -> Unit,
+    onRestartSource: (String) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
     stickyHeaderBackgroundColor: Color = Color.Unspecified,
-    onClickItem: ((Media) -> Unit) = { state.select(it) },
+    onClickItem: (Media) -> Unit = { state.select(it) },
     singleLineFilter: Boolean = false,
     scrollable: Boolean = true,
 ) {
     val bringIntoViewRequesters = remember { mutableStateMapOf<Media, BringIntoViewRequester>() }
     val presentation by state.presentationFlow.collectAsStateWithLifecycle()
-    val uiScope = rememberCoroutineScope()
 
     Column(modifier) {
         val lazyListState = rememberLazyListState()
         var showExcluded by rememberSaveable { mutableStateOf(false) }
 
         // 切换数据源类型的按钮
-        SingleChoiceSegmentedButtonRow(
+        ViewKindAndMoreRow(
+            viewKind,
+            onViewKindChange,
+            fetchRequest,
+            onFetchRequestChange,
             Modifier.fillMaxWidth().padding(bottom = 16.dp),
-        ) {
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                onClick = { onViewKindChange(ViewKind.WEB) },
-                selected = viewKind == ViewKind.WEB,
-            ) {
-                Text("简单模式", softWrap = false)
-            }
-            SegmentedButton(
-                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                onClick = { onViewKindChange(ViewKind.BT) },
-                selected = viewKind == ViewKind.BT,
-            ) {
-                Text("详细模式", softWrap = false)
-            }
-        }
+        )
 
         AnimatedContent(
             viewKind,
@@ -190,6 +200,149 @@ fun MediaSelectorView(
             .collectLatest {
                 bringIntoViewRequesters[it]?.bringIntoView()
             }
+    }
+}
+
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+private fun ViewKindAndMoreRow(
+    viewKind: ViewKind,
+    onViewKindChange: (ViewKind) -> Unit,
+    fetchRequest: MediaFetchRequest?,
+    onFetchRequestChange: (MediaFetchRequest) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        SingleChoiceSegmentedButtonRow(
+            Modifier.weight(1f),
+        ) {
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                onClick = { onViewKindChange(ViewKind.WEB) },
+                selected = viewKind == ViewKind.WEB,
+            ) {
+                Text("简单模式", softWrap = false)
+            }
+            SegmentedButton(
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                onClick = { onViewKindChange(ViewKind.BT) },
+                selected = viewKind == ViewKind.BT,
+            ) {
+                Text("详细模式", softWrap = false)
+            }
+        }
+
+        // 更多操作
+//        var showDropdown by rememberSaveable { mutableStateOf(false) }
+        var showEditRequest by rememberSaveable { mutableStateOf(false) }
+
+        Box {
+            IconButton({ showEditRequest = true }) {
+                Icon(Icons.Rounded.EditSquare, contentDescription = stringResource(Lang.settings_media_source_more))
+            }
+//            DropdownMenu(showDropdown, { showDropdown = false }) {
+//                DropdownMenuItem(
+//                    text = { Text("编辑查询请求") },
+//                    onClick = {
+//                        showEditRequest = true
+//                        showDropdown = false
+//                    },
+//                )
+//            }
+
+            // 编辑请求
+            if (showEditRequest && fetchRequest != null) {
+                var editingRequest by rememberSaveable(
+                    fetchRequest,
+                    saver = mutableStateSaver(EditingMediaFetchRequest.Saver),
+                ) {
+                    mutableStateOf(fetchRequest.toEditingMediaFetchRequest())
+                }
+                var showConfirmDiscard by rememberSaveable { mutableStateOf(false) }
+                val onDismissRequest = {
+                    val hasChange = editingRequest != fetchRequest.toEditingMediaFetchRequest()
+                    if (hasChange) {
+                        showConfirmDiscard = true
+                    } else {
+                        showEditRequest = false
+                    }
+                }
+
+                val toaster = LocalToaster.current
+
+                AlertDialog(
+                    onDismissRequest,
+                    confirmButton = {
+                        TextButton(
+                            {
+                                editingRequest.toMediaFetchRequestOrNull()?.let {
+                                    showEditRequest = false
+                                    onFetchRequestChange(it)
+                                } ?: toaster.toast("请求无效，请检查")
+                            },
+                            enabled = editingRequest.toMediaFetchRequestOrNull() != null,
+                        ) {
+                            Text("保存并刷新")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onDismissRequest) {
+                            Text("取消")
+                        }
+                    },
+                    title = {
+                        Text("编辑查询请求")
+                    },
+                    text = {
+                        MediaFetchRequestEditor(
+                            editingRequest,
+                            { editingRequest = it },
+                            Modifier.fillMaxWidth(),
+                        )
+                    },
+                )
+
+                if (showConfirmDiscard) {
+                    AlertDialog(
+                        onDismissRequest = {
+                            showConfirmDiscard = false
+                            showEditRequest = false
+                        },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    showConfirmDiscard = false
+                                    showEditRequest = false
+                                },
+                            ) {
+                                Text("舍弃", color = MaterialTheme.colorScheme.error)
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = {
+                                    showConfirmDiscard = false
+                                },
+                            ) {
+                                Text("继续编辑")
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                Icons.Rounded.Delete, null,
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        },
+                        text = {
+                            Text("有未保存的编辑，要舍弃编辑吗？")
+                        },
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -371,10 +524,12 @@ private fun PreviewMediaSelector() {
                 state = mediaSelector,
                 viewKind = viewKind,
                 onViewKindChange = onViewKindChange,
+                fetchRequest = TestMediaFetchRequest,
+                onFetchRequestChange = { },
                 sourceResults = TestMediaSourceResultListPresentation,
-                onRefresh = {},
                 onRestartSource = {
                 },
+                onRefresh = {},
             )
         }
     }

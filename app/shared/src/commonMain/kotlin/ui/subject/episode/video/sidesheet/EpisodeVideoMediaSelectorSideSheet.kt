@@ -31,9 +31,11 @@ import me.him188.ani.app.ui.mediafetch.MediaSourceResultListPresentation
 import me.him188.ani.app.ui.mediafetch.TestMediaSourceResultListPresentation
 import me.him188.ani.app.ui.mediafetch.ViewKind
 import me.him188.ani.app.ui.mediafetch.rememberTestMediaSelectorState
+import me.him188.ani.app.ui.mediafetch.request.TestMediaFetchRequest
 import me.him188.ani.app.ui.subject.episode.TAG_MEDIA_SELECTOR_SHEET
 import me.him188.ani.app.ui.subject.episode.video.components.EpisodeVideoSideSheets
 import me.him188.ani.app.ui.subject.episode.video.settings.SideSheetLayout
+import me.him188.ani.datasources.api.source.MediaFetchRequest
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.jetbrains.compose.ui.tooling.preview.PreviewLightDark
@@ -45,6 +47,8 @@ fun EpisodeVideoSideSheets.MediaSelectorSheet(
     mediaSourceResultListPresentation: MediaSourceResultListPresentation,
     viewKind: ViewKind,
     onViewKindChange: (ViewKind) -> Unit,
+    fetchRequest: MediaFetchRequest?,
+    onFetchRequestChange: (MediaFetchRequest) -> Unit,
     onDismissRequest: () -> Unit,
     onRefresh: () -> Unit,
     onRestartSource: (instanceId: String) -> Unit,
@@ -64,6 +68,8 @@ fun EpisodeVideoSideSheets.MediaSelectorSheet(
             mediaSelectorState,
             viewKind,
             onViewKindChange,
+            fetchRequest,
+            onFetchRequestChange,
             mediaSourceResultListPresentation,
             onRestartSource = onRestartSource,
             onRefresh,
@@ -93,6 +99,8 @@ private fun PreviewEpisodeVideoMediaSelectorSideSheet() {
             mediaSourceResultListPresentation = TestMediaSourceResultListPresentation,
             viewKind = viewKind,
             onViewKindChange = onViewKindChange,
+            fetchRequest = TestMediaFetchRequest,
+            onFetchRequestChange = {},
             onDismissRequest = {},
             onRefresh = {},
             onRestartSource = {},

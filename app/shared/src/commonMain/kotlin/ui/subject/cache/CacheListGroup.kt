@@ -48,6 +48,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -189,10 +190,18 @@ fun SettingsScope.EpisodeCacheListGroup(
                 val selectorPresentation =
                     rememberMediaSelectorState(mediaSourceInfoProvider, filteredResults) { task.mediaSelector }
                 val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(ViewKind.WEB) }
+
+                // todo: shit
+                val fetchRequest by task.fetchSession.request.collectAsState(null)
+
                 MediaSelectorView(
                     selectorPresentation,
                     viewKind,
                     onViewKindChange,
+                    fetchRequest,
+                    {
+                        task.fetchSession.setFetchRequest(it)
+                    },
                     sourceResults,
                     onRestartSource = {
                         task.fetchSession.restart(it)

@@ -328,13 +328,20 @@ class MediaSourceMediaFetcher(
         private val config: MediaFetcherConfig,
         private val flowContext: CoroutineContext,
     ) : MediaFetchSession {
-        override val request: Flow<MediaFetchRequest> =
+        private val initialFetchRequest: Flow<MediaFetchRequest> =
             request.take(1) // 只采用第一个, as per described in [fetch]
                 .onEach {
                     logger.info { "MediaFetchSessionImpl pagedSources creating, request: \n${it.toStringMultiline()}" }
                 }
                 .shareIn(CoroutineScope(flowContext), started = SharingStarted.Lazily, replay = 1) // only 
                 .take(1) // 只采用 replayCache, 让后面 flow 能完结
+
+        private val overrideFetchRequest = MutableStateFlow<MediaFetchRequest?>(null)
+
+        override val request: Flow<MediaFetchRequest> =
+            combine(initialFetchRequest, overrideFetchRequest) { initial, override ->
+                override ?: initial
+            }.take(1) // 否则会一直显示加载
 
         override val mediaSourceResults: List<MediaSourceFetchResult> = mediaSources.map { instance ->
             MediaSourceResultImpl(
@@ -406,6 +413,14 @@ class MediaSourceMediaFetcher(
                     },
                 )
             }.flowOn(flowContext)
+        }
+
+        override fun setFetchRequest(request: MediaFetchRequest) {
+            if (request == overrideFetchRequest.value) {
+                return
+            }
+            overrideFetchRequest.value = request
+            restartAll()
         }
     }
 
