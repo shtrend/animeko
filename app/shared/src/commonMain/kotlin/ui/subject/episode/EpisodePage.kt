@@ -945,6 +945,7 @@ private fun EpisodeVideo(
             .then(if (expanded) Modifier.fillMaxSize() else Modifier.statusBarsPadding()),
         maintainAspectRatio = maintainAspectRatio,
         contentWindowInsets = windowInsets,
+        fastForwardSpeed = vm.videoScaffoldConfig.fastForwardSpeed,
     )
 }
 

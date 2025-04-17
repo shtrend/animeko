@@ -72,6 +72,8 @@ import me.him188.ani.app.ui.lang.settings_player_fullscreen_button
 import me.him188.ani.app.ui.lang.settings_player_fullscreen_button_description
 import me.him188.ani.app.ui.lang.settings_player_fullscreen_only_in_controller
 import me.him188.ani.app.ui.lang.settings_player_hide_selector_on_select
+import me.him188.ani.app.ui.lang.settings_player_long_press_fast_forward_speed
+import me.him188.ani.app.ui.lang.settings_player_long_press_fast_forward_speed_description
 import me.him188.ani.app.ui.lang.settings_player_pause_on_edit_danmaku
 import me.him188.ani.app.ui.lang.settings_update_auto_check
 import me.him188.ani.app.ui.lang.settings_update_auto_check_description
@@ -544,6 +546,17 @@ fun SettingsScope.PlayerGroup(
                 videoScaffoldConfig.update(config.copy(autoSwitchMediaOnPlayerError = it))
             },
             title = { Text(stringResource(Lang.settings_player_auto_switch_media_on_error)) },
+        )
+        HorizontalDividerItem()
+        DropdownItem(
+            selected = { config.fastForwardSpeed },
+            values = { listOf(1.5f, 2f, 2.5f, 3f) },
+            itemText = { Text("${it}x") },
+            onSelect = {
+                videoScaffoldConfig.update(config.copy(fastForwardSpeed = it))
+            },
+            title = { Text(stringResource(Lang.settings_player_long_press_fast_forward_speed)) },
+            description = { Text(stringResource(Lang.settings_player_long_press_fast_forward_speed_description)) },
         )
         PlayerGroupPlatform(videoScaffoldConfig)
     }

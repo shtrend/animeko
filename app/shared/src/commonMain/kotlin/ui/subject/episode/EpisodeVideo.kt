@@ -134,6 +134,7 @@ internal fun EpisodeVideoImpl(
     modifier: Modifier = Modifier,
     maintainAspectRatio: Boolean = !expanded,
     gestureFamily: GestureFamily = LocalPlatform.current.mouseFamily,
+    fastForwardSpeed: Float = 3f,
     contentWindowInsets: WindowInsets = WindowInsets(0.dp),
 ) {
     // Don't rememberSavable. 刻意让每次切换都是隐藏的
@@ -271,6 +272,7 @@ internal fun EpisodeVideoImpl(
                     onToggleDanmaku = onToggleDanmaku,
                     family = gestureFamily,
                     indicatorState,
+                    fastForwardSpeed = fastForwardSpeed,
                 )
             },
             floatingMessage = {

@@ -79,6 +79,12 @@ data class VideoScaffoldConfig @SerializationOnly constructor(
      * @since 4.8
      */
     val displayModeId: Int = 0,
+    /**
+     * 长按快进的速度倍率
+     *
+     * @since 4.9
+     */
+    val fastForwardSpeed: Float = 2.5f, // 3 倍弹幕会跳, 所以慢点, see #1524
     // WARNING: if you add new property here, review Companion properties.
     @Suppress("PropertyName") @Transient val _placeholder: Int = 0,
 ) {

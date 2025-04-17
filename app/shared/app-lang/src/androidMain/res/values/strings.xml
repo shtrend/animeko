@@ -175,6 +175,8 @@
     <string name="settings_player_auto_skip_op_ed">Automatically skip OP and ED</string>
     <string name="settings_player_auto_skip_op_ed_description">Only works for some resources from BT data sources</string>
     <string name="settings_player_auto_switch_media_on_error">Automatically switch resources on playback failure</string>
+    <string name="settings_player_long_press_fast_forward_speed">Long-press fast-forward speed</string>
+    <string name="settings_player_long_press_fast_forward_speed_description">Speed when long-pressing to fast-forward</string>
     <string name="settings_storage_title">Storage settings</string>
     <string name="settings_storage_bt_cache_location">BT video cache location</string>
     <string name="settings_storage_bt_cache_location_description">Changing this won\'t automatically migrate data nor delete old data.\nIf you want to remove old data, please click &quot;Open BT cache directory&quot; before making changes and remove all files in that directory.\n\nRestart required to take effect.</string>
