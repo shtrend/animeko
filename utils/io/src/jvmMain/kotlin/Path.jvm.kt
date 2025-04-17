@@ -1,6 +1,8 @@
 package me.him188.ani.utils.io
 
 import kotlinx.io.files.Path
+import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.warn
 import java.io.File
 import java.io.IOException
 import java.nio.file.FileVisitResult
@@ -43,6 +45,8 @@ actual fun SystemPath.isRegularFile(): Boolean {
     return path.file.isFile
 }
 
+private val logger = logger<SystemPath>()
+
 fun SystemPath.moveDirectoryRecursively(target: SystemPath, visitor: ((SystemPath) -> Unit)? = null) {
     val sourceDir = this.toNioPath()
     val targetDir = target.toNioPath()
@@ -80,8 +84,8 @@ fun SystemPath.moveDirectoryRecursively(target: SystemPath, visitor: ((SystemPat
 
                 try {
                     Files.delete(dir)
-                } catch (_: IOException) {
-                    // we just ignore deletion exception.
+                } catch (e: IOException) {
+                    logger.warn(e) { "Failed to delete directory $dir. Just ignoring." }
                 }
 
                 return FileVisitResult.CONTINUE

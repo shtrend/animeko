@@ -46,6 +46,7 @@ kotlin {
     sourceSets.commonMain.dependencies {
         api(projects.utils.platform)
         api(libs.kotlinx.io.core)
+        implementation(projects.utils.logging)
         implementation(libs.atomicfu)
 //        implementation(libs.okio) // 仅用于读文件
     }
