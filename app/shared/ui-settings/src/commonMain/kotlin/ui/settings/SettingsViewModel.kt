@@ -59,6 +59,7 @@ import me.him188.ani.app.ui.settings.tabs.media.source.MediaSourceSubscriptionGr
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyPresentation
 import me.him188.ani.datasources.api.source.ConnectionStatus
 import me.him188.ani.datasources.bangumi.BangumiClient
+import me.him188.ani.utils.platform.currentPlatform
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -102,6 +103,7 @@ class SettingsViewModel : AbstractSettingsViewModel(), KoinComponent {
     val cacheDirectoryGroupState = CacheDirectoryGroupState(
         mediaCacheSettingsState,
         permissionManager,
+        showThisTab = currentPlatform() is me.him188.ani.utils.platform.Platform.Desktop,
     )
 
     private val mediaSelectorSettingsState: SettingsState<MediaSelectorSettings> =

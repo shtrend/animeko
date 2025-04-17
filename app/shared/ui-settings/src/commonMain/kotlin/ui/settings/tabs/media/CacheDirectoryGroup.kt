@@ -11,6 +11,7 @@ import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 class CacheDirectoryGroupState(
     val mediaCacheSettingsState: SettingsState<MediaCacheSettings>,
     val permissionManager: PermissionManager,
+    val showThisTab: Boolean,
 )
 
 @Composable

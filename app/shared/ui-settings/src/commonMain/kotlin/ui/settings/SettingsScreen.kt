@@ -93,7 +93,29 @@ import me.him188.ani.app.ui.foundation.layout.paneVerticalPadding
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.BackNavigationIconButton
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
-import me.him188.ani.app.ui.lang.*
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.acknowledgements
+import me.him188.ani.app.ui.lang.developer_list
+import me.him188.ani.app.ui.lang.settings
+import me.him188.ani.app.ui.lang.settings_category_app_ui
+import me.him188.ani.app.ui.lang.settings_category_data_playback
+import me.him188.ani.app.ui.lang.settings_category_network_storage
+import me.him188.ani.app.ui.lang.settings_category_others
+import me.him188.ani.app.ui.lang.settings_debug_mode_enabled
+import me.him188.ani.app.ui.lang.settings_tab_about
+import me.him188.ani.app.ui.lang.settings_tab_appearance
+import me.him188.ani.app.ui.lang.settings_tab_bt
+import me.him188.ani.app.ui.lang.settings_tab_cache
+import me.him188.ani.app.ui.lang.settings_tab_danmaku
+import me.him188.ani.app.ui.lang.settings_tab_debug
+import me.him188.ani.app.ui.lang.settings_tab_log
+import me.him188.ani.app.ui.lang.settings_tab_media_selector
+import me.him188.ani.app.ui.lang.settings_tab_media_source
+import me.him188.ani.app.ui.lang.settings_tab_player
+import me.him188.ani.app.ui.lang.settings_tab_proxy
+import me.him188.ani.app.ui.lang.settings_tab_storage
+import me.him188.ani.app.ui.lang.settings_tab_theme
+import me.him188.ani.app.ui.lang.settings_tab_update
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.rendering.P2p
 import me.him188.ani.app.ui.settings.tabs.AniHelpNavigator
@@ -181,7 +203,9 @@ fun SettingsScreen(
             Item(SettingsTab.PROXY)
             Item(SettingsTab.BT)
             Item(SettingsTab.CACHE)
-            Item(SettingsTab.STORAGE)
+            if (vm.cacheDirectoryGroupState.showThisTab) {
+                Item(SettingsTab.STORAGE)
+            }
 
             Title(stringResource(Lang.settings_category_others))
             Item(SettingsTab.UPDATE)
