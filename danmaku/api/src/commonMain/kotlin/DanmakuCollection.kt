@@ -41,6 +41,7 @@ interface DanmakuCollection {
      */
     fun at(
         progress: Flow<Duration>,
+        playbackSpeed: () -> Float,
         danmakuRegexFilterList: Flow<List<String>>,
     ): DanmakuSession
 }
@@ -64,6 +65,7 @@ fun emptyDanmakuCollection(): DanmakuCollection {
     return object : DanmakuCollection {
         override fun at(
             progress: Flow<Duration>,
+            playbackSpeed: () -> Float,
             danmakuRegexFilterList: Flow<List<String>>,
         ): DanmakuSession = emptyDanmakuSession()
     }
@@ -121,6 +123,7 @@ class TimeBasedDanmakuSession private constructor(
      */
     override fun at(
         progress: Flow<Duration>,
+        playbackSpeed: () -> Float,
         danmakuRegexFilterList: Flow<List<String>>,
     ): DanmakuSession {
         if (list.isEmpty()) {
@@ -129,7 +132,7 @@ class TimeBasedDanmakuSession private constructor(
 
         val state = DanmakuSessionFlowState(
             list,
-            repopulateThreshold = 3.seconds,
+            repopulateThreshold = { 3.seconds.times(playbackSpeed().toDouble()) },
             repopulateDistance = { 20.seconds },
             repopulateMaxCount = Int.MAX_VALUE,
         )
@@ -215,7 +218,7 @@ internal class DanmakuSessionFlowState(
     /**
      * 每当快进/快退超过这个阈值后, 重新装填整个屏幕弹幕
      */
-    val repopulateThreshold: Duration = 3.seconds,
+    val repopulateThreshold: () -> Duration = { 3.seconds },
     /**
      * 重新装填屏幕弹幕时, 从当前时间开始往旧重新装填的距离. 例如当前时间为 15s, repopulateDistance 为 3s, 则会装填 12-15s 的弹幕
      * 需要根据屏幕宽度, 弹幕密度, 以及弹幕速度计算
@@ -285,7 +288,7 @@ internal class DanmakuSessionAlgorithm(
 
         try {
             if (state.lastTime == Duration.INFINITE // 第一帧
-                || (curTime - state.lastTime).absoluteValue >= state.repopulateThreshold
+                || (curTime - state.lastTime).absoluteValue >= state.repopulateThreshold().coerceAtLeast(3.seconds)
             ) {
                 // 移动太远, 重新装填屏幕弹幕
                 // 初次播放如果进度不是在 0 也会触发这个

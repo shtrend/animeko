@@ -49,6 +49,7 @@ import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.annotations.TestOnly
 import org.koin.core.Koin
 import org.openani.mediamp.MediampPlayer
+import org.openani.mediamp.features.PlaybackSpeed
 import org.openani.mediamp.metadata.duration
 import org.openani.mediamp.source.SeekableInputMediaData
 import org.openani.mediamp.source.UriMediaData
@@ -154,6 +155,7 @@ class EpisodeDanmakuLoader(
     private val danmakuSessionFlow: Flow<DanmakuSession> = danmakuCollectionFlow.mapLatest { session ->
         session.at(
             progress = player.currentPositionMillis.map { it.milliseconds },
+            playbackSpeed = { player.features[PlaybackSpeed]?.value ?: 1f },
             danmakuRegexFilterList = getDanmakuRegexFilterListFlowUseCase(),
         )
     }.shareIn(flowScope, started = sharingStarted, replay = 1)

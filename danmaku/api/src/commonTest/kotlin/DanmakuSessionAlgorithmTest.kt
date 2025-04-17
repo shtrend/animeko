@@ -22,7 +22,19 @@ internal class DanmakuSessionAlgorithmTest {
 
     private fun create(
         sequence: Sequence<DanmakuInfo>,
-        repopulateThreshold: Duration = 3.seconds,
+        repopulateThreshold: Duration,
+        repopulateDistance: Duration = 2.seconds,
+    ): DanmakuSessionAlgorithm {
+        return create(
+            sequence,
+            repopulateThreshold = { repopulateThreshold },
+            repopulateDistance = repopulateDistance,
+        )
+    }
+
+    private fun create(
+        sequence: Sequence<DanmakuInfo>,
+        repopulateThreshold: () -> Duration = { 3.seconds },
         repopulateDistance: Duration = 2.seconds,
     ): DanmakuSessionAlgorithm {
         return DanmakuSessionAlgorithm(
@@ -548,5 +560,79 @@ internal class DanmakuSessionAlgorithmTest {
             ).at(time.seconds).tickRepopulateTime()
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // dynamic repopulateThreshold driven by playbackRate
+    ///////////////////////////////////////////////////////////////////////////
+
+    @Test
+    fun `3x speed does NOT repopulate while the 9 - second threshold is not reached`() = runTest {
+        var rate = 3f                 // simulate current playbackRate
+        val instance = create(
+            sequenceOf(
+                dummyDanmaku(1.0),   // will appear at t = 3 s
+                dummyDanmaku(4.0),   // will appear at t = 6 s
+                dummyDanmaku(7.0),   // will appear at t = 9 s
+            ),
+            repopulateThreshold = { 3.seconds * rate },   // dynamic threshold
+            repopulateDistance = 20.seconds,
+        )
+
+        // Initial tick: no repop, nothing added
+        assertEquals(emptyList(), instance.at(0.seconds).tickRepopulateTime())
+
+        // Δt = 3 s < 9 s  ➜ only Add events (no repopulation)
+        assertEquals(listOf(1.0), instance.at(3.seconds).tickCollectTime())
+
+        // Δt = 3 s again < 9 s
+        assertEquals(listOf(4.0), instance.at(6.seconds).tickCollectTime())
+    }
+
+    @Test
+    fun `3x speed DOES repopulate once the 9 - second threshold is exceeded`() = runTest {
+        val rate = 3f
+        val instance = create(
+            sequenceOf(
+                dummyDanmaku(2.0),
+                dummyDanmaku(5.0),
+                dummyDanmaku(8.0),
+            ),
+            repopulateThreshold = { 3.seconds * rate },
+            repopulateDistance = 20.seconds,
+        )
+
+        // Jump directly from 0 s to 10 s (Δt = 10 s > 9 s) ─ should trigger Repopulate
+        assertEquals(listOf(2.0, 5.0, 8.0), instance.at(10.seconds).tickRepopulateTime())
+    }
+
+    @Test
+    fun `threshold reacts instantly to playbackRate changes`() = runTest {
+        var rate = 1f                                   // start at normal speed
+        val instance = create(
+            sequenceOf(
+                dummyDanmaku(1.0),
+                dummyDanmaku(4.0),
+                dummyDanmaku(7.0),
+                dummyDanmaku(13.0),
+            ),
+            repopulateThreshold = { 3.seconds * rate }, // dynamic threshold
+            repopulateDistance = 20.seconds,
+        )
+
+        // 1× speed: jump 2.5 s (<3) ➜ Add only
+        assertEquals(emptyList(), instance.at(0.seconds).tickRepopulateTime())
+        assertEquals(listOf(1.0), instance.at(2.5.seconds).tickCollectTime())
+
+        // Switch to 3× speed (threshold becomes 9 s)
+        @Suppress("AssignedValueIsNeverRead")
+        rate = 3f
+
+        // Jump another 6 s (Δt = 6 s < 9 s) ➜ still Add only
+        assertEquals(listOf(4.0, 7.0), instance.at(8.5.seconds).tickCollectTime())
+
+        // Jump 10 s (Δt = 10 s > 9 s) ➜ Repopulate now expected
+        assertEquals(listOf(1.0, 4.0, 7.0, 13.0), instance.at(18.5.seconds).tickRepopulateTime())
+    }
 }
 
+operator fun Duration.times(scale: Float): Duration = this * scale.toDouble()

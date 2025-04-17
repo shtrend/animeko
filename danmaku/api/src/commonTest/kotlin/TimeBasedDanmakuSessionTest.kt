@@ -44,6 +44,7 @@ internal class TimeBasedDanmakuSessionTest {
         )
         val list = instance.at(
             flowOf(0.seconds),
+            { 1f },
             danmakuRegexFilterList = flowOf(emptyList()),
         ).events.toList()
         assertEquals(0, list.size)
