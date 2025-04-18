@@ -46,6 +46,8 @@ import me.him188.ani.app.ui.lang.SupportedLocales
 import me.him188.ani.app.ui.lang.settings_app_episode_playback
 import me.him188.ani.app.ui.lang.settings_app_initial_page
 import me.him188.ani.app.ui.lang.settings_app_initial_page_description
+import me.him188.ani.app.ui.lang.settings_app_language
+import me.him188.ani.app.ui.lang.settings_app_language_restart
 import me.him188.ani.app.ui.lang.settings_app_light_up_mode
 import me.him188.ani.app.ui.lang.settings_app_light_up_mode_description
 import me.him188.ani.app.ui.lang.settings_app_list_animation
@@ -172,9 +174,9 @@ fun SettingsScope.AppearanceGroup(
             onSelect = {
                 state.update(uiSettings.copy(appLanguage = it))
             },
-            title = { Text("语言") },
+            title = { Text(stringResource(Lang.settings_app_language)) },
             description = if (LocalPlatform.current.isDesktop()) {
-                { Text("重启软件生效") }
+                { Text(stringResource(Lang.settings_app_language_restart)) }
             } else null,
         )
     }
