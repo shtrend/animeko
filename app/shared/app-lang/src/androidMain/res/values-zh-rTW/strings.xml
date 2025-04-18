@@ -348,6 +348,12 @@
     <string name="settings_mediasource_rss_guid">guid</string>
     <string name="settings_mediasource_rss_enclosure_url">enclosure.url</string>
     <string name="settings_mediasource_rss_enclosure_type">enclosure.type</string>
+
+    <!-- NewVersionPopupCard -->
+    <string name="settings_update_popup_new_version">新版本</string>
+    <string name="settings_update_popup_see_details">查看詳情</string>
+    <string name="settings_update_popup_auto_update">自動更新</string>
+    <string name="settings_update_popup_close">關閉</string>
 </resources>
 
 <!--@formatter:on-->

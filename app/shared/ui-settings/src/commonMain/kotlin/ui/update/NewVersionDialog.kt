@@ -42,6 +42,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_update_popup_auto_update
+import me.him188.ani.app.ui.lang.settings_update_popup_close
+import me.him188.ani.app.ui.lang.settings_update_popup_new_version
+import me.him188.ani.app.ui.lang.settings_update_popup_see_details
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -54,7 +60,7 @@ fun NewVersionPopupCard(
     modifier: Modifier = Modifier,
 ) {
     BasicNotificationPopupCard(
-        title = { Text("新版本") },
+        title = { Text(stringResource(Lang.settings_update_popup_new_version)) },
         modifier,
         subtitle = { Text(version) },
         dismissButton = {
@@ -70,14 +76,14 @@ fun NewVersionPopupCard(
                     contentDescription = null,
                 )
                 Spacer(Modifier.width(8.dp))
-                Text("查看详情") // See details
+                Text(stringResource(Lang.settings_update_popup_see_details))
             }
             Spacer(Modifier.width(16.dp))
             Button(
                 onClick = onAutoUpdateClick,
                 modifier = Modifier,
             ) {
-                Text("自动更新") // Auto‑update
+                Text(stringResource(Lang.settings_update_popup_auto_update))
             }
         },
         content = {
@@ -177,7 +183,7 @@ object NotificationPopupDefaults {
         IconButton(onClick = onClick, modifier) {
             Icon(
                 imageVector = Icons.Rounded.Close,
-                contentDescription = "Close",
+                contentDescription = stringResource(Lang.settings_update_popup_close),
             )
         }
     }
