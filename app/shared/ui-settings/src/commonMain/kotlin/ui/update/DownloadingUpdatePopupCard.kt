@@ -58,12 +58,12 @@ fun DownloadingUpdatePopupCard(
     val onRequestCancel = {
         when (fileDownloaderStats.state) {
             // 弹一个对话框问一下
-            FileDownloaderState.Downloading -> onCancelClick()
+            FileDownloaderState.Downloading -> showConfirmCancel = true
 
             // 直接关闭
             is FileDownloaderState.Succeed,
             is FileDownloaderState.Failed,
-            FileDownloaderState.Idle -> showConfirmCancel = false
+            FileDownloaderState.Idle -> onCancelClick()
         }
 
     }
