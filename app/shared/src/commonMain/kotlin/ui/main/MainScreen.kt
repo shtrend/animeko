@@ -65,7 +65,7 @@ import me.him188.ani.app.ui.foundation.layout.setRequestFullScreen
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.subject.collection.CollectionPage
 import me.him188.ani.app.ui.subject.collection.UserCollectionsViewModel
-import me.him188.ani.app.ui.update.TextButtonUpdateLogo
+import me.him188.ani.app.ui.update.UpdateNotifierHost
 import me.him188.ani.utils.platform.isAndroid
 
 
@@ -219,9 +219,6 @@ private fun MainScreenContent(
                                 coroutineScope.launch { explorationPageViewModel.refreshLoginSession() }
                             },
                             modifier = modifier.fillMaxSize(),
-                            actions = {
-                                TextButtonUpdateLogo()
-                            },
                         )
                     }
 
@@ -239,9 +236,6 @@ private fun MainScreenContent(
                             modifier = Modifier.fillMaxSize(),
                             enableAnimation = userCollectionsViewModel.myCollectionsSettings.enableListAnimation1,
                             lazyGridState = userCollectionsViewModel.lazyGridState,
-                            actions = {
-                                TextButtonUpdateLogo()
-                            },
                         )
                     }
 
@@ -283,6 +277,8 @@ private fun TabContent(
         shape = shape,
         color = AniThemeDefaults.pageContentBackgroundColor,
     ) {
-        content()
+        UpdateNotifierHost {
+            content()
+        }
     }
 }
