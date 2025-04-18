@@ -7,20 +7,6 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-import java.io.BufferedOutputStream
-import java.io.FileOutputStream
-import java.util.zip.ZipEntry
-import java.util.zip.ZipOutputStream
-
-/*
- * Copyright (C) 2024-2025 OpenAni and contributors.
- *
- * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
- * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
- *
- * https://github.com/open-ani/ani/blob/main/LICENSE
- */
-
 tasks.register("podInstall", Exec::class) {
     group = "build"
     description = "Builds the iOS framework"
@@ -93,6 +79,11 @@ val buildReleaseArchive = tasks.register("buildReleaseArchive", Exec::class) {
  *
  * This task is **configuration‑cache safe** – it does *not* capture the `Project` instance.
  */
+/**
+ * Packages an unsigned IPA **and** injects an ad‑hoc signature so sideloaders can re‑sign it.
+ *
+ * This task is **configuration‑cache safe** – it does *not* capture the `Project` instance.
+ */
 @CacheableTask
 abstract class BuildIpaTask : DefaultTask() {
 
@@ -139,9 +130,18 @@ abstract class BuildIpaTask : DefaultTask() {
             )
         }
 
-        // 4. Zip Payload ⇒ .ipa
+        // 4. Zip Payload ⇒ .ipa using the system `zip` command
+        //
+        //    -r : recurse into directories
+        //    -y : store symbolic links as the link instead of the referenced file
+        //
+        // The working directory is the temporary folder so the archive
+        // has a top‑level "Payload/" directory (required for .ipa files).
         val zipFile = File(temporaryDir, "Animeko.zip")
-        zipDirectory(payloadDir, zipFile)
+        execOperations.exec {
+            workingDir(temporaryDir)
+            commandLine("zip", "-r", "-y", zipFile.absolutePath, "Payload")
+        }
 
         // 5. Move to final location (with .ipa extension)
         outputIpa.get().asFile.apply {
@@ -151,24 +151,6 @@ abstract class BuildIpaTask : DefaultTask() {
         }
 
         logger.lifecycle("[IPA] Created ad‑hoc‑signed IPA at: ${outputIpa.get().asFile.absolutePath}")
-    }
-
-    /* -------------------------------------------------------------
-     * Helper: zip a directory (recursively) preserving relative paths
-     * ----------------------------------------------------------- */
-
-    private fun zipDirectory(sourceDir: File, outputFile: File) {
-        ZipOutputStream(BufferedOutputStream(FileOutputStream(outputFile))).use { zipOut ->
-            sourceDir.walkTopDown().forEach { file ->
-                if (file.isFile) {
-                    val relativePath = file.relativeTo(sourceDir.parentFile).path
-                    val entry = ZipEntry(relativePath)
-                    zipOut.putNextEntry(entry)
-                    file.inputStream().use { it.copyTo(zipOut) }
-                    zipOut.closeEntry()
-                }
-            }
-        }
     }
 }
 
