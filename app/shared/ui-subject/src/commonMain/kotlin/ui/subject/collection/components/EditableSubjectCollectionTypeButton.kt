@@ -36,10 +36,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.external.placeholder.placeholder
+import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.foundation.widgets.showLoadError
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.annotations.TestOnly
+import kotlin.coroutines.cancellation.CancellationException
 
 @Stable
 class EditableSubjectCollectionTypeState(
@@ -109,13 +113,20 @@ class EditableSubjectCollectionTypeState(
             initialValue = Presentation.Placeholder,
         )
 
-    fun setSelfCollectionType(new: UnifiedCollectionType) {
-        setSelfCollectionTypeTasker.launch {
-            onSetSelfCollectionType(new)
-            if (new == UnifiedCollectionType.DONE && hasAnyUnwatched()) {
-                showSetAllEpisodesDoneDialogFlow.value = true
+    suspend fun setSelfCollectionType(new: UnifiedCollectionType): LoadError? {
+        return setSelfCollectionTypeTasker.async {
+            try {
+                onSetSelfCollectionType(new)
+                if (new == UnifiedCollectionType.DONE && hasAnyUnwatched()) {
+                    showSetAllEpisodesDoneDialogFlow.value = true
+                }
+                null
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                LoadError.fromException(e)
             }
-        }
+        }.await()
     }
 
     fun setAllEpisodesWatched() {
@@ -142,10 +153,16 @@ fun EditableSubjectCollectionTypeButton(
     val presentation by state.presentationFlow
         .collectAsStateWithLifecycle()
 
+    val scope = rememberCoroutineScope()
+    val toaster = LocalToaster.current
+
     SubjectCollectionTypeButton(
         presentation.selfCollectionType,
         onEdit = {
-            state.setSelfCollectionType(it)
+            scope.launch {
+                val error = state.setSelfCollectionType(it)
+                error?.let(toaster::showLoadError)
+            }
         },
         modifier = modifier.placeholder(presentation.isPlaceholder),
         enabled = !presentation.isSetSelfCollectionTypeWorking,

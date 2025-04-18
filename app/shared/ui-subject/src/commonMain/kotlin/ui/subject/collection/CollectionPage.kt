@@ -107,8 +107,10 @@ import me.him188.ani.app.ui.foundation.session.SelfAvatar
 import me.him188.ani.app.ui.foundation.session.SessionTipsArea
 import me.him188.ani.app.ui.foundation.session.SessionTipsIcon
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
+import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.foundation.widgets.NsfwMask
 import me.him188.ani.app.ui.foundation.widgets.PullToRefreshBox
+import me.him188.ani.app.ui.foundation.widgets.showLoadError
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.progress.EpisodeListStateFactory
 import me.him188.ani.app.ui.subject.collection.progress.SubjectProgressButton
@@ -510,6 +512,8 @@ private fun SubjectCollectionItem(
     val subjectProgressState = subjectProgressStateFactory
         .rememberSubjectProgressState(subjectCollection)
 
+    val scope = rememberCoroutineScope()
+
     SubjectCollectionItem(
         subjectCollection,
         editableSubjectCollectionTypeState = editableSubjectCollectionTypeState,
@@ -524,12 +528,16 @@ private fun SubjectCollectionItem(
         },
         playButton = {
             val editableSubjectCollectionTypePresentation by editableSubjectCollectionTypeState.presentationFlow.collectAsStateWithLifecycle()
-
+            val toaster = LocalToaster.current
             if (type != UnifiedCollectionType.DONE) {
                 if (subjectProgressState.isDone) {
                     FilledTonalButton(
                         {
-                            editableSubjectCollectionTypeState.setSelfCollectionType(UnifiedCollectionType.DONE)
+                            scope.launch {
+                                val error =
+                                    editableSubjectCollectionTypeState.setSelfCollectionType(UnifiedCollectionType.DONE)
+                                error?.let { toaster.showLoadError(it) }
+                            }
                         },
                         enabled = !editableSubjectCollectionTypePresentation.isSetSelfCollectionTypeWorking,
                     ) {

@@ -77,6 +77,7 @@ import me.him188.ani.app.data.repository.shouldRetry
 import me.him188.ani.app.domain.search.SubjectType
 import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
+import me.him188.ani.app.domain.session.checkTokenNow
 import me.him188.ani.app.domain.session.verifiedAccessToken
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.UTC9
@@ -162,6 +163,9 @@ sealed class SubjectCollectionRepository(
         isPrivate: Boolean? = null,
     )
 
+    /**
+     * @throws me.him188.ani.app.data.repository.RepositoryAuthorizationException
+     */
     abstract suspend fun setSubjectCollectionTypeOrDelete(
         subjectId: Int,
         type: UnifiedCollectionType?,
@@ -531,6 +535,7 @@ class SubjectCollectionRepositoryImpl(
         type: UnifiedCollectionType?,
     ) {
         return withContext(defaultDispatcher) {
+            sessionManager.checkTokenNow()
             if (type == null) {
                 deleteSubjectCollection(subjectId)
             } else {

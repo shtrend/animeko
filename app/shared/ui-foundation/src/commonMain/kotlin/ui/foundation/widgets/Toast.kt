@@ -36,9 +36,12 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
+import me.him188.ani.utils.logging.logger
+import me.him188.ani.utils.logging.warn
 import me.him188.ani.utils.platform.annotations.TestOnly
 import kotlin.math.max
 import kotlin.math.min
@@ -55,6 +58,24 @@ interface Toaster {
     // AI 喜欢补这个
     fun show(text: String) {
         toast(text)
+    }
+}
+
+private val logger = logger<Toaster>()
+
+fun Toaster.showLoadError(error: LoadError) {
+    when (error) {
+        LoadError.NetworkError -> show("网络错误，请检查网络连接或稍后再试")
+        LoadError.NoResults -> show("没有结果")
+        LoadError.RateLimited -> show("请求过于频繁，请稍后再试")
+        LoadError.RequiresLogin -> show("此功能需要登录")
+        LoadError.ServiceUnavailable -> show("服务不可用，请稍后再试")
+        is LoadError.UnknownError -> {
+            show("发生未知错误，请在设置中反馈（附加日志）")
+            logger.warn(error.throwable) {
+                "Toaster showing an LoadError.UnknownError"
+            }
+        }
     }
 }
 
