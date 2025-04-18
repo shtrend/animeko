@@ -439,8 +439,8 @@ run {
         ),
         buildAllAndroidAbis = false,
         uploadIpa = true,
-        gradleHeap = "12g",
-        kotlinCompilerHeap = "6g",
+        gradleHeap = "8g",
+        kotlinCompilerHeap = "8g",
         gradleParallel = true,
     )
 
@@ -997,6 +997,7 @@ class WithMatrix(
         maxAttempts: Int = 2,
         timeoutMinutes: Int = 180,
         gradleArgs: String = matrix.gradleArgs,
+        maxWorkers: Int? = null,
     ) = runWithAttempts(
         name = name,
         `if` = `if`,
@@ -1006,6 +1007,9 @@ class WithMatrix(
             tasks.joinTo(this, " ")
             append(' ')
             append(gradleArgs)
+            if (maxWorkers != null) {
+                append("--max-workers=$maxWorkers")
+            }
         },
         env = env,
         maxAttempts = maxAttempts,
@@ -1432,11 +1436,20 @@ class WithMatrix(
     fun JobBuilder<*>.buildIosIpaRelease() {
         if (matrix.uploadIpa) {
             runGradle(
+                name = "linkPodReleaseFrameworkIosArm64",
+                tasks = [
+                    ":app:shared:application:linkPodReleaseFrameworkIosArm64",
+                ],
+                maxAttempts = 6,
+                maxWorkers = 1, // Save memory on CI
+            )
+            runGradle(
                 name = "Build iOS Release IPA",
                 tasks = [
                     ":app:ios:buildReleaseIpa",
                 ],
-                maxAttempts = 3,
+                maxAttempts = 6,
+                maxWorkers = 1, // Save memory on CI
             )
             usesWithAttempts(
                 name = "Upload iOS Release IPA",
