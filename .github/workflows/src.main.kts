@@ -439,8 +439,8 @@ run {
         ),
         buildAllAndroidAbis = false,
         uploadIpa = true,
-        gradleHeap = "8g",
-        kotlinCompilerHeap = "4g",
+        gradleHeap = "12g",
+        kotlinCompilerHeap = "6g",
         gradleParallel = true,
     )
 
