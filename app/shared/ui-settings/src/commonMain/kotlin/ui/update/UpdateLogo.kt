@@ -40,38 +40,38 @@ import me.him188.ani.app.tools.update.InstallationResult
 import me.him188.ani.app.ui.foundation.text.toPercentageString
 
 @Composable
-fun UpdateLogoLabel(state: UpdateLogoState) {
+fun UpdateLogoLabel(state: AppUpdateState) {
     when (state) {
-        UpdateLogoState.ClickToCheck -> Text(text = "检查更新")
-        is UpdateLogoState.DownloadFailed -> Text(
+        AppUpdateState.ClickToCheck -> Text(text = "检查更新")
+        is AppUpdateState.DownloadFailed -> Text(
             text = "下载失败",
             color = MaterialTheme.colorScheme.error,
         )
 
-        is UpdateLogoState.Downloaded -> Text(text = "重启更新", color = MaterialTheme.colorScheme.error)
-        is UpdateLogoState.Downloading -> Text(text = "下载中 ${state.progress.toPercentageString()}")
-        is UpdateLogoState.HasUpdate -> Text(text = "有新版本", color = MaterialTheme.colorScheme.error)
-        UpdateLogoState.UpToDate -> Text(text = "已是最新")
+        is AppUpdateState.Downloaded -> Text(text = "重启更新", color = MaterialTheme.colorScheme.error)
+        is AppUpdateState.Downloading -> Text(text = "下载中 ${state.progress.toPercentageString()}")
+        is AppUpdateState.HasUpdate -> Text(text = "有新版本", color = MaterialTheme.colorScheme.error)
+        AppUpdateState.AlreadyUpToDate -> Text(text = "已是最新")
     }
 }
 
 @Composable
-fun UpdateLogoIcon(state: UpdateLogoState) {
+fun UpdateLogoIcon(state: AppUpdateState) {
     when (state) {
-        UpdateLogoState.ClickToCheck,
-        is UpdateLogoState.HasUpdate,
+        AppUpdateState.ClickToCheck,
+        is AppUpdateState.HasUpdate,
             -> Icon(Icons.Rounded.Update, null, tint = MaterialTheme.colorScheme.error)
 
-        is UpdateLogoState.DownloadFailed,
+        is AppUpdateState.DownloadFailed,
             -> Icon(Icons.Rounded.ErrorOutline, null, tint = MaterialTheme.colorScheme.error)
 
-        is UpdateLogoState.Downloaded
+        is AppUpdateState.Downloaded
             -> Icon(Icons.Rounded.RestartAlt, null, tint = MaterialTheme.colorScheme.error)
 
-        is UpdateLogoState.Downloading
+        is AppUpdateState.Downloading
             -> Icon(Icons.Rounded.Downloading, null)
 
-        UpdateLogoState.UpToDate
+        AppUpdateState.AlreadyUpToDate
             -> Icon(Icons.Rounded.CheckCircleOutline, null)
     }
 }
@@ -124,7 +124,7 @@ fun TextButtonUpdateLogo(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ProvideTextStyle(MaterialTheme.typography.labelMedium) {
-                    if (state.logoState !is UpdateLogoState.HasUpdate) {
+                    if (state.logoState !is AppUpdateState.HasUpdate) {
                         UpdateLogoLabel(state.logoState)
                     }
                 }

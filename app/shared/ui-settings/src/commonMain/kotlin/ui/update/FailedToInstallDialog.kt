@@ -27,7 +27,7 @@ import org.koin.mp.KoinPlatform
 fun FailedToInstallDialog(
     message: String,
     onDismissRequest: () -> Unit,
-    logoState: () -> UpdateLogoState,
+    logoState: () -> AppUpdateState,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -41,7 +41,7 @@ fun FailedToInstallDialog(
                 Button(
                     onClick = {
                         scope.launch {
-                            val file = (logoState() as? UpdateLogoState.Downloaded)?.file
+                            val file = (logoState() as? AppUpdateState.Downloaded)?.file
                             if (file == null) {
                                 toaster.toast("未找到安装包")
                                 return@launch

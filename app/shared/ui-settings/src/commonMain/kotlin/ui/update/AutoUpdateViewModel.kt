@@ -86,30 +86,30 @@ class AutoUpdateViewModel : AbstractViewModel(), KoinComponent {
 
     private val autoCheckTasker = MonoTasker(backgroundScope)
 
-    val logoState: UpdateLogoState by derivedStateOf {
+    val logoState: AppUpdateState by derivedStateOf {
         val latestVersion = latestVersion
         val fileDownloaderState = fileDownloaderPresentation.state
         when {
-            !checked -> UpdateLogoState.ClickToCheck
-            latestVersion == null -> UpdateLogoState.UpToDate
+            !checked -> AppUpdateState.ClickToCheck
+            latestVersion == null -> AppUpdateState.AlreadyUpToDate
             else -> {
                 when (fileDownloaderState) {
-                    FileDownloaderState.Idle -> UpdateLogoState.HasUpdate(latestVersion)
+                    FileDownloaderState.Idle -> AppUpdateState.HasUpdate(latestVersion)
                     is FileDownloaderState.Failed ->
-                        UpdateLogoState.DownloadFailed(latestVersion, fileDownloaderState.throwable)
+                        AppUpdateState.DownloadFailed(latestVersion, fileDownloaderState.throwable)
 
                     FileDownloaderState.Downloading ->
-                        UpdateLogoState.Downloading(latestVersion, fileDownloaderPresentation)
+                        AppUpdateState.Downloading(latestVersion, fileDownloaderPresentation)
 
                     is FileDownloaderState.Succeed ->
-                        UpdateLogoState.Downloaded(latestVersion, fileDownloaderState.file)
+                        AppUpdateState.Downloaded(latestVersion, fileDownloaderState.file)
                 }
             }
         }
     }
 
     val hasUpdate by derivedStateOf {
-        logoState is UpdateLogoState.HasNewVersion
+        logoState is AppUpdateState.HasNewVersion
     }
 
     // 一小时内只会检查一次

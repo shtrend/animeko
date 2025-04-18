@@ -19,23 +19,23 @@ import me.him188.ani.utils.io.SystemPath
 import org.koin.mp.KoinPlatform
 
 /**
- * UI 的"有新版本"标识的状态
+ * 自动更新
  */
 @Stable
-sealed interface UpdateLogoState {
+sealed interface AppUpdateState {
     /**
      * 没有开启自动检查更新, 需要点击检查
      */
     @Immutable
-    data object ClickToCheck : UpdateLogoState
+    data object ClickToCheck : AppUpdateState
 
     /**
      * 已经是最新版本
      */
     @Immutable
-    data object UpToDate : UpdateLogoState
+    data object AlreadyUpToDate : AppUpdateState
 
-    sealed interface HasNewVersion : UpdateLogoState {
+    sealed interface HasNewVersion : AppUpdateState {
         val version: NewVersion
     }
 
@@ -43,7 +43,7 @@ sealed interface UpdateLogoState {
      * 有新版本, 而且没有开启自动下载, 所以要展示一个 "更新" 图标
      */
     @Immutable
-    data class HasUpdate(override val version: NewVersion) : UpdateLogoState, HasNewVersion
+    data class HasUpdate(override val version: NewVersion) : AppUpdateState, HasNewVersion
 
     /**
      * 正在下载更新
@@ -84,17 +84,17 @@ fun AutoUpdateViewModel.handleClickLogo(
     showChangelogDialog: () -> Unit,
 ) {
     when (val logo = logoState) {
-        UpdateLogoState.ClickToCheck -> {} // should not happen
-        is UpdateLogoState.DownloadFailed -> this.restartDownload(uriHandler)
-        is UpdateLogoState.Downloaded -> {
+        AppUpdateState.ClickToCheck -> {} // should not happen
+        is AppUpdateState.DownloadFailed -> this.restartDownload(uriHandler)
+        is AppUpdateState.Downloaded -> {
             val result = KoinPlatform.getKoin().get<UpdateInstaller>().install(logo.file, context)
             if (result is InstallationResult.Failed) {
                 onInstallationError(result)
             }
         }
 
-        is UpdateLogoState.Downloading -> {}
-        is UpdateLogoState.HasUpdate -> showChangelogDialog()
-        UpdateLogoState.UpToDate -> this.startCheckLatestVersion(uriHandler)
+        is AppUpdateState.Downloading -> {}
+        is AppUpdateState.HasUpdate -> showChangelogDialog()
+        AppUpdateState.AlreadyUpToDate -> this.startCheckLatestVersion(uriHandler)
     }
 }
