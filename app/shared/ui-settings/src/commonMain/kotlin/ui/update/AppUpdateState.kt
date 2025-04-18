@@ -11,12 +11,7 @@ package me.him188.ani.app.ui.update
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.ui.platform.UriHandler
-import me.him188.ani.app.platform.ContextMP
-import me.him188.ani.app.tools.update.InstallationResult
-import me.him188.ani.app.tools.update.UpdateInstaller
 import me.him188.ani.utils.io.SystemPath
-import org.koin.mp.KoinPlatform
 
 /**
  * 自动更新
@@ -51,9 +46,9 @@ sealed interface AppUpdateState {
     @Stable
     data class Downloading(
         override val version: NewVersion,
-        private val fileDownloaderState: FileDownloaderPresentation,
+        private val fileDownloaderStats: FileDownloaderStats,
     ) : HasNewVersion {
-        val progress: Float get() = fileDownloaderState.progress
+        val progress: Float get() = fileDownloaderStats.progress
     }
 
     /**
@@ -62,7 +57,7 @@ sealed interface AppUpdateState {
     @Stable
     data class DownloadFailed(
         override val version: NewVersion,
-        private val throwable: Throwable,
+        val throwable: Throwable,
     ) : HasNewVersion
 
     /**
@@ -75,26 +70,4 @@ sealed interface AppUpdateState {
     ) : HasNewVersion
 
     companion object
-}
-
-fun AutoUpdateViewModel.handleClickLogo(
-    context: ContextMP,
-    uriHandler: UriHandler,
-    onInstallationError: (InstallationResult.Failed) -> Unit,
-    showChangelogDialog: () -> Unit,
-) {
-    when (val logo = logoState) {
-        AppUpdateState.ClickToCheck -> {} // should not happen
-        is AppUpdateState.DownloadFailed -> this.restartDownload(uriHandler)
-        is AppUpdateState.Downloaded -> {
-            val result = KoinPlatform.getKoin().get<UpdateInstaller>().install(logo.file, context)
-            if (result is InstallationResult.Failed) {
-                onInstallationError(result)
-            }
-        }
-
-        is AppUpdateState.Downloading -> {}
-        is AppUpdateState.HasUpdate -> showChangelogDialog()
-        AppUpdateState.AlreadyUpToDate -> this.startCheckLatestVersion(uriHandler)
-    }
 }

@@ -20,10 +20,12 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.intl.Locale
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.CoroutineScope
 import me.him188.ani.app.data.models.danmaku.DanmakuFilterConfig
@@ -112,10 +114,8 @@ import me.him188.ani.app.ui.settings.framework.components.TextItem
 import me.him188.ani.app.ui.settings.rendering.ReleaseClassIcon
 import me.him188.ani.app.ui.settings.rendering.guessReleaseClass
 import me.him188.ani.app.ui.settings.tabs.theme.ThemeGroup
-import me.him188.ani.app.ui.update.AutoUpdateViewModel
-import me.him188.ani.app.ui.update.ChangelogDialog
+import me.him188.ani.app.ui.update.AppUpdateViewModel
 import me.him188.ani.app.ui.update.NewVersion
-import me.him188.ani.app.ui.update.TextButtonUpdateLogo
 import me.him188.ani.app.ui.update.UpdateChecker
 import me.him188.ani.utils.platform.isDesktop
 import me.him188.ani.utils.platform.isIos
@@ -390,17 +390,9 @@ fun SettingsScope.SoftwareUpdateGroup(
             }
         }
         HorizontalDividerItem()
-        var showUpdatePopup by remember { mutableStateOf(false) }
-        val autoUpdate: AutoUpdateViewModel = viewModel { AutoUpdateViewModel() }
-        if (showUpdatePopup) {
-            (state.updateCheckerTester.tester.result as? CheckVersionResult.HasNewVersion)?.let {
-                ChangelogDialog(
-                    latestVersion = it.newVersion,
-                    onDismissRequest = { showUpdatePopup = false },
-                    onStartDownload = { autoUpdate.startDownload(it.newVersion, uriHandler) },
-                )
-            }
-        }
+        var showUpdatePopup by rememberSaveable { mutableStateOf(false) }
+        val autoUpdate: AppUpdateViewModel = viewModel { AppUpdateViewModel() }
+        val updatePresentation by autoUpdate.presentationFlow.collectAsStateWithLifecycle()
         TextButtonItem(
             onClick = {
                 if (state.updateCheckerTester.tester.isTesting) {
@@ -434,15 +426,13 @@ fun SettingsScope.SoftwareUpdateGroup(
         )
         AniAnimatedVisibility(
             state.updateCheckerTester.tester.result is CheckVersionResult.HasNewVersion // 在设置里检查的
-                    || autoUpdate.hasUpdate, // 在主页自动检查的
+                    || updatePresentation.hasUpdate, // 在主页自动检查的
         ) {
-            HorizontalDividerItem()
-            Item(
-                headlineContent = {},
-                trailingContent = {
-                    TextButtonUpdateLogo(autoUpdate)
-                },
-            )
+            // TODO: 2025/4/18  
+//            NewVersionPopupCard(
+//                updatePresentation.newVersion,
+//                
+//            )
         }
     }
 }

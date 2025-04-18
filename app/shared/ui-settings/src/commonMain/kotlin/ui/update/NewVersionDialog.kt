@@ -11,23 +11,29 @@ package me.him188.ani.app.ui.update
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CornerBasedShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Launch
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.foundation.text.ProvideTextStyleContentColor
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -46,45 +53,34 @@ fun NewVersionPopupCard(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
+    BasicNotificationPopupCard(
+        title = { Text("新版本") },
         modifier,
-        shape = MaterialTheme.shapes.extraLarge,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ),
-    ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 24.dp, vertical = 20.dp)
-                .widthIn(min = 280.dp, max = 380.dp),
-        ) {
-            /* ─── Title + Dismiss ─────────────────────────────────────────────── */
-            Row(
-                verticalAlignment = Alignment.Top,
-                modifier = Modifier.fillMaxWidth(),
+        subtitle = { Text(version) },
+        dismissButton = {
+            NotificationPopupDefaults.DismissButton(onDismissRequest)
+        },
+        actions = {
+            OutlinedButton(
+                onClick = onDetailsClick,
+                modifier = Modifier,
             ) {
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        text = "新版本",
-                        style = MaterialTheme.typography.headlineSmall,
-                    )
-                    Text(
-                        text = version,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                IconButton(onClick = onDismissRequest) {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
-                        contentDescription = "Close",
-                    )
-                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.Launch,
+                    contentDescription = null,
+                )
+                Spacer(Modifier.width(8.dp))
+                Text("查看详情") // See details
             }
-
-            Spacer(Modifier.height(12.dp))
-
-            /* ─── Release Notes ──────────────────────────────────────────────── */
+            Spacer(Modifier.width(16.dp))
+            Button(
+                onClick = onAutoUpdateClick,
+                modifier = Modifier,
+            ) {
+                Text("自动更新") // Auto‑update
+            }
+        },
+        content = {
             Column {
                 changes.forEach { change ->
                     Row(
@@ -100,35 +96,89 @@ fun NewVersionPopupCard(
                     }
                 }
             }
+        },
+    )
+}
 
-            Spacer(Modifier.height(28.dp))
+@Composable
+fun BasicNotificationPopupCard(
+    title: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: @Composable () -> Unit = {},
+    dismissButton: @Composable () -> Unit = {},
+    actions: @Composable RowScope.() -> Unit = {},
+    secondaryActions: @Composable RowScope.() -> Unit = {},
+    shape: CornerBasedShape = MaterialTheme.shapes.extraLarge,
+    colors: CardColors = CardDefaults.cardColors(
+        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+    ),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Card(
+        modifier,
+        shape = shape,
+        colors = colors,
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 24.dp, vertical = 20.dp)
+                .widthIn(min = 280.dp, max = 380.dp),
+        ) {
+            /* ─── Title + Dismiss ─────────────────────────────────────────────── */
+            Row(
+                verticalAlignment = Alignment.Top,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Column(Modifier.weight(1f)) {
+                    ProvideTextStyle(MaterialTheme.typography.titleLarge) {
+                        title()
+                    }
+
+                    ProvideTextStyleContentColor(
+                        MaterialTheme.typography.bodyMedium,
+                        MaterialTheme.colorScheme.onSurfaceVariant,
+                    ) {
+                        subtitle()
+                    }
+                }
+                dismissButton()
+            }
+
+            Spacer(Modifier.height(16.dp))
+
+            /* ─── Release Notes ──────────────────────────────────────────────── */
+            Column {
+                content()
+            }
+
+            Spacer(Modifier.height(16.dp))
 
             /* ─── Action Buttons ────────────────────────────────────────────── */
             Row(
-                horizontalArrangement = Arrangement.End,
+//                horizontalArrangement = Arrangement.spacedBy(0.dp, Alignment.End),
                 modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                OutlinedButton(
-                    onClick = onDetailsClick,
-                    shape = MaterialTheme.shapes.extraLarge,
-                    modifier = Modifier,
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.Launch,
-                        contentDescription = null,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text("查看详情") // See details
+                FlowRow(Modifier.weight(1f), verticalArrangement = Arrangement.aligned(Alignment.CenterVertically)) {
+                    secondaryActions()
                 }
-                Spacer(Modifier.width(16.dp))
-                Button(
-                    onClick = onAutoUpdateClick,
-                    shape = MaterialTheme.shapes.extraLarge,
-                    modifier = Modifier,
-                ) {
-                    Text("自动更新") // Auto‑update
-                }
+                actions()
             }
+        }
+    }
+}
+
+object NotificationPopupDefaults {
+    @Composable
+    fun DismissButton(
+        onClick: () -> Unit,
+        modifier: Modifier = Modifier,
+    ) {
+        IconButton(onClick = onClick, modifier) {
+            Icon(
+                imageVector = Icons.Rounded.Close,
+                contentDescription = "Close",
+            )
         }
     }
 }

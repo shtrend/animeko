@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.tools.update
 
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.client.plugins.timeout
@@ -44,6 +43,7 @@ import me.him188.ani.utils.io.exists
 import me.him188.ani.utils.io.length
 import me.him188.ani.utils.io.readAndDigest
 import me.him188.ani.utils.io.resolve
+import me.him188.ani.utils.ktor.ScopedHttpClient
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import kotlin.time.Duration.Companion.seconds
@@ -109,7 +109,7 @@ sealed class FileDownloaderState {
 }
 
 class DefaultFileDownloader(
-    private val client: HttpClient,
+    private val client: ScopedHttpClient,
 ) : FileDownloader {
     private companion object {
         private val logger = logger<DefaultFileDownloader>()
@@ -211,10 +211,10 @@ class DefaultFileDownloader(
     /**
      * 获取远程 SHA-1 校验和: 对应的 URL 为 [url].sha1
      */
-    private suspend fun fetchRemoteChecksum(client: HttpClient, url: String): String? {
+    private suspend fun fetchRemoteChecksum(client: ScopedHttpClient, url: String): String? {
         return try {
             // The server should serve the checksum as plain text
-            client.get("$url.sha1").body()
+            client.use { get("$url.sha1").body() }
         } catch (e: kotlin.coroutines.cancellation.CancellationException) {
             throw e
         } catch (e: ClientRequestException) {
@@ -230,49 +230,51 @@ class DefaultFileDownloader(
     /**
      * 下载单个文件并更新进度 [_progress]. 如果下载失败, 抛出异常.
      */
-    private suspend fun tryDownload(client: HttpClient, url: String, file: SystemPath) {
+    private suspend fun tryDownload(client: ScopedHttpClient, url: String, file: SystemPath) {
         cancellableCoroutineScope {
             logger.info { "Attempting download: $url" }
             try {
-                client.prepareRequest(url) {
-                    timeout {
-                        requestTimeoutMillis = 1_000_000
-                    }
-                }.execute { resp ->
-                    val length = resp.contentLength()
-                    logger.info { "Downloading $url to ${file.absolutePath}, length=${(length ?: 0).bytes}" }
+                client.use {
+                    prepareRequest(url) {
+                        timeout {
+                            requestTimeoutMillis = 1_000_000
+                        }
+                    }.execute { resp ->
+                        val length = resp.contentLength()
+                        logger.info { "Downloading $url to ${file.absolutePath}, length=${(length ?: 0).bytes}" }
 
-                    val downloaded = object {
-                        val value = atomic(0L)
-                    }
+                        val downloaded = object {
+                            val value = atomic(0L)
+                        }
 
-                    val input = resp.bodyAsChannel()
-                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                        val input = resp.bodyAsChannel()
+                        val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
 
-                    if (length != null) {
-                        launch {
-                            while (isActive) {
-                                delay(1.seconds)
-                                _progress.value = downloaded.value.value.toFloat() / length
+                        if (length != null) {
+                            launch {
+                                while (isActive) {
+                                    delay(1.seconds)
+                                    _progress.value = downloaded.value.value.toFloat() / length
+                                }
                             }
                         }
-                    }
 
-                    file.bufferedSink().use { output ->
-                        while (!input.isClosedForRead) {
-                            val read = input.readAvailable(buffer)
-                            if (read == -1) {
-                                break
-                            }
-                            downloaded.value.addAndGet(read.toLong())
-                            withContext(Dispatchers.IO_) {
-                                output.write(buffer, 0, read)
+                        file.bufferedSink().use { output ->
+                            while (!input.isClosedForRead) {
+                                val read = input.readAvailable(buffer)
+                                if (read == -1) {
+                                    break
+                                }
+                                downloaded.value.addAndGet(read.toLong())
+                                withContext(Dispatchers.IO_) {
+                                    output.write(buffer, 0, read)
+                                }
                             }
                         }
-                    }
-                    _progress.value = 1f
+                        _progress.value = 1f
 
-                    logger.info { "Successfully downloaded: $url" }
+                        logger.info { "Successfully downloaded: $url" }
+                    }
                 }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e

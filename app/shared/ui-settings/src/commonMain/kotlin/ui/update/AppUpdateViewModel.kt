@@ -11,31 +11,35 @@ package me.him188.ani.app.ui.update
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.UriHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
+import me.him188.ani.app.data.repository.RepositoryNetworkException
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.foundation.HttpClientProvider
+import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.domain.foundation.get
 import me.him188.ani.app.domain.update.UpdateManager
+import me.him188.ani.app.platform.ContextMP
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.tools.MonoTasker
 import me.him188.ani.app.tools.update.DefaultFileDownloader
 import me.him188.ani.app.tools.update.FileDownloaderState
+import me.him188.ani.app.tools.update.InstallationResult
+import me.him188.ani.app.tools.update.UpdateInstaller
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.utils.io.createDirectories
 import me.him188.ani.utils.io.exists
 import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.io.list
-import me.him188.ani.utils.ktor.UnsafeScopedHttpClientApi
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.warn
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -48,76 +52,72 @@ import kotlin.coroutines.cancellation.CancellationException
  * 主页使用的自动更新检查
  */
 @Stable
-class AutoUpdateViewModel : AbstractViewModel(), KoinComponent {
+class AppUpdateViewModel : AbstractViewModel(), KoinComponent {
     private val settingsRepository: SettingsRepository by inject()
     private val updateSettings = settingsRepository.updateSettings.flow
     private val updateManager: UpdateManager by inject()
     private val clientProvider: HttpClientProvider by inject()
+    private val updateInstaller: UpdateInstaller by inject()
 
-    private val updateChecker: UpdateChecker by lazy { UpdateChecker() }
-
-    private val client by lazy { clientProvider.get() }
-
-    @OptIn(UnsafeScopedHttpClientApi::class) // returned in onCleared
-    private val borrowedClient = lazy { clientProvider.get().borrow() }
-
-    @OptIn(UnsafeScopedHttpClientApi::class)
-    private val fileDownloader by lazy { DefaultFileDownloader(borrowedClient.value.client) }
-
-    /**
-     * 新版本下载进度
-     */
-    private val fileDownloaderPresentation = FileDownloaderPresentation(fileDownloader, backgroundScope)
+    private val fileDownloader by lazy { DefaultFileDownloader(clientProvider.get()) }
+    private val updateChecker: UpdateChecker = UpdateChecker()
 
     /**
      * 最新的版本. 当 [checked] 为 `true` 时, `null` 表示没有新版本. 否则表示还没有检查过.
      */
-    var latestVersion: NewVersion? by mutableStateOf(null)
-    val currentVersion get() = currentAniBuildConfig.versionName
-
-    private var lastCheckTime: Long by mutableLongStateOf(0L)
+    private val latestVersionFlow = MutableStateFlow<NewVersion?>(null)
+    private val lastCheckTime: MutableStateFlow<Long> = MutableStateFlow(0L)
 
     /**
-     * 是否检查过更新
+     * 新版本下载进度
      */
-    val checked by derivedStateOf {
-        lastCheckTime != 0L
-    }
+    private val fileDownloaderPresenter = FileDownloaderPresenter(fileDownloader, backgroundScope)
 
-    private val autoCheckTasker = MonoTasker(backgroundScope)
-
-    val logoState: AppUpdateState by derivedStateOf {
+    val presentationFlow = combine(
+        latestVersionFlow,
+        fileDownloaderPresenter.flow,
+    ) { latestVersion, fileDownloaderStats ->
         val latestVersion = latestVersion
-        val fileDownloaderState = fileDownloaderPresentation.state
-        when {
-            !checked -> AppUpdateState.ClickToCheck
+        val state = when {
+            // 还没检查过
+            lastCheckTime.value == 0L -> AppUpdateState.ClickToCheck
             latestVersion == null -> AppUpdateState.AlreadyUpToDate
             else -> {
-                when (fileDownloaderState) {
+                when (fileDownloaderStats.state) {
                     FileDownloaderState.Idle -> AppUpdateState.HasUpdate(latestVersion)
                     is FileDownloaderState.Failed ->
-                        AppUpdateState.DownloadFailed(latestVersion, fileDownloaderState.throwable)
+                        AppUpdateState.DownloadFailed(latestVersion, fileDownloaderStats.state.throwable)
 
                     FileDownloaderState.Downloading ->
-                        AppUpdateState.Downloading(latestVersion, fileDownloaderPresentation)
+                        AppUpdateState.Downloading(latestVersion, fileDownloaderStats)
 
                     is FileDownloaderState.Succeed ->
-                        AppUpdateState.Downloaded(latestVersion, fileDownloaderState.file)
+                        AppUpdateState.Downloaded(latestVersion, fileDownloaderStats.state.file)
                 }
             }
         }
-    }
 
-    val hasUpdate by derivedStateOf {
-        logoState is AppUpdateState.HasNewVersion
-    }
+        AppUpdatePresentation(
+            newVersion = latestVersion,
+            state = state,
+            fileDownloaderStats = fileDownloaderStats,
+            isPlaceholder = latestVersion == null && fileDownloaderStats.isPlaceholder,
+        )
+    }.stateIn(
+        scope = backgroundScope,
+        started = SharingStarted.WhileSubscribed(),
+        initialValue = AppUpdatePresentation.Placeholder,
+    )
+
+    private val autoCheckTasker = MonoTasker(backgroundScope)
+    private val downloadTasker = MonoTasker(backgroundScope)
 
     // 一小时内只会检查一次
     fun startAutomaticCheckLatestVersion() {
         if (autoCheckTasker.isRunning.value) {
             return
         } else {
-            if (currentTimeMillis() - lastCheckTime < 1000 * 60 * 60 * 1) {
+            if (currentTimeMillis() - lastCheckTime.value < 1000 * 60 * 60 * 1) {
                 return // 1 小时内检查过
             }
 
@@ -148,11 +148,10 @@ class AutoUpdateViewModel : AbstractViewModel(), KoinComponent {
                 logger.info { "Auto update checking failed due to IOException: $e" } // 故意不打印堆栈
                 return@launch
             } finally {
-                withContext(Dispatchers.Main) {
-                    lastCheckTime = currentTimeMillis()
-                }
+                lastCheckTime.value = currentTimeMillis()
             }
-            withContext(Dispatchers.Main) { latestVersion = ver }
+
+            latestVersionFlow.update { ver }
 
             if (ver != null && updateSettings.autoDownloadUpdate) {
                 logger.info { "autoDownloadUpdate is true, starting download" }
@@ -161,9 +160,8 @@ class AutoUpdateViewModel : AbstractViewModel(), KoinComponent {
         }
     }
 
-    private val autoDownloadTasker = MonoTasker(backgroundScope)
     fun startDownload(ver: NewVersion, uriHandler: UriHandler?) {
-        autoDownloadTasker.launch {
+        downloadTasker.launch {
             val settings = updateSettings.first()
             if (!settings.inAppDownload) {
                 if (uriHandler == null) {
@@ -206,17 +204,54 @@ class AutoUpdateViewModel : AbstractViewModel(), KoinComponent {
     }
 
     fun restartDownload(uriHandler: UriHandler) {
-        latestVersion?.let { startDownload(it, uriHandler) }
+        latestVersionFlow.value?.let { startDownload(it, uriHandler) }
     }
 
-    @OptIn(UnsafeScopedHttpClientApi::class)
-    override fun onCleared() {
-        super.onCleared()
-        if (borrowedClient.isInitialized()) {
-            client.returnClient(borrowedClient.value)
+    fun install(context: ContextMP): InstallationResult.Failed? {
+        val state = presentationFlow.value.state as? AppUpdateState.Downloaded
+            ?: return null
+        val result = updateInstaller.install(state.file, context)
+        return when (result) {
+            is InstallationResult.Failed -> result
+            InstallationResult.Succeed -> null
         }
     }
+
+    fun cancelDownload() {
+        downloadTasker.cancel()
+    }
 }
+
+@Immutable
+data class AppUpdatePresentation(
+    val newVersion: NewVersion?,
+    val state: AppUpdateState,
+    val fileDownloaderStats: FileDownloaderStats,
+    val currentVersion: String = currentAniBuildConfig.versionName,
+    val isPlaceholder: Boolean = false,
+) {
+    val isDownloading = when (state) {
+        AppUpdateState.AlreadyUpToDate -> false
+        AppUpdateState.ClickToCheck -> false
+        is AppUpdateState.DownloadFailed -> true
+        is AppUpdateState.Downloaded -> true
+        is AppUpdateState.Downloading -> true
+        is AppUpdateState.HasUpdate -> false
+    }
+    val downloadError = (state as? AppUpdateState.DownloadFailed)?.throwable?.let { LoadError.fromException(it) }
+
+    val hasUpdate = state is AppUpdateState.HasUpdate
+
+    companion object {
+        val Placeholder = AppUpdatePresentation(
+            newVersion = null,
+            state = AppUpdateState.ClickToCheck,
+            fileDownloaderStats = FileDownloaderStats.Placeholder,
+            isPlaceholder = true,
+        )
+    }
+}
+
 
 @Immutable
 class NewVersion(
@@ -227,7 +262,11 @@ class NewVersion(
      */
     val downloadUrlAlternatives: List<String>,
     val publishedAt: String,
-)
+) {
+    val majorChanges = changelogs.asSequence().flatMap { changelog ->
+        changelog.changes.lineSequence().map { it.removePrefix("- ").removePrefix("* ") }
+    }.take(4).toList()
+}
 
 @Immutable
 class Changelog(
@@ -248,8 +287,47 @@ class Changelog(
 val TestNewVersion
     get() = NewVersion(
         "1.0.0",
-        listOf(),
+        listOf(
+            Changelog(
+                "1.0.0", "",
+                "- Major feature 1\n- Major feature 2",
+            ),
+        ),
         listOf("https://example.com"),
         "2024-01-02",
     )
 
+@TestOnly
+object TestAppUpdatePresentations {
+    @TestOnly
+    val HasUpdate
+        get() = AppUpdatePresentation(
+            newVersion = TestNewVersion,
+            state = AppUpdateState.HasUpdate(TestNewVersion),
+            fileDownloaderStats = FileDownloaderStats.Placeholder,
+        )
+
+    @TestOnly
+    val Downloading
+        get() = AppUpdatePresentation(
+            newVersion = TestNewVersion,
+            state = AppUpdateState.Downloading(TestNewVersion, TestFileDownloaderStats.Downloading),
+            fileDownloaderStats = FileDownloaderStats.Placeholder,
+        )
+
+    @TestOnly
+    val Succeed
+        get() = AppUpdatePresentation(
+            newVersion = TestNewVersion,
+            state = AppUpdateState.Downloaded(TestNewVersion, kotlinx.io.files.Path("").inSystem),
+            fileDownloaderStats = FileDownloaderStats.Placeholder,
+        )
+
+    @TestOnly
+    val Failed
+        get() = AppUpdatePresentation(
+            newVersion = TestNewVersion,
+            state = AppUpdateState.DownloadFailed(TestNewVersion, RepositoryNetworkException()),
+            fileDownloaderStats = FileDownloaderStats.Placeholder,
+        )
+}

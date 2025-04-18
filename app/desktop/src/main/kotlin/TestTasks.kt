@@ -92,15 +92,13 @@ object TestTasks {
         val url = args[0]
 
         val result = runBlocking {
-            clientProvider.get(ScopedHttpClientUserAgent.ANI).use {
-                logger.info { "Downloading update from $url" }
-                DefaultFileDownloader(this).download(
-                    listOf(url),
-                    saveDir = File(".").toKtPath().inSystem,
-                ).also {
-                    logger.info { "Downloading done" }
-                } ?: error("Download failed")
-            }
+            logger.info { "Downloading update from $url" }
+            DefaultFileDownloader(clientProvider.get(ScopedHttpClientUserAgent.ANI)).download(
+                listOf(url),
+                saveDir = File(".").toKtPath().inSystem,
+            ).also {
+                logger.info { "Downloading done" }
+            } ?: error("Download failed")
         }
 
         when (currentPlatformDesktop()) {

@@ -15,7 +15,6 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.provider.Settings
-import androidx.core.content.ContextCompat.startActivity
 import androidx.core.content.FileProvider
 import me.him188.ani.BuildConfig
 import me.him188.ani.app.platform.ContextMP
