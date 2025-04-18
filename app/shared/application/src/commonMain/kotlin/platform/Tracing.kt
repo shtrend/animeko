@@ -16,7 +16,7 @@ import me.him188.ani.utils.platform.currentPlatform
 
 
 /**
- * Shares initialization logic across platforms. Only used by [initializeErrorReport].
+ * Shares initialization logic across platforms. Only used by [initializeSentry].
  */
 internal object CommonTracingInitializer {
     fun configureSentryOptions(options: SentryOptions) {
@@ -37,4 +37,4 @@ internal object CommonTracingInitializer {
 /**
  * Initializes [ErrorReport] for the platform.
  */
-internal expect fun initializeErrorReport(userId: String)
+internal expect fun initializeSentry(userId: String)

@@ -12,7 +12,7 @@ package me.him188.ani.app.platform
 import io.sentry.kotlin.multiplatform.Sentry
 import io.sentry.kotlin.multiplatform.protocol.User
 
-internal actual fun initializeErrorReport(userId: String) {
+internal actual fun initializeSentry(userId: String) {
     Sentry.init { options ->
         CommonTracingInitializer.configureSentryOptions(options)
     }

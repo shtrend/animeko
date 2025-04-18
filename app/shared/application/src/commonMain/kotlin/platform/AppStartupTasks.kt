@@ -9,7 +9,6 @@
 
 package me.him188.ani.app.platform
 
-import io.sentry.kotlin.multiplatform.Sentry
 import me.him188.ani.app.domain.session.AuthorizationCancelledException
 import me.him188.ani.app.domain.session.AuthorizationFailedException
 import me.him188.ani.app.domain.session.SessionManager
@@ -23,22 +22,21 @@ import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
 import me.him188.ani.utils.platform.currentPlatform
-import me.him188.ani.utils.platform.isIos
 import kotlin.coroutines.cancellation.CancellationException
 
 object AppStartupTasks {
     fun initializeSentry(userId: String) {
-        initializeErrorReport(userId = userId)
         if (!currentAniBuildConfig.isDebug && currentAniBuildConfig.sentryEnabled) {
             ErrorReportHolder.init(SentryErrorReport)
+            me.him188.ani.app.platform.initializeSentry(userId = userId)
         } else {
-            if (currentPlatform().isIos()) {
-                // 初始化一下然后关闭, 否则 ios 上 sentry 会捕获 crash, 导致 debug 看不到堆栈.
-                Sentry.init {
-                    it.beforeBreadcrumb = { null }
-                }
-                Sentry.close()
-            }
+//            if (currentPlatform().isIos()) {
+//                // 初始化一下然后关闭, 否则 ios 上 sentry 会捕获 crash, 导致 debug 看不到堆栈.
+//                Sentry.init {
+//                    it.beforeBreadcrumb = { null }
+//                }
+//                Sentry.close()
+//            }
         }
     }
 
