@@ -51,6 +51,11 @@ val LocalToaster: ProvidableCompositionLocal<Toaster> = staticCompositionLocalOf
 @Stable
 interface Toaster {
     fun toast(text: String)
+
+    // AI 喜欢补这个
+    fun show(text: String) {
+        toast(text)
+    }
 }
 
 @Stable
