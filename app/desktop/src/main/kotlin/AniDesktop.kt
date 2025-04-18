@@ -564,6 +564,6 @@ private fun isWindowStateValid(
     windowPosition: WindowPosition,
     minimumSize: DpSize,
     screenSize: DpSize,
-): Boolean = ((windowSize.width >= minimumSize.width || windowSize.height >= minimumSize.height)
+): Boolean = ((windowSize.width >= minimumSize.width && windowSize.height >= minimumSize.height)
         && windowPosition.x > 0.dp && windowPosition.y > 0.dp
         && windowPosition.x < screenSize.width - 200.dp && windowPosition.y < screenSize.height - 200.dp)
