@@ -12,7 +12,6 @@ package me.him188.ani.app.tools.update
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
@@ -24,6 +23,7 @@ import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.io.toKtPath
+import me.him188.ani.utils.ktor.asScopedHttpClient
 import java.io.File
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
@@ -54,7 +54,7 @@ class DefaultFileDownloaderTest {
             createClient {
                 expectSuccess = true
                 install(HttpTimeout)
-            },
+            }.asScopedHttpClient(),
         )
         val tempDir = createTempDirectory(prefix = "file-downloader-test").toFile()
 
@@ -101,7 +101,7 @@ class DefaultFileDownloaderTest {
             createClient {
                 expectSuccess = true
                 install(HttpTimeout)
-            },
+            }.asScopedHttpClient(),
         )
         val tempDir = createTempDirectory(prefix = "file-downloader-test").toFile()
 
@@ -177,7 +177,7 @@ class DefaultFileDownloaderTest {
             createClient {
                 expectSuccess = true
                 install(HttpTimeout)
-            },
+            }.asScopedHttpClient(),
         )
         val tempDir = createTempDirectory(prefix = "file-downloader-test").toFile()
 
@@ -219,7 +219,7 @@ class DefaultFileDownloaderTest {
             createClient {
                 expectSuccess = true
                 install(HttpTimeout)
-            },
+            }.asScopedHttpClient(),
         )
         val tempDir = createTempDirectory(prefix = "file-downloader-test").toFile()
         val targetFile = File(tempDir, "test-file.txt").apply {
@@ -258,7 +258,7 @@ class DefaultFileDownloaderTest {
             createClient {
                 expectSuccess = true
                 install(HttpTimeout)
-            },
+            }.asScopedHttpClient(),
         )
         val tempDir = createTempDirectory(prefix = "file-downloader-test").toFile()
         val targetFile = File(tempDir, "corrupted-file.txt")
@@ -305,7 +305,7 @@ class DefaultFileDownloaderTest {
             createClient {
                 expectSuccess = true
                 install(HttpTimeout)
-            },
+            }.asScopedHttpClient(),
         )
         val tempDir = createTempDirectory(prefix = "file-downloader-test").toFile()
         val targetFile = File(tempDir, "test-file-progress.txt").apply { delete() }
