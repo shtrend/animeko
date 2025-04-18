@@ -61,7 +61,7 @@ internal fun SettingsScope.AutoCacheGroup(
                         Column {
                             Text("若手动缓存数量超过该设置值，将不会自动缓存")
                             Row {
-                                Text(remember(maxCount) { autoCacheDescription(maxCount) })
+                                Text(autoCacheDescription(maxCount))
                                 if (maxCount == 10f) {
                                     Text("可能会占用大量空间", color = MaterialTheme.colorScheme.error)
                                 }

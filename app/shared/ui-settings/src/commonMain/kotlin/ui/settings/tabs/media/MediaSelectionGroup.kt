@@ -26,6 +26,50 @@ import androidx.compose.ui.util.fastAll
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
 import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_media_advanced_settings
+import me.him188.ani.app.ui.lang.settings_media_advanced_settings_description
+import me.him188.ani.app.ui.lang.settings_media_alliance
+import me.him188.ani.app.ui.lang.settings_media_alliance_description
+import me.him188.ani.app.ui.lang.settings_media_any
+import me.him188.ani.app.ui.lang.settings_media_auto_cache_all
+import me.him188.ani.app.ui.lang.settings_media_auto_cache_none
+import me.him188.ani.app.ui.lang.settings_media_auto_cache_partial
+import me.him188.ani.app.ui.lang.settings_media_auto_cache_space
+import me.him188.ani.app.ui.lang.settings_media_auto_enable_last
+import me.him188.ani.app.ui.lang.settings_media_auto_enable_last_description
+import me.him188.ani.app.ui.lang.settings_media_fast_select_web
+import me.him188.ani.app.ui.lang.settings_media_fast_select_web_description
+import me.him188.ani.app.ui.lang.settings_media_hide_no_subtitle
+import me.him188.ani.app.ui.lang.settings_media_hide_no_subtitle_description
+import me.him188.ani.app.ui.lang.settings_media_hide_single_episode
+import me.him188.ani.app.ui.lang.settings_media_hide_single_episode_description
+import me.him188.ani.app.ui.lang.settings_media_max_wait_time
+import me.him188.ani.app.ui.lang.settings_media_max_wait_time_description
+import me.him188.ani.app.ui.lang.settings_media_none
+import me.him188.ani.app.ui.lang.settings_media_prefer_seasons
+import me.him188.ani.app.ui.lang.settings_media_prefer_seasons_description
+import me.him188.ani.app.ui.lang.settings_media_prefer_source_type
+import me.him188.ani.app.ui.lang.settings_media_prefer_source_type_description
+import me.him188.ani.app.ui.lang.settings_media_preference_description
+import me.him188.ani.app.ui.lang.settings_media_preference_override_notice
+import me.him188.ani.app.ui.lang.settings_media_preference_title
+import me.him188.ani.app.ui.lang.settings_media_resolution
+import me.him188.ani.app.ui.lang.settings_media_resolution_description
+import me.him188.ani.app.ui.lang.settings_media_show_disabled
+import me.him188.ani.app.ui.lang.settings_media_show_disabled_description
+import me.him188.ani.app.ui.lang.settings_media_sort_tip
+import me.him188.ani.app.ui.lang.settings_media_source_bt
+import me.him188.ani.app.ui.lang.settings_media_source_no_preference
+import me.him188.ani.app.ui.lang.settings_media_source_web
+import me.him188.ani.app.ui.lang.settings_media_subtitle_language
+import me.him188.ani.app.ui.lang.settings_media_wait_time_10s
+import me.him188.ani.app.ui.lang.settings_media_wait_time_15s
+import me.him188.ani.app.ui.lang.settings_media_wait_time_3s
+import me.him188.ani.app.ui.lang.settings_media_wait_time_5s
+import me.him188.ani.app.ui.lang.settings_media_wait_time_8s
+import me.him188.ani.app.ui.lang.settings_media_wait_time_infinite
+import me.him188.ani.app.ui.lang.settings_media_wait_time_none
 import me.him188.ani.app.ui.media.renderResolution
 import me.him188.ani.app.ui.media.renderSubtitleLanguage
 import me.him188.ani.app.ui.settings.framework.SettingsState
@@ -40,6 +84,7 @@ import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.datasources.api.topic.Resolution
 import me.him188.ani.datasources.api.topic.SubtitleLanguage
+import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -82,17 +127,17 @@ internal fun SettingsScope.MediaSelectionGroup(
 ) {
     Group(
         title = {
-            Text("资源选择偏好")
+            Text(stringResource(Lang.settings_media_preference_title))
         },
         description = {
             Column {
-                Text("设置默认的资源选择偏好。将同时影响在线播放和缓存")
-                Text("每部番剧在播放时的选择将覆盖这里的设置")
+                Text(stringResource(Lang.settings_media_preference_description))
+                Text(stringResource(Lang.settings_media_preference_override_notice))
             }
         },
     ) {
-        val textAny = "任意"
-        val textNone = "无"
+        val textAny = stringResource(Lang.settings_media_any)
+        val textNone = stringResource(Lang.settings_media_none)
 
         SorterItem(
             values = { state.sortedLanguages },
@@ -123,11 +168,11 @@ internal fun SettingsScope.MediaSelectionGroup(
             key = { it },
             dialogDescription = {
                 Text(
-                    TIPS_LONG_CLICK_SORT,
+                    stringResource(Lang.settings_media_sort_tip),
                 )
             },
             icon = { Icon(Icons.Outlined.Language, null) },
-            title = { Text("字幕语言") },
+            title = { Text(stringResource(Lang.settings_media_subtitle_language)) },
         )
 
         HorizontalDividerItem()
@@ -159,10 +204,10 @@ internal fun SettingsScope.MediaSelectionGroup(
             },
             item = { Text(renderResolution(it)) },
             key = { it },
-            dialogDescription = { Text(TIPS_LONG_CLICK_SORT) },
+            dialogDescription = { Text(stringResource(Lang.settings_media_sort_tip)) },
             icon = { Icon(Icons.Outlined.Hd, null) },
-            title = { Text("分辨率") },
-            description = { Text("未选择的分辨率也会显示，但不会自动选择") },
+            title = { Text(stringResource(Lang.settings_media_resolution)) },
+            description = { Text(stringResource(Lang.settings_media_resolution_description)) },
         )
 
         HorizontalDividerItem()
@@ -172,9 +217,9 @@ internal fun SettingsScope.MediaSelectionGroup(
         }
         TextFieldItem(
             value = allianceRegexes,
-            title = { Text("字幕组") },
+            title = { Text(stringResource(Lang.settings_media_alliance)) },
             description = {
-                Text("支持使用正则表达式，使用逗号分隔。越靠前的表达式的优先级越高\n\n示例: 桜都, 喵萌, 北宇治\n将优先采用桜都字幕组资源，否则采用喵萌，以此类推")
+                Text(stringResource(Lang.settings_media_alliance_description))
             },
             icon = { Icon(Icons.Outlined.Subtitles, null) },
             placeholder = { Text(textAny) },
@@ -189,8 +234,8 @@ internal fun SettingsScope.MediaSelectionGroup(
         )
 
         Group(
-            title = { Text("高级设置") },
-            description = { Text("精调数据源自动选择算法。一般不需要修改这些设置") },
+            title = { Text(stringResource(Lang.settings_media_advanced_settings)) },
+            description = { Text(stringResource(Lang.settings_media_advanced_settings_description)) },
             useThinHeader = true,
         ) {
             val mediaSelectorSettings by state.mediaSelectorSettingsState
@@ -205,9 +250,9 @@ internal fun SettingsScope.MediaSelectionGroup(
                     itemText = {
                         Text(
                             when (it) {
-                                MediaSourceKind.WEB -> "在线 (推荐)"
-                                MediaSourceKind.BitTorrent -> "BT"
-                                null -> "无偏好"
+                                MediaSourceKind.WEB -> stringResource(Lang.settings_media_source_web)
+                                MediaSourceKind.BitTorrent -> stringResource(Lang.settings_media_source_bt)
+                                null -> stringResource(Lang.settings_media_source_no_preference)
                                 MediaSourceKind.LocalCache -> "" // not possible
                             },
                         )
@@ -220,8 +265,8 @@ internal fun SettingsScope.MediaSelectionGroup(
                             Icon(MediaSourceIcons.kind(it), null)
                         }
                     },
-                    title = { Text("优先选择数据源类型") },
-                    description = { Text("在线数据源载入快但清晰度可能偏低，BT 数据源相反") },
+                    title = { Text(stringResource(Lang.settings_media_prefer_source_type)) },
+                    description = { Text(stringResource(Lang.settings_media_prefer_source_type_description)) },
                 )
             }
 
@@ -236,8 +281,8 @@ internal fun SettingsScope.MediaSelectionGroup(
                                 mediaSelectorSettings.copy(fastSelectWebKind = it),
                             )
                         },
-                        title = { Text("快速选择在线数据源") },
-                        description = { Text("按数据源排序，当排序靠前的数据源查询完成后立即选择，不等待其他数据源查询。可大幅减少等待时间") },
+                        title = { Text(stringResource(Lang.settings_media_fast_select_web)) },
+                        description = { Text(stringResource(Lang.settings_media_fast_select_web_description)) },
                     )
 
                     HorizontalDividerItem()
@@ -258,13 +303,13 @@ internal fun SettingsScope.MediaSelectionGroup(
                         itemText = { duration ->
                             Text(
                                 when (duration) {
-                                    0.seconds -> "不等待"
-                                    3.seconds -> "3 秒后"
-                                    5.seconds -> "5 秒后"
-                                    8.seconds -> "8 秒后"
-                                    10.seconds -> "10 秒后"
-                                    15.seconds -> "15 秒后"
-                                    Duration.INFINITE -> "无限"
+                                    0.seconds -> stringResource(Lang.settings_media_wait_time_none)
+                                    3.seconds -> stringResource(Lang.settings_media_wait_time_3s)
+                                    5.seconds -> stringResource(Lang.settings_media_wait_time_5s)
+                                    8.seconds -> stringResource(Lang.settings_media_wait_time_8s)
+                                    10.seconds -> stringResource(Lang.settings_media_wait_time_10s)
+                                    15.seconds -> stringResource(Lang.settings_media_wait_time_15s)
+                                    Duration.INFINITE -> stringResource(Lang.settings_media_wait_time_infinite)
                                     else -> duration.toString() // non-reachable
                                 },
                             )
@@ -276,8 +321,8 @@ internal fun SettingsScope.MediaSelectionGroup(
                                 ),
                             )
                         },
-                        title = { Text("最长等待时间") },
-                        description = { Text("每次查询的最长等待时间。在此时间结束时，将会从已经查询到的数据源中根据你设置的偏好自动选择数据源。如果等待时间太短，可能会忽略你的偏好设置；如果时间更长，可以更好地满足你的偏好设置，但可能会导致每次开播很慢。建议设置 5-10 秒") },
+                        title = { Text(stringResource(Lang.settings_media_max_wait_time)) },
+                        description = { Text(stringResource(Lang.settings_media_max_wait_time_description)) },
                         enabled = mediaSelectorSettings.fastSelectWebKind,
                     )
 
@@ -292,8 +337,8 @@ internal fun SettingsScope.MediaSelectionGroup(
                         mediaSelectorSettings.copy(showDisabled = it),
                     )
                 },
-                title = { Text("显示禁用的数据源") },
-                description = { Text("""播放时，以灰色显示在"数据源管理"设置中禁用的数据源，而不是隐藏。以便在偏好数据源中未找到资源时，可临时启用禁用的数据源""") },
+                title = { Text(stringResource(Lang.settings_media_show_disabled)) },
+                description = { Text(stringResource(Lang.settings_media_show_disabled_description)) },
             )
 
             HorizontalDividerItem()
@@ -305,8 +350,8 @@ internal fun SettingsScope.MediaSelectionGroup(
                         state.defaultMediaPreference.copy(showWithoutSubtitle = !it),
                     )
                 },
-                title = { Text("隐藏无字幕资源") },
-                description = { Text("""可以过滤掉一些生肉资源，但也可能会过滤掉未识别到字幕类型的资源""") },
+                title = { Text(stringResource(Lang.settings_media_hide_no_subtitle)) },
+                description = { Text(stringResource(Lang.settings_media_hide_no_subtitle_description)) },
             )
 
             HorizontalDividerItem()
@@ -318,8 +363,8 @@ internal fun SettingsScope.MediaSelectionGroup(
                         mediaSelectorSettings.copy(hideSingleEpisodeForCompleted = it),
                     )
                 },
-                title = { Text("完结一年后隐藏单集 BT 资源") },
-                description = { Text("在番剧完结一年后，单集资源通常会没有速度") },
+                title = { Text(stringResource(Lang.settings_media_hide_single_episode)) },
+                description = { Text(stringResource(Lang.settings_media_hide_single_episode_description)) },
             )
 
             HorizontalDividerItem()
@@ -331,8 +376,8 @@ internal fun SettingsScope.MediaSelectionGroup(
                         mediaSelectorSettings.copy(preferSeasons = it),
                     )
                 },
-                title = { Text("BT 资源优先选择季度全集") },
-                description = { Text("季度全集资源通常更快，建议开启") },
+                title = { Text(stringResource(Lang.settings_media_prefer_seasons)) },
+                description = { Text(stringResource(Lang.settings_media_prefer_seasons_description)) },
             )
 
             HorizontalDividerItem()
@@ -344,19 +389,18 @@ internal fun SettingsScope.MediaSelectionGroup(
                         mediaSelectorSettings.copy(autoEnableLastSelected = it),
                     )
                 },
-                title = { Text("自动启用上次临时启用选择的数据源") },
-                description = { Text("""如果在"数据源管理"设置中禁用了一个数据源，但在观看一个番剧时使用了它，则下次播放此番剧时自动启用这个数据源""") },
+                title = { Text(stringResource(Lang.settings_media_auto_enable_last)) },
+                description = { Text(stringResource(Lang.settings_media_auto_enable_last_description)) },
             )
         }
     }
 }
 
+@Composable
 fun autoCacheDescription(sliderValue: Float) = when (sliderValue) {
-    0f -> "当前设置: 不自动缓存"
-    10f -> "当前设置: 自动缓存全部未观看剧集, "
-    else -> "当前设置: 自动缓存观看进度之后的 ${sliderValue.toInt()} 话, " +
-            "预计占用空间 ${600.megaBytes * sliderValue}/番剧"
+    0f -> stringResource(Lang.settings_media_auto_cache_none)
+    10f -> stringResource(Lang.settings_media_auto_cache_all)
+    else -> stringResource(Lang.settings_media_auto_cache_partial, sliderValue.toInt()) +
+            stringResource(Lang.settings_media_auto_cache_space, 600.megaBytes * sliderValue)
 }
 
-private const val TIPS_LONG_CLICK_SORT = "长按排序，优先选择顺序较高的项目。\n" +
-        "选中数量越少，查询越快。"

@@ -56,11 +56,14 @@ val populateStringsLocales by tasks.registering(Copy::class) {
     )
     destinationDir = file("src/androidMain/res")
 
-    // Copy rTW to chtLocales
-    for (locale in chtLocales) {
-        from(file("src/androidMain/res/values-zh-rHK/strings.xml")) {
-            into(locale)
-            rename { "strings.xml" }
+    for (file in file("src/androidMain/res/values").listFiles().orEmpty()) {
+        if (file.isFile && file.name.startsWith("strings") && file.extension == "xml") {
+            for (locale in chtLocales) {
+                from(file("src/androidMain/res/values-zh-rHK/${file.name}")) {
+                    into(locale)
+                    rename { file.name }
+                }
+            }
         }
     }
 }

@@ -56,7 +56,7 @@ fun SettingsScope.AutoCacheGroup(
                 title = { Text("最大自动缓存话数") },
                 description = {
                     Row {
-                        Text(remember(sliderValue) { autoCacheDescription(sliderValue) })
+                        Text(autoCacheDescription(sliderValue))
                         if (sliderValue == 10f) {
                             Text("可能会占用大量空间", color = MaterialTheme.colorScheme.error)
                         }
