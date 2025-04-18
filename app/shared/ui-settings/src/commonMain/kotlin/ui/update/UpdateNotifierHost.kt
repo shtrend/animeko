@@ -48,12 +48,10 @@ import me.him188.ani.utils.platform.annotations.TestOnly
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-fun UpdateNotifierHost(
+fun BoxScope.UpdateNotifier(
     viewModel: AppUpdateViewModel = viewModel { AppUpdateViewModel() },
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    modifier: Modifier = Modifier,
     layoutKind: UpdateNotifierLayoutKind = UpdateNotifierDefaults.layoutKind(),
-    content: @Composable BoxScope.() -> Unit,
 ) {
     SideEffect {
         viewModel.startAutomaticCheckLatestVersion()
@@ -65,7 +63,7 @@ fun UpdateNotifierHost(
     val context = LocalContext.current
     var showInstallationError by rememberSaveable { mutableStateOf<InstallationResult.Failed?>(null) }
 
-    UpdateNotifierHost(
+    UpdateNotifier(
         presentation = presentation,
         onStartUpdateClick = {
             presentation.newVersion?.let {
@@ -84,9 +82,7 @@ fun UpdateNotifierHost(
             viewModel.restartDownload(uriHandler)
         },
         snackbarHostState = snackbarHostState,
-        modifier = modifier,
         layoutKind = layoutKind,
-        content = content,
     )
 
     showInstallationError?.let {
@@ -107,95 +103,88 @@ fun UpdateNotifierHost(
  *     when a new version is available.
  */
 @Composable
-fun UpdateNotifierHost(
+fun BoxScope.UpdateNotifier(
     presentation: AppUpdatePresentation,
     onStartUpdateClick: () -> Unit,
     onInstallClick: () -> Unit,
     onCancelClick: () -> Unit,
     onRetryClick: () -> Unit,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
-    modifier: Modifier = Modifier,
     layoutKind: UpdateNotifierLayoutKind = UpdateNotifierDefaults.layoutKind(),
-    content: @Composable BoxScope.() -> Unit,
 ) {
     val uriHandler = LocalUriHandler.current
 
     // Track whether the user dismisses the notification in this session
     var dismissedManually by rememberSaveable { mutableStateOf(false) }
 
-    Box(modifier) {
-        // host the caller's UI first
-        content()
+    val newVersion = presentation.newVersion
+    if (newVersion != null) {
+        if (presentation.isDownloading) {
+            val positionModifiers = when (layoutKind) {
+                UpdateNotifierLayoutKind.POPUP -> Modifier.padding(24.dp).align(Alignment.BottomEnd)
+                UpdateNotifierLayoutKind.SNACKBAR -> Modifier.padding(16.dp).fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+            }
 
-        val newVersion = presentation.newVersion
-        if (newVersion != null) {
-            if (presentation.isDownloading) {
-                val positionModifiers = when (layoutKind) {
-                    UpdateNotifierLayoutKind.POPUP -> Modifier.padding(24.dp).align(Alignment.BottomEnd)
-                    UpdateNotifierLayoutKind.SNACKBAR -> Modifier.padding(16.dp).fillMaxWidth()
-                        .align(Alignment.BottomCenter)
+            DownloadingUpdatePopupCard(
+                version = presentation.newVersion,
+                fileDownloaderStats = presentation.fileDownloaderStats,
+                error = presentation.downloadError,
+                onInstallClick = onInstallClick,
+                onCancelClick = {
+                    onCancelClick()
+                    dismissedManually = true
+                },
+                onRetryClick = onRetryClick,
+                modifier = positionModifiers,
+            )
+        } else {
+            // 提示有新版本
+
+            val onDetailsClick =
+                { uriHandler.openUri("https://github.com/open-ani/animeko/releases/tag/${newVersion.name}") }
+
+            when (layoutKind) {
+                UpdateNotifierLayoutKind.POPUP -> {
+                    if (!dismissedManually) {
+                        DesktopPopup(
+                            version = newVersion,
+                            onDismiss = { dismissedManually = true },
+                            onDetailsClick,
+                            onAutoUpdateClick = onStartUpdateClick,
+                            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
+                                .shadow(4.dp, MaterialTheme.shapes.extraLarge),
+                        )
+                    }
                 }
 
-                DownloadingUpdatePopupCard(
-                    version = presentation.newVersion,
-                    fileDownloaderStats = presentation.fileDownloaderStats,
-                    error = presentation.downloadError,
-                    onInstallClick = onInstallClick,
-                    onCancelClick = {
-                        onCancelClick()
-                        dismissedManually = true
-                    },
-                    onRetryClick = onRetryClick,
-                    modifier = positionModifiers,
-                )
-            } else {
-                // 提示有新版本
+                UpdateNotifierLayoutKind.SNACKBAR -> {
+                    // 点击 snackbar 后显示 popup
+                    var showDetails by rememberSaveable { mutableStateOf(false) }
 
-                val onDetailsClick =
-                    { uriHandler.openUri("https://github.com/open-ani/animeko/releases/tag/${newVersion.name}") }
-
-                when (layoutKind) {
-                    UpdateNotifierLayoutKind.POPUP -> {
-                        if (!dismissedManually) {
-                            DesktopPopup(
-                                version = newVersion,
-                                onDismiss = { dismissedManually = true },
-                                onDetailsClick,
-                                onAutoUpdateClick = onStartUpdateClick,
-                                modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp)
-                                    .shadow(4.dp, MaterialTheme.shapes.extraLarge),
-                            )
-                        }
+                    if (!dismissedManually) {
+                        MobileSnackbar(
+                            hostState = snackbarHostState,
+                            version = newVersion,
+                            onShowDetailsClick = { showDetails = true },
+                            onDismissChanged = { dismissedManually = it },
+                        )
                     }
 
-                    UpdateNotifierLayoutKind.SNACKBAR -> {
-                        // 点击 snackbar 后显示 popup
-                        var showDetails by rememberSaveable { mutableStateOf(false) }
+                    SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
 
-                        if (!dismissedManually) {
-                            MobileSnackbar(
-                                hostState = snackbarHostState,
-                                version = newVersion,
-                                onShowDetailsClick = { showDetails = true },
-                                onDismissChanged = { dismissedManually = it },
+                    // If snackbar action is clicked, we pop up a dialog containing the card.
+                    if (showDetails && !dismissedManually) {
+                        Box(
+                            Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(all = 16.dp),
+                        ) {
+                            NewVersionPopupCard(
+                                version = newVersion.name,
+                                changes = newVersion.majorChanges,
+                                onDetailsClick = onDetailsClick,
+                                onAutoUpdateClick = onStartUpdateClick,
+                                onDismissRequest = { dismissedManually = true },
                             )
-                        }
-
-                        SnackbarHost(hostState = snackbarHostState, modifier = Modifier.align(Alignment.BottomCenter))
-
-                        // If snackbar action is clicked, we pop up a dialog containing the card.
-                        if (showDetails && !dismissedManually) {
-                            Box(
-                                Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(all = 16.dp),
-                            ) {
-                                NewVersionPopupCard(
-                                    version = newVersion.name,
-                                    changes = newVersion.majorChanges,
-                                    onDetailsClick = onDetailsClick,
-                                    onAutoUpdateClick = onStartUpdateClick,
-                                    onDismissRequest = { dismissedManually = true },
-                                )
-                            }
                         }
                     }
                 }
@@ -302,14 +291,7 @@ private fun PreviewImpl(
     kind: UpdateNotifierLayoutKind,
     state: AppUpdatePresentation = TestAppUpdatePresentations.HasUpdate,
 ) {
-    UpdateNotifierHost(
-        presentation = state,
-        onStartUpdateClick = {},
-        {},
-        {},
-        {},
-        layoutKind = kind,
-    ) {
+    Box {
         Column(
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -317,5 +299,14 @@ private fun PreviewImpl(
                 ListItem(headlineContent = { Text("Test $it") })
             }
         }
+
+        UpdateNotifier(
+            presentation = state,
+            onStartUpdateClick = {},
+            {},
+            {},
+            {},
+            layoutKind = kind,
+        )
     }
 }

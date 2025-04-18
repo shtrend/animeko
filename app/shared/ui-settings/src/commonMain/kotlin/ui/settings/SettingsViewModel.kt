@@ -79,7 +79,6 @@ class SettingsViewModel : AbstractSettingsViewModel(), KoinComponent {
 
     val softwareUpdateGroupState: SoftwareUpdateGroupState = SoftwareUpdateGroupState(
         updateSettings = settingsRepository.updateSettings.stateInBackground(UpdateSettings.Default.copy(_placeholder = -1)),
-        backgroundScope,
     )
 
     val uiSettings: SettingsState<UISettings> =

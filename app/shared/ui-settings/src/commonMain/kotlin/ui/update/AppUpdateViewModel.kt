@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
-import kotlinx.io.IOException
 import me.him188.ani.app.data.repository.RepositoryNetworkException
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.foundation.HttpClientProvider
@@ -72,11 +71,15 @@ class AppUpdateViewModel : AbstractViewModel(), KoinComponent {
      * 新版本下载进度
      */
     private val fileDownloaderPresenter = FileDownloaderPresenter(fileDownloader, backgroundScope)
+    private val autoCheckTasker = MonoTasker(backgroundScope)
+    private val checkUpdateErrorFlow = MutableStateFlow<LoadError?>(null)
 
     val presentationFlow = combine(
         latestVersionFlow,
         fileDownloaderPresenter.flow,
-    ) { latestVersion, fileDownloaderStats ->
+        autoCheckTasker.isRunning,
+        checkUpdateErrorFlow,
+    ) { latestVersion, fileDownloaderStats, isCheckingUpdate, checkUpdateError ->
         val latestVersion = latestVersion
         val state = when {
             // 还没检查过
@@ -101,6 +104,8 @@ class AppUpdateViewModel : AbstractViewModel(), KoinComponent {
             newVersion = latestVersion,
             state = state,
             fileDownloaderStats = fileDownloaderStats,
+            isCheckingUpdate = isCheckingUpdate,
+            checkUpdateError = checkUpdateError,
             isPlaceholder = latestVersion == null && fileDownloaderStats.isPlaceholder,
         )
     }.stateIn(
@@ -109,7 +114,7 @@ class AppUpdateViewModel : AbstractViewModel(), KoinComponent {
         initialValue = AppUpdatePresentation.Placeholder,
     )
 
-    private val autoCheckTasker = MonoTasker(backgroundScope)
+    val isChecking get() = autoCheckTasker.isRunning.value
     private val downloadTasker = MonoTasker(backgroundScope)
 
     // 一小时内只会检查一次
@@ -134,6 +139,7 @@ class AppUpdateViewModel : AbstractViewModel(), KoinComponent {
         autoCheckTasker.launch {
             val updateSettings = updateSettings.first()
 
+            checkUpdateErrorFlow.value = null
             val ver = try {
                 if (!updateSettings.autoCheckUpdate) {
                     logger.info { "autoCheckUpdate disabled" }
@@ -144,7 +150,8 @@ class AppUpdateViewModel : AbstractViewModel(), KoinComponent {
                 updateChecker.checkLatestVersion(updateSettings.releaseClass)
             } catch (e: CancellationException) {
                 throw e
-            } catch (e: IOException) {
+            } catch (e: Throwable) {
+                checkUpdateErrorFlow.value = LoadError.fromException(e)
                 logger.info { "Auto update checking failed due to IOException: $e" } // 故意不打印堆栈
                 return@launch
             } finally {
@@ -227,6 +234,8 @@ data class AppUpdatePresentation(
     val newVersion: NewVersion?,
     val state: AppUpdateState,
     val fileDownloaderStats: FileDownloaderStats,
+    val isCheckingUpdate: Boolean,
+    val checkUpdateError: LoadError? = null,
     val currentVersion: String = currentAniBuildConfig.versionName,
     val isPlaceholder: Boolean = false,
 ) {
@@ -247,6 +256,7 @@ data class AppUpdatePresentation(
             newVersion = null,
             state = AppUpdateState.ClickToCheck,
             fileDownloaderStats = FileDownloaderStats.Placeholder,
+            isCheckingUpdate = false,
             isPlaceholder = true,
         )
     }
@@ -305,6 +315,7 @@ object TestAppUpdatePresentations {
             newVersion = TestNewVersion,
             state = AppUpdateState.HasUpdate(TestNewVersion),
             fileDownloaderStats = FileDownloaderStats.Placeholder,
+            isCheckingUpdate = false,
         )
 
     @TestOnly
@@ -313,6 +324,7 @@ object TestAppUpdatePresentations {
             newVersion = TestNewVersion,
             state = AppUpdateState.Downloading(TestNewVersion, TestFileDownloaderStats.Downloading),
             fileDownloaderStats = FileDownloaderStats.Placeholder,
+            isCheckingUpdate = false,
         )
 
     @TestOnly
@@ -321,6 +333,7 @@ object TestAppUpdatePresentations {
             newVersion = TestNewVersion,
             state = AppUpdateState.Downloaded(TestNewVersion, kotlinx.io.files.Path("").inSystem),
             fileDownloaderStats = FileDownloaderStats.Placeholder,
+            isCheckingUpdate = false,
         )
 
     @TestOnly
@@ -329,5 +342,6 @@ object TestAppUpdatePresentations {
             newVersion = TestNewVersion,
             state = AppUpdateState.DownloadFailed(TestNewVersion, RepositoryNetworkException()),
             fileDownloaderStats = FileDownloaderStats.Placeholder,
+            isCheckingUpdate = false,
         )
 }

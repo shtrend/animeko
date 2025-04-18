@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -43,9 +43,7 @@ import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.framework.components.SwitchItem
 import me.him188.ani.app.ui.settings.framework.createTestSettingsState
 import me.him188.ani.app.ui.settings.framework.rememberTestSettingsState
-import me.him188.ani.app.ui.update.TestNewVersion
 import me.him188.ani.utils.platform.annotations.TestOnly
-import kotlin.random.Random
 
 
 @OptIn(TestOnly::class)
@@ -70,14 +68,6 @@ internal fun rememberTestSoftwareUpdateGroupState(): SoftwareUpdateGroupState {
     return remember {
         SoftwareUpdateGroupState(
             updateSettings = createTestSettingsState(UpdateSettings(autoCheckUpdate = true), scope),
-            scope,
-            onTest = {
-                when (Random.nextInt() % 3) {
-                    0 -> CheckVersionResult.UpToDate
-                    1 -> CheckVersionResult.HasNewVersion(TestNewVersion)
-                    else -> CheckVersionResult.Failed(Exception("Test"))
-                }
-            },
         )
     }
 }

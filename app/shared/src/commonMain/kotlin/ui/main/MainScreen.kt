@@ -10,9 +10,11 @@
 package me.him188.ani.app.ui.main
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.icons.Icons
@@ -65,7 +67,7 @@ import me.him188.ani.app.ui.foundation.layout.setRequestFullScreen
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.subject.collection.CollectionPage
 import me.him188.ani.app.ui.subject.collection.UserCollectionsViewModel
-import me.him188.ani.app.ui.update.UpdateNotifierHost
+import me.him188.ani.app.ui.update.UpdateNotifier
 import me.him188.ani.utils.platform.isAndroid
 
 
@@ -277,8 +279,10 @@ private fun TabContent(
         shape = shape,
         color = AniThemeDefaults.pageContentBackgroundColor,
     ) {
-        UpdateNotifierHost {
+        Box(Modifier.fillMaxWidth()) {
             content()
+
+            UpdateNotifier()
         }
     }
 }
