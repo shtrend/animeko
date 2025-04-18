@@ -507,6 +507,9 @@ private fun FrameWindowScope.MainWindowContent(
     }
 }
 
+private val minimumSize = DpSize(400.dp, 400.dp)
+private val screenSize = ScreenUtils.getScreenSize()
+
 @Composable
 private fun WindowStateRecorder(
     windowState: WindowState,
@@ -527,13 +530,8 @@ private fun WindowStateRecorder(
                 ),
             )
             //保存的窗口尺寸和大小全都合规时，才使用，否则使用默认设置
-            val minimumSize = DpSize(800.dp, 600.dp)
-            val screenSize = ScreenUtils.getScreenSize()
-            if (
-                (savedWindowState.size.width > minimumSize.width || savedWindowState.size.height > minimumSize.height)
-                && savedWindowState.position.x > 0.dp && savedWindowState.position.y > 0.dp
-                && savedWindowState.position.x < screenSize.width - 200.dp && savedWindowState.position.y < screenSize.height - 200.dp
-            ) {
+
+            if (isWindowStateValid(savedWindowState.size, savedWindowState.position, minimumSize, screenSize)) {
                 windowState.apply {
                     position = savedWindowState.position
                     size = savedWindowState.size
@@ -542,14 +540,30 @@ private fun WindowStateRecorder(
         }
 
         onDispose {
-            update(
-                SavedWindowState(
-                    x = windowState.position.x,
-                    y = windowState.position.y,
-                    width = windowState.size.width,
-                    height = windowState.size.height,
-                ),
+            val newState = SavedWindowState(
+                x = windowState.position.x,
+                y = windowState.position.y,
+                width = windowState.size.width,
+                height = windowState.size.height,
             )
+            if (isWindowStateValid(
+                    DpSize(width = newState.width, height = newState.height),
+                    WindowPosition(x = newState.x, y = newState.y),
+                    minimumSize,
+                    screenSize,
+                )
+            ) {
+                update(newState)
+            }
         }
     }
 }
+
+private fun isWindowStateValid(
+    windowSize: DpSize,
+    windowPosition: WindowPosition,
+    minimumSize: DpSize,
+    screenSize: DpSize,
+): Boolean = ((windowSize.width >= minimumSize.width || windowSize.height >= minimumSize.height)
+        && windowPosition.x > 0.dp && windowPosition.y > 0.dp
+        && windowPosition.x < screenSize.width - 200.dp && windowPosition.y < screenSize.height - 200.dp)
