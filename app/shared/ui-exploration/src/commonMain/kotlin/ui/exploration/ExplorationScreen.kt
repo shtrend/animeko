@@ -96,11 +96,21 @@ import me.him188.ani.app.ui.foundation.session.SelfAvatar
 import me.him188.ani.app.ui.foundation.stateOf
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.exploration_continue_watching
+import me.him188.ani.app.ui.lang.exploration_horizontal_scroll_tip
+import me.him188.ani.app.ui.lang.exploration_recommendations
+import me.him188.ani.app.ui.lang.exploration_schedule
+import me.him188.ani.app.ui.lang.exploration_search
+import me.him188.ani.app.ui.lang.exploration_settings
+import me.him188.ani.app.ui.lang.exploration_title
+import me.him188.ani.app.ui.lang.exploration_trending
 import me.him188.ani.app.ui.search.createTestPager
 import me.him188.ani.app.ui.search.isLoadingFirstPageOrRefreshing
 import me.him188.ani.app.ui.search.rememberLoadErrorState
 import me.him188.ani.utils.platform.annotations.TestOnly
 import me.him188.ani.utils.platform.hasScrollingBug
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.PreviewLightDark
 import org.jetbrains.compose.ui.tooling.preview.PreviewScreenSizes
 
@@ -162,7 +172,7 @@ fun ExplorationScreen(
         containerColor = AniThemeDefaults.pageContentBackgroundColor,
         topBar = {
             AniTopAppBar(
-                title = { AniTopAppBarDefaults.Title("探索") },
+                title = { AniTopAppBarDefaults.Title(stringResource(Lang.exploration_title)) },
                 Modifier.fillMaxWidth(),
                 actions = {
                     actions()
@@ -170,7 +180,7 @@ fun ExplorationScreen(
                         || currentWindowAdaptiveInfo1().windowSizeClass.isWidthAtLeastMedium
                     ) {
                         IconButton(onClick = onClickSettings) {
-                            Icon(Icons.Rounded.Settings, "设置")
+                            Icon(Icons.Rounded.Settings, stringResource(Lang.exploration_settings))
                         }
                     }
                 },
@@ -185,12 +195,12 @@ fun ExplorationScreen(
                 },
                 searchIconButton = {
                     IconButton(onSearch) {
-                        Icon(Icons.Rounded.Search, "搜索")
+                        Icon(Icons.Rounded.Search, stringResource(Lang.exploration_search))
                     }
                 },
                 searchBar = {
                     IconButton(onSearch) {
-                        Icon(Icons.Rounded.Search, "搜索")
+                        Icon(Icons.Rounded.Search, stringResource(Lang.exploration_search))
                     }
                 },
                 windowInsets = AniWindowInsets.forTopAppBarWithoutDesktopTitle(),
@@ -208,6 +218,7 @@ fun ExplorationScreen(
         val showHorizontalNavigateTip by state.horizontalScrollTipFlow.collectAsState(false)
         val toaster = LocalToaster.current
         val scope = rememberCoroutineScope()
+        val horizontalScrollTip = stringResource(Lang.exploration_horizontal_scroll_tip)
 
         val recommendationPager = state.recommendationPager.collectAsLazyPagingItemsWithLifecycle()
         val recommendationPagerLoadError by recommendationPager.rememberLoadErrorState()
@@ -232,7 +243,7 @@ fun ExplorationScreen(
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Column {
                     NavTitleHeader(
-                        title = { Text("最高热度", softWrap = false) },
+                        title = { Text(stringResource(Lang.exploration_trending), softWrap = false) },
                         trailingActions = {
                             TextButton(
                                 { navigator.navigateSchedule() },
@@ -241,7 +252,7 @@ fun ExplorationScreen(
                             ) {
                                 Icon(Icons.Rounded.CalendarMonth, null, Modifier.size(ButtonDefaults.IconSize))
                                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                                Text("新番时间表", softWrap = false)
+                                Text(stringResource(Lang.exploration_schedule), softWrap = false)
                             }
                         },
                     )
@@ -258,7 +269,7 @@ fun ExplorationScreen(
                                     )
                                 }
                                 if (showHorizontalNavigateTip) {
-                                    toaster.toast(getHorizontalScrollNavigatorTipText())
+                                    toaster.toast(horizontalScrollTip)
                                     state.setDisableHorizontalScrollTip()
                                 }
                             },
@@ -282,7 +293,7 @@ fun ExplorationScreen(
                     }
 
                     NavTitleHeader(
-                        title = { Text("继续观看", softWrap = false) },
+                        title = { Text(stringResource(Lang.exploration_continue_watching), softWrap = false) },
                     )
 
                     val followedSubjectsPager =
@@ -301,7 +312,7 @@ fun ExplorationScreen(
                                     )
                                 }
                                 if (showHorizontalNavigateTip) {
-                                    toaster.toast(getHorizontalScrollNavigatorTipText())
+                                    toaster.toast(horizontalScrollTip)
                                     state.setDisableHorizontalScrollTip()
                                 }
                             },
@@ -330,7 +341,7 @@ fun ExplorationScreen(
                     }
 
                     NavTitleHeader(
-                        title = { Text("推荐", softWrap = false) },
+                        title = { Text(stringResource(Lang.exploration_recommendations), softWrap = false) },
                     )
                 }
             }
@@ -361,10 +372,6 @@ fun RecommendedSubjectInfo.toNavPlaceholder(): SubjectDetailPlaceholder {
         nameCN = nameCn,
         coverUrl = imageLarge,
     )
-}
-
-private fun getHorizontalScrollNavigatorTipText(): String {
-    return "按住 Shift + 鼠标滚轮 同样可以水平滚动"
 }
 
 @OptIn(TestOnly::class)

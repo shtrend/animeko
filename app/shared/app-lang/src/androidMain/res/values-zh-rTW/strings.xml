@@ -360,6 +360,16 @@
     <string name="settings_update_popup_continue_download">繼續下載</string>
     <string name="settings_update_popup_restart_update">重啟更新</string>
     <string name="settings_update_popup_download_complete">下載完成</string>
+
+    <!-- ExplorationScreen -->
+    <string name="exploration_title">探索</string>
+    <string name="exploration_settings">設定</string>
+    <string name="exploration_search">搜尋</string>
+    <string name="exploration_trending">最高熱度</string>
+    <string name="exploration_schedule">新番時間表</string>
+    <string name="exploration_continue_watching">繼續觀看</string>
+    <string name="exploration_recommendations">推薦</string>
+    <string name="exploration_horizontal_scroll_tip">按住 Shift + 滑鼠滾輪 同樣可以水平滾動</string>
 </resources>
 
 <!--@formatter:on-->
