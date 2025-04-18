@@ -332,6 +332,11 @@
     <string name="exploration_continue_watching">Continue Watching</string>
     <string name="exploration_recommendations">Recommendations</string>
     <string name="exploration_horizontal_scroll_tip">Hold Shift + mouse wheel to scroll horizontally</string>
+
+    <!-- MainScreenPage -->
+    <string name="main_screen_page_exploration">Explore</string>
+    <string name="main_screen_page_collection">Collection</string>
+    <string name="main_screen_page_cache_management">Cache</string>
 </resources>
 
 <!--@formatter:on-->

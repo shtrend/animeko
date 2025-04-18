@@ -13,10 +13,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.DownloadDone
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.TravelExplore
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.navigation.NavOptionsBuilder
 import kotlinx.serialization.Serializable
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.main_screen_page_cache_management
+import me.him188.ani.app.ui.lang.main_screen_page_collection
+import me.him188.ani.app.ui.lang.main_screen_page_exploration
+import org.jetbrains.compose.resources.stringResource
 
 @Serializable
 sealed class NavRoutes {
@@ -180,8 +186,9 @@ fun MainScreenPage.getIcon() = when (this) {
 }
 
 @Stable
+@Composable
 fun MainScreenPage.getText(): String = when (this) {
-    MainScreenPage.Exploration -> "探索"
-    MainScreenPage.Collection -> "追番"
-    MainScreenPage.CacheManagement -> "缓存"
+    MainScreenPage.Exploration -> stringResource(Lang.main_screen_page_exploration)
+    MainScreenPage.Collection -> stringResource(Lang.main_screen_page_collection)
+    MainScreenPage.CacheManagement -> stringResource(Lang.main_screen_page_cache_management)
 }
