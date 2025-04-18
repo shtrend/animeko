@@ -56,7 +56,7 @@ fun NewVersionPopupCard(
     changes: List<String>,
     onDetailsClick: () -> Unit,
     onAutoUpdateClick: () -> Unit,
-    onDismissRequest: () -> Unit,
+    onDismissRequest: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     BasicNotificationPopupCard(
@@ -64,7 +64,9 @@ fun NewVersionPopupCard(
         modifier,
         subtitle = { Text(version) },
         dismissButton = {
-            NotificationPopupDefaults.DismissButton(onDismissRequest)
+            onDismissRequest?.let {
+                NotificationPopupDefaults.DismissButton(it)
+            }
         },
         actions = {
             OutlinedButton(

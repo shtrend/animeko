@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -175,15 +176,15 @@ fun BoxScope.UpdateNotifier(
 
                     // If snackbar action is clicked, we pop up a dialog containing the card.
                     if (showDetails && !dismissedManually) {
-                        Box(
-                            Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(all = 16.dp),
+                        BasicAlertDialog(
+                            { dismissedManually = true },
                         ) {
                             NewVersionPopupCard(
                                 version = newVersion.name,
                                 changes = newVersion.majorChanges,
                                 onDetailsClick = onDetailsClick,
                                 onAutoUpdateClick = onStartUpdateClick,
-                                onDismissRequest = { dismissedManually = true },
+                                onDismissRequest = null,
                             )
                         }
                     }
