@@ -89,58 +89,81 @@ val buildReleaseArchive = tasks.register("buildReleaseArchive", Exec::class) {
 
 
 /**
- * A Gradle task that packages an unsigned .ipa manually from an .xcarchive.
+ * Packages an unsigned IPA **and** injects an ad‑hoc signature so sideloaders can re‑sign it.
+ *
+ * This task is **configuration‑cache safe** – it does *not* capture the `Project` instance.
  */
 @CacheableTask
-abstract class BuildIpaTask(
-//    project: Project,
-) : DefaultTask() {
+abstract class BuildIpaTask : DefaultTask() {
 
-    @get:PathSensitive(PathSensitivity.ABSOLUTE)
+    /* -------------------------------------------------------------
+     * Inputs / outputs
+     * ----------------------------------------------------------- */
+
     @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.ABSOLUTE)
     abstract val archiveDir: DirectoryProperty
 
     @get:OutputFile
     abstract val outputIpa: RegularFileProperty
 
+    /* -------------------------------------------------------------
+     * Services (injected)
+     * ----------------------------------------------------------- */
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
+
+    /* -------------------------------------------------------------
+     * Action
+     * ----------------------------------------------------------- */
+
     @TaskAction
     fun buildIpa() {
-        // 1. Locate the .app in the .xcarchive
+        // 1. Locate the .app inside the .xcarchive
         val appDir = archiveDir.get().asFile.resolve("Products/Applications/Animeko.app")
-        if (!appDir.exists()) {
+        if (!appDir.exists())
             throw GradleException("Could not find Animeko.app in archive at: ${appDir.absolutePath}")
-        }
 
-        // 2. Create a temporary Payload folder
+        // 2. Create temporary Payload directory and copy .app into it
         val payloadDir = File(temporaryDir, "Payload").apply { mkdirs() }
-        val destApp = File(payloadDir, "Animeko.app")
-
-        // 3. Copy the .app into Payload/
+        val destApp = File(payloadDir, appDir.name)
         appDir.copyRecursively(destApp, overwrite = true)
 
-        // 4. Zip the Payload folder
+        // 3. Inject placeholder (ad‑hoc) code signature so AltStore / SideStore accept it
+        logger.lifecycle("[IPA] Ad‑hoc signing ${destApp.name} …")
+        execOperations.exec {
+            commandLine(
+                "codesign", "--force", "--deep", "--sign", "-", "--timestamp=none",
+                destApp.absolutePath,
+            )
+        }
+
+        // 4. Zip Payload ⇒ .ipa
         val zipFile = File(temporaryDir, "Animeko.zip")
         zipDirectory(payloadDir, zipFile)
 
-        // 5. Rename .zip to .ipa
-        val ipaFile = outputIpa.get().asFile
-        ipaFile.parentFile.mkdirs()
-        if (ipaFile.exists()) ipaFile.delete()
-        zipFile.renameTo(ipaFile)
+        // 5. Move to final location (with .ipa extension)
+        outputIpa.get().asFile.apply {
+            parentFile.mkdirs()
+            delete()
+            zipFile.renameTo(this)
+        }
 
-        logger.lifecycle("Created unsigned IPA at: ${ipaFile.absolutePath}")
+        logger.lifecycle("[IPA] Created ad‑hoc‑signed IPA at: ${outputIpa.get().asFile.absolutePath}")
     }
 
-    /**
-     * Zips the given [sourceDir] (including all subdirectories) into [outputFile].
-     */
+    /* -------------------------------------------------------------
+     * Helper: zip a directory (recursively) preserving relative paths
+     * ----------------------------------------------------------- */
+
     private fun zipDirectory(sourceDir: File, outputFile: File) {
         ZipOutputStream(BufferedOutputStream(FileOutputStream(outputFile))).use { zipOut ->
             sourceDir.walkTopDown().forEach { file ->
                 if (file.isFile) {
                     val relativePath = file.relativeTo(sourceDir.parentFile).path
-                    val zipEntry = ZipEntry(relativePath)
-                    zipOut.putNextEntry(zipEntry)
+                    val entry = ZipEntry(relativePath)
+                    zipOut.putNextEntry(entry)
                     file.inputStream().use { it.copyTo(zipOut) }
                     zipOut.closeEntry()
                 }
