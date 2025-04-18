@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.CardColors
+import androidx.compose.material3.CardElevation
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemColors
@@ -83,6 +84,7 @@ fun LoadErrorCard(
     },
     shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
     containerColor: Color = LoadErrorDefaults.containerColor,
+    elevation: CardElevation? = null,
 ) {
     if (error == null) return
     val role = LoadErrorCardRole.from(error)
@@ -212,9 +214,11 @@ fun LoadErrorCard(
         modifier = modifier,
         shape = shape,
         containerColor = containerColor,
-    ) {
-        content(cardColors)
-    }
+        elevation = elevation,
+        content = {
+            content(cardColors)
+        },
+    )
 }
 
 
@@ -230,9 +234,10 @@ fun LoadErrorCardLayout(
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
     containerColor: Color = LoadErrorDefaults.containerColor,
-    content: @Composable LoadErrorCardScope.() -> Unit,
+    elevation: CardElevation? = null,
+    content: @Composable (LoadErrorCardScope.() -> Unit),
 ) {
-    role.Container(modifier, containerColor, shape, content)
+    role.Container(modifier, containerColor, shape, elevation, content)
 }
 
 @Stable

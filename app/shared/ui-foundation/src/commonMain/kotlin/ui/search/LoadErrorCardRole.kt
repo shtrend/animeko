@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -11,6 +11,7 @@ package me.him188.ani.app.ui.search
 
 import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CardElevation
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -34,7 +35,8 @@ sealed class LoadErrorCardRole {
         modifier: Modifier = Modifier,
         containerColor: Color = LoadErrorDefaults.containerColor,
         shape: Shape = MaterialTheme.shapes.large, // behave like Dialogs.
-        content: @Composable LoadErrorCardScope.() -> Unit,
+        elevation: CardElevation?,
+        content: @Composable (LoadErrorCardScope.() -> Unit),
     )
 
     @Stable
@@ -44,7 +46,8 @@ sealed class LoadErrorCardRole {
             modifier: Modifier,
             containerColor: Color,
             shape: Shape,
-            content: @Composable LoadErrorCardScope.() -> Unit,
+            elevation: CardElevation?,
+            content: @Composable (LoadErrorCardScope.() -> Unit),
         ) {
             val colors = CardDefaults.elevatedCardColors(
                 containerColor = containerColor,
@@ -58,6 +61,7 @@ sealed class LoadErrorCardRole {
             ElevatedCard(
                 modifier, shape = shape,
                 colors = colors,
+                elevation = elevation ?: CardDefaults.elevatedCardElevation(),
             ) {
                 scope.content()
             }
@@ -71,7 +75,8 @@ sealed class LoadErrorCardRole {
             modifier: Modifier,
             containerColor: Color,
             shape: Shape,
-            content: @Composable LoadErrorCardScope.() -> Unit,
+            elevation: CardElevation?,
+            content: @Composable (LoadErrorCardScope.() -> Unit),
         ) {
             val colors = CardDefaults.cardColors(containerColor = Color.Transparent)
             val colorsState by rememberUpdatedState(colors)
@@ -83,7 +88,7 @@ sealed class LoadErrorCardRole {
             ElevatedCard(
                 modifier,
                 colors = colors, // no 'boxing'
-                elevation = CardDefaults.cardElevation(), // no elevation
+                elevation = elevation ?: CardDefaults.cardElevation(), // no elevation
             ) {
                 scope.content()
             }
@@ -97,7 +102,8 @@ sealed class LoadErrorCardRole {
             modifier: Modifier,
             containerColor: Color,
             shape: Shape,
-            content: @Composable LoadErrorCardScope.() -> Unit,
+            elevation: CardElevation?,
+            content: @Composable (LoadErrorCardScope.() -> Unit),
         ) {
             val colors = CardDefaults.elevatedCardColors(
                 containerColor = containerColor,
@@ -112,6 +118,7 @@ sealed class LoadErrorCardRole {
             ElevatedCard(
                 modifier, shape = shape,
                 colors = colors,
+                elevation = elevation ?: CardDefaults.elevatedCardElevation(),
             ) {
                 scope.content()
             }
@@ -125,7 +132,8 @@ sealed class LoadErrorCardRole {
             modifier: Modifier,
             containerColor: Color,
             shape: Shape,
-            content: @Composable LoadErrorCardScope.() -> Unit,
+            elevation: CardElevation?,
+            content: @Composable (LoadErrorCardScope.() -> Unit),
         ) {
             val colors = CardDefaults.elevatedCardColors(
                 containerColor = containerColor,
@@ -140,6 +148,7 @@ sealed class LoadErrorCardRole {
             ElevatedCard(
                 modifier, shape = shape,
                 colors = colors,
+                elevation = elevation ?: CardDefaults.elevatedCardElevation(),
             ) {
                 scope.content()
             }

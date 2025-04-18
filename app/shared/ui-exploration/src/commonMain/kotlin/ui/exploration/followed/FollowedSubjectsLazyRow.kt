@@ -121,12 +121,13 @@ fun FollowedSubjectsLazyRow(
                     Box(Modifier.minimumHairlineSize()) {
                         LoadErrorCardLayout(
                             LoadErrorCardRole.Unimportant,
-                        ) {
-                            ListItem(
-                                headlineContent = { Text("将番剧收藏为 \"在看\" 后将在这里显示") },
-                                colors = listItemColors,
-                            )
-                        }
+                            content = {
+                                ListItem(
+                                    headlineContent = { Text("将番剧收藏为 \"在看\" 后将在这里显示") },
+                                    colors = listItemColors,
+                                )
+                            },
+                        )
                     }
                 }
             }
