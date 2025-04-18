@@ -166,7 +166,7 @@ fun ExplorationScreen(
                 Modifier.fillMaxWidth(),
                 actions = {
                     actions()
-                    if (authState.isKnownGuest // #1269 游客模式下无法打开设置界面
+                    if (authState.isKnownGuestOrLoggedOut // #1269 游客模式下无法打开设置界面
                         || currentWindowAdaptiveInfo1().windowSizeClass.isWidthAtLeastMedium
                     ) {
                         IconButton(onClick = onClickSettings) {

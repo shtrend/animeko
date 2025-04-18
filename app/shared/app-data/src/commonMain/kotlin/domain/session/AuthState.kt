@@ -55,6 +55,9 @@ sealed class AuthState {
     val isKnownLoggedIn: Boolean get() = this is Success && !isGuest
     val isKnownGuest: Boolean get() = this is Success && isGuest
     val isKnownLoggedOut: Boolean get() = this is NetworkError || this is TokenExpired || this is NotAuthed
+
+    val isKnownGuestOrLoggedOut get() = this.isKnownGuest || this.isKnownLoggedOut
+    
     val isKnownExpired: Boolean get() = this is TokenExpired
     val isLoading: Boolean get() = this is AwaitingResult
 
