@@ -39,8 +39,16 @@ import androidx.compose.ui.util.fastRoundToInt
 import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.tools.update.FileDownloaderState
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.lang.Lang
+import me.him188.ani.app.ui.lang.settings_update_popup_cancel
+import me.him188.ani.app.ui.lang.settings_update_popup_cancel_download
+import me.him188.ani.app.ui.lang.settings_update_popup_continue_download
+import me.him188.ani.app.ui.lang.settings_update_popup_download_complete
+import me.him188.ani.app.ui.lang.settings_update_popup_downloading
+import me.him188.ani.app.ui.lang.settings_update_popup_restart_update
 import me.him188.ani.app.ui.search.LoadErrorCard
 import me.him188.ani.utils.platform.annotations.TestOnly
+import org.jetbrains.compose.resources.stringResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -71,7 +79,7 @@ fun DownloadingUpdatePopupCard(
     if (showConfirmCancel) {
         AlertDialog(
             onDismissRequest = { showConfirmCancel = false },
-            text = { Text("要取消下载吗?") },
+            text = { Text(stringResource(Lang.settings_update_popup_cancel_download)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -79,21 +87,21 @@ fun DownloadingUpdatePopupCard(
                         showConfirmCancel = false
                     },
                 ) {
-                    Text("取消")
+                    Text(stringResource(Lang.settings_update_popup_cancel))
                 }
             },
             dismissButton = {
                 TextButton(
                     onClick = { showConfirmCancel = false },
                 ) {
-                    Text("继续下载")
+                    Text(stringResource(Lang.settings_update_popup_continue_download))
                 }
             },
         )
     }
 
     BasicNotificationPopupCard(
-        title = { Text("正在下载更新") },
+        title = { Text(stringResource(Lang.settings_update_popup_downloading)) },
         modifier,
         dismissButton = {
             NotificationPopupDefaults.DismissButton(onRequestCancel)
@@ -104,7 +112,7 @@ fun DownloadingUpdatePopupCard(
                 Button(
                     onClick = onInstallClick,
                 ) {
-                    Text("重启更新")
+                    Text(stringResource(Lang.settings_update_popup_restart_update))
                 }
             }
         },
@@ -113,7 +121,7 @@ fun DownloadingUpdatePopupCard(
             fileDownloaderStats.state is FileDownloaderState.Succeed -> {
                 ListItem(
                     headlineContent = {
-                        Text("下载完成")
+                        Text(stringResource(Lang.settings_update_popup_download_complete))
                     },
                     leadingContent = {
                         Icon(
