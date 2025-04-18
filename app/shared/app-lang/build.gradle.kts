@@ -20,7 +20,6 @@ plugins {
 
 kotlin {
     sourceSets.commonMain.dependencies {
-        api(projects.app.shared.appPlatform)
         api(compose.components.resources)
     }
     sourceSets.commonTest.dependencies {

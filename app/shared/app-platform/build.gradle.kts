@@ -24,6 +24,7 @@ plugins {
 kotlin {
     sourceSets.commonMain.dependencies {
         api(projects.utils.platform)
+        api(projects.app.shared.appLang)
         api(libs.kotlinx.coroutines.core)
         api(projects.danmaku.danmakuApi)
         api(libs.kotlinx.collections.immutable)
