@@ -255,7 +255,7 @@ private fun MobileSnackbar(
         val result = hostState.showSnackbar(
             message = "发现新版本 ${version.name}",
             actionLabel = "查看",
-            withDismissAction = false,
+            withDismissAction = true,
             duration = SnackbarDuration.Indefinite,
         )
         when (result) {
