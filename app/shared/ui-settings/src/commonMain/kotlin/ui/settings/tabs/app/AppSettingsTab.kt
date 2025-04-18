@@ -117,6 +117,7 @@ import me.him188.ani.app.ui.settings.tabs.theme.ThemeGroup
 import me.him188.ani.app.ui.update.AppUpdateViewModel
 import me.him188.ani.app.ui.update.NewVersion
 import me.him188.ani.app.ui.update.UpdateChecker
+import me.him188.ani.utils.platform.isAndroid
 import me.him188.ani.utils.platform.isDesktop
 import me.him188.ani.utils.platform.isIos
 import me.him188.ani.utils.platform.isMobile
@@ -165,7 +166,7 @@ fun SettingsScope.AppearanceGroup(
 ) {
     val uiSettings by state
 
-    if (LocalPlatform.current.isDesktop()) {
+    if (LocalPlatform.current.isDesktop() || LocalPlatform.current.isAndroid()) {
         DropdownItem(
             selected = { uiSettings.appLanguage },
             values = { SupportedLocales },

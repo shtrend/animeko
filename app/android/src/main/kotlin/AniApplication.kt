@@ -15,7 +15,10 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.LocaleList
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.ProcessLifecycleOwner
 import io.ktor.client.engine.okhttp.OkHttp
 import kotlinx.coroutines.CoroutineName
@@ -168,6 +171,19 @@ class AniApplication : Application() {
             }
         }
 
+        scope.launch {
+            val settingsRepository = koin.get<SettingsRepository>()
+            settingsRepository.uiSettings.flow.collect { settings ->
+                settings.appLanguage?.let {
+                    try {
+                        applyLanguage(it.toLanguageTag())
+                    } catch (e: Throwable) {
+                        logger<AniApplication>().error(e) { "Failed to set app language, see exception" }
+                    }
+                }
+            }
+        }
+
         scope.launch(CoroutineName("TorrentManager initializer")) {
             koin.get<TorrentManager>() // start sharing, connect to DHT now
         }
@@ -212,5 +228,18 @@ class AniApplication : Application() {
                 putExtra("open_activity_intent", Intent(this@AniApplication, MainActivity::class.java))
             },
         )
+    }
+
+    fun Context.applyLanguage(languageTag: String) {
+        val locales = LocaleListCompat.forLanguageTags(languageTag)
+        AppCompatDelegate.setApplicationLocales(locales)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE /* 34 */) {
+            // API‑34+: LocaleManager is still the recommended path
+            val localeManager = getSystemService(android.app.LocaleManager::class.java)
+            localeManager.applicationLocales = locales.unwrap() as LocaleList
+        } else {
+            // AndroidX AppCompat ≥ 1.6 handles API 14‑33
+            AppCompatDelegate.setApplicationLocales(locales)
+        }
     }
 }
