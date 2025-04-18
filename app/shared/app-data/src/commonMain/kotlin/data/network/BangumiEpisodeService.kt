@@ -13,16 +13,13 @@ import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.EpisodeInfo
-import me.him188.ani.app.data.repository.RepositoryAuthorizationException
-import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
-import me.him188.ani.app.domain.session.verifiedAccessToken
+import me.him188.ani.app.domain.session.isLoggedInNow
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.EpisodeType.ED
@@ -119,7 +116,7 @@ class BangumiEpisodeServiceImpl(
         episodeType: BangumiEpType?
     ): Paged<EpisodeCollectionInfo> {
         return withContext(ioDispatcher) {
-            if (isLoggedIn()) {
+            if (sessionManager.isLoggedInNow()) {
                 client.api {
                     getUserSubjectEpisodeCollection(
                         subjectId,
@@ -171,7 +168,7 @@ class BangumiEpisodeServiceImpl(
         subjectId: Int,
         type: BangumiEpType?
     ): Flow<BangumiUserEpisodeCollection>? {
-        if (!isLoggedIn()) {
+        if (!sessionManager.isLoggedInNow()) {
             return null
         }
 
@@ -229,7 +226,7 @@ class BangumiEpisodeServiceImpl(
     }
 
     override suspend fun getEpisodeCollectionById(episodeId: Int): EpisodeCollectionInfo? = withContext(ioDispatcher) {
-        if (isLoggedIn()) {
+        if (sessionManager.isLoggedInNow()) {
             try {
                 return@withContext client.api { getUserEpisodeCollection(episodeId).body().toEpisodeCollectionInfo() }
             } catch (e: ClientRequestException) {
@@ -254,7 +251,7 @@ class BangumiEpisodeServiceImpl(
         episodeId: List<Int>,
         type: UnifiedCollectionType
     ): Boolean = withContext(ioDispatcher) {
-        if (!isLoggedIn()) {
+        if (!sessionManager.isLoggedInNow()) {
             return@withContext false
         }
         try {
@@ -285,18 +282,6 @@ class BangumiEpisodeServiceImpl(
             return this.value in 500..599
         }
     }
-
-    @OptIn(OpaqueSession::class)
-    private suspend fun checkToken() {
-        val session = sessionManager.verifiedAccessToken.first()
-        if (session == null) {
-            // 没 token 肯定会失败, 就别发请求了
-            throw RepositoryAuthorizationException("Precondition failed: verifiedAccessToken is null, aborting request.")
-        }
-    }
-
-    @OptIn(OpaqueSession::class)
-    private suspend fun isLoggedIn(): Boolean = sessionManager.verifiedAccessToken.first() != null
 }
 
 private fun EpisodeInfo.createNotCollected(): EpisodeCollectionInfo {

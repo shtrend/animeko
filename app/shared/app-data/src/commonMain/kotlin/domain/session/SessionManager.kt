@@ -14,8 +14,10 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import me.him188.ani.app.data.models.ApiFailure
+import me.him188.ani.app.data.repository.RepositoryAuthorizationException
 import me.him188.ani.app.data.repository.user.Session
 import me.him188.ani.app.navigation.AniNavigator
 import me.him188.ani.utils.platform.annotations.TestOnly
@@ -150,6 +152,21 @@ val SessionManager.verifiedAccessToken: Flow<AccessTokenPair?>
     get() = state.map {
         (it as? SessionStatus.Verified)?.accessToken
     }
+
+/**
+ * @throws RepositoryAuthorizationException
+ */
+@OptIn(OpaqueSession::class)
+suspend fun SessionManager.checkTokenNow() {
+    val session = verifiedAccessToken.first()
+    if (session == null) {
+        // 没 token 肯定会失败, 就别发请求了
+        throw RepositoryAuthorizationException("Precondition failed: verifiedAccessToken is null, aborting request.")
+    }
+}
+
+@OptIn(OpaqueSession::class)
+suspend fun SessionManager.isLoggedInNow(): Boolean = verifiedAccessToken.first() != null
 
 /**
  * 当用户希望以游客身份登录时抛出的异常.

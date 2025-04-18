@@ -42,12 +42,12 @@ import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionCounts
 import me.him188.ani.app.data.models.subject.SubjectInfo
-import me.him188.ani.app.data.repository.RepositoryAuthorizationException
 import me.him188.ani.app.data.repository.RepositoryUsernameProvider
 import me.him188.ani.app.data.repository.getOrThrow
 import me.him188.ani.app.domain.search.SubjectType
 import me.him188.ani.app.domain.session.OpaqueSession
 import me.him188.ani.app.domain.session.SessionManager
+import me.him188.ani.app.domain.session.checkTokenNow
 import me.him188.ani.app.domain.session.username
 import me.him188.ani.app.domain.session.verifiedAccessToken
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -153,7 +153,7 @@ class RemoteBangumiSubjectService(
         offset: Int,
         limit: Int
     ): List<BatchSubjectCollection> = withContext(ioDispatcher) {
-        checkToken()
+        sessionManager.checkTokenNow()
         val username = usernameProvider.getOrThrow()
         val collections = try {
             api {
@@ -385,21 +385,21 @@ class RemoteBangumiSubjectService(
 
 
     override suspend fun patchSubjectCollection(subjectId: Int, payload: BangumiUserSubjectCollectionModifyPayload) {
-        checkToken()
+        sessionManager.checkTokenNow()
         withContext(ioDispatcher) {
             api { postUserCollection(subjectId, payload) }
         }
     }
 
     override suspend fun deleteSubjectCollection(subjectId: Int) {
-        checkToken()
+        sessionManager.checkTokenNow()
         // TODO:  deleteSubjectCollection
     }
 
     @OptIn(OpaqueSession::class)
     override fun subjectCollectionCountsFlow(): Flow<SubjectCollectionCounts> {
         return sessionManager.username.filterNotNull().map { username ->
-            checkToken()
+            sessionManager.checkTokenNow()
             val types = UnifiedCollectionType.entries - UnifiedCollectionType.NOT_COLLECTED
             val totals = IntArray(types.size) { type ->
                 api {
@@ -460,18 +460,6 @@ class RemoteBangumiSubjectService(
                 },
             )
         }.flowOn(ioDispatcher)
-    }
-
-    private companion object {
-    }
-
-    @OptIn(OpaqueSession::class)
-    private suspend fun checkToken() {
-        val session = sessionManager.verifiedAccessToken.first()
-        if (session == null) {
-            // 没 token 肯定会失败, 就别发请求了
-            throw RepositoryAuthorizationException("Precondition failed: verifiedAccessToken is null, aborting request.")
-        }
     }
 }
 
