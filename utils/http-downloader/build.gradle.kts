@@ -36,7 +36,7 @@ kotlin {
         api(libs.datastore.core)
     }
     sourceSets.desktopMain.dependencies {
-        runtimeOnly(libs.slf4j.simple)
+//        runtimeOnly(libs.slf4j.simple)
     }
     sourceSets.commonTest.dependencies {
         implementation(libs.turbine)
