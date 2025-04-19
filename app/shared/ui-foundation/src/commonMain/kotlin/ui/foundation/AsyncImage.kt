@@ -33,6 +33,7 @@ import kotlinx.coroutines.Dispatchers
 import me.him188.ani.utils.ktor.ScopedHttpClient
 import me.him188.ani.utils.platform.currentPlatform
 import me.him188.ani.utils.platform.isDesktop
+import me.him188.ani.utils.platform.isIos
 
 val LocalImageLoader = androidx.compose.runtime.compositionLocalOf<ImageLoader> {
     error("No ImageLoader provided")
@@ -157,8 +158,9 @@ fun createDefaultImageLoader(
     config: ImageLoader.Builder.() -> Unit = {}
 ): ImageLoader {
     return ImageLoader.Builder(context).apply {
-        crossfade(true)
-
+        if (!currentPlatform().isIos()) {
+            crossfade(true)
+        }
 //        diskCache(DiskCache.Builder().apply {
 //            maxSizeBytes(100 * 1024 * 1024)
 //        }.build())
