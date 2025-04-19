@@ -577,6 +577,8 @@ fun KoinApplication.startCommonKoinModule(
          * `AniApplication.instance.requiresTorrentCacheMigration` will be properly set.
          */
         val storages = koin.get<MediaCacheManager>().storagesIncludingDisabled
+
+        @Suppress("DEPRECATION")
         val legacyMetadataDir = context.getMediaMetadataDir()
 
         // Since 4.8, metadata is stored in the datastore. Migration workaround.

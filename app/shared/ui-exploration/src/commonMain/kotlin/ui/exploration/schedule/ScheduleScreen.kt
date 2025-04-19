@@ -382,6 +382,7 @@ private fun renderScheduleDay(day: ScheduleDay): String {
 }
 
 @Stable
+@Suppress("REDUNDANT_ELSE_IN_WHEN") // Compiler works fine, but IDE complains about this, so we suppress it.
 private fun renderDayOfWeek(day: DayOfWeek, kind: ScheduleDay.Kind): String = when (kind) {
     // we manually permute them to make them real constants to avoid runtime allocations.
     ScheduleDay.Kind.LAST_WEEK -> when (day) {

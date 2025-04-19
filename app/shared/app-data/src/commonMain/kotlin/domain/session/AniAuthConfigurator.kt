@@ -417,10 +417,6 @@ class AniAuthConfigurator(
             }
 
             is SessionStatus.UnknownError -> AuthState.UnknownError(sessionState.exception)
-
-            else -> {
-                AuthState.NotAuthed
-            }
         }
     }
 

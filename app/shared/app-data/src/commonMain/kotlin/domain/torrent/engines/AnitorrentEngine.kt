@@ -10,7 +10,7 @@
 package me.him188.ani.app.domain.torrent.engines
 
 import io.ktor.client.request.get
-import io.ktor.client.statement.readBytes
+import io.ktor.client.statement.readRawBytes
 import kotlinx.coroutines.flow.Flow
 import me.him188.ani.app.data.models.preference.AnitorrentConfig
 import me.him188.ani.app.domain.torrent.AbstractTorrentEngine
@@ -123,7 +123,7 @@ private fun computeTorrentUserAgent(
 ): String = "ani_libtorrent/${versionCode}"
 
 private fun ScopedHttpClient.asHttpFileDownloader(): HttpFileDownloader = object : HttpFileDownloader {
-    override suspend fun download(url: String): ByteArray = this@asHttpFileDownloader.use { get(url).readBytes() }
+    override suspend fun download(url: String): ByteArray = this@asHttpFileDownloader.use { get(url).readRawBytes() }
     override fun close() {}
 
     override fun toString(): String {
