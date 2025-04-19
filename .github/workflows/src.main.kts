@@ -460,13 +460,13 @@ run {
         ghWin2019, // win installer
         selfMac15.copy(
             buildAllAndroidAbis = true,
-            uploadApk = true,
+            uploadApk = false,
             uploadDesktopInstallers = false,
             extraGradleArgs = selfMac15.extraGradleArgs.filterNot { it.startsWith("-P$ANI_ANDROID_ABIS=") },
         ), // android apks
         ghMac15, // macos AArch64 installer
         ghMac13, // macos x64 portable
-        ghUbuntu2404, // linux app image
+        ghUbuntu2404, // linux app image + Android APKs
     )
 }
 
