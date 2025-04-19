@@ -180,6 +180,7 @@ fun SettingsScope.AppearanceGroup(
             } else null,
         )
     }
+    IosLanguageSettings()
 
     DropdownItem(
         selected = { uiSettings.mainSceneInitialPage },
@@ -515,6 +516,9 @@ fun SettingsScope.PlayerGroup(
         PlayerGroupPlatform(videoScaffoldConfig)
     }
 }
+
+@Composable
+internal expect fun SettingsScope.IosLanguageSettings()
 
 @Composable
 internal expect fun SettingsScope.AppSettingsTabPlatform()
