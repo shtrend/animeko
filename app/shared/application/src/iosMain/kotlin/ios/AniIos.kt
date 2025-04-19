@@ -14,7 +14,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
@@ -60,9 +59,7 @@ import me.him188.ani.app.platform.startCommonKoinModule
 import me.him188.ani.app.tools.update.IosUpdateInstaller
 import me.him188.ani.app.tools.update.UpdateInstaller
 import me.him188.ani.app.ui.foundation.TestGlobalLifecycleOwner
-import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
-import me.him188.ani.app.ui.foundation.layout.isSystemInFullscreen
 import me.him188.ani.app.ui.foundation.navigation.LocalOnBackPressedDispatcherOwner
 import me.him188.ani.app.ui.foundation.navigation.SkikoOnBackPressedDispatcherOwner
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
@@ -148,10 +145,7 @@ fun MainViewController(): UIViewController {
                 LocalOnBackPressedDispatcherOwner provides onBackPressedDispatcherOwner,
             ) {
                 Box(
-                    Modifier.background(color = MaterialTheme.colorScheme.background)
-                        .ifThen(!isSystemInFullscreen()) {
-                            statusBarsPadding() // Windows 有, macOS 没有
-                        }
+                    Modifier.background(color = MaterialTheme.colorScheme.surfaceContainerLowest)
                         .fillMaxSize(),
                 ) {
                     Box(Modifier.fillMaxSize()) {
