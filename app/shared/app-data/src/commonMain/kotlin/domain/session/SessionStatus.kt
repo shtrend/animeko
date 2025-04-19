@@ -106,7 +106,12 @@ sealed interface SessionStatus {
 data class AccessTokenPair(
     val bangumiAccessToken: String,
     val aniAccessToken: String,
-)
+) {
+    override fun toString(): String {
+        // 日志不打印 token
+        return "AccessTokenPair(bangumiAccessToken.hashCode=${bangumiAccessToken.hashCode()}, aniAccessToken.hashCode=${aniAccessToken.hashCode()})"
+    }
+}
 
 /**
  * 获取未经验证的 access token. 未经验证, 也就是说这个 token 可能是:
