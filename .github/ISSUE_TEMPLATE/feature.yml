@@ -42,11 +42,15 @@ body:
       multiple: true
       description: 适用的操作系统。如果适用于全部，可留空
       options:
-        - Android
-        - macOS (Intel)
-        - macOS (M 系列芯片)
+        - Android 手机/平板
         - Windows
-        - Linux
-        - 其他 (请在上方描述中补充)
+        - iOS (请备注系统版本)
+        - iPadOS (请备注系统版本)
+        - macOS (M 系列芯片)
+        - Ubuntu
+        - Arch Linux
+        - 其他 Linux 系统
+        - Android TV
+        - macOS (Intel)
     validations:
       required: false
