@@ -186,8 +186,8 @@ data class MatrixInstance(
     val buildAllAndroidAbis: Boolean = true,
 
     // Gradle command line args
-    private val gradleHeap: String = "4g",
-    private val kotlinCompilerHeap: String = "4g",
+    val gradleHeap: String = "4g",
+    val kotlinCompilerHeap: String = "4g",
     /**
      * 只能在内存比较大的时候用.
      */
@@ -888,6 +888,7 @@ workflow(
             enableSwap()
             deleteLocalProperties()
             writeLocalProperties()
+            updateJvmArgsInGradleProperties()
             installJbr21()
             chmod777()
             setupGradle()
@@ -1057,6 +1058,35 @@ class WithMatrix(
             ),
             continueOnError = true,
         )
+    }
+
+    fun JobBuilder<*>.updateJvmArgsInGradleProperties() {
+        // 将 Gradle 内存设置写入 gradle.properties. 因为构建 iOS 时 Xcode 会跑 ./gradlew, 而不包含 matrix.gradleArgs
+        if (matrix.uploadIpa) {
+            val newVmArgs =
+                "-Xmx${matrix.gradleHeap} -Dkotlin.daemon.jvm.options=-Xmx${matrix.kotlinCompilerHeap}"
+
+            run(
+                name = "Update JVM args in gradle.properties",
+                command = shell(
+                    $$"""
+                # Update org.gradle.jvmargs in gradle.properties
+                if grep -q '^org.gradle.jvmargs=' gradle.properties; then
+                  # replace the existing line
+                  sed -i -E 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=$${newVmArgs}/' gradle.properties
+                else
+                  # append if the key is not present
+                  echo "org.gradle.jvmargs=$${newVmArgs}" >> gradle.properties
+                fi
+                """.trimIndent(),
+                ),
+            )
+
+            run(
+                name = "Display gradle.properties",
+                command = shell("cat ./gradle.properties"),
+            )
+        }
     }
 
     fun JobBuilder<*>.installJbr21() {
@@ -1431,20 +1461,21 @@ class WithMatrix(
 
     fun JobBuilder<*>.buildIosIpaRelease() {
         if (matrix.uploadIpa) {
-            runGradle(
-                name = "linkPodReleaseFrameworkIosArm64",
-                tasks = [
-                    ":app:shared:application:linkPodReleaseFrameworkIosArm64",
-                ],
-                maxAttempts = 6,
-                maxWorkers = 1, // Save memory on CI
-            )
+            // No need to do this. `:app:ios:buildReleaseIpa` will redo linking because it uses different gradle properties.
+//            runGradle(
+//                name = "linkPodReleaseFrameworkIosArm64",
+//                tasks = [
+//                    ":app:shared:application:linkPodReleaseFrameworkIosArm64",
+//                ],
+//                maxAttempts = 6,
+//                maxWorkers = 1, // Save memory on CI
+//            )
             runGradle(
                 name = "Build iOS Release IPA",
                 tasks = [
                     ":app:ios:buildReleaseIpa",
                 ],
-                maxAttempts = 6,
+                maxAttempts = 3,
             )
             usesWithAttempts(
                 name = "Upload iOS Release IPA",

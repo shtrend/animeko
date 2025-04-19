@@ -258,16 +258,30 @@ jobs:
         echo "ani.analytics.server=${{ secrets.ANALYTICS_SERVER }}" >> local.properties
         echo "ani.analytics.key=${{ secrets.ANALYTICS_KEY }}" >> local.properties
     - id: 'step-5'
+      name: 'Update JVM args in gradle.properties'
+      run: |-
+        # Update org.gradle.jvmargs in gradle.properties
+        if grep -q '^org.gradle.jvmargs=' gradle.properties; then
+          # replace the existing line
+          sed -i -E 's/^org.gradle.jvmargs=.*/org.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g/' gradle.properties
+        else
+          # append if the key is not present
+          echo "org.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" >> gradle.properties
+        fi
+    - id: 'step-6'
+      name: 'Display gradle.properties'
+      run: 'cat ./gradle.properties'
+    - id: 'step-7'
       name: 'Resolve JBR location'
       shell: 'bash'
       run: |-
         # Expand jbrLocationExpr
         jbr_location_expr='${{ runner.tool_cache }}/jbrsdk_jcef-21.0.6-osx-aarch64-b895.91.tar.gz'
         echo "jbrLocation=$jbr_location_expr" >> $GITHUB_OUTPUT
-    - id: 'step-6'
+    - id: 'step-8'
       name: 'Get JBR 21 for macOS AArch64 (Attempt #1)'
       env:
-        jbrLocation: '${{ steps.step-5.outputs.jbrLocation }}'
+        jbrLocation: '${{ steps.step-7.outputs.jbrLocation }}'
       continue-on-error: true
       timeout-minutes: 180
       shell: 'bash'
@@ -297,10 +311,10 @@ jobs:
 
         rm -f $checksum_file
         file "$jbr_location"
-    - id: 'step-7'
+    - id: 'step-9'
       name: 'Get JBR 21 for macOS AArch64 (Attempt #2)'
       env:
-        jbrLocation: '${{ steps.step-5.outputs.jbrLocation }}'
+        jbrLocation: '${{ steps.step-7.outputs.jbrLocation }}'
       continue-on-error: false
       timeout-minutes: 180
       shell: 'bash'
@@ -330,38 +344,38 @@ jobs:
 
         rm -f $checksum_file
         file "$jbr_location"
-      if: '${{ steps.step-6.outcome == ''failure'' }}'
-    - id: 'step-8'
+      if: '${{ steps.step-8.outcome == ''failure'' }}'
+    - id: 'step-10'
       name: 'Setup JBR 21 for macOS '
       uses: 'gmitch215/setup-java@6d2c5e1f82f180ae79f799f0ed6e3e5efb4e664d'
       with:
         java-version: '21'
         distribution: 'jdkfile'
-        jdkFile: '${{ steps.step-5.outputs.jbrLocation }}'
+        jdkFile: '${{ steps.step-7.outputs.jbrLocation }}'
       env:
         GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-    - id: 'step-9'
+    - id: 'step-11'
       name: 'Dump Local Properties'
       run: 'echo "jvm.toolchain.version=21" >> local.properties'
-    - id: 'step-10'
+    - id: 'step-12'
       run: 'chmod -R 777 .'
-    - id: 'step-11'
+    - id: 'step-13'
       name: 'Setup Gradle'
       uses: 'gradle/actions/setup-gradle@v3'
       with:
         cache-disabled: 'true'
-    - id: 'step-12'
+    - id: 'step-14'
       name: 'Clean and download dependencies (Attempt #1)'
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew --scan "--stacktrace" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-    - id: 'step-13'
+    - id: 'step-15'
       name: 'Clean and download dependencies (Attempt #2)'
       continue-on-error: false
       timeout-minutes: 180
       run: './gradlew --scan "--stacktrace" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-12.outcome == ''failure'' }}'
-    - id: 'step-14'
+      if: '${{ steps.step-14.outcome == ''failure'' }}'
+    - id: 'step-16'
       name: 'Update Release Version Name (Attempt #1)'
       env:
         GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
@@ -371,7 +385,7 @@ jobs:
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew updateReleaseVersionNameFromGit "--no-configuration-cache" "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-    - id: 'step-15'
+    - id: 'step-17'
       name: 'Update Release Version Name (Attempt #2)'
       env:
         GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
@@ -381,133 +395,80 @@ jobs:
       continue-on-error: false
       timeout-minutes: 180
       run: './gradlew updateReleaseVersionNameFromGit "--no-configuration-cache" "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-14.outcome == ''failure'' }}'
-    - id: 'step-16'
+      if: '${{ steps.step-16.outcome == ''failure'' }}'
+    - id: 'step-18'
       name: 'Compile Kotlin (Attempt #1)'
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew compileKotlin compileCommonMainKotlinMetadata compileJvmMainKotlinMetadata compileKotlinDesktop compileKotlinMetadata "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-    - id: 'step-17'
+    - id: 'step-19'
       name: 'Compile Kotlin (Attempt #2)'
       continue-on-error: false
       timeout-minutes: 180
       run: './gradlew compileKotlin compileCommonMainKotlinMetadata compileJvmMainKotlinMetadata compileKotlinDesktop compileKotlinMetadata "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-16.outcome == ''failure'' }}'
-    - id: 'step-18'
+      if: '${{ steps.step-18.outcome == ''failure'' }}'
+    - id: 'step-20'
       name: 'Compile Kotlin Android (Attempt #1)'
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew compileDebugKotlinAndroid compileReleaseKotlinAndroid "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-    - id: 'step-19'
+    - id: 'step-21'
       name: 'Compile Kotlin Android (Attempt #2)'
       continue-on-error: false
       timeout-minutes: 180
       run: './gradlew compileDebugKotlinAndroid compileReleaseKotlinAndroid "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-18.outcome == ''failure'' }}'
-    - id: 'step-20'
+      if: '${{ steps.step-20.outcome == ''failure'' }}'
+    - id: 'step-22'
       name: 'generateDummyFramework (Attempt #1)'
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew :app:shared:application:generateDummyFramework "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-    - id: 'step-21'
+    - id: 'step-23'
       name: 'generateDummyFramework (Attempt #2)'
       continue-on-error: false
       timeout-minutes: 180
       run: './gradlew :app:shared:application:generateDummyFramework "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-20.outcome == ''failure'' }}'
-    - id: 'step-22'
+      if: '${{ steps.step-22.outcome == ''failure'' }}'
+    - id: 'step-24'
       name: 'Pod Install (Attempt #1)'
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew :app:ios:podInstall "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-    - id: 'step-23'
+    - id: 'step-25'
       name: 'Pod Install (Attempt #2)'
       continue-on-error: false
       timeout-minutes: 180
       run: './gradlew :app:ios:podInstall "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-22.outcome == ''failure'' }}'
-    - id: 'step-24'
+      if: '${{ steps.step-24.outcome == ''failure'' }}'
+    - id: 'step-26'
       name: 'Patch ios Plist (Attempt #1)'
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew :app:ios:patchInfoPlist "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-    - id: 'step-25'
+    - id: 'step-27'
       name: 'Patch ios Plist (Attempt #2)'
       continue-on-error: false
       timeout-minutes: 180
       run: './gradlew :app:ios:patchInfoPlist "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-24.outcome == ''failure'' }}'
-    - id: 'step-26'
-      name: 'linkPodReleaseFrameworkIosArm64 (Attempt #1)'
-      continue-on-error: true
-      timeout-minutes: 180
-      run: './gradlew :app:shared:application:linkPodReleaseFrameworkIosArm64 "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel" --max-workers=1'
-    - id: 'step-27'
-      name: 'linkPodReleaseFrameworkIosArm64 (Attempt #2)'
-      continue-on-error: true
-      timeout-minutes: 180
-      run: './gradlew :app:shared:application:linkPodReleaseFrameworkIosArm64 "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel" --max-workers=1'
       if: '${{ steps.step-26.outcome == ''failure'' }}'
     - id: 'step-28'
-      name: 'linkPodReleaseFrameworkIosArm64 (Attempt #3)'
-      continue-on-error: true
-      timeout-minutes: 180
-      run: './gradlew :app:shared:application:linkPodReleaseFrameworkIosArm64 "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel" --max-workers=1'
-      if: '${{ steps.step-27.outcome == ''failure'' }}'
-    - id: 'step-29'
-      name: 'linkPodReleaseFrameworkIosArm64 (Attempt #4)'
-      continue-on-error: true
-      timeout-minutes: 180
-      run: './gradlew :app:shared:application:linkPodReleaseFrameworkIosArm64 "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel" --max-workers=1'
-      if: '${{ steps.step-28.outcome == ''failure'' }}'
-    - id: 'step-30'
-      name: 'linkPodReleaseFrameworkIosArm64 (Attempt #5)'
-      continue-on-error: true
-      timeout-minutes: 180
-      run: './gradlew :app:shared:application:linkPodReleaseFrameworkIosArm64 "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel" --max-workers=1'
-      if: '${{ steps.step-29.outcome == ''failure'' }}'
-    - id: 'step-31'
-      name: 'linkPodReleaseFrameworkIosArm64 (Attempt #6)'
-      continue-on-error: false
-      timeout-minutes: 180
-      run: './gradlew :app:shared:application:linkPodReleaseFrameworkIosArm64 "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel" --max-workers=1'
-      if: '${{ steps.step-30.outcome == ''failure'' }}'
-    - id: 'step-32'
       name: 'Build iOS Release IPA (Attempt #1)'
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew :app:ios:buildReleaseIpa "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-    - id: 'step-33'
+    - id: 'step-29'
       name: 'Build iOS Release IPA (Attempt #2)'
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew :app:ios:buildReleaseIpa "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-32.outcome == ''failure'' }}'
-    - id: 'step-34'
+      if: '${{ steps.step-28.outcome == ''failure'' }}'
+    - id: 'step-30'
       name: 'Build iOS Release IPA (Attempt #3)'
-      continue-on-error: true
-      timeout-minutes: 180
-      run: './gradlew :app:ios:buildReleaseIpa "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-33.outcome == ''failure'' }}'
-    - id: 'step-35'
-      name: 'Build iOS Release IPA (Attempt #4)'
-      continue-on-error: true
-      timeout-minutes: 180
-      run: './gradlew :app:ios:buildReleaseIpa "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-34.outcome == ''failure'' }}'
-    - id: 'step-36'
-      name: 'Build iOS Release IPA (Attempt #5)'
-      continue-on-error: true
-      timeout-minutes: 180
-      run: './gradlew :app:ios:buildReleaseIpa "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-35.outcome == ''failure'' }}'
-    - id: 'step-37'
-      name: 'Build iOS Release IPA (Attempt #6)'
       continue-on-error: false
       timeout-minutes: 180
       run: './gradlew :app:ios:buildReleaseIpa "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-36.outcome == ''failure'' }}'
-    - id: 'step-38'
+      if: '${{ steps.step-29.outcome == ''failure'' }}'
+    - id: 'step-31'
       name: 'Upload iOS Release IPA (Attempt #1)'
       continue-on-error: true
       uses: 'actions/upload-artifact@v4'
@@ -515,7 +476,7 @@ jobs:
         name: 'ani-ios-release'
         path: 'app/ios/build/archives/release/Animeko.ipa'
         overwrite: 'true'
-    - id: 'step-39'
+    - id: 'step-32'
       name: 'Upload iOS Release IPA (Attempt #2)'
       continue-on-error: true
       uses: 'actions/upload-artifact@v4'
@@ -523,8 +484,8 @@ jobs:
         name: 'ani-ios-release'
         path: 'app/ios/build/archives/release/Animeko.ipa'
         overwrite: 'true'
-      if: '${{ steps.step-38.outcome == ''failure'' }}'
-    - id: 'step-40'
+      if: '${{ steps.step-31.outcome == ''failure'' }}'
+    - id: 'step-33'
       name: 'Upload iOS Release IPA (Attempt #3)'
       continue-on-error: false
       uses: 'actions/upload-artifact@v4'
@@ -532,8 +493,8 @@ jobs:
         name: 'ani-ios-release'
         path: 'app/ios/build/archives/release/Animeko.ipa'
         overwrite: 'true'
-      if: '${{ steps.step-39.outcome == ''failure'' }}'
-    - id: 'step-41'
+      if: '${{ steps.step-32.outcome == ''failure'' }}'
+    - id: 'step-34'
       name: 'Upload iOS IPA (Attempt #1)'
       env:
         GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
@@ -549,7 +510,7 @@ jobs:
       continue-on-error: true
       timeout-minutes: 180
       run: './gradlew :ci-helper:uploadIosIpa "--no-configuration-cache" "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-    - id: 'step-42'
+    - id: 'step-35'
       name: 'Upload iOS IPA (Attempt #2)'
       env:
         GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
@@ -565,8 +526,8 @@ jobs:
       continue-on-error: false
       timeout-minutes: 180
       run: './gradlew :ci-helper:uploadIosIpa "--no-configuration-cache" "--scan" "-Porg.gradle.daemon.idletimeout=60000" "-Dfile.encoding=UTF-8" "-Dorg.gradle.jvmargs=-Xmx8g -Dkotlin.daemon.jvm.options=-Xmx16g" "-Dkotlin.daemon.jvm.options=-Xmx16g" "--parallel"'
-      if: '${{ steps.step-41.outcome == ''failure'' }}'
-    - id: 'step-43'
+      if: '${{ steps.step-34.outcome == ''failure'' }}'
+    - id: 'step-36'
       name: 'Cleanup temp files'
       continue-on-error: true
       run: 'chmod +x ./ci-helper/cleanup-temp-files-macos.sh && ./ci-helper/cleanup-temp-files-macos.sh'
