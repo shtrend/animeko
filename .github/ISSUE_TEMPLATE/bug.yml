@@ -8,8 +8,9 @@ body:
     attributes:
       value: |
         欢迎反馈 bug！
-        在提交之前，请确保你已经搜索过已有的 issues，确保没有重复问题。
+        ## 在提交之前，请确保你已经搜索过已有的 issues，确保没有重复问题。
         例如，对于 "下载不了在线资源" 问题，请先搜索 "下载"，看看是否已经有人提出过，如果有就去那个议题里点赞即可，无需重复提交。
+        
         ----
         请尽量提供多的信息，这将帮助问题更快解决。
 
@@ -47,8 +48,12 @@ body:
       options:
         - Android 手机/平板
         - Windows
+        - iOS (请备注系统版本)
+        - iPadOS (请备注系统版本)
         - macOS (M 系列芯片)
         - Ubuntu
+        - Arch Linux
+        - 其他 Linux 系统
         - Android TV
         - macOS (Intel)
     validations:
