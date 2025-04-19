@@ -208,7 +208,6 @@ data class MatrixInstance(
 
         add(quote("--scan"))
         add(quote("-Porg.gradle.daemon.idletimeout=60000"))
-        add(quote("-Pkotlin.native.ignoreDisabledTargets=true"))
         add(quote("-Dfile.encoding=UTF-8"))
 
         if (os == OS.WINDOWS) {
@@ -218,11 +217,6 @@ data class MatrixInstance(
 
         add(quote("-Dorg.gradle.jvmargs=-Xmx${gradleHeap} -Dkotlin.daemon.jvm.options=-Xmx${kotlinCompilerHeap}"))
         add(quote("-Dkotlin.daemon.jvm.options=-Xmx${kotlinCompilerHeap}"))
-        add(quote("-Pani.dandanplay.app.id=${expr { secrets.DANDANPLAY_APP_ID }}"))
-        add(quote("-Pani.dandanplay.app.secret=${expr { secrets.DANDANPLAY_APP_SECRET }}"))
-        add(quote("-Pani.sentry.dsn=${expr { secrets.SENTRY_DSN }}"))
-        add(quote("-Pani.analytics.server=${expr { secrets.ANALYTICS_SERVER }}"))
-        add(quote("-Pani.analytics.key=${expr { secrets.ANALYTICS_KEY }}"))
 
         if (gradleParallel) {
             add(quote("--parallel"))
@@ -1451,7 +1445,6 @@ class WithMatrix(
                     ":app:ios:buildReleaseIpa",
                 ],
                 maxAttempts = 6,
-                maxWorkers = 1, // Save memory on CI
             )
             usesWithAttempts(
                 name = "Upload iOS Release IPA",
