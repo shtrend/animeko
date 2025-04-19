@@ -507,9 +507,6 @@ private fun FrameWindowScope.MainWindowContent(
     }
 }
 
-private val minimumSize = DpSize(400.dp, 400.dp)
-private val screenSize = ScreenUtils.getScreenSize()
-
 @Composable
 private fun WindowStateRecorder(
     windowState: WindowState,
@@ -531,7 +528,7 @@ private fun WindowStateRecorder(
             )
             //保存的窗口尺寸和大小全都合规时，才使用，否则使用默认设置
 
-            if (isWindowStateValid(savedWindowState.size, savedWindowState.position, minimumSize, screenSize)) {
+            if (isWindowStateValid(savedWindowState.size, savedWindowState.position)) {
                 windowState.apply {
                     position = savedWindowState.position
                     size = savedWindowState.size
@@ -549,8 +546,6 @@ private fun WindowStateRecorder(
             if (isWindowStateValid(
                     DpSize(width = newState.width, height = newState.height),
                     WindowPosition(x = newState.x, y = newState.y),
-                    minimumSize,
-                    screenSize,
                 )
             ) {
                 update(newState)
@@ -562,8 +557,10 @@ private fun WindowStateRecorder(
 private fun isWindowStateValid(
     windowSize: DpSize,
     windowPosition: WindowPosition,
-    minimumSize: DpSize,
-    screenSize: DpSize,
+    minimumSize: DpSize = DpSize(400.dp, 400.dp),
+    // In headless testing this will throw NoClassDefFoundError, see https://github.com/open-ani/animeko/runs/40761327501
+    //  so we use runCatching to avoid this
+    screenSize: DpSize = runCatching { ScreenUtils.getScreenSize() }.getOrElse { DpSize(1280.dp, 720.dp) },
 ): Boolean = ((windowSize.width >= minimumSize.width && windowSize.height >= minimumSize.height)
         && windowPosition.x > 0.dp && windowPosition.y > 0.dp
         && windowPosition.x < screenSize.width - 200.dp && windowPosition.y < screenSize.height - 200.dp)
