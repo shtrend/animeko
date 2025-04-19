@@ -220,7 +220,7 @@ private fun MainScreenContent(
                             onClickRetryRefreshSession = {
                                 coroutineScope.launch { explorationPageViewModel.refreshLoginSession() }
                             },
-                            modifier = modifier.fillMaxSize(),
+                            modifier = Modifier.fillMaxSize(),
                         )
                     }
 
