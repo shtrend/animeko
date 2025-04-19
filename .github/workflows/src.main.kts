@@ -1008,6 +1008,7 @@ class WithMatrix(
             append(' ')
             append(gradleArgs)
             if (maxWorkers != null) {
+                append(' ')
                 append("--max-workers=$maxWorkers")
             }
         },
