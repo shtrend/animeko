@@ -29,6 +29,7 @@ import coil3.network.NetworkFetcher
 import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.svg.SvgDecoder
+import kotlinx.coroutines.Dispatchers
 import me.him188.ani.utils.ktor.ScopedHttpClient
 import me.him188.ani.utils.platform.currentPlatform
 import me.him188.ani.utils.platform.isDesktop
@@ -161,6 +162,8 @@ fun createDefaultImageLoader(
 //        diskCache(DiskCache.Builder().apply {
 //            maxSizeBytes(100 * 1024 * 1024)
 //        }.build())
+
+        coroutineContext(Dispatchers.Default)
 
         diskCachePolicy(CachePolicy.ENABLED)
         memoryCachePolicy(CachePolicy.ENABLED)
