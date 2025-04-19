@@ -216,8 +216,7 @@ data class MatrixInstance(
             add(quote("-DBoost_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include"))
         }
 
-        add(quote("-Dorg.gradle.jvmargs=-Xmx${gradleHeap}"))
-        add(quote("-Dkotlin.daemon.jvm.options=-Xmx${kotlinCompilerHeap}"))
+        add(quote("-Porg.gradle.jvmargs=-Xmx${gradleHeap} -Dkotlin.daemon.jvm.options=-Xmx${kotlinCompilerHeap}"))
         add(quote("-Pani.dandanplay.app.id=${expr { secrets.DANDANPLAY_APP_ID }}"))
         add(quote("-Pani.dandanplay.app.secret=${expr { secrets.DANDANPLAY_APP_SECRET }}"))
         add(quote("-Pani.sentry.dsn=${expr { secrets.SENTRY_DSN }}"))
