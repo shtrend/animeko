@@ -216,7 +216,8 @@ data class MatrixInstance(
             add(quote("-DBoost_INCLUDE_DIR=C:/vcpkg/installed/x64-windows/include"))
         }
 
-        add(quote("-Porg.gradle.jvmargs=-Xmx${gradleHeap} -Dkotlin.daemon.jvm.options=-Xmx${kotlinCompilerHeap}"))
+        add(quote("-Dorg.gradle.jvmargs=-Xmx${gradleHeap} -Dkotlin.daemon.jvm.options=-Xmx${kotlinCompilerHeap}"))
+        add(quote("-Dkotlin.daemon.jvm.options=-Xmx${kotlinCompilerHeap}"))
         add(quote("-Pani.dandanplay.app.id=${expr { secrets.DANDANPLAY_APP_ID }}"))
         add(quote("-Pani.dandanplay.app.secret=${expr { secrets.DANDANPLAY_APP_SECRET }}"))
         add(quote("-Pani.sentry.dsn=${expr { secrets.SENTRY_DSN }}"))
@@ -439,7 +440,7 @@ run {
         buildAllAndroidAbis = false,
         uploadIpa = true,
         // Kotlin ios linking needs A LOT OF memory. 12GB + 16GB is proven to work fine. 8GB + 16GB does not work.
-        gradleHeap = "12g",
+        gradleHeap = "8g",
         kotlinCompilerHeap = "16g",
         gradleParallel = true,
     )
