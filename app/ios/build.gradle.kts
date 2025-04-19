@@ -50,6 +50,7 @@ val buildDebugArchive = tasks.register("buildDebugArchive", Exec::class) {
 
     val output = layout.buildDirectory.dir("archives/debug/Animeko.xcarchive")
     outputs.dir(output)
+    dependsOn(":app:shared:application:linkPodDebugFrameworkIosArm64")
     commandLine(
         *ipaArguments(),
         "archive",
@@ -63,6 +64,7 @@ val buildReleaseArchive = tasks.register("buildReleaseArchive", Exec::class) {
     description = "Builds the iOS framework for Release"
     workingDir(projectDir)
 
+    dependsOn(":app:shared:application:linkPodReleaseFrameworkIosArm64")
     val output = layout.buildDirectory.dir("archives/release/Animeko.xcarchive")
     outputs.dir(output)
     commandLine(
