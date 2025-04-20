@@ -181,7 +181,9 @@ class DefaultRssMediaSourceEngine(
             val document = try {
                 client.first().use {
                     get(finalUrl).let { resp ->
-                        Xml.parse(resp.bodyAsChannel().toSource())
+                        resp.bodyAsChannel().toSource().use {
+                            Xml.parse(it)
+                        }
                     }
                 }
             } catch (e: ClientRequestException) {
