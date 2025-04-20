@@ -377,6 +377,11 @@
     <string name="settings_danmaku_regex_expression">Regular Expression</string>
     <string name="settings_danmaku_regex_invalid">Invalid regular expression syntax</string>
     <string name="settings_danmaku_regex_description">Enter a regular expression for filtering, e.g.: \'.*sign.*\' will filter all danmaku containing the word \'sign\'.</string>
+
+    <!-- ConnectionTesterResultIndicator -->
+    <string name="settings_framework_timeout">Timeout</string>
+    <string name="settings_framework_not_enabled">Not enabled</string>
+    <string name="settings_framework_waiting_for_test">Waiting for test</string>
 </resources>
 
 <!--@formatter:on-->

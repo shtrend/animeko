@@ -415,6 +415,11 @@
     <string name="settings_danmaku_regex_expression">正則表達式</string>
     <string name="settings_danmaku_regex_invalid">正則表達式語法不正確</string>
     <string name="settings_danmaku_regex_description">填寫用於屏蔽的正則表達式，例如：\'.*簽.*\' 會屏蔽所有含有文字\'簽\'的彈幕。</string>
+
+    <!-- ConnectionTesterResultIndicator -->
+    <string name="settings_framework_timeout">超時</string>
+    <string name="settings_framework_not_enabled">未啟用</string>
+    <string name="settings_framework_waiting_for_test">等待測試</string>
 </resources>
 
 <!--@formatter:on-->
