@@ -382,6 +382,23 @@
     <string name="settings_framework_timeout">Timeout</string>
     <string name="settings_framework_not_enabled">Not enabled</string>
     <string name="settings_framework_waiting_for_test">Waiting for test</string>
+
+    <!-- GlobalProxyGroup -->
+    <string name="settings_network_proxy_title">Global Proxy Settings</string>
+    <string name="settings_network_proxy_description">Applied to all data sources and Bangumi</string>
+    <string name="settings_network_proxy_type">Proxy Type</string>
+    <string name="settings_network_proxy_disabled">Disabled</string>
+    <string name="settings_network_proxy_system">System Proxy</string>
+    <string name="settings_network_proxy_custom">Custom</string>
+    <string name="settings_network_proxy_detection_result">Auto-detection Result</string>
+    <string name="settings_network_proxy_detecting">Detecting</string>
+    <string name="settings_network_proxy_not_detected">No system proxy detected</string>
+    <string name="settings_network_proxy_address">Proxy Address</string>
+    <string name="settings_network_proxy_address_example">Example: http://127.0.0.1:7890 or socks5://127.0.0.1:1080</string>
+    <string name="settings_network_proxy_username">Username</string>
+    <string name="settings_network_proxy_optional">Optional</string>
+    <string name="settings_network_proxy_none">None</string>
+    <string name="settings_network_proxy_password">Password</string>
 </resources>
 
 <!--@formatter:on-->

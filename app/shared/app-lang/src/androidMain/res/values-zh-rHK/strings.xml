@@ -420,6 +420,23 @@
     <string name="settings_framework_timeout">超時</string>
     <string name="settings_framework_not_enabled">未啟用</string>
     <string name="settings_framework_waiting_for_test">等待測試</string>
+
+    <!-- GlobalProxyGroup -->
+    <string name="settings_network_proxy_title">全局代理設置</string>
+    <string name="settings_network_proxy_description">應用於所有數據源以及 Bangumi</string>
+    <string name="settings_network_proxy_type">代理類型</string>
+    <string name="settings_network_proxy_disabled">禁用</string>
+    <string name="settings_network_proxy_system">系統代理</string>
+    <string name="settings_network_proxy_custom">自定義</string>
+    <string name="settings_network_proxy_detection_result">自動檢測結果</string>
+    <string name="settings_network_proxy_detecting">正在檢測</string>
+    <string name="settings_network_proxy_not_detected">未檢測到系統代理</string>
+    <string name="settings_network_proxy_address">代理地址</string>
+    <string name="settings_network_proxy_address_example">示例: http://127.0.0.1:7890 或 socks5://127.0.0.1:1080</string>
+    <string name="settings_network_proxy_username">用戶名</string>
+    <string name="settings_network_proxy_optional">可選</string>
+    <string name="settings_network_proxy_none">無</string>
+    <string name="settings_network_proxy_password">密碼</string>
 </resources>
 
 <!--@formatter:on-->
