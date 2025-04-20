@@ -354,6 +354,19 @@
     <string name="settings_theme_mode_light">Light</string>
     <string name="settings_theme_mode_dark">Dark</string>
     <string name="settings_theme_mode_auto">Auto</string>
+
+    <!-- DanmakuGroup -->
+    <string name="settings_network_danmaku">Danmaku</string>
+    <string name="settings_network_danmaku_global_acceleration">Global Acceleration</string>
+    <string name="settings_network_danmaku_global_acceleration_description">Improves speed when fetching danmaku data\nEnabling this within mainland China will slow it down</string>
+    <string name="settings_network_danmaku_connection_test">Connection Speed Test</string>
+    <string name="settings_network_danmaku_currently_using">Currently using</string>
+    <string name="settings_network_danmaku_recommended_other_regions">Recommended for other regions</string>
+    <string name="settings_network_danmaku_recommended_mainland_hk">Recommended for mainland China and Hong Kong</string>
+    <string name="settings_network_danmaku_global">Global</string>
+    <string name="settings_network_danmaku_mainland">Mainland China</string>
+    <string name="settings_network_danmaku_stop_test">Stop Test</string>
+    <string name="settings_network_danmaku_start_test">Start Test</string>
 </resources>
 
 <!--@formatter:on-->

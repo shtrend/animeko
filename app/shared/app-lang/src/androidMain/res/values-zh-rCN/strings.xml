@@ -392,6 +392,19 @@
     <string name="settings_theme_mode_light">浅色</string>
     <string name="settings_theme_mode_dark">深色</string>
     <string name="settings_theme_mode_auto">自动</string>
+
+    <!-- DanmakuGroup -->
+    <string name="settings_network_danmaku">弹幕</string>
+    <string name="settings_network_danmaku_global_acceleration">全球加速</string>
+    <string name="settings_network_danmaku_global_acceleration_description">提升在获取弹幕数据的速度\n在中国大陆内启用会减速</string>
+    <string name="settings_network_danmaku_connection_test">连接速度测试</string>
+    <string name="settings_network_danmaku_currently_using">当前使用</string>
+    <string name="settings_network_danmaku_recommended_other_regions">建议在其他地区使用</string>
+    <string name="settings_network_danmaku_recommended_mainland_hk">建议在中国大陆和香港使用</string>
+    <string name="settings_network_danmaku_global">全球</string>
+    <string name="settings_network_danmaku_mainland">中国大陆</string>
+    <string name="settings_network_danmaku_stop_test">终止测试</string>
+    <string name="settings_network_danmaku_start_test">开始测试</string>
 </resources>
 
 <!--@formatter:on-->
