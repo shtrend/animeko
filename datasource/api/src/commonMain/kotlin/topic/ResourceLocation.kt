@@ -118,7 +118,7 @@ fun ResourceLocation.Companion.guessTorrentFromUrl(uri: String): ResourceLocatio
     val isHttp = uri.startsWith("http://", ignoreCase = true) || uri.startsWith("https://", ignoreCase = true)
     return when {
         uri.startsWith("magnet:") -> ResourceLocation.MagnetLink(uri)
-        isHttp && uri.endsWith(".torrent") -> ResourceLocation.HttpTorrentFile(uri)
+        isHttp && (uri.endsWith(".torrent") || uri.contains("uploadbt.com")) -> ResourceLocation.HttpTorrentFile(uri)
         else -> null
     }
 }
