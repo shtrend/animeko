@@ -437,6 +437,21 @@
     <string name="settings_network_proxy_optional">可選</string>
     <string name="settings_network_proxy_none">無</string>
     <string name="settings_network_proxy_password">密碼</string>
+
+    <!-- TorrentEngineGroup -->
+    <string name="settings_media_torrent_title">BT 設置</string>
+    <string name="settings_media_torrent_download_rate_limit">下載速度限制</string>
+    <string name="settings_media_torrent_sharing_settings">分享設置</string>
+    <string name="settings_media_torrent_sharing_description">BT 網絡依賴用戶間分享，你所看的視頻均來自其他用戶的分享。允許上傳，共同維護健康的 BT 分享環境。</string>
+    <string name="settings_media_torrent_upload_rate_limit">上傳速度限制</string>
+    <string name="settings_media_torrent_share_ratio_limit">分享率限制</string>
+    <string name="settings_media_torrent_share_ratio_description">分享率 = 上傳量 / 下載量。大於 1 說明上傳量大於下載量。資源達到分享率限制後，將停止上傳。</string>
+    <string name="settings_media_torrent_unlimited">無限制</string>
+    <string name="settings_media_torrent_speed_format">%1$s MB/s</string>
+    <string name="settings_media_torrent_limit_upload_on_metered">計費網絡限制上傳</string>
+    <string name="settings_media_torrent_limit_upload_on_metered_description">在計費網絡環境下限制上傳速度為 1 KB/s</string>
+    <string name="settings_media_torrent_peer_filter">Peer 過濾和屏蔽設置</string>
+    <string name="settings_media_torrent_peer_filter_description">在下載或上傳緩存的番劇時不與黑名單或命中過濾規則的客戶端連接</string>
 </resources>
 
 <!--@formatter:on-->

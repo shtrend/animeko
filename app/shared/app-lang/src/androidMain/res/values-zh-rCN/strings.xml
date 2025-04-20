@@ -437,6 +437,21 @@
     <string name="settings_network_proxy_optional">可选</string>
     <string name="settings_network_proxy_none">无</string>
     <string name="settings_network_proxy_password">密码</string>
+
+    <!-- TorrentEngineGroup -->
+    <string name="settings_media_torrent_title">BT 设置</string>
+    <string name="settings_media_torrent_download_rate_limit">下载速度限制</string>
+    <string name="settings_media_torrent_sharing_settings">分享设置</string>
+    <string name="settings_media_torrent_sharing_description">BT 网络依赖用户间分享，你所看的视频均来自其他用户的分享。允许上传，共同维护健康的 BT 分享环境。</string>
+    <string name="settings_media_torrent_upload_rate_limit">上传速度限制</string>
+    <string name="settings_media_torrent_share_ratio_limit">分享率限制</string>
+    <string name="settings_media_torrent_share_ratio_description">分享率 = 上传量 / 下载量。大于 1 说明上传量大于下载量。资源达到分享率限制后，将停止上传。</string>
+    <string name="settings_media_torrent_unlimited">无限制</string>
+    <string name="settings_media_torrent_speed_format">%1$s MB/s</string>
+    <string name="settings_media_torrent_limit_upload_on_metered">计费网络限制上传</string>
+    <string name="settings_media_torrent_limit_upload_on_metered_description">在计费网络环境下限制上传速度为 1 KB/s</string>
+    <string name="settings_media_torrent_peer_filter">Peer 过滤和屏蔽设置</string>
+    <string name="settings_media_torrent_peer_filter_description">在下载或上传缓存的番剧时不与黑名单或命中过滤规则的客户端连接</string>
 </resources>
 
 <!--@formatter:on-->

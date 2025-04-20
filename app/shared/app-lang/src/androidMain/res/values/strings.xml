@@ -399,6 +399,21 @@
     <string name="settings_network_proxy_optional">Optional</string>
     <string name="settings_network_proxy_none">None</string>
     <string name="settings_network_proxy_password">Password</string>
+
+    <!-- TorrentEngineGroup -->
+    <string name="settings_media_torrent_title">BT Settings</string>
+    <string name="settings_media_torrent_download_rate_limit">Download Speed Limit</string>
+    <string name="settings_media_torrent_sharing_settings">Sharing Settings</string>
+    <string name="settings_media_torrent_sharing_description">The BT network relies on sharing between users. The videos you watch come from other users\' sharing. Allow uploading to help maintain a healthy BT sharing environment.</string>
+    <string name="settings_media_torrent_upload_rate_limit">Upload Speed Limit</string>
+    <string name="settings_media_torrent_share_ratio_limit">Share Ratio Limit</string>
+    <string name="settings_media_torrent_share_ratio_description">Share ratio = Upload amount / Download amount. Greater than 1 means upload amount is greater than download amount. After reaching the share ratio limit, uploading will stop.</string>
+    <string name="settings_media_torrent_unlimited">Unlimited</string>
+    <string name="settings_media_torrent_speed_format">%1$s MB/s</string>
+    <string name="settings_media_torrent_limit_upload_on_metered">Limit Upload on Metered Network</string>
+    <string name="settings_media_torrent_limit_upload_on_metered_description">Limit upload speed to 1 KB/s on metered networks</string>
+    <string name="settings_media_torrent_peer_filter">Peer Filtering and Blocking Settings</string>
+    <string name="settings_media_torrent_peer_filter_description">Do not connect with blacklisted clients or those that match filter rules when downloading or uploading cached anime</string>
 </resources>
 
 <!--@formatter:on-->
