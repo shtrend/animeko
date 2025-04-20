@@ -367,6 +367,16 @@
     <string name="settings_network_danmaku_mainland">Mainland China</string>
     <string name="settings_network_danmaku_stop_test">Stop Test</string>
     <string name="settings_network_danmaku_start_test">Start Test</string>
+
+    <!-- DanmakuRegexFilterGroup -->
+    <string name="settings_danmaku_regex_filter_group">Danmaku Regex Filter Management</string>
+    <string name="settings_danmaku_add_regex_filter">Add Regex Filter</string>
+    <string name="settings_danmaku_add_regex">Add Regex</string>
+    <string name="settings_danmaku_confirm">Confirm</string>
+    <string name="settings_danmaku_cancel">Cancel</string>
+    <string name="settings_danmaku_regex_expression">Regular Expression</string>
+    <string name="settings_danmaku_regex_invalid">Invalid regular expression syntax</string>
+    <string name="settings_danmaku_regex_description">Enter a regular expression for filtering, e.g.: \'.*sign.*\' will filter all danmaku containing the word \'sign\'.</string>
 </resources>
 
 <!--@formatter:on-->

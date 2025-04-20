@@ -405,6 +405,16 @@
     <string name="settings_network_danmaku_mainland">中国大陆</string>
     <string name="settings_network_danmaku_stop_test">终止测试</string>
     <string name="settings_network_danmaku_start_test">开始测试</string>
+
+    <!-- DanmakuRegexFilterGroup -->
+    <string name="settings_danmaku_regex_filter_group">弹幕正则过滤器管理</string>
+    <string name="settings_danmaku_add_regex_filter">添加正则过滤器</string>
+    <string name="settings_danmaku_add_regex">添加正则</string>
+    <string name="settings_danmaku_confirm">确认</string>
+    <string name="settings_danmaku_cancel">取消</string>
+    <string name="settings_danmaku_regex_expression">正则表达式</string>
+    <string name="settings_danmaku_regex_invalid">正则表达式语法不正确</string>
+    <string name="settings_danmaku_regex_description">填写用于屏蔽的正则表达式，例如：\'.*签.*\' 会屏蔽所有含有文字\'签\'的弹幕。</string>
 </resources>
 
 <!--@formatter:on-->
