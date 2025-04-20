@@ -452,6 +452,18 @@
     <string name="settings_media_torrent_limit_upload_on_metered_description">在計費網絡環境下限制上傳速度為 1 KB/s</string>
     <string name="settings_media_torrent_peer_filter">Peer 過濾和屏蔽設置</string>
     <string name="settings_media_torrent_peer_filter_description">在下載或上傳緩存的番劇時不與黑名單或命中過濾規則的客戶端連接</string>
+
+    <!-- AutoCacheGroup -->
+    <string name="settings_media_auto_cache_title">自動快取</string>
+    <string name="settings_media_auto_cache_description">自動快取 \"在看\" 分類中未觀看的劇集</string>
+    <string name="settings_media_auto_cache_enable">啟用自動快取</string>
+    <string name="settings_media_auto_cache_max_count">最大自動快取話數</string>
+    <string name="settings_media_auto_cache_max_count_description">若手動快取數量超過該設定值，將不會自動快取</string>
+    <string name="settings_media_auto_cache_space_warning">可能會佔用大量空間</string>
+    <string name="settings_media_auto_cache_recent_only">僅快取最近看過的番劇</string>
+    <string name="settings_media_auto_cache_count">快取數量</string>
+    <string name="settings_media_auto_cache_count_description">目前設定: 僅快取最近看過的 %d 部番劇</string>
+    <string name="settings_media_auto_cache_manage">管理已快取的劇集</string>
 </resources>
 
 <!--@formatter:on-->

@@ -452,6 +452,18 @@
     <string name="settings_media_torrent_limit_upload_on_metered_description">在计费网络环境下限制上传速度为 1 KB/s</string>
     <string name="settings_media_torrent_peer_filter">Peer 过滤和屏蔽设置</string>
     <string name="settings_media_torrent_peer_filter_description">在下载或上传缓存的番剧时不与黑名单或命中过滤规则的客户端连接</string>
+
+    <!-- AutoCacheGroup -->
+    <string name="settings_media_auto_cache_title">自动缓存</string>
+    <string name="settings_media_auto_cache_description">自动缓存 \"在看\" 分类中未观看的剧集</string>
+    <string name="settings_media_auto_cache_enable">启用自动缓存</string>
+    <string name="settings_media_auto_cache_max_count">最大自动缓存话数</string>
+    <string name="settings_media_auto_cache_max_count_description">若手动缓存数量超过该设置值，将不会自动缓存</string>
+    <string name="settings_media_auto_cache_space_warning">可能会占用大量空间</string>
+    <string name="settings_media_auto_cache_recent_only">仅缓存最近看过的番剧</string>
+    <string name="settings_media_auto_cache_count">缓存数量</string>
+    <string name="settings_media_auto_cache_count_description">当前设置: 仅缓存最近看过的 %d 部番剧</string>
+    <string name="settings_media_auto_cache_manage">管理已缓存的剧集</string>
 </resources>
 
 <!--@formatter:on-->
