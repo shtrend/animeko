@@ -68,3 +68,24 @@ val TestEpisodeListUiState
         otherEpisodes = TestEpisodeListItems.take(2)
             .map { it.copy(sort = EpisodeSort(BigNum(it.sort.number!!), EpisodeType.SP)) },
     )
+
+@TestOnly
+val TestEpisodeListUiStateVeryLong
+    get() = EpisodeListUiState(
+        subjectTitle = "测试标题",
+        mainEpisodes = buildList {
+            repeat(100) {
+                add(createTestEpisodeListItem(EpisodeSort(it + 1)))
+            }
+        },
+        otherEpisodes = TestEpisodeListItems.take(2)
+            .map { it.copy(sort = EpisodeSort(BigNum(it.sort.number!!), EpisodeType.SP)) },
+    )
+
+@TestOnly
+val TestEpisodeListItems
+    get() = buildList {
+        repeat(12) {
+            add(createTestEpisodeListItem(EpisodeSort(it + 1)))
+        }
+    }

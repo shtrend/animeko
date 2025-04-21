@@ -33,14 +33,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import me.him188.ani.app.data.models.preference.EpisodeListProgressTheme
+import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
 import me.him188.ani.app.ui.foundation.theme.stronglyWeaken
 import me.him188.ani.app.ui.foundation.theme.weaken
+import me.him188.ani.utils.platform.annotations.TestOnly
+import org.jetbrains.compose.ui.tooling.preview.PreviewLightDark
 
 @Composable
 fun EpisodeListDialog(
@@ -71,36 +73,30 @@ fun EpisodeListDialog(
 
                     Column(
                         Modifier.weight(1f, fill = false)
+                            .heightIn(max = 360.dp) // 特别长需要限制高度并且滚动, #182
                             .verticalScroll(rememberScrollState()),
                     ) {
-                        Row(
-                            Modifier.clipToBounds()
-                                .heightIn(max = 360.dp),
-                        ) {
+                        EpisodeListFlowRow(
+                            state.mainEpisodes,
+                            onEpisodeClick,
+                            onCollectionUpdate,
+                        )
+
+                        if (state.otherEpisodes.isNotEmpty()) {
+                            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+
                             EpisodeListFlowRow(
-                                state.mainEpisodes,
+                                state.otherEpisodes,
                                 onEpisodeClick,
                                 onCollectionUpdate,
                             )
                         }
 
-                        if (state.otherEpisodes.isNotEmpty()) {
-                            HorizontalDivider(Modifier.padding(vertical = 16.dp))
-
-                            Row(
-                                Modifier.clipToBounds()
-                                    .heightIn(max = 360.dp),
-                            ) {
-                                EpisodeListFlowRow(
-                                    state.otherEpisodes,
-                                    onEpisodeClick,
-                                    onCollectionUpdate,
-                                )
-                            }
-                        }
+                        Spacer(Modifier.height(16.dp))
                     }
 
-                    HorizontalDivider(Modifier.padding(vertical = 16.dp))
+                    HorizontalDivider()
+                    Spacer(Modifier.height(16.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.Lightbulb, null)
@@ -170,4 +166,48 @@ object EpisodeListDefaults {
             )
         }
     }
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Previews
+///////////////////////////////////////////////////////////////////////////
+
+
+@OptIn(TestOnly::class)
+@PreviewLightDark
+@Composable
+private fun PreviewEpisodeProgressDialog() {
+    ProvideCompositionLocalsForPreview {
+        EpisodeListDialog(
+            TestEpisodeListUiState,
+            {}, {}, {}, {},
+        )
+    }
+}
+
+
+// 特别长需要限制高度并且滚动, #182
+@OptIn(TestOnly::class)
+@PreviewLightDark
+@Composable
+private fun PreviewEpisodeProgressDialogVeryLong() {
+    ProvideCompositionLocalsForPreview {
+        EpisodeListDialog(
+            TestEpisodeListUiStateVeryLong,
+            {}, {}, {}, {},
+        )
+    }
+}
+
+@Composable
+private fun PreviewEpisodeListFlowRowImpl(
+    episodes: List<EpisodeListItem>,
+    theme: EpisodeListProgressTheme = EpisodeListProgressTheme.Default,
+) {
+    EpisodeListFlowRow(
+        episodes = episodes,
+        onClick = {},
+        onLongClick = {},
+        theme = theme,
+    )
 }

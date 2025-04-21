@@ -15,11 +15,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import me.him188.ani.app.data.models.preference.EpisodeListProgressTheme
-import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
-import me.him188.ani.datasources.api.EpisodeSort
-import me.him188.ani.datasources.api.PackedDate
-import me.him188.ani.utils.platform.annotations.TestOnly
-import org.jetbrains.compose.ui.tooling.preview.PreviewLightDark
 
 
 @Composable
@@ -46,65 +41,3 @@ fun EpisodeListFlowRow(
     }
 }
 
-///////////////////////////////////////////////////////////////////////////
-// Previews
-///////////////////////////////////////////////////////////////////////////
-
-
-private val airDate get() = PackedDate(2021, 1, 1)
-
-
-@TestOnly
-val TestEpisodeListItems
-    get() = buildList {
-        repeat(12) {
-            add(createTestEpisodeListItem(EpisodeSort(it + 1)))
-        }
-    }
-
-@OptIn(TestOnly::class)
-@PreviewLightDark
-@Composable
-private fun PreviewEpisodeProgressDialog() {
-    ProvideCompositionLocalsForPreview {
-        EpisodeListDialog(
-            TestEpisodeListUiState,
-            {}, {}, {}, {},
-        )
-    }
-}
-
-// 特别长需要限制高度并且滚动, #182
-//@OptIn(TestOnly::class)
-//@PreviewLightDark
-//@Composable
-//private fun PreviewEpisodeProgressDialogVeryLong() {
-//    ProvideCompositionLocalsForPreview {
-//        EpisodeListDialog(
-//            onDismissRequest = {},
-//            title = { Text(text = "银魂") },
-//            onClickCache = {},
-//        ) {
-//            PreviewEpisodeListFlowRowImpl(
-//                buildList {
-//                    repeat(10) {
-//                        addAll(TestEpisodeListItems)
-//                    }
-//                },
-//            )
-//        }
-//    }
-//}
-
-@Composable
-private fun PreviewEpisodeListFlowRowImpl(
-    episodes: List<EpisodeListItem>,
-    theme: EpisodeListProgressTheme = EpisodeListProgressTheme.Default,
-) {
-    EpisodeListFlowRow(
-        episodes = episodes,
-        onClick = {},
-        onLongClick = {},
-        theme = theme,
-    )
-}
