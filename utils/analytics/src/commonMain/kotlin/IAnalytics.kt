@@ -44,6 +44,8 @@ value class AnalyticsEvent(val event: String) {
     companion object {
         val Screen = AnalyticsEvent($$"$screen")
         val AppStart = AnalyticsEvent("time_taken_init")
+        val LoginClick = AnalyticsEvent("login_click")
+        val LoginSkipClick = AnalyticsEvent("login_skip_click")
     }
 }
 

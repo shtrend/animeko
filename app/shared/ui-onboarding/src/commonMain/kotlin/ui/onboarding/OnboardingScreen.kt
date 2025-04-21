@@ -52,6 +52,8 @@ import me.him188.ani.app.ui.onboarding.step.ThemeSelectStep
 import me.him188.ani.app.ui.onboarding.step.ThemeSelectUIState
 import me.him188.ani.app.ui.settings.framework.SettingsState
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyPresentation
+import me.him188.ani.utils.analytics.Analytics
+import me.him188.ani.utils.analytics.AnalyticsEvent
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Composable
@@ -232,6 +234,7 @@ fun OnboardingScreen(
 
         val onSkipLogin: () -> Unit = {
             scope.launch {
+                Analytics.recordEvent(AnalyticsEvent.LoginSkipClick)
                 state.bangumiAuthorizeState.onUseGuestMode()
                 controller.goForward()
             }
