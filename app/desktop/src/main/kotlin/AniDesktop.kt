@@ -346,13 +346,17 @@ object AniDesktop {
                 logger.error(it) { "Failed to delete installed files" }
             }
         }
-        runCatching {
-            PagingLoggingHack.install()
-            logger.trace { "Successfully instrumented PagingLogging" }
-        }.onFailure {
-            logger.error(it) { "Failed to install paging logging hack" }
+        startupTimeMonitor.mark(StepName.LaunchAsyncInitializers)
+
+        if (currentAniBuildConfig.isDebug) {
+            runCatching {
+                PagingLoggingHack.install()
+                logger.trace { "Successfully instrumented PagingLogging" }
+            }.onFailure {
+                logger.error(it) { "Failed to install paging logging hack" }
+            }
+            startupTimeMonitor.mark(StepName.PagingHack)
         }
-        startupTimeMonitor.mark(StepName.PagingHack)
 
         val navigator = AniNavigator()
 
