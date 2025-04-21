@@ -43,6 +43,7 @@ inline fun IAnalytics.recordEvent(
 value class AnalyticsEvent(val event: String) {
     companion object {
         val Screen = AnalyticsEvent($$"$screen")
+        val AppStart = AnalyticsEvent("time_taken_init")
     }
 }
 
