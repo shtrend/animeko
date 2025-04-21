@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -41,11 +42,9 @@ import me.him188.ani.app.data.models.preference.EpisodeListProgressTheme
 import me.him188.ani.app.ui.foundation.theme.stronglyWeaken
 import me.him188.ani.app.ui.foundation.theme.weaken
 
-
 @Composable
 fun EpisodeListDialog(
-    subjectTitle: String,
-    episodes: List<EpisodeListItem>,
+    state: EpisodeListUiState,
     onDismissRequest: () -> Unit,
     onCacheClick: () -> Unit,
     onEpisodeClick: (episode: EpisodeListItem) -> Unit,
@@ -64,22 +63,41 @@ fun EpisodeListDialog(
 
                     Row(Modifier.padding(top = 8.dp)) {
                         ProvideTextStyle(MaterialTheme.typography.bodyLarge) {
-                            Text(subjectTitle)
+                            Text(state.subjectTitle)
                         }
                     }
 
-                    Row(
-                        Modifier.clipToBounds()
-                            .weight(1f, fill = false)
-                            .heightIn(max = 360.dp)
-                            .padding(top = 16.dp)
+                    Spacer(Modifier.height(16.dp))
+
+                    Column(
+                        Modifier.weight(1f, fill = false)
                             .verticalScroll(rememberScrollState()),
                     ) {
-                        EpisodeListFlowRow(
-                            episodes,
-                            onEpisodeClick,
-                            onCollectionUpdate,
-                        )
+                        Row(
+                            Modifier.clipToBounds()
+                                .heightIn(max = 360.dp),
+                        ) {
+                            EpisodeListFlowRow(
+                                state.mainEpisodes,
+                                onEpisodeClick,
+                                onCollectionUpdate,
+                            )
+                        }
+
+                        if (state.otherEpisodes.isNotEmpty()) {
+                            HorizontalDivider(Modifier.padding(vertical = 16.dp))
+
+                            Row(
+                                Modifier.clipToBounds()
+                                    .heightIn(max = 360.dp),
+                            ) {
+                                EpisodeListFlowRow(
+                                    state.otherEpisodes,
+                                    onEpisodeClick,
+                                    onCollectionUpdate,
+                                )
+                            }
+                        }
                     }
 
                     HorizontalDivider(Modifier.padding(vertical = 16.dp))

@@ -68,8 +68,7 @@ val TestEpisodeListItems
 private fun PreviewEpisodeProgressDialog() {
     ProvideCompositionLocalsForPreview {
         EpisodeListDialog(
-            "葬送的芙莉莲",
-            TestEpisodeListItems,
+            TestEpisodeListUiState,
             {}, {}, {}, {},
         )
     }

@@ -117,7 +117,7 @@ import me.him188.ani.app.ui.subject.collection.progress.SubjectProgressStateFact
 import me.him188.ani.app.ui.subject.collection.progress.rememberSubjectProgressState
 import me.him188.ani.app.ui.subject.episode.list.EpisodeListDialog
 import me.him188.ani.app.ui.subject.episode.list.EpisodeListItem
-import me.him188.ani.app.ui.subject.episode.list.createEpisodeListItems
+import me.him188.ani.app.ui.subject.episode.list.EpisodeListUiState
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.hasScrollingBug
 import me.him188.ani.utils.platform.isDesktop
@@ -486,9 +486,8 @@ private fun SubjectCollectionItem(
     val navigator = LocalNavigator.current
     if (showEpisodeProgressDialog) {
         EpisodeListDialog(
-            subjectCollection.subjectInfo.displayName,
             remember(subjectCollection.subjectId) {
-                subjectCollection.createEpisodeListItems(Clock.System.now())
+                EpisodeListUiState.from(subjectCollection, Clock.System.now())
             },
             onDismissRequest = { showEpisodeProgressDialog = false },
             onCacheClick = {

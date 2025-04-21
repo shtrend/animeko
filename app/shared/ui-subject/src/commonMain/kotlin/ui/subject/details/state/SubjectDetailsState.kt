@@ -28,7 +28,7 @@ import me.him188.ani.app.ui.rating.EditableRatingState
 import me.him188.ani.app.ui.subject.AiringLabelState
 import me.him188.ani.app.ui.subject.SubjectProgressState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
-import me.him188.ani.app.ui.subject.episode.list.EpisodeListItem
+import me.him188.ani.app.ui.subject.episode.list.EpisodeListUiState
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 
 /**
@@ -68,14 +68,14 @@ class SubjectDetailsState(
 data class SubjectDetailsPresentation(
     val subjectId: Int,
     val displayName: String,
-    val episodeListItems: List<EpisodeListItem>,
+    val episodeListUiState: EpisodeListUiState,
     val isPlaceholder: Boolean = false,
 ) {
     companion object {
         val Placeholder = SubjectDetailsPresentation(
             subjectId = 0,
             displayName = "",
-            episodeListItems = emptyList(),
+            episodeListUiState = EpisodeListUiState.Placeholder,
             isPlaceholder = true,
         )
     }

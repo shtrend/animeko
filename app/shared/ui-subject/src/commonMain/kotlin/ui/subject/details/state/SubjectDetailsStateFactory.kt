@@ -50,7 +50,6 @@ import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
 import me.him188.ani.app.data.repository.episode.EpisodeProgressRepository
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
 import me.him188.ani.app.data.repository.subject.SubjectRelationsRepository
-import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.ui.comment.CommentMapperContext.parseToUIComment
 import me.him188.ani.app.ui.comment.CommentState
 import me.him188.ani.app.ui.foundation.produceState
@@ -61,7 +60,7 @@ import me.him188.ani.app.ui.subject.SubjectProgressState
 import me.him188.ani.app.ui.subject.collection.components.EditableSubjectCollectionTypeState
 import me.him188.ani.app.ui.subject.collection.progress.SubjectProgressStateFactory
 import me.him188.ani.app.ui.subject.details.updateRating
-import me.him188.ani.app.ui.subject.episode.list.createEpisodeListItems
+import me.him188.ani.app.ui.subject.episode.list.EpisodeListUiState
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.datasources.api.topic.isDoneOrDropped
@@ -92,7 +91,6 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
     private val episodeCollectionRepository: EpisodeCollectionRepository by inject()
     private val bangumiRelatedPeopleService: BangumiRelatedPeopleService by inject()
     private val subjectRelationsRepository: SubjectRelationsRepository by inject()
-    private val settingsRepository: SettingsRepository by inject()
     private val bangumiCommentRepository: BangumiCommentRepository by inject()
 
     override fun create(
@@ -187,7 +185,6 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
         val totalCharactersCountState = mutableStateOf<Int?>(null)
 
         val subjectId = subjectInfo.subjectId
-        val subjectScope = this
         val editableSubjectCollectionTypeState = EditableSubjectCollectionTypeState(
             selfCollectionTypeFlow = subjectCollectionFlow
                 .map { it.collectionType },
@@ -342,11 +339,11 @@ class DefaultSubjectDetailsStateFactory : SubjectDetailsStateFactory, KoinCompon
             subjectProgressState = subjectProgressState,
             subjectCommentState = subjectCommentState,
             presentation = combine(minuteTicker, subjectCollectionFlow) { _, collection ->
-                val time = Clock.System.now()
+                val now = Clock.System.now()
                 SubjectDetailsPresentation(
                     subjectId = subjectId,
                     displayName = collection.subjectInfo.displayName,
-                    collection.createEpisodeListItems(time),
+                    EpisodeListUiState.from(collection, now),
                 )
             }.stateIn(
                 this, SharingStarted.WhileSubscribed(5000),

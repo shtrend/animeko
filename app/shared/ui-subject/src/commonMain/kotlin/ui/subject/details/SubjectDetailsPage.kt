@@ -276,8 +276,7 @@ private fun SubjectDetailsPage(
     MaterialThemeFromImage(bitmap) {
         if (showSelectEpisode) {
             EpisodeListDialog(
-                state.info?.displayName.orEmpty(),
-                presentation.episodeListItems,
+                presentation.episodeListUiState,
                 onDismissRequest = { showSelectEpisode = false },
                 { navigator.navigateSubjectCaches(presentation.subjectId) },
                 { navigator.navigateEpisodeDetails(presentation.subjectId, it.episodeId) },

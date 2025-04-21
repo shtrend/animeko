@@ -10,10 +10,7 @@
 package me.him188.ani.app.ui.subject.episode.list
 
 import androidx.compose.runtime.Immutable
-import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
-import me.him188.ani.app.data.models.subject.SubjectCollectionInfo
 import me.him188.ani.app.data.models.subject.SubjectRecurrence
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
@@ -61,22 +58,6 @@ data class EpisodeListItem(
                 isBroadcast = isBroadcast,
             )
         }
-    }
-}
-
-fun SubjectCollectionInfo.createEpisodeListItems(
-    currentTime: Instant,
-    zone: TimeZone = TimeZone.currentSystemDefault()
-): List<EpisodeListItem> {
-    return episodes.map { episode ->
-        EpisodeListItem.from(
-            episode,
-            isBroadcast = recurrence?.isEpisodeBroadcast(
-                episode.episodeInfo.airDate,
-                currentTime,
-                zone,
-            ) ?: false,
-        )
     }
 }
 
