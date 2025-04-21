@@ -65,6 +65,7 @@ import me.him188.ani.app.domain.episode.EpisodeCompletionContext.isKnownComplete
 import me.him188.ani.app.domain.episode.EpisodeDanmakuLoader
 import me.him188.ani.app.domain.episode.EpisodeFetchSelectPlayState
 import me.him188.ani.app.domain.episode.EpisodeSession
+import me.him188.ani.app.domain.episode.SetEpisodeCollectionTypeUseCase
 import me.him188.ani.app.domain.episode.SubjectEpisodeInfoBundle
 import me.him188.ani.app.domain.episode.UnsafeEpisodeSessionApi
 import me.him188.ani.app.domain.episode.episodeIdFlow
@@ -211,6 +212,7 @@ class EpisodeViewModel(
     private val getMediaSelectorSettings: GetMediaSelectorSettingsUseCase by inject()
     private val getMediaSourceInstances: GetMediaSourceInstancesUseCase by inject()
     val turnstileState: TurnstileState by inject()
+    val setEpisodeCollectionType: SetEpisodeCollectionTypeUseCase by inject()
     // endregion
 
     val player: MediampPlayer =

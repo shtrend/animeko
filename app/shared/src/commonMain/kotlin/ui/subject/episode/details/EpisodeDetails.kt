@@ -65,6 +65,7 @@ import me.him188.ani.app.data.models.episode.displayName
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.Tag
 import me.him188.ani.app.domain.danmaku.DanmakuLoadingState
+import me.him188.ani.app.domain.episode.SetEpisodeCollectionTypeRequest
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.navigation.LocalNavigator
 import me.him188.ani.app.ui.foundation.LocalPlatform
@@ -141,6 +142,7 @@ fun EpisodeDetails(
     onClickLogin: () -> Unit,
     onClickTag: (Tag) -> Unit,
     onManualMatchDanmaku: (DanmakuProviderId) -> Unit,
+    onEpisodeCollectionUpdate: (SetEpisodeCollectionTypeRequest) -> Unit,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
 ) {
@@ -164,9 +166,9 @@ fun EpisodeDetails(
                     onPlay = onSwitchEpisode,
                     onLoadErrorRetry = { state.subjectDetailsStateLoader.reload(state.subjectId) },
                     onClickTag = onClickTag,
+                    onEpisodeCollectionUpdate = onEpisodeCollectionUpdate,
                     showTopBar = false,
                     showBlurredBackground = false,
-                    navigationIcon = {},
                 )
             }
         }
@@ -190,7 +192,6 @@ fun EpisodeDetails(
 
     EditableSubjectCollectionTypeDialogsHost(editableSubjectCollectionTypeState)
 
-    val videoStatistics by videoStatisticsFlow.collectAsStateWithLifecycle(VideoStatistics.Placeholder)
     val navigator = LocalNavigator.current
     EpisodeDetailsScaffold(
         subjectTitle = { Text(state.subjectTitle) },

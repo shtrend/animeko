@@ -222,6 +222,7 @@ private fun PreviewEpisodeDetailsImpl(
             onClickTag = {},
             onManualMatchDanmaku = {
             },
+            onEpisodeCollectionUpdate = {},
             Modifier
                 .padding(bottom = 16.dp, top = 8.dp)
                 .padding(it)

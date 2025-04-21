@@ -122,6 +122,7 @@ import me.him188.ani.app.ui.foundation.theme.AniTheme
 import me.him188.ani.app.ui.foundation.theme.LocalThemeSettings
 import me.him188.ani.app.ui.foundation.theme.weaken
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
+import me.him188.ani.app.ui.foundation.widgets.showLoadError
 import me.him188.ani.app.ui.richtext.RichTextDefaults
 import me.him188.ani.app.ui.subject.episode.comments.EpisodeCommentColumn
 import me.him188.ani.app.ui.subject.episode.comments.EpisodeEditCommentSheet
@@ -456,6 +457,7 @@ private fun EpisodeScreenTabletVeryWide(
                         0 -> Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
                             val navigator = LocalNavigator.current
                             val pageState by vm.pageState.collectAsStateWithLifecycle()
+                            val toaster = LocalToaster.current
                             pageState?.let { page ->
                                 EpisodeDetails(
                                     page.mediaSelectorSummary,
@@ -484,6 +486,13 @@ private fun EpisodeScreenTabletVeryWide(
                                     onClickTag = { navigator.navigateSubjectSearch(it.name) },
                                     onManualMatchDanmaku = {
                                         vm.startMatchingDanmaku(it)
+                                    },
+                                    onEpisodeCollectionUpdate = { request ->
+                                        scope.launch {
+                                            vm.setEpisodeCollectionType.invokeSafe(request)?.let {
+                                                toaster.showLoadError(it)
+                                            }
+                                        }
                                     },
                                 )
                             }
@@ -566,6 +575,7 @@ private fun EpisodeScreenContentPhone(
     windowInsets: WindowInsets = ScaffoldDefaults.contentWindowInsets,
 ) {
     var showDanmakuEditor by rememberSaveable { mutableStateOf(false) }
+    val toaster = LocalToaster.current
 
     EpisodeScreenContentPhoneScaffold(
         videoOnly = vm.isFullscreen,
@@ -581,6 +591,8 @@ private fun EpisodeScreenContentPhone(
         episodeDetails = {
             val navigator = LocalNavigator.current
             val pageState by vm.pageState.collectAsStateWithLifecycle()
+            val scope = rememberCoroutineScope()
+
             pageState?.let { page ->
                 EpisodeDetails(
                     page.mediaSelectorSummary,
@@ -609,6 +621,13 @@ private fun EpisodeScreenContentPhone(
                     onClickTag = { navigator.navigateSubjectSearch(it.name) },
                     onManualMatchDanmaku = {
                         vm.startMatchingDanmaku(it)
+                    },
+                    onEpisodeCollectionUpdate = { request ->
+                        scope.launch {
+                            vm.setEpisodeCollectionType.invokeSafe(request)?.let {
+                                toaster.showLoadError(it)
+                            }
+                        }
                     },
                     Modifier.fillMaxSize(),
                 )
