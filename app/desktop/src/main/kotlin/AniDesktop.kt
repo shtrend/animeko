@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.preference.DarkMode
 import me.him188.ani.app.data.repository.SavedWindowState
 import me.him188.ani.app.data.repository.WindowStateRepository
@@ -287,7 +288,7 @@ object AniDesktop {
             }
         }
 
-        val loadAnitorrentJob = coroutineScope.launch {
+        val loadAnitorrentJob = coroutineScope.launch(Dispatchers.IO) {
             try {
                 AnitorrentLibraryLoader.loadLibraries()
             } catch (e: Throwable) {
@@ -324,7 +325,9 @@ object AniDesktop {
 
             // 预先加载 VLC, https://github.com/open-ani/ani/issues/618
             kotlin.runCatching {
-                VlcMediampPlayer.prepareLibraries()
+                withContext(Dispatchers.IO) {
+                    VlcMediampPlayer.prepareLibraries()
+                }
             }.onFailure {
                 logger.error(it) { "Failed to prepare VLC" }
             }
