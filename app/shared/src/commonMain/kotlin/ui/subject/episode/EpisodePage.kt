@@ -495,6 +495,12 @@ private fun EpisodeScreenTabletVeryWide(
                                         }
                                     },
                                     shareData = page.shareData,
+                                    page.loadError,
+                                    onRetryLoad = {
+                                        page.loadError?.let {
+                                            vm.retryLoad(it)
+                                        }
+                                    },
                                 )
                             }
                         }
@@ -631,7 +637,11 @@ private fun EpisodeScreenContentPhone(
                         }
                     },
                     shareData = page.shareData,
-                    Modifier.fillMaxSize(),
+                    loadError = page.loadError,
+                    onRetryLoad = {
+                        page.loadError?.let { vm.retryLoad(it) }
+                    },
+                    modifier = Modifier.fillMaxSize(),
                 )
             }
         },

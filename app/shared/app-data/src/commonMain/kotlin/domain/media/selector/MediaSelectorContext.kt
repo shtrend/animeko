@@ -10,6 +10,7 @@
 package me.him188.ani.app.domain.media.selector
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onStart
 import me.him188.ani.app.data.models.episode.EpisodeInfo
 import me.him188.ani.app.data.models.subject.SubjectInfo
@@ -77,11 +78,11 @@ data class MediaSelectorContext(
 class MediaSelectorContextFlowProducer(
     subjectCompleted: Flow<Boolean>,
     mediaSourcePrecedence: Flow<List<String>>,
-    subtitleKindFilters: Flow<MediaSelectorSubtitlePreferences>,
     subjectSeriesInfo: Flow<SubjectSeriesInfo>,
     subjectInfoFlow: Flow<SubjectInfo>,
     episodeInfoFlow: Flow<EpisodeInfo>,
     mediaSourceTiersFlow: Flow<MediaSelectorSourceTiers>,
+    subtitleKindFilters: Flow<MediaSelectorSubtitlePreferences> = flowOf(MediaSelectorSubtitlePreferences.CurrentPlatform),
 ) {
     val flow = me.him188.ani.utils.coroutines.flows.combine(
         // 都 emit null, debug 时能知道是谁没 emit

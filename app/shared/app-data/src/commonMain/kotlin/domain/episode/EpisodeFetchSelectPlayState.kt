@@ -206,6 +206,13 @@ class EpisodeFetchSelectPlayState(
         extensionManager.call { it.onClose() }
     }
 
+    /**
+     * @see EpisodeSession.restartLoad
+     */
+    fun restartLoad() {
+        episodeSessionFlow.value.restartLoad()
+    }
+
     private suspend fun EpisodeSession.startSessionScopeTasks() {
         /**
          * Session-scope tasks are non-stopping, and is not aware of app lifecycle.

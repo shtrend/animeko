@@ -69,12 +69,12 @@ interface MediaSelectorFactory {
                         mediaSourceManager.allInstances.map { list ->
                             list.map { it.mediaSourceId }
                         },
-                        flowOf(subtitlePreferences),
                         subjectRelationsRepository.subjectSeriesInfoFlow(subjectId),
                         subjectCollectionRepository.subjectCollectionFlow(subjectId).map { it.subjectInfo },
                         episodeCollectionRepository.episodeCollectionInfoFlow(subjectId, episodeId)
                             .map { it.episodeInfo },
                         mediaSourceManager.mediaSourceTiersFlow(),
+                        flowOf(subtitlePreferences),
                     ).flow,
                     mediaList,
                     savedUserPreference = episodePreferencesRepository.mediaPreferenceFlow(subjectId),
