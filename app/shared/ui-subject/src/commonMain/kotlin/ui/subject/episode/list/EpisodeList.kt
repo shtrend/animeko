@@ -107,7 +107,10 @@ fun EpisodeListDialog(
                     Row(Modifier.padding(top = 16.dp).align(Alignment.End)) {
                         onSubjectDetailsClick?.let {
                             TextButton(
-                                it,
+                                {
+                                    onDismissRequest()
+                                    it()
+                                },
                             ) {
                                 Text("条目详情")
                             }
