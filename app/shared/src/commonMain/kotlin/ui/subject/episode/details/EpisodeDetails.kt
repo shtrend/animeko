@@ -68,6 +68,7 @@ import me.him188.ani.app.domain.danmaku.DanmakuLoadingState
 import me.him188.ani.app.domain.episode.SetEpisodeCollectionTypeRequest
 import me.him188.ani.app.domain.session.AuthState
 import me.him188.ani.app.navigation.LocalNavigator
+import me.him188.ani.app.ui.episode.share.MediaShareData
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBarPadding
@@ -143,6 +144,7 @@ fun EpisodeDetails(
     onClickTag: (Tag) -> Unit,
     onManualMatchDanmaku: (DanmakuProviderId) -> Unit,
     onEpisodeCollectionUpdate: (SetEpisodeCollectionTypeRequest) -> Unit,
+    shareData: MediaShareData,
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
 ) {
@@ -204,9 +206,8 @@ fun EpisodeDetails(
                         style = MaterialTheme.typography.bodyLarge,
                     )
 
-                    val mediaSelectorPresentation by mediaSelectorState.presentationFlow.collectAsStateWithLifecycle()
 
-                    PlayingEpisodeItemDefaults.ActionShare(mediaSelectorPresentation.selected)
+                    PlayingEpisodeItemDefaults.ActionShare(shareData)
                     PlayingEpisodeItemDefaults.ActionCache({ navigator.navigateSubjectCaches(state.subjectId) })
                 }
             }

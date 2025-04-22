@@ -494,6 +494,7 @@ private fun EpisodeScreenTabletVeryWide(
                                             }
                                         }
                                     },
+                                    shareData = page.shareData,
                                 )
                             }
                         }
@@ -629,6 +630,7 @@ private fun EpisodeScreenContentPhone(
                             }
                         }
                     },
+                    shareData = page.shareData,
                     Modifier.fillMaxSize(),
                 )
             }

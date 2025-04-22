@@ -102,6 +102,7 @@ import me.him188.ani.app.ui.danmaku.UIDanmakuEvent
 import me.him188.ani.app.ui.episode.PlayingEpisodeSummary
 import me.him188.ani.app.ui.episode.danmaku.MatchingDanmakuPresenter
 import me.him188.ani.app.ui.episode.danmaku.MatchingDanmakuUiState
+import me.him188.ani.app.ui.episode.share.MediaShareData
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.foundation.HasBackgroundScope
 import me.him188.ani.app.ui.foundation.launchInBackground
@@ -180,6 +181,7 @@ data class EpisodePageState(
     val matchingDanmakuPresenter: MatchingDanmakuPresenter?,
     val matchingDanmakuUiState: MatchingDanmakuUiState?,
     val fetchRequest: MediaFetchRequest?,
+    val shareData: MediaShareData,
 )
 
 /**
@@ -610,6 +612,8 @@ class EpisodeViewModel(
             initialValue = MediaSelectorSummary.AutoSelecting(listOf(), estimate = 10.seconds),
         )
 
+        val selectedMediaFlow =
+            episodeSession.fetchSelectFlow.flatMapLatest { it?.mediaSelector?.selected ?: flowOfNull() }
         return me.him188.ani.utils.coroutines.flows.combine(
             authStateProvider.state,
             episodeSession.infoBundleFlow.distinctUntilChanged().onStart { emit(null) },
@@ -643,7 +647,10 @@ class EpisodeViewModel(
             initialMediaSelectorViewKindFlow(),
             matchingDanmakuPresenter,
             matchingDanmakuPresenter.flatMapLatest { it?.uiState ?: flowOfNull() },
-        ) { authState, subjectEpisodeBundle, loadError, fetchSelect, danmakuStatistics, danmakuEnabled, danmakuConfig, mediaSelectorState, mediaSourceResultsPresentation, mediaSelectorSummary, initialMediaSelectorViewKind, matchingDanmakuPresenter, matchingDanmaku ->
+            combine(selectedMediaFlow, player.mediaData) { selectedMedia, mediaData ->
+                MediaShareData.from(selectedMedia, mediaData)
+            },
+        ) { authState, subjectEpisodeBundle, loadError, fetchSelect, danmakuStatistics, danmakuEnabled, danmakuConfig, mediaSelectorState, mediaSourceResultsPresentation, mediaSelectorSummary, initialMediaSelectorViewKind, matchingDanmakuPresenter, matchingDanmaku, shareData ->
 
             val (subject, episode) = if (subjectEpisodeBundle == null) {
                 SubjectPresentation.Placeholder to EpisodePresentation.Placeholder
@@ -689,6 +696,7 @@ class EpisodeViewModel(
                     initialQuery = subjectEpisodeBundle?.subjectInfo?.nameCnOrName ?: "",
                 ),
                 fetchRequest = fetchSelect?.mediaFetchSession?.request?.first(),
+                shareData = shareData,
             )
         }
     }
