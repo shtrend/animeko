@@ -47,6 +47,8 @@ value class AnalyticsEvent(val event: String) {
         val NetworkCheckFailed = AnalyticsEvent("network_check_failed")
         val LoginClick = AnalyticsEvent("login_click")
         val LoginSkipClick = AnalyticsEvent("login_skip_click")
+
+        val EpisodeEnter = AnalyticsEvent("episode_enter")
     }
 }
 
