@@ -50,6 +50,8 @@ import me.him188.ani.app.platform.IosContext
 import me.him188.ani.app.platform.IosContextFiles
 import me.him188.ani.app.platform.LocalContext
 import me.him188.ani.app.platform.PermissionManager
+import me.him188.ani.app.platform.StartupTimeMonitor
+import me.him188.ani.app.platform.StepName
 import me.him188.ani.app.platform.create
 import me.him188.ani.app.platform.createAppRootCoroutineScope
 import me.him188.ani.app.platform.currentAniBuildConfig
@@ -68,7 +70,10 @@ import me.him188.ani.app.ui.foundation.widgets.ToastViewModel
 import me.him188.ani.app.ui.foundation.widgets.Toaster
 import me.him188.ani.app.ui.main.AniApp
 import me.him188.ani.app.ui.main.AniAppContent
+import me.him188.ani.utils.analytics.Analytics
 import me.him188.ani.utils.analytics.AnalyticsConfig
+import me.him188.ani.utils.analytics.AnalyticsEvent.Companion.AppStart
+import me.him188.ani.utils.analytics.recordEvent
 import me.him188.ani.utils.io.SystemCacheDir
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.SystemSupportDir
@@ -84,6 +89,7 @@ import platform.UIKit.UIViewController
 
 @Suppress("FunctionName", "unused") // used in Swift
 fun MainViewController(): UIViewController {
+    val startupTimeMonitor = StartupTimeMonitor()
     val scope = createAppRootCoroutineScope()
 
     val context = IosContext(
@@ -92,13 +98,17 @@ fun MainViewController(): UIViewController {
             dataDir = SystemSupportDir.apply { createDirectories() },
         ),
     )
+    startupTimeMonitor.mark(StepName.WindowAndContext)
+    
     AppStartupTasks.printVersions()
     IosLoggingConfigurator.configure(context.files.logsDir.path, SystemFileSystem)
+    startupTimeMonitor.mark(StepName.Logging)
 
     val koin = startKoin {
         modules(getCommonKoinModule({ context }, scope))
         modules(getIosModules(context, context.files.dataDir.resolve("torrent"), scope))
     }.startCommonKoinModule(context, scope).koin
+    startupTimeMonitor.mark(StepName.Modules)
 
     val analyticsInitializer = scope.launch {
         val settingsRepository = koin.get<SettingsRepository>()
@@ -136,6 +146,12 @@ fun MainViewController(): UIViewController {
     )
 
     runBlocking { analyticsInitializer.join() }
+    startupTimeMonitor.mark(StepName.Analytics)
+
+    Analytics.recordEvent(AppStart) {
+        putAll(startupTimeMonitor.getMarks())
+        put("total_time", startupTimeMonitor.getTotalDuration().inWholeMilliseconds)
+    }
     return ComposeUIViewController {
         AniApp {
             val platformWindow = rememberPlatformWindow()

@@ -34,14 +34,19 @@ import me.him188.ani.app.domain.torrent.service.ServiceConnectionManager
 import me.him188.ani.app.platform.AndroidLoggingConfigurator
 import me.him188.ani.app.platform.AppStartupTasks
 import me.him188.ani.app.platform.JvmLogHelper
+import me.him188.ani.app.platform.StartupTimeMonitor
+import me.him188.ani.app.platform.StepName
 import me.him188.ani.app.platform.create
 import me.him188.ani.app.platform.createAppRootCoroutineScope
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.platform.getCommonKoinModule
 import me.him188.ani.app.platform.startCommonKoinModule
 import me.him188.ani.app.ui.settings.tabs.log.getLogsDir
+import me.him188.ani.utils.analytics.Analytics
 import me.him188.ani.utils.analytics.AnalyticsConfig
+import me.him188.ani.utils.analytics.AnalyticsEvent.Companion.AppStart
 import me.him188.ani.utils.analytics.AnalyticsImpl
+import me.him188.ani.utils.analytics.recordEvent
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
@@ -88,10 +93,12 @@ class AniApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        val startupTimeMonitor = StartupTimeMonitor()
 
         val logsDir = applicationContext.getLogsDir().absolutePath
         AndroidLoggingConfigurator.configure(logsDir)
         AppStartupTasks.printVersions()
+        startupTimeMonitor.mark(StepName.Logging)
 
         val defaultUEH = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { t, e ->
@@ -99,6 +106,7 @@ class AniApplication : Application() {
             Thread.sleep(500)
             defaultUEH?.uncaughtException(t, e)
         }
+        startupTimeMonitor.mark(StepName.UncaughtExceptionHandler)
 
         if (processName().contains("torrent_service")) {
             // In service process, we don't need any dependency which is use in app process.
@@ -114,6 +122,7 @@ class AniApplication : Application() {
             ProcessLifecycleOwner.get().lifecycle,
         )
         instance = Instance()
+        startupTimeMonitor.mark(StepName.WindowAndContext)
 
         if (FEATURE_USE_TORRENT_SERVICE) {
             connectionManager.startLifecycleLoop()
@@ -142,7 +151,8 @@ class AniApplication : Application() {
              */
             restorePersistedCaches = { !instance.requiresTorrentCacheMigration },
         )
-
+        startupTimeMonitor.mark(StepName.Modules)
+        
         val koin = getKoin()
         val analyticsInitializer = scope.launch {
             val settingsRepository = koin.get<SettingsRepository>()
@@ -189,6 +199,12 @@ class AniApplication : Application() {
         }
 
         runBlocking { analyticsInitializer.join() }
+        startupTimeMonitor.mark(StepName.Analytics)
+
+        Analytics.recordEvent(AppStart) {
+            putAll(startupTimeMonitor.getMarks())
+            put("total_time", startupTimeMonitor.getTotalDuration().inWholeMilliseconds)
+        }
     }
 
     @SuppressLint("DiscouragedPrivateApi")
