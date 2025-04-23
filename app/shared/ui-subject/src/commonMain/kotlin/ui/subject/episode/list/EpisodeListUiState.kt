@@ -38,7 +38,7 @@ data class EpisodeListUiState(
                         episode.episodeInfo.airDate,
                         currentTime,
                         zone,
-                    ) ?: false,
+                    ) ?: true, // 注意, 没有 recurrence 时需要为 true. 因为完结番没有 recurrence.
                 )
             }.partition {
                 it.sort is EpisodeSort.Normal
