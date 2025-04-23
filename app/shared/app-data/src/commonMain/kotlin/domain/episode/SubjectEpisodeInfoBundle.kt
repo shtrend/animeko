@@ -136,9 +136,7 @@ class SubjectEpisodeInfoBundleLoader(
      * This flow is intended to be shared in a view model or other long-lived scope.
      * Do not collect it multiple times concurrently.
      *
-     * The flow may or may not complete. If the [episodeIdFlow] completes, this flow will also complete,
-     * and it's guaranteed to complete normally without throwing an exception,
-     * as all exceptions are caught and handled by [flowLoadErrorObserver].
+     * The flow does not complete. Even if the [episodeIdFlow] completes, this flow will NOT complete, as you may still call [restart].
      */
     val infoBundleFlow: Flow<SubjectEpisodeInfoBundle?> =
         episodeIdFlow.map { GetSubjectEpisodeInfoBundleFlowUseCase.SubjectIdAndEpisodeId(subjectId, it) }
