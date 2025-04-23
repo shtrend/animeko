@@ -6,6 +6,10 @@ struct ComposeView: UIViewControllerRepresentable {
 	// Use the specific type of your container view controller
 	typealias UIViewControllerType = MyUIViewController
 	typealias Context = UIViewControllerRepresentableContext<Self>
+	
+	init() {
+		SwiftBridgeKt.SwiftBridge = SwiftBridgeImpl()
+	}
 
 	func makeUIViewController(context: Context) -> UIViewControllerType {
 		let containerController = MyUIViewController()
@@ -27,6 +31,7 @@ struct ComposeView: UIViewControllerRepresentable {
 			kmpViewController.view.topAnchor.constraint(equalTo: containerController.view.topAnchor),
 			kmpViewController.view.bottomAnchor.constraint(equalTo: containerController.view.bottomAnchor)
 		])
+
 
 		// 4. Notify the child view controller that it has been moved to a parent
 		kmpViewController.didMove(toParent: containerController)
@@ -51,6 +56,10 @@ class MyUIViewController : UIViewController {
 	override var preferredStatusBarUpdateAnimation: UIStatusBarAnimation {
 		return .slide
 	}
+	
+	override var prefersHomeIndicatorAutoHidden: Bool {
+		return MainViewControllerPropertyProvider.shared.prefersHomeIndicatorAutoHidden
+	}
 }
 
 struct ContentView: View {
@@ -61,5 +70,8 @@ struct ContentView: View {
 	}
 }
 
-
-
+class SwiftBridgeImpl : ISwiftBridge {
+	func navigationController(_ receiver: UIViewController) -> UINavigationController? {
+		return receiver.navigationController
+	}
+}

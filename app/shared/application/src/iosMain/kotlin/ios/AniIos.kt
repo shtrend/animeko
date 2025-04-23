@@ -44,6 +44,7 @@ import me.him188.ani.app.navigation.AniNavigator
 import me.him188.ani.app.navigation.BrowserNavigator
 import me.him188.ani.app.navigation.IosBrowserNavigator
 import me.him188.ani.app.navigation.LocalNavigator
+import me.him188.ani.app.platform.AniHostingUIViewController
 import me.him188.ani.app.platform.AppStartupTasks
 import me.him188.ani.app.platform.GrantedPermissionManager
 import me.him188.ani.app.platform.IosContext
@@ -85,7 +86,10 @@ import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.openani.mediamp.MediampPlayerFactory
 import org.openani.mediamp.avkit.AVKitMediampPlayerFactory
+import platform.UIKit.NSLayoutConstraint
 import platform.UIKit.UIViewController
+import platform.UIKit.addChildViewController
+import platform.UIKit.didMoveToParentViewController
 
 @Suppress("FunctionName", "unused") // used in Swift
 fun MainViewController(): UIViewController {
@@ -152,7 +156,7 @@ fun MainViewController(): UIViewController {
         putAll(startupTimeMonitor.getMarks())
         put("total_time", startupTimeMonitor.getTotalDuration().inWholeMilliseconds)
     }
-    return ComposeUIViewController {
+    val contentViewController = ComposeUIViewController {
         AniApp {
             val platformWindow = rememberPlatformWindow()
             CompositionLocalProvider(
@@ -192,6 +196,26 @@ fun MainViewController(): UIViewController {
             }
         }
     }
+
+    return AniHostingUIViewController().apply {
+        addChildViewController(contentViewController)
+        view.addSubview(contentViewController.view)
+        fillMaxSize(this, contentViewController)
+    }
+}
+
+private fun fillMaxSize(container: AniHostingUIViewController, contentViewController: UIViewController) {
+    contentViewController.didMoveToParentViewController(container)
+    contentViewController.view.translatesAutoresizingMaskIntoConstraints = false
+
+    NSLayoutConstraint.activateConstraints(
+        listOf(
+            contentViewController.view.topAnchor.constraintEqualToAnchor(container.view.topAnchor),
+            contentViewController.view.bottomAnchor.constraintEqualToAnchor(container.view.bottomAnchor),
+            contentViewController.view.leadingAnchor.constraintEqualToAnchor(container.view.leadingAnchor),
+            contentViewController.view.trailingAnchor.constraintEqualToAnchor(container.view.trailingAnchor),
+        ),
+    )
 }
 
 fun getIosModules(
