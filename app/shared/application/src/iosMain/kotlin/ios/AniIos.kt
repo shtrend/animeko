@@ -91,8 +91,15 @@ import platform.UIKit.UIViewController
 import platform.UIKit.addChildViewController
 import platform.UIKit.didMoveToParentViewController
 
-@Suppress("FunctionName", "unused") // used in Swift
-fun MainViewController(): UIViewController {
+class AniIosApplication(
+    val context: IosContext,
+    val aniNavigator: AniNavigator,
+    val onBackPressedDispatcherOwner: SkikoOnBackPressedDispatcherOwner
+)
+
+// Called from Swift
+@Suppress("unused")
+fun startIosApp(): AniIosApplication {
     val startupTimeMonitor = StartupTimeMonitor()
     val scope = createAppRootCoroutineScope()
 
@@ -103,7 +110,7 @@ fun MainViewController(): UIViewController {
         ),
     )
     startupTimeMonitor.mark(StepName.WindowAndContext)
-    
+
     AppStartupTasks.printVersions()
     IosLoggingConfigurator.configure(context.files.logsDir.path, SystemFileSystem)
     startupTimeMonitor.mark(StepName.Logging)
@@ -156,13 +163,23 @@ fun MainViewController(): UIViewController {
         putAll(startupTimeMonitor.getMarks())
         put("total_time", startupTimeMonitor.getTotalDuration().inWholeMilliseconds)
     }
+
+    return AniIosApplication(
+        context = context,
+        aniNavigator = aniNavigator,
+        onBackPressedDispatcherOwner = onBackPressedDispatcherOwner,
+    )
+}
+
+@Suppress("FunctionName", "unused") // used in Swift
+fun MainViewController(app: AniIosApplication): UIViewController {
     val contentViewController = ComposeUIViewController {
         AniApp {
             val platformWindow = rememberPlatformWindow()
             CompositionLocalProvider(
-                LocalContext provides context,
+                LocalContext provides app.context,
                 LocalPlatformWindow provides platformWindow,
-                LocalOnBackPressedDispatcherOwner provides onBackPressedDispatcherOwner,
+                LocalOnBackPressedDispatcherOwner provides app.onBackPressedDispatcherOwner,
             ) {
                 Box(
                     Modifier.background(color = MaterialTheme.colorScheme.surfaceContainerLowest)
@@ -177,7 +194,7 @@ fun MainViewController(): UIViewController {
                         val content by vm.content.collectAsStateWithLifecycle()
 
                         CompositionLocalProvider(
-                            LocalNavigator provides aniNavigator,
+                            LocalNavigator provides app.aniNavigator,
                             LocalToaster provides remember {
                                 object : Toaster {
                                     override fun toast(text: String) {
@@ -187,7 +204,7 @@ fun MainViewController(): UIViewController {
                             },
                         ) {
                             Box(Modifier.padding(all = paddingByWindowSize)) {
-                                AniAppContent(aniNavigator)
+                                AniAppContent(app.aniNavigator)
                                 Toast({ showing }, { Text(content) })
                             }
                         }

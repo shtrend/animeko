@@ -7,15 +7,15 @@ struct ComposeView: UIViewControllerRepresentable {
 	typealias UIViewControllerType = MyUIViewController
 	typealias Context = UIViewControllerRepresentableContext<Self>
 	
-	init() {
-		SwiftBridgeKt.SwiftBridge = SwiftBridgeImpl()
-	}
-
+	let app: AniIosApplication
+	
 	func makeUIViewController(context: Context) -> UIViewControllerType {
 		let containerController = MyUIViewController()
 
 		// --- Embed KMP View Controller ---
-		let kmpViewController = AniIosKt.MainViewController() // Create the KMP UIViewController instance
+		let kmpViewController = AniIosKt.MainViewController(
+			app: app
+		) // Create the KMP UIViewController instance
 
 		// 1. Add the KMP VC as a child of the container VC
 		containerController.addChild(kmpViewController)
@@ -63,8 +63,10 @@ class MyUIViewController : UIViewController {
 }
 
 struct ContentView: View {
+	let app: AniIosApplication
+	
 	var body: some View {
-		ComposeView()
+		ComposeView(app: app)
 			.ignoresSafeArea(.all)
 			// .ignoresSafeArea(.keyboard)
 	}
