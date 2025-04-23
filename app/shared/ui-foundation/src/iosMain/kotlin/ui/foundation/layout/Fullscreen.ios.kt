@@ -16,7 +16,15 @@ import org.jetbrains.skiko.OSVersion
 import org.jetbrains.skiko.available
 import platform.Foundation.NSThread
 import platform.Foundation.setValue
-import platform.UIKit.*
+import platform.UIKit.UIApplication
+import platform.UIKit.UIDevice
+import platform.UIKit.UIDeviceOrientation
+import platform.UIKit.UIInterfaceOrientationMaskLandscape
+import platform.UIKit.UIInterfaceOrientationMaskPortrait
+import platform.UIKit.UINavigationController
+import platform.UIKit.UIWindowSceneGeometryPreferencesIOS
+import platform.UIKit.attemptRotationToDeviceOrientation
+import platform.UIKit.setNeedsUpdateOfHomeIndicatorAutoHidden
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
 
@@ -78,8 +86,7 @@ actual suspend fun Context.setRequestFullScreen(window: PlatformWindowMP, fullsc
 
 actual fun Context.setSystemBarVisible(window: PlatformWindowMP, visible: Boolean) {
     ensureMainThread {
-        MainViewControllerPropertyProvider.prefersStatusBarHidden = !visible
-        window.uiViewController.setNeedsStatusBarAppearanceUpdate()
+        window.uiViewController.statusBarHidden = !visible
 
         MainViewControllerPropertyProvider.prefersHomeIndicatorAutoHidden = !visible
         window.uiViewController.setNeedsUpdateOfHomeIndicatorAutoHidden()

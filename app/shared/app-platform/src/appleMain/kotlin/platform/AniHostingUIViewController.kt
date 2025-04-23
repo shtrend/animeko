@@ -9,24 +9,19 @@
 
 package me.him188.ani.app.platform
 
-//class AniHostingUIViewController : platform.UIKit.UIViewController(null, null) {
-//    override fun preferredStatusBarUpdateAnimation(): UIStatusBarAnimation {
-//        return UIStatusBarAnimation.UIStatusBarAnimationSlide
-//    }
-//
-//    var statusBarHidden = false
-//        set(value) {
-//            field = value
-//            setNeedsStatusBarAppearanceUpdate()
-//        }
-//
-//    override fun prefersStatusBarHidden(): Boolean = statusBarHidden
-//
-//    override fun viewDidLoad() {
-//        super.viewDidLoad()
-//
-//        edgesForExtendedLayout = UIRectEdgeAll
-//        view.insetsLayoutMarginsFromSafeArea = false
-//        extendedLayoutIncludesOpaqueBars = true
-//    }
-//}
+import platform.UIKit.UIStatusBarAnimation
+
+class AniHostingUIViewController : platform.UIKit.UIViewController(null, null) {
+    override fun preferredStatusBarUpdateAnimation(): UIStatusBarAnimation {
+        return UIStatusBarAnimation.UIStatusBarAnimationSlide
+    }
+
+    var statusBarHidden = false
+        set(value) {
+            field = value
+            setNeedsStatusBarAppearanceUpdate()
+        }
+
+    override fun prefersStatusBarHidden(): Boolean = statusBarHidden
+
+}

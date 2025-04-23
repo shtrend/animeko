@@ -60,15 +60,6 @@ class MyUIViewController : UIViewController {
 	override var prefersHomeIndicatorAutoHidden: Bool {
 		return MainViewControllerPropertyProvider.shared.prefersHomeIndicatorAutoHidden
 	}
-	
-	override var prefersStatusBarHidden: Bool {
-		return MainViewControllerPropertyProvider.shared.prefersStatusBarHidden
-	}
-	
-	
-	override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-		return UIInterfaceOrientationMask(rawValue: UInt(MainViewControllerPropertyProvider.shared.supportedInterfaceOrientations))
-	}
 }
 
 struct ContentView: View {
