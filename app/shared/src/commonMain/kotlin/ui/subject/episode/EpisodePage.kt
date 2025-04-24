@@ -409,7 +409,8 @@ private fun EpisodeScreenTabletVeryWide(
                     windowInsets
                 } else {
                     // 非全屏右边还有东西
-                    windowInsets.only(WindowInsetsSides.Left + WindowInsetsSides.Top)
+                    // Consider #1923 平板横屏模式下播放器底栏和导航栏重合
+                    windowInsets.only(WindowInsetsSides.Left + WindowInsetsSides.Vertical)
                 },
             )
 
