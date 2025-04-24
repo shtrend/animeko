@@ -133,7 +133,7 @@ fun EpisodeComment(
                 CommentDefaults.ReplyList(
                     replies = comment.briefReplies,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                    hiddenReplyCount = comment.replyCount - comment.briefReplies.size,
+                    hiddenReplyCount = 0, //comment.replyCount - comment.briefReplies.size,
                     onClickUrl = { },
                     onClickExpand = { },
                 )
