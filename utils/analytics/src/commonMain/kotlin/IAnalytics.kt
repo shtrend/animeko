@@ -26,7 +26,7 @@ val Analytics: IAnalytics get() = AnalyticsHolder.getInstance()
 interface IAnalytics {
     fun recordEvent(
         event: AnalyticsEvent,
-        properties: Map<String, Any> = emptyMap(),
+        properties: Map<String, Any?> = emptyMap(),
     )
 
     fun onAppStart() {}
@@ -34,7 +34,7 @@ interface IAnalytics {
 
 inline fun IAnalytics.recordEvent(
     event: AnalyticsEvent,
-    buildProperties: MutableMap<String, Any>.() -> Unit = {},
+    buildProperties: MutableMap<String, Any?>.() -> Unit = {},
 ) {
     recordEvent(event, buildMap(buildProperties))
 }
@@ -78,8 +78,22 @@ abstract class CommonAnalyticsImpl(
         put("\$app_version", config.appVersion)
     }
 
-    final override fun recordEvent(event: AnalyticsEvent, properties: Map<String, Any>) {
-        recordEventImpl(event, intrinsicProperties + properties)
+    final override fun recordEvent(event: AnalyticsEvent, properties: Map<String, Any?>) {
+        recordEventImpl(
+            event,
+            if (properties.isEmpty()) {
+                intrinsicProperties
+            } else {
+                buildMap {
+                    putAll(intrinsicProperties)
+                    for ((key, value) in properties) {
+                        if (value != null) {
+                            put(key, value)
+                        }
+                    }
+                }
+            },
+        )
     }
 
     protected abstract fun recordEventImpl(event: AnalyticsEvent, properties: Map<String, Any> = emptyMap())
@@ -103,7 +117,7 @@ object AnalyticsHolder {
 }
 
 private object NoopAnalytics : IAnalytics {
-    override fun recordEvent(event: AnalyticsEvent, properties: Map<String, Any>) {
+    override fun recordEvent(event: AnalyticsEvent, properties: Map<String, Any?>) {
     }
 
     override fun onAppStart() {
