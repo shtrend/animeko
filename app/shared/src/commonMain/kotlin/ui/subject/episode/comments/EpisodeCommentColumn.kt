@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.ui.subject.episode.comments
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -63,6 +64,7 @@ fun EpisodeCommentColumn(
             state.list.collectAsLazyPagingItemsWithLifecycle(),
             state = gridState,
             modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 72.dp), // 允许滚动到 FAB 上面
         ) { _, comment ->
             EpisodeComment(
                 comment = comment,
