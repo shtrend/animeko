@@ -1007,24 +1007,16 @@ private fun EpisodeCommentColumn(
 
     EpisodeCommentColumn(
         state = commentState,
-        editCommentStubText = commentEditorState.content,
         onClickReply = {
             setShowEditCommentSheet(true)
             commentEditorState.startEdit(CommentContext.EpisodeReply(subjectId, episodeId, it.toInt()))
             pauseOnPlaying()
 
         },
-        onClickEditCommentStub = {
+        onNewCommentClick = {
             commentEditorState.startEdit(
                 CommentContext.Episode(subjectId, episodeId),
             )
-            setShowEditCommentSheet(true)
-        },
-        onClickEditCommentStubEmoji = {
-            commentEditorState.startEdit(
-                CommentContext.Episode(subjectId, episodeId),
-            )
-            commentEditorState.toggleStickerPanelState(true)
             setShowEditCommentSheet(true)
         },
         onClickUrl = {
