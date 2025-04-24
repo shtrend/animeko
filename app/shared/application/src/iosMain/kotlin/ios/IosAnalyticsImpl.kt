@@ -47,13 +47,17 @@ class IosAnalyticsImpl(
         properties: Map<String, Any>,
     ) {
         @Suppress("UNCHECKED_CAST")
-        PostHogSDK.shared().screenWithTitle(
-            "Main",
-            properties as Map<Any?, String>,
+        PostHogSDK.shared().captureWithEvent(
+            event.event,
+            properties as Map<Any?, *>,
         )
     }
 
     override fun onAppStart() {
-        recordEvent(AnalyticsEvent.Screen)
+        @Suppress("UNCHECKED_CAST")
+        PostHogSDK.shared().screenWithTitle(
+            "Main",
+            intrinsicProperties as Map<Any?, *>,
+        )
     }
 }
