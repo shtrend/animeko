@@ -81,7 +81,7 @@ fun SearchScreen(
                 windowInsets = paneContentWindowInsets.only(WindowInsetsSides.Top + WindowInsetsSides.Right),
                 navigationIcon = {
                     // 只有在单面板模式下才显示返回按钮
-                    if (listDetailLayoutParameters.isSinglePane) {
+                    if (listDetailLayoutParameters.preferSinglePane) {
                         BackNavigationIconButton(
                             onNavigateBack = {
                                 coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
