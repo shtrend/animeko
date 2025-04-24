@@ -83,7 +83,7 @@ class ProxyTester(
 @OptIn(ExperimentalAtomicApi::class)
 private fun checkResultAndReport(results: ServiceConnectionTester.Results) {
     if (results.anyFailed() && results.allCompleted() // 有失败的测试
-        && isFirstTestResult.compareAndSet(expectedValue = false, newValue = true) // 只上报一次
+        && isFirstTestResult.compareAndSet(expectedValue = true, newValue = false) // 只上报一次
     ) {
         // 上报未知错误
         for ((service, state) in results.idToStateMap) {
