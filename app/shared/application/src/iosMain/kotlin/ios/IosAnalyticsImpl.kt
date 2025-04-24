@@ -40,6 +40,8 @@ class IosAnalyticsImpl(
                 }
             },
         )
+        @Suppress("UNCHECKED_CAST")
+        PostHogSDK.shared().registerProperties(intrinsicProperties as Map<Any?, *>)
     }
 
     override fun recordEventImpl(

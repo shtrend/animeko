@@ -33,6 +33,9 @@ class AnalyticsImpl(
             this.getAnonymousId = { UUID.fromString(userId) }
         }
         PostHogAndroid.setup(context, config)
+        for (entry in intrinsicProperties) {
+            PostHog.register(entry.key, entry.value)
+        }
     }
 
     override fun recordEventImpl(event: AnalyticsEvent, properties: Map<String, Any>) {

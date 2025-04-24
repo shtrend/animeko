@@ -48,7 +48,7 @@ value class AnalyticsEvent(val event: String) {
         val OnboardingNetworkEnter = AnalyticsEvent("onboarding_network_enter")
         val OnboardingLoginEnter = AnalyticsEvent("onboarding_login_enter")
         val OnboardingDone = AnalyticsEvent("onboarding_done")
-        
+
         val NetworkCheckFailed = AnalyticsEvent("network_check_failed")
         val LoginClick = AnalyticsEvent("login_click")
         val LoginBangumiSuccess = AnalyticsEvent("login_bangumi_success")
@@ -87,20 +87,10 @@ abstract class CommonAnalyticsImpl(
     }
 
     final override fun recordEvent(event: AnalyticsEvent, properties: Map<String, Any?>) {
+        @Suppress("UNCHECKED_CAST")
         recordEventImpl(
             event,
-            if (properties.isEmpty()) {
-                intrinsicProperties
-            } else {
-                buildMap {
-                    putAll(intrinsicProperties)
-                    for ((key, value) in properties) {
-                        if (value != null) {
-                            put(key, value)
-                        }
-                    }
-                }
-            },
+            properties.filterValues { it != null } as Map<String, Any>,
         )
     }
 
