@@ -276,6 +276,11 @@ class EpisodeViewModel(
         ),
         koin,
         sharingStarted = SharingStarted.WhileSubscribed(5_000),
+        analyticsContext = object : EpisodeFetchSelectPlayState.AnalyticsContext {
+            override suspend fun isFullscreen(): Boolean? {
+                return withContext(Dispatchers.Main) { this@EpisodeViewModel.isFullscreen }
+            }
+        },
     )
 
     val mediaResolver: MediaResolver get() = fetchPlayState.playerSession.mediaResolver

@@ -50,6 +50,7 @@ value class AnalyticsEvent(val event: String) {
         val LoginSkipClick = AnalyticsEvent("login_skip_click")
 
         val EpisodeEnter = AnalyticsEvent("episode_enter")
+        val EpisodeSwitch = AnalyticsEvent("episode_switch")
     }
 }
 
