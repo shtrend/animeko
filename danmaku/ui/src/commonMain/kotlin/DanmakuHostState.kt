@@ -709,12 +709,15 @@ class DanmakuHostState(
         topTrack.forEach { it.clearAll() }
         bottomTrack.forEach { it.clearAll() }
 
-        check(presentFloatingDanmaku.size == 0) {
-            "presentFloatingDanmaku is not totally cleared after releasing track."
-        }
-        check(presentFixedDanmaku.size == 0) {
-            "presentFloatingDanmaku is not totally cleared after releasing track."
-        }
+        // We expect presentFloatingDanmaku.size and presentFixedDanmaku.size to be zero, but we don't crash UI here if they are not the case.
+        // It's possible some thread
+
+//        check(presentFloatingDanmaku.size == 0) {
+//            "presentFloatingDanmaku is not totally cleared after releasing track."
+//        }
+//        check(presentFixedDanmaku.size == 0) {
+//            "presentFloatingDanmaku is not totally cleared after releasing track."
+//        }
     }
 
     /**
