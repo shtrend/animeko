@@ -223,11 +223,14 @@ class TorrentMediaCacheEngine(
             logger.info { "Closing TorrentCache" }
             close()
 
-            logger.info { "Closing torrent handle" }
+            logger.info { "Closing torrent file handle" }
             handle.closeAndDelete()
 
             withContext(Dispatchers.IO) {
-                val file = handle.entry.resolveFileMaybeEmptyOrNull() ?: return@withContext
+                val file = handle.entry.resolveFileMaybeEmptyOrNull() ?: kotlin.run {
+                    logger.warn { "No file resolved for torrent entry '${handle.entry.pathInTorrent}'" }
+                    return@withContext
+                }
                 if (file.exists()) {
                     logger.info { "Deleting torrent cache: $file" }
                     try {
