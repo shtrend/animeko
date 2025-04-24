@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import me.him188.ani.datasources.api.source.FactoryId
 import me.him188.ani.utils.analytics.Analytics
+import me.him188.ani.utils.analytics.AnalyticsEvent
 import me.him188.ani.utils.analytics.AnalyticsEvent.Companion.EpisodeEnter
 
 /**
@@ -108,6 +109,7 @@ interface AniNavigator {
      */
     fun navigateOnboardingComplete(completionPopUpTargetInclusive: NavRoutes?) {
         currentNavigator.navigate(NavRoutes.OnboardingComplete(completionPopUpTargetInclusive))
+        Analytics.recordEvent(AnalyticsEvent.OnboardingDone)
     }
 
     fun navigateMain(

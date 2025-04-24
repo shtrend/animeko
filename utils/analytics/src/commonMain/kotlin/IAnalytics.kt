@@ -44,6 +44,11 @@ value class AnalyticsEvent(val event: String) {
     companion object {
         val Screen = AnalyticsEvent($$"$screen")
         val AppStart = AnalyticsEvent("app_start")
+
+        val OnboardingNetworkEnter = AnalyticsEvent("onboarding_network_enter")
+        val OnboardingLoginEnter = AnalyticsEvent("onboarding_login_enter")
+        val OnboardingDone = AnalyticsEvent("onboarding_done")
+        
         val NetworkCheckFailed = AnalyticsEvent("network_check_failed")
         val LoginClick = AnalyticsEvent("login_click")
         val LoginBangumiSuccess = AnalyticsEvent("login_bangumi_success")

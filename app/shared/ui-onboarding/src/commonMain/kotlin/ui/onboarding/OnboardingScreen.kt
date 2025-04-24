@@ -170,6 +170,11 @@ fun OnboardingScreen(
                 onDispose { }
             }
 
+            DisposableEffect(Unit) {
+                Analytics.recordEvent(AnalyticsEvent.OnboardingNetworkEnter)
+                onDispose { }
+            }
+
             ConfigureProxyStep(
                 state = proxyState,
                 onUpdate = { new ->
@@ -274,6 +279,11 @@ fun OnboardingScreen(
                 )
             },
         ) {
+            DisposableEffect(Unit) {
+                Analytics.recordEvent(AnalyticsEvent.OnboardingLoginEnter)
+                onDispose { }
+            }
+
             DisposableEffect(bangumiShowTokenAuthorizePage) {
                 if (!bangumiShowTokenAuthorizePage) {
                     state.bangumiAuthorizeState.onCheckCurrentToken()
