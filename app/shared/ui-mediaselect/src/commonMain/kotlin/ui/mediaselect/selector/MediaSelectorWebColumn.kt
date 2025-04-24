@@ -116,7 +116,6 @@ fun MediaSelectorWebSourcesColumn(
                     append("都不对？")
                     pushStyle(
                         SpanStyle(
-                            color = MaterialTheme.colorScheme.primary,
                             textDecoration = TextDecoration.Underline,
                         ),
                     )
