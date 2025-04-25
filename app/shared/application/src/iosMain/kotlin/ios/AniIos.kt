@@ -59,6 +59,7 @@ import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.platform.getCommonKoinModule
 import me.him188.ani.app.platform.rememberPlatformWindow
 import me.him188.ani.app.platform.startCommonKoinModule
+import me.him188.ani.app.platform.trace.recordAppStart
 import me.him188.ani.app.tools.update.IosUpdateInstaller
 import me.him188.ani.app.tools.update.UpdateInstaller
 import me.him188.ani.app.ui.foundation.TestGlobalLifecycleOwner
@@ -73,8 +74,6 @@ import me.him188.ani.app.ui.main.AniApp
 import me.him188.ani.app.ui.main.AniAppContent
 import me.him188.ani.utils.analytics.Analytics
 import me.him188.ani.utils.analytics.AnalyticsConfig
-import me.him188.ani.utils.analytics.AnalyticsEvent.Companion.AppStart
-import me.him188.ani.utils.analytics.recordEvent
 import me.him188.ani.utils.io.SystemCacheDir
 import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.SystemSupportDir
@@ -159,9 +158,8 @@ fun startIosApp(): AniIosApplication {
     runBlocking { analyticsInitializer.join() }
     startupTimeMonitor.mark(StepName.Analytics)
 
-    Analytics.recordEvent(AppStart) {
-        putAll(startupTimeMonitor.getMarks())
-        put("total_time", startupTimeMonitor.getTotalDuration().inWholeMilliseconds)
+    scope.launch {
+        Analytics.recordAppStart(startupTimeMonitor)
     }
 
     return AniIosApplication(

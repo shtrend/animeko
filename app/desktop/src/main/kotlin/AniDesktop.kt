@@ -75,6 +75,7 @@ import me.him188.ani.app.platform.createAppRootCoroutineScope
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.platform.getCommonKoinModule
 import me.him188.ani.app.platform.startCommonKoinModule
+import me.him188.ani.app.platform.trace.recordAppStart
 import me.him188.ani.app.platform.window.HandleWindowsWindowProc
 import me.him188.ani.app.platform.window.LocalTitleBarThemeController
 import me.him188.ani.app.platform.window.rememberLayoutHitTestOwner
@@ -102,9 +103,7 @@ import me.him188.ani.desktop.generated.resources.Res
 import me.him188.ani.desktop.generated.resources.a_round
 import me.him188.ani.utils.analytics.Analytics
 import me.him188.ani.utils.analytics.AnalyticsConfig
-import me.him188.ani.utils.analytics.AnalyticsEvent.Companion.AppStart
 import me.him188.ani.utils.analytics.AnalyticsImpl
-import me.him188.ani.utils.analytics.recordEvent
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -387,9 +386,8 @@ object AniDesktop {
         val systemThemeDetector = SystemThemeDetector()
         startupTimeMonitor.mark(StepName.ThemeDetector)
 
-        Analytics.recordEvent(AppStart) {
-            putAll(startupTimeMonitor.getMarks())
-            put("total_time", startupTimeMonitor.getTotalDuration().inWholeMilliseconds)
+        coroutineScope.launch {
+            Analytics.recordAppStart(startupTimeMonitor)
         }
         logger.info {
             "App startup breakdown: \n" +

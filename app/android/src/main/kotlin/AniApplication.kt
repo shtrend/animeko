@@ -41,12 +41,11 @@ import me.him188.ani.app.platform.createAppRootCoroutineScope
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.platform.getCommonKoinModule
 import me.him188.ani.app.platform.startCommonKoinModule
+import me.him188.ani.app.platform.trace.recordAppStart
 import me.him188.ani.app.ui.settings.tabs.log.getLogsDir
 import me.him188.ani.utils.analytics.Analytics
 import me.him188.ani.utils.analytics.AnalyticsConfig
-import me.him188.ani.utils.analytics.AnalyticsEvent.Companion.AppStart
 import me.him188.ani.utils.analytics.AnalyticsImpl
-import me.him188.ani.utils.analytics.recordEvent
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
@@ -201,9 +200,8 @@ class AniApplication : Application() {
         runBlocking { analyticsInitializer.join() }
         startupTimeMonitor.mark(StepName.Analytics)
 
-        Analytics.recordEvent(AppStart) {
-            putAll(startupTimeMonitor.getMarks())
-            put("total_time", startupTimeMonitor.getTotalDuration().inWholeMilliseconds)
+        scope.launch {
+            Analytics.recordAppStart(startupTimeMonitor)
         }
     }
 
