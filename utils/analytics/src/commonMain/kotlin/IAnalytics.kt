@@ -45,6 +45,7 @@ value class AnalyticsEvent(val event: String) {
         val Screen = AnalyticsEvent($$"$screen")
         val AppStart = Screen // compatibility
 
+        val OnboardingStart = AnalyticsEvent("onboarding_start")
         val OnboardingNetworkEnter = AnalyticsEvent("onboarding_network_enter")
         val OnboardingLoginEnter = AnalyticsEvent("onboarding_login_enter")
         val OnboardingDone = AnalyticsEvent("onboarding_done")

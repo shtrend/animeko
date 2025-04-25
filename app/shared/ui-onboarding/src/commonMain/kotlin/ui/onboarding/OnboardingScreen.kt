@@ -54,6 +54,7 @@ import me.him188.ani.app.ui.settings.framework.SettingsState
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyPresentation
 import me.him188.ani.utils.analytics.Analytics
 import me.him188.ani.utils.analytics.AnalyticsEvent
+import me.him188.ani.utils.analytics.AnalyticsEvent.Companion.OnboardingStart
 import me.him188.ani.utils.platform.annotations.TestOnly
 
 @Composable
@@ -117,6 +118,11 @@ fun OnboardingScreen(
     val proxyState by state.configureProxyState.state.collectAsStateWithLifecycle(ConfigureProxyUIState.Placeholder)
     val grantNotificationPermissionState by state.bitTorrentFeatureState.grantNotificationPermissionState
         .collectAsStateWithLifecycle(GrantNotificationPermissionState.Placeholder)
+
+    DisposableEffect(Unit) {
+        Analytics.recordEvent(OnboardingStart)
+        onDispose { }
+    }
 
     WizardNavHost(
         controller,
