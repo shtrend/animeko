@@ -43,7 +43,7 @@ inline fun IAnalytics.recordEvent(
 value class AnalyticsEvent(val event: String) {
     companion object {
         val Screen = AnalyticsEvent($$"$screen")
-        val AppStart = AnalyticsEvent("app_start")
+        val AppStart = Screen // compatibility
 
         val OnboardingNetworkEnter = AnalyticsEvent("onboarding_network_enter")
         val OnboardingLoginEnter = AnalyticsEvent("onboarding_login_enter")
@@ -109,8 +109,6 @@ object AnalyticsHolder {
     fun init(instance: IAnalytics) {
         check(this.instance === NoopAnalytics) { "Analytics instance is already initialized" }
         this.instance = instance
-
-        instance.onAppStart()
     }
 }
 

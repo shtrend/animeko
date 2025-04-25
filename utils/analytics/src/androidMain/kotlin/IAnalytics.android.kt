@@ -30,6 +30,7 @@ class AnalyticsImpl(
         ).apply {
             debug = config.debugLogging
             this.captureApplicationLifecycleEvents = false
+            this.captureScreenViews = false
             this.getAnonymousId = { UUID.fromString(userId) }
         }
         PostHogAndroid.setup(context, config)

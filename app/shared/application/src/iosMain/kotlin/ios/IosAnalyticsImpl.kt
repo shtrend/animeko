@@ -33,7 +33,7 @@ class IosAnalyticsImpl(
             PostHogConfig(apiKey = apiKey, host = host).apply {
                 setCaptureApplicationLifecycleEvents(false)
                 setCaptureElementInteractions(false)
-                setCaptureScreenViews(true)
+                setCaptureScreenViews(false)
                 setDebug(true)
                 setGetAnonymousId {
                     NSUUID(userId)
@@ -56,10 +56,5 @@ class IosAnalyticsImpl(
     }
 
     override fun onAppStart() {
-        @Suppress("UNCHECKED_CAST")
-        PostHogSDK.shared().screenWithTitle(
-            "Main",
-            intrinsicProperties as Map<Any?, *>,
-        )
     }
 }
