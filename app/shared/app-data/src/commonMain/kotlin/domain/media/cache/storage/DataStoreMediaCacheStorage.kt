@@ -12,7 +12,9 @@ package me.him188.ani.app.domain.media.cache.storage
 import androidx.datastore.core.DataStore
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.cancel
@@ -26,7 +28,6 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerializationException
@@ -35,10 +36,12 @@ import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.engine.InvalidMediaCacheEngineKey
 import me.him188.ani.app.domain.media.cache.engine.MediaCacheEngine
 import me.him188.ani.app.domain.media.cache.engine.MediaStats
+import me.him188.ani.app.domain.media.cache.engine.TorrentMediaCacheEngine
 import me.him188.ani.app.domain.media.fetch.MediaFetcher
 import me.him188.ani.app.domain.media.resolver.EpisodeMetadata
 import me.him188.ani.datasources.api.Media
 import me.him188.ani.datasources.api.MediaCacheMetadata
+import me.him188.ani.datasources.api.MetadataKey
 import me.him188.ani.datasources.api.paging.SinglePagePagedSource
 import me.him188.ani.datasources.api.paging.SizedSource
 import me.him188.ani.datasources.api.source.ConnectionStatus
@@ -49,6 +52,7 @@ import me.him188.ani.datasources.api.source.MediaSourceInfo
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.source.MediaSourceLocation
 import me.him188.ani.datasources.api.source.matches
+import me.him188.ani.utils.coroutines.RestartableCoroutineScope
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.coroutines.update
 import me.him188.ani.utils.io.SystemPath
@@ -62,9 +66,6 @@ import me.him188.ani.utils.logging.warn
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-@Deprecated("Since 4.8, metadata is stored in the datastore. This will be removed in the future.")
-const val METADATA_FILE_EXTENSION = "metadata"
-
 /**
  * 本地目录缓存, 管理本地目录以及元数据的存储, 调用 [MediaCacheEngine] 进行缓存的实际创建
  */
@@ -77,6 +78,7 @@ class DataStoreMediaCacheStorage(
     private val clock: Clock = Clock.System,
 ) : MediaCacheStorage {
     private val scope: CoroutineScope = parentCoroutineContext.childScope()
+    private val statSubscriptionScope = RestartableCoroutineScope(scope.coroutineContext)
 
     private val metadataFlow = store.data
         .map { list ->
@@ -84,32 +86,69 @@ class DataStoreMediaCacheStorage(
                 .sortedBy { it.origin.mediaId } // consistent stable order
         }
 
-    override suspend fun restorePersistedCaches() {
-        val metadataFlowSnapshot = metadataFlow.first()
+    /**
+     * Locks access to mutable operations.
+     */
+    private val lock = Mutex()
 
-        val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
-        val semaphore = Semaphore(8)
+    /**
+     * App 必须先在启动时候恢复过一次之后才能启动监听
+     */
+    private val appStartupRestored = CompletableDeferred<Unit>()
 
-        supervisorScope {
-            metadataFlowSnapshot.forEach { (origin, metadata, _) ->
-                launch {
-                    semaphore.withPermit {
-                        restoreFile(
-                            origin,
-                            metadata,
-                            reportRecovered = { cache ->
-                                lock.withLock {
-                                    listFlow.value += cache
-                                }
-                                allRecovered.update { plus(cache) }
-                            },
-                        )
+    init {
+        if (engine is TorrentMediaCacheEngine) {
+            scope.launch {
+                // 等待 [restorePersistedCaches]
+                appStartupRestored.await()
+
+                engine.whenServiceConnected {
+                    statSubscriptionScope.restart()
+                    lock.withLock {
+                        listFlow.update { emptyList() }
+                        restorePersistedCachesImpl { }
                     }
                 }
             }
         }
+    }
 
-        engine.deleteUnusedCaches(allRecovered.value)
+    override suspend fun restorePersistedCaches() {
+        try {
+            lock.withLock {
+                val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
+                restorePersistedCachesImpl { allRecovered.update { plus(it) } }
+                engine.deleteUnusedCaches(allRecovered.value)
+            }
+        } finally {
+            appStartupRestored.complete(Unit)
+        }
+    }
+
+    // must be used under lock
+    private suspend fun restorePersistedCachesImpl(reportRecovered: (MediaCache) -> Unit) {
+        val metadataFlowSnapshot = metadataFlow.first()
+        val semaphore = Semaphore(8)
+
+        supervisorScope {
+            metadataFlowSnapshot.forEach { (origin, metadata, _) ->
+                semaphore.acquire()
+                launch(start = CoroutineStart.ATOMIC) {
+                    try {
+                        restoreFile(
+                            origin,
+                            metadata,
+                            reportRecovered = { cache ->
+                                listFlow.update { plus(cache) }
+                                reportRecovered(cache)
+                            },
+                        )
+                    } finally {
+                        semaphore.release()
+                    }
+                }
+            }
+        }
     }
 
     private suspend fun restoreFile(
@@ -117,28 +156,27 @@ class DataStoreMediaCacheStorage(
         metadata: MediaCacheMetadata,
         reportRecovered: suspend (MediaCache) -> Unit,
     ) = withContext(Dispatchers.IO) {
-
         try {
             val cache = engine.restore(origin, metadata, scope.coroutineContext)
             logger.info { "Cache restored: ${origin.mediaId}, result=${cache}" }
+            if (cache == null) return@withContext
 
-            if (cache != null) {
-                reportRecovered(cache)
-                cache.resume()
-                logger.info { "Cache resumed: $cache" }
-            }
+            reportRecovered(cache)
+            cache.resume()
 
-            // try to migrate
-            /*if (cache != null) {
-                val newSaveName = getSaveFilename(cache)
-                if (file.name != newSaveName) {
-                    logger.warn {
-                        "Metadata file name mismatch, renaming: " +
-                                "${file.name} -> $newSaveName"
+            when (cache) {
+                is TorrentMediaCacheEngine.TorrentMediaCache -> {
+                    logger.info { "Cache resumed: $cache, subscribe to media cache stats." }
+                    statSubscriptionScope.launch {
+                        cache.subscribeStats { cache.appendExtra(it) }
                     }
-                    file.moveTo(metadataDir.resolve(newSaveName))
                 }
-            }*/
+
+                else -> {
+                    logger.info { "Cache resumed: $cache" }
+                    return@withContext
+                }
+            }
         } catch (e: Exception) {
             logger.error(e) { "Failed to restore cache for ${origin.mediaId}" }
         }
@@ -158,11 +196,6 @@ class DataStoreMediaCacheStorage(
         )
     }
 
-    /**
-     * Locks accesses to [listFlow]
-     */
-    private val lock = Mutex()
-
     override suspend fun cache(
         media: Media,
         metadata: MediaCacheMetadata,
@@ -179,7 +212,7 @@ class DataStoreMediaCacheStorage(
         return lock.withLock {
             logger.info { "$mediaSourceId creating cache, metadata=$metadata" }
             listFlow.value.firstOrNull {
-                cacheEquals(it, media, metadata)
+                isSameMediaAndEpisode(it, media, metadata)
             }?.let { return@withLock it }
 
             if (!engine.supports(media)) {
@@ -190,12 +223,21 @@ class DataStoreMediaCacheStorage(
                 episodeMetadata,
                 scope.coroutineContext,
             )
+
             withContext(Dispatchers.IO) {
                 store.updateData { list ->
                     list + MediaCacheSave(cache.origin, cache.metadata, engine.engineKey)
                 }
             }
-            listFlow.value += cache
+
+            if (cache is TorrentMediaCacheEngine.TorrentMediaCache) {
+                logger.info { "Cache created: $cache, subscribe to media cache stats." }
+                statSubscriptionScope.launch {
+                    cache.subscribeStats { cache.appendExtra(it) }
+                }
+            }
+
+            listFlow.update { plus(cache) }
             cache
         }.also {
             if (resume) {
@@ -204,21 +246,18 @@ class DataStoreMediaCacheStorage(
         }
     }
 
-    private fun cacheEquals(
-        it: MediaCache,
-        media: Media,
-        metadata: MediaCacheMetadata = it.metadata
-    ) = it.origin.mediaId == media.mediaId && it.metadata.episodeSort == metadata.episodeSort
+    override suspend fun delete(cache: MediaCache): Boolean {
+        return deleteFirst { isSameMediaAndEpisode(it, cache.origin, cache.metadata) }
+    }
 
     override suspend fun deleteFirst(predicate: (MediaCache) -> Boolean): Boolean {
         lock.withLock {
             val cache = listFlow.value.firstOrNull(predicate) ?: return false
-            listFlow.value -= cache
+            listFlow.update { minus(cache) }
             withContext(Dispatchers.IO) {
                 store.updateData { list ->
                     list.filterNot {
-                        it.engine == engine.engineKey && it.origin.mediaId == cache.origin.mediaId
-                                && it.metadata.episodeSort == cache.metadata.episodeSort
+                        isSameMediaAndEpisode(cache, it)
                     }
                 }
             }
@@ -233,6 +272,40 @@ class DataStoreMediaCacheStorage(
         }
         scope.cancel()
     }
+
+    // 添加额外的 metadata extras, 如果 datastore 中没有这个 media cache, 则不添加
+    private suspend fun MediaCache.appendExtra(newMetadataExtras: Map<MetadataKey, String>) {
+        logger.info { "Cache ${origin.mediaId} append new extras, size = ${newMetadataExtras.size}." }
+        store.updateData { originalList ->
+            val existing = originalList.indexOfFirst {
+                isSameMediaAndEpisode(this, it)
+            }
+            if (existing == -1) return@updateData originalList
+
+            originalList.toMutableList().apply {
+                val existingSave = removeAt(existing)
+                add(
+                    // 更新时只使用 datastore 的数据
+                    MediaCacheSave(
+                        existingSave.origin,
+                        existingSave.metadata.withExtra(newMetadataExtras),
+                        existingSave.engine,
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun isSameMediaAndEpisode(
+        cache: MediaCache,
+        media: Media,
+        metadata: MediaCacheMetadata = cache.metadata
+    ) = cache.origin.mediaId == media.mediaId &&
+            metadata.subjectId == cache.metadata.subjectId &&
+            metadata.episodeId == cache.metadata.episodeId
+
+    private fun isSameMediaAndEpisode(cache: MediaCache, save: MediaCacheSave): Boolean =
+        isSameMediaAndEpisode(cache, save.origin, save.metadata)
 
     companion object {
         private val logger = logger<DataStoreMediaCacheStorage>()

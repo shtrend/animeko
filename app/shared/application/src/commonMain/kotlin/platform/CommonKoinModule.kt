@@ -431,10 +431,7 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
                         DataStoreMediaCacheStorage(
                             mediaSourceId = "test-in-memory",
                             store = metadataStore,
-                            engine = DummyMediaCacheEngine(
-                                "test-in-memory",
-                                engineKey = MediaCacheEngineKey("test-in-memory"),
-                            ),
+                            engine = DummyMediaCacheEngine("test-in-memory"),
                             "[debug]dummy",
                             coroutineScope.childScopeContext(),
                         ),
@@ -450,6 +447,10 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
                                 mediaSourceId = id,
                                 engineKey = MediaCacheEngineKey(engine.type.id),
                                 torrentEngine = engine,
+                                engineAccess = get(),
+                                mediaCacheMetadataStore = metadataStore,
+                                shareRatioLimitFlow = settingsRepository.anitorrentConfig.flow
+                                    .map { it.shareRatioLimit },
                             ),
                             displayName = "本地",
                             coroutineScope.childScopeContext(),
@@ -464,7 +465,6 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
                         engine = HttpMediaCacheEngine(
                             mediaSourceId = id,
                             downloader = get<HttpDownloader>(),
-                            engineKey = MediaCacheEngineKey("web-m3u"),
                             saveDir = getContext().files.dataDir.resolve("web-m3u-cache").path,
                             mediaResolver = get<MediaResolver>(),
                         ),
@@ -615,11 +615,11 @@ fun KoinApplication.startCommonKoinModule(
         koin.get<HttpDownloader>().init() // 这涉及读取 DownloadState, 需要在加载 storage metadata 前调用.
 
         val manager = koin.get<MediaCacheManager>()
-        for (storage in manager.storages) {
+        for (storage in manager.storagesIncludingDisabled) {
             /**
              * Get `AniApplication.instance.requiresTorrentCacheMigration` lazily.
              */
-            if (restorePersistedCaches()) storage.first()?.restorePersistedCaches()
+            if (restorePersistedCaches()) storage.restorePersistedCaches()
         }
 
         koin.get<MediaAutoCacheService>().startRegularCheck(coroutineScope)

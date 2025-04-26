@@ -12,11 +12,14 @@ package me.him188.ani.app.domain.media.resolver
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
+import me.him188.ani.app.domain.media.cache.engine.EnsureTorrentEngineIsAccessible
+import me.him188.ani.app.domain.media.cache.engine.TorrentEngineAccess
+import me.him188.ani.app.domain.media.cache.engine.UnsafeTorrentEngineAccessApi
+import me.him188.ani.app.domain.media.cache.engine.withServiceRequest
 import me.him188.ani.app.domain.media.player.data.MediaDataProvider
 import me.him188.ani.app.domain.media.player.data.TorrentMediaData
 import me.him188.ani.app.domain.torrent.TorrentEngine
@@ -29,12 +32,14 @@ import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.datasources.api.topic.contains
 import me.him188.ani.datasources.api.topic.titles.RawTitleParser
 import me.him188.ani.datasources.api.topic.titles.parse
+import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import kotlin.coroutines.cancellation.CancellationException
 
 class TorrentMediaResolver(
     private val engine: TorrentEngine,
+    private val engineAccess: TorrentEngineAccess,
 ) : MediaResolver {
     override fun supports(media: Media): Boolean {
         if (!engine.isSupported) return false
@@ -43,37 +48,41 @@ class TorrentMediaResolver(
 
     @Throws(MediaResolutionException::class, CancellationException::class)
     override suspend fun resolve(media: Media, episode: EpisodeMetadata): MediaDataProvider<*> {
-        val downloader = try {
-            engine.getDownloader()
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Throwable) {
-            throw MediaResolutionException(ResolutionFailures.ENGINE_ERROR, e)
-        }
-
-        return when (val location = media.download) {
-            is ResourceLocation.HttpTorrentFile,
-            is ResourceLocation.MagnetLink
-                -> {
-                try {
-                    TorrentMediaDataProvider(
-                        engine,
-                        encodedTorrentInfo = downloader.fetchTorrent(location.uri),
-                        episodeMetadata = episode,
-                        extraFiles = media.extraFiles.toMediampMediaExtraFiles(),
-                    )
-                } catch (e: FetchTorrentTimeoutException) {
-                    throw MediaResolutionException(ResolutionFailures.FETCH_TIMEOUT)
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: IOException) {
-                    throw MediaResolutionException(ResolutionFailures.NETWORK_ERROR, e)
-                } catch (e: Exception) {
-                    throw MediaResolutionException(ResolutionFailures.ENGINE_ERROR, e)
-                }
+        @OptIn(EnsureTorrentEngineIsAccessible::class)
+        engineAccess.withServiceRequest("TorrentMediaResolver#$this-resolve:${media.mediaId}") {
+            val downloader = try {
+                engine.getDownloader()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                throw MediaResolutionException(ResolutionFailures.ENGINE_ERROR, e)
             }
 
-            else -> throw UnsupportedMediaException(media)
+            return when (val location = media.download) {
+                is ResourceLocation.HttpTorrentFile,
+                is ResourceLocation.MagnetLink
+                    -> {
+                    try {
+                        TorrentMediaDataProvider(
+                            engine,
+                            engineAccess = engineAccess,
+                            encodedTorrentInfo = downloader.fetchTorrent(location.uri),
+                            episodeMetadata = episode,
+                            extraFiles = media.extraFiles.toMediampMediaExtraFiles(),
+                        )
+                    } catch (e: FetchTorrentTimeoutException) {
+                        throw MediaResolutionException(ResolutionFailures.FETCH_TIMEOUT)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: IOException) {
+                        throw MediaResolutionException(ResolutionFailures.NETWORK_ERROR, e)
+                    } catch (e: Exception) {
+                        throw MediaResolutionException(ResolutionFailures.ENGINE_ERROR, e)
+                    }
+                }
+
+                else -> throw UnsupportedMediaException(media)
+            }
         }
     }
 
@@ -175,6 +184,7 @@ class TorrentMediaResolver(
 
 class TorrentMediaDataProvider(
     private val engine: TorrentEngine,
+    private val engineAccess: TorrentEngineAccess,
     private val encodedTorrentInfo: EncodedTorrentInfo,
     private val episodeMetadata: EpisodeMetadata,
     override val extraFiles: org.openani.mediamp.source.MediaExtraFiles,
@@ -191,34 +201,50 @@ class TorrentMediaDataProvider(
         logger.info {
             "TorrentVideoSource '${episodeMetadata.title}' opening a VideoData"
         }
-        val downloader = engine.getDownloader()
-        val handle = withContext(Dispatchers.IO) {
-            logger.info {
-                "TorrentVideoSource '${episodeMetadata.title}' waiting for files"
-            }
-            val files = downloader.startDownload(encodedTorrentInfo)
-                .getFiles()
 
-            TorrentMediaResolver.selectVideoFileEntry(
-                files,
-                { pathInTorrent },
-                listOf(episodeMetadata.title),
-                episodeSort = episodeMetadata.sort,
-                episodeEp = episodeMetadata.ep,
-            )?.also {
+        val requestToken = "TorrentMediaDataProvider#$this-open:${encodedTorrentInfo.data}"
+        // 使用 MediaDataProvider.open 通常是在播放临时 BT 源, 在下面的 onClose 里再释放.
+        // 也就是说进入从开启这个 MediaData 开始, 到下面 onClose 释放期间, 需要始终保持 BT 服务可用.
+        @OptIn(UnsafeTorrentEngineAccessApi::class)
+        engineAccess.requestService(requestToken, true)
+
+        val handle = try {
+            val downloader = engine.getDownloader()
+            withContext(Dispatchers.IO_) {
                 logger.info {
-                    "TorrentVideoSource selected file: ${it.pathInTorrent}"
+                    "TorrentVideoSource '${episodeMetadata.title}' waiting for files"
                 }
-            }?.createHandle()?.also {
-                it.resume(FilePriority.HIGH)
-            } ?: throw MediaSourceOpenException(
-                OpenFailures.NO_MATCHING_FILE,
-                """
+                val files = downloader.startDownload(encodedTorrentInfo)
+                    .getFiles()
+
+                TorrentMediaResolver.selectVideoFileEntry(
+                    files,
+                    { pathInTorrent },
+                    listOf(episodeMetadata.title),
+                    episodeSort = episodeMetadata.sort,
+                    episodeEp = episodeMetadata.ep,
+                )?.also {
+                    logger.info {
+                        "TorrentVideoSource selected file: ${it.pathInTorrent}"
+                    }
+                }?.createHandle()?.also {
+                    it.resume(FilePriority.HIGH)
+                } ?: throw MediaSourceOpenException(
+                    OpenFailures.NO_MATCHING_FILE,
+                    """
                                 Torrent files: ${files.joinToString { it.pathInTorrent }}
                                 Episode metadata: $episodeMetadata
                             """.trimIndent(),
-            )
+                )
+            }
+        } catch (ex: Exception) {
+            // 如果上面发生了异常或被取消, 下面的 onClose 就永远不会被调用, 需要手动释放.
+            @OptIn(UnsafeTorrentEngineAccessApi::class)
+            engineAccess.requestService(requestToken, false)
+            
+            throw ex // just re-throw it
         }
+
         return TorrentMediaData(
             handle,
             onClose = {
@@ -226,7 +252,13 @@ class TorrentMediaDataProvider(
                     "TorrentVideoSource '${episodeMetadata.title}' closing"
                 }
                 scopeForCleanup.launch(NonCancellable + CoroutineName("TorrentMediaDataProvider.close")) {
-                    handle.close()
+                    try {
+                        handle.close()
+                    } finally {
+                        // 对应了上面的 requestUseEngine(true)
+                        @OptIn(UnsafeTorrentEngineAccessApi::class)
+                        engineAccess.requestService(requestToken, false)
+                    }
                 }
             },
         )
