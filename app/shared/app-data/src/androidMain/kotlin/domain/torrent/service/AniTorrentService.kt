@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -118,9 +119,15 @@ sealed class AniTorrentService : LifecycleService() {
             // 用来更新通知的状态, 有 BT 任务时显示下载数量. 没任务时显示 BT 服务运行中.
             combine(
                 anitorrentDownloader.openSessions.flatMapLatest { sessionMap ->
-                    combine(sessionMap.values.map { it.sessionStats }) { sessions ->
-                        sessions.count { it?.isDownloadFinished != true }
+                    val sessionStats = sessionMap.values.map { it.sessionStats }
+                    if (sessionStats.isEmpty()) {
+                        flowOf(0)
+                    } else {
+                        combine(sessionMap.values.map { it.sessionStats }) { sessions ->
+                            sessions.count { it?.isDownloadFinished != true }
+                        }
                     }
+
                 },
                 anitorrentDownloader.totalStats.sampleWithInitial(2000),
             ) { downloadingSessionCount, stats ->
