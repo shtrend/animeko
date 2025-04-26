@@ -81,6 +81,7 @@ import me.him188.ani.app.domain.media.fetch.MediaSourceResultsFilterer
 import me.him188.ani.app.domain.media.resolver.MediaResolver
 import me.him188.ani.app.domain.mediasource.instance.GetMediaSourceInstancesUseCase
 import me.him188.ani.app.domain.player.CacheProgressProvider
+import me.him188.ani.app.domain.player.extension.AnalyticsExtension
 import me.him188.ani.app.domain.player.extension.AutoSelectExtension
 import me.him188.ani.app.domain.player.extension.MarkAsWatchedExtension
 import me.him188.ani.app.domain.player.extension.RememberPlayProgressExtension
@@ -250,6 +251,7 @@ class EpisodeViewModel(
     private val fetchPlayState = EpisodeFetchSelectPlayState(
         subjectId, initialEpisodeId, player, backgroundScope,
         extensions = listOf(
+            AnalyticsExtension,
             RememberPlayProgressExtension,
             MarkAsWatchedExtension,
             SwitchNextEpisodeExtension.Factory(

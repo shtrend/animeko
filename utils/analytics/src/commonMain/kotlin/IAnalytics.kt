@@ -57,6 +57,7 @@ value class AnalyticsEvent(val event: String) {
 
         val EpisodeEnter = AnalyticsEvent("episode_enter")
         val EpisodeSwitch = AnalyticsEvent("episode_switch")
+        val EpisodePlay = AnalyticsEvent("episode_play")
 
         val CacheCreate = AnalyticsEvent("cache_create")
     }
