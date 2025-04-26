@@ -9,6 +9,7 @@
 
 package me.him188.ani.utils.coroutines
 
+import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -154,12 +155,13 @@ class RestartableCoroutineScopeTest {
     fun `thread-safety - concurrent launches`() = runTest {
         val completedJobs = CompletableDeferred<Int>()
         var completed = 0
+        val lock = SynchronizedObject()
 
         val jobs = List(100) {
             async {
                 val job = scope.launch {
                     delay(10)
-                    synchronized(this@RestartableCoroutineScopeTest) {
+                    kotlinx.atomicfu.locks.synchronized(lock) {
                         completed++
                         if (completed == 100) {
                             completedJobs.complete(completed)
