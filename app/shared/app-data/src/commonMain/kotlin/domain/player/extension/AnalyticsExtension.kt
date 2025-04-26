@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import me.him188.ani.app.domain.episode.EpisodeSession
 import me.him188.ani.utils.analytics.Analytics
-import me.him188.ani.utils.analytics.AnalyticsEvent.Companion.EpisodePlay
+import me.him188.ani.utils.analytics.AnalyticsEvent.Companion.EpisodePlaying
 import org.koin.core.Koin
 import org.openani.mediamp.PlaybackState
 
@@ -34,7 +34,7 @@ class AnalyticsExtension(
                 context.player.playbackState.collectLatest { state ->
                     if (state == PlaybackState.PLAYING) {
                         Analytics.recordEvent(
-                            EpisodePlay,
+                            EpisodePlaying,
                             mapOf(
                                 "subject_id" to context.subjectId,
                                 "episode_id" to episodeSession.episodeId,
