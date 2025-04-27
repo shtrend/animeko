@@ -271,6 +271,7 @@ class DataStoreMediaCacheStorage(
             engine.close()
         }
         scope.cancel()
+        statSubscriptionScope.close()
     }
 
     // 添加额外的 metadata extras, 如果 datastore 中没有这个 media cache, 则不添加
