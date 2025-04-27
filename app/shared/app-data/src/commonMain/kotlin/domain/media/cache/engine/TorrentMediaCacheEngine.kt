@@ -12,13 +12,12 @@ package me.him188.ani.app.domain.media.cache.engine
 import androidx.datastore.core.DataStore
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
-import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -36,7 +35,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.io.files.FileNotFoundException
@@ -76,6 +74,7 @@ import me.him188.ani.utils.io.exists
 import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.io.isDirectory
 import me.him188.ani.utils.io.resolve
+import me.him188.ani.utils.logging.debug
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -350,79 +349,106 @@ class TorrentMediaCacheEngine(
         }
 
         /**
-         * 订阅当前 TorrentMediaCache 的统计信息以更新它的 metadata
+         * 订阅当前 TorrentMediaCache 的统计信息以更新它的 metadata.
          */
         suspend fun subscribeStats(onUpdateMetadata: suspend (Map<MetadataKey, String>) -> Unit) {
-            isServiceStared
-                .collectLatest { serviceStarted ->
-                    if (!serviceStarted) return@collectLatest
-                    coroutineScope {
-                        val fileEntryFlow = fileHandle.entry.filterNotNull().shareIn(this, SharingStarted.Lazily)
-                        val sessionStatsFlow = fileHandle.session.filterNotNull()
-                            .flatMapLatest { it.sessionStats }.filterNotNull()
-                            .shareIn(this, SharingStarted.Lazily)
+            isServiceStared.collectLatest { serviceStarted ->
+                if (!serviceStarted) return@collectLatest
 
-                        val fileEntry = fileEntryFlow.first()
-                        val entryFileStats = fileEntry.fileStats.filterNotNull().first()
-                        val sessionStats = sessionStatsFlow.first()
+                coroutineScope {
+                    val fileEntryFlow = fileHandle.entry.filterNotNull().shareIn(this, SharingStarted.Lazily)
+                    val sessionStatsFlow = fileHandle.session.filterNotNull()
+                        .flatMapLatest { it.sessionStats }.filterNotNull()
+                        .shareIn(this, SharingStarted.Lazily)
 
-                        // 无论如何都先更新一次数据
-                        onUpdateMetadata(
-                            buildMap {
-                                if (entryFileStats.isDownloadFinished) {
-                                    put(EXTRA_TORRENT_COMPLETED, "true")
-                                }
-                                put(EXTRA_TORRENT_CACHE_FILE, fileEntry.pathInTorrent)
-                                put(EXTRA_TORRENT_CACHE_FILE_SIZE, entryFileStats.downloadedBytes.toString())
-                                put(EXTRA_TORRENT_CACHE_UPLOADED_SIZE, sessionStats.uploadedBytes.toString())
-                            },
-                        )
+                    val fileEntry = fileEntryFlow.first()
+                    val entryFileStats = fileEntry.fileStats.filterNotNull().first()
+                    val sessionStats = sessionStatsFlow.first()
 
-                        // 最后一次有上传活动的时间
-                        var lastUploadActivity = currentTimeMillis()
-                        val finished = MutableStateFlow(false)
+                    val currentShareRatioLimit = shareRatioLimitFlow.first()
+                    val currentShareRatio = sessionStats.uploadedBytes /
+                            entryFileStats.downloadedBytes.coerceAtLeast(1).toFloat()
 
-                        combine(finished, fileEntryFlow) { f, entry -> f to entry }.collectLatest f@{ (f, entry) ->
-                            if (f) return@f
+                    val finished = metadata.extra[EXTRA_TORRENT_COMPLETED] == "true" || // metadata 已记录 true 表示已完成
+                            (entryFileStats.isDownloadFinished && currentShareRatio >= currentShareRatioLimit) // 统计判断达到条件也是完成
 
-                            combine(
-                                sessionStatsFlow,
-                                entry.fileStats.filterNotNull(),
-                                shareRatioLimitFlow,
-                            ) check@{ sessionStats, fileStats, shareRatioLimit ->
-                                if (!fileStats.isDownloadFinished) return@check
+                    // 无论如何都先更新一次数据
+                    onUpdateMetadata(
+                        buildMap {
+                            if (finished) {
+                                put(EXTRA_TORRENT_COMPLETED, "true")
+                            }
+                            put(EXTRA_TORRENT_CACHE_FILE, fileEntry.pathInTorrent)
+                            put(EXTRA_TORRENT_CACHE_FILE_SIZE, entryFileStats.downloadedBytes.toString())
+                            put(EXTRA_TORRENT_CACHE_UPLOADED_SIZE, sessionStats.uploadedBytes.toString())
+                        },
+                    )
 
-                                val shareRatio =
-                                    sessionStats.uploadedBytes / fileStats.downloadedBytes.coerceAtLeast(1).toFloat()
+                    // 如果种子任务已经完成了就不启动了
+                    if (finished) {
+                        logger.debug { "Cache task ${origin.mediaId} is already finished, ignore stats subscription." }
+                        return@coroutineScope
+                    }
 
-                                // 没达到分享率才进入这里的逻辑, 达到分享率直接更新 metadata
-                                if (shareRatio < shareRatioLimit) {
-                                    val currentTimeMillis = currentTimeMillis()
+                    // 最后一次有上传活动的时间
+                    var lastUploadActivity = currentTimeMillis()
+                    // 当更新完 metadata 后需要停止 stats collector
+                    // 因为 TorrentMediaCache 没有订阅 metadata 的能力, 使用一个 flow 来辅助停止
+                    val finishedFlow = MutableStateFlow(false) // always false initially
 
-                                    // 如果距离上次上传活动小于 10 分钟, 不能更新 metadata, 因为 10 分钟内还可能有上传
-                                    if (currentTimeMillis - lastUploadActivity < 10.minutes.inWholeMilliseconds) {
-                                        // 如果有上传活动, 更新最后的活动时间
-                                        if (sessionStats.uploadSpeed > 0L) {
-                                            lastUploadActivity = currentTimeMillis
-                                        }
-                                        return@check
+                    finishedFlow.collectLatest finished@{ f ->
+                        if (f) {
+                            logger.debug { "Cache task ${origin.mediaId} is finished, stop stats subscription." }
+                            return@finished
+                        }
+
+                        logger.debug { "Subscribed stats of cache task ${origin.mediaId}." }
+
+                        combine(
+                            sessionStatsFlow,
+                            fileEntryFlow.flatMapLatest { it.fileStats.filterNotNull() },
+                            shareRatioLimitFlow,
+                        ) task@{ sessionStats, fileStats, shareRatioLimit ->
+                            if (!fileStats.isDownloadFinished) return@task
+
+                            val shareRatio = sessionStats.uploadedBytes /
+                                    fileStats.downloadedBytes.coerceAtLeast(1).toFloat()
+
+                            // 没达到分享率才进入这里的逻辑, 达到分享率直接更新 metadata
+                            if (shareRatio < shareRatioLimit) {
+                                val currentTimeMillis = currentTimeMillis()
+
+                                // 如果距离上次上传活动小于 10 分钟, 不能更新 metadata, 因为 10 分钟内还可能有上传
+                                if (currentTimeMillis - lastUploadActivity < 10.minutes.inWholeMilliseconds) {
+                                    // 如果有上传活动, 更新最后的活动时间
+                                    if (sessionStats.uploadSpeed > 0L) {
+                                        lastUploadActivity = currentTimeMillis
                                     }
-                                    // 如果距离上次上传活动大于 10 分钟, 直接更新 metadata
+                                    return@task
                                 }
+                                // 如果距离上次上传活动大于 10 分钟, 直接更新 metadata
+                            }
 
-                                onUpdateMetadata(
-                                    mapOf(
-                                        EXTRA_TORRENT_COMPLETED to "true",
-                                        EXTRA_TORRENT_CACHE_FILE_SIZE to fileStats.downloadedBytes.toString(),
-                                        EXTRA_TORRENT_CACHE_UPLOADED_SIZE to sessionStats.uploadedBytes.toString(),
-                                    ),
-                                )
+                            onUpdateMetadata(
+                                mapOf(
+                                    EXTRA_TORRENT_COMPLETED to "true",
+                                    EXTRA_TORRENT_CACHE_FILE_SIZE to fileStats.downloadedBytes.toString(),
+                                    EXTRA_TORRENT_CACHE_UPLOADED_SIZE to sessionStats.uploadedBytes.toString(),
+                                ),
+                            )
 
-                                finished.value = true // side effect.
-                            }.collect()
+                            finishedFlow.value = true // side effect.
+                        }.run {
+                            try {
+                                collect()
+                            } catch (ex: CancellationException) {
+                                logger.debug { "Stat subscription of cache task ${origin.mediaId} is cancelled." }
+                                throw ex // re-throw it. 
+                            }
                         }
                     }
                 }
+            }
         }
 
         override fun toString(): String {

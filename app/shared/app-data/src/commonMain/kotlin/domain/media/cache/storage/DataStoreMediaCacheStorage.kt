@@ -15,8 +15,8 @@ import kotlinx.collections.immutable.plus
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -59,6 +59,7 @@ import me.him188.ani.utils.io.SystemPath
 import me.him188.ani.utils.io.name
 import me.him188.ani.utils.io.readText
 import me.him188.ani.utils.io.useDirectoryEntries
+import me.him188.ani.utils.logging.debug
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -92,17 +93,18 @@ class DataStoreMediaCacheStorage(
     private val lock = Mutex()
 
     /**
-     * App 必须先在启动时候恢复过一次之后才能启动监听
+     * App 必须先在启动时候恢复过一次之后才能 refresh caches
      */
-    private val appStartupRestored = CompletableDeferred<Unit>()
+    @Volatile
+    private var appStartupRestored = false
 
     init {
         if (engine is TorrentMediaCacheEngine) {
             scope.launch {
-                // 等待 [restorePersistedCaches]
-                appStartupRestored.await()
-
                 engine.whenServiceConnected {
+                    if (!appStartupRestored) return@whenServiceConnected
+                    logger.debug { "Refreshing torrent caches." }
+
                     statSubscriptionScope.restart()
                     lock.withLock {
                         listFlow.update { emptyList() }
@@ -121,7 +123,7 @@ class DataStoreMediaCacheStorage(
                 engine.deleteUnusedCaches(allRecovered.value)
             }
         } finally {
-            appStartupRestored.complete(Unit)
+            appStartupRestored = true
         }
     }
 
@@ -133,6 +135,7 @@ class DataStoreMediaCacheStorage(
         supervisorScope {
             metadataFlowSnapshot.forEach { (origin, metadata, _) ->
                 semaphore.acquire()
+                @OptIn(DelicateCoroutinesApi::class)
                 launch(start = CoroutineStart.ATOMIC) {
                     try {
                         restoreFile(
