@@ -17,6 +17,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.job
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlin.test.BeforeTest
@@ -30,18 +31,19 @@ import kotlin.time.Duration.Companion.milliseconds
 @OptIn(ExperimentalCoroutinesApi::class)
 class RestartableCoroutineScopeTest {
 
+    private val testScope = TestScope()
     private lateinit var scope: RestartableCoroutineScope
 
     @BeforeTest
     fun setUp() {
-        scope = RestartableCoroutineScope()
+        scope = RestartableCoroutineScope(testScope.coroutineContext)
     }
 
     @Test
-    fun `launch starts coroutine`() = runTest {
+    fun `launch starts coroutine`() = testScope.runTest {
         val result = CompletableDeferred<Int>()
 
-        scope.launch {
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
             result.complete(42)
         }
 
@@ -49,10 +51,12 @@ class RestartableCoroutineScopeTest {
     }
 
     @Test
-    fun `cancel stops running coroutines`() = runTest {
+    fun `cancel stops running coroutines`() = testScope.runTest {
         val isRunning = CompletableDeferred<Boolean>()
 
-        val job = scope.launch {
+        val job = scope.launch(
+            start = CoroutineStart.UNDISPATCHED,
+        ) {
             try {
                 delay(1000)
                 isRunning.complete(true)
@@ -71,15 +75,19 @@ class RestartableCoroutineScopeTest {
     }
 
     @Test
-    fun `can launch new coroutines after cancel`() = runTest {
+    fun `can launch new coroutines after cancel`() = testScope.runTest {
         // Start and cancel initial coroutines
-        val job1 = scope.launch { delay(1000) }
+        val job1 = scope.launch(
+            start = CoroutineStart.UNDISPATCHED,
+        ) { delay(1000) }
         scope.restart()
         assertFalse(job1.isActive)
 
         // Launch a new coroutine after cancellation
         val result = CompletableDeferred<Int>()
-        val job2 = scope.launch {
+        val job2 = scope.launch(
+            start = CoroutineStart.UNDISPATCHED,
+        ) {
             result.complete(42)
         }
 
@@ -89,30 +97,36 @@ class RestartableCoroutineScopeTest {
     }
 
     @Test
-    fun `close cancels all coroutines and allows new launches`() = runTest {
-        val job1 = scope.launch { delay(1000) }
+    fun `close cancels all coroutines and allows new launches`() = testScope.runTest {
+        val job1 = scope.launch(
+            start = CoroutineStart.UNDISPATCHED,
+        ) { delay(1000) }
 
         scope.close()
         assertFalse(job1.isActive)
 
         // Attempt to launch after close should return a completed job
-        val job2 = scope.launch { delay(1000) }
+        val job2 = scope.launch(
+            start = CoroutineStart.UNDISPATCHED,
+        ) { delay(1000) }
         assertTrue(job2.isActive)
     }
 
     @Test
-    fun `cancel doesn't affect parent scope`() = runTest {
+    fun `cancel doesn't affect parent scope`() = testScope.runTest {
         val parentJob = coroutineContext.job
         val initialActiveState = parentJob.isActive
 
-        scope.launch { delay(1000) }
+        scope.launch(
+            start = CoroutineStart.UNDISPATCHED,
+        ) { delay(1000) }
         scope.restart()
 
         assertEquals(initialActiveState, parentJob.isActive)
     }
 
     @Test
-    fun `multiple launches work independently`() = runTest {
+    fun `multiple launches work independently`() = testScope.runTest {
         val results = List(5) { CompletableDeferred<Int>() }
 
         results.forEachIndexed { index, deferred ->
@@ -128,7 +142,7 @@ class RestartableCoroutineScopeTest {
     }
 
     @Test
-    fun `cancel affects only current child jobs`() = runTest {
+    fun `cancel affects only current child jobs`() = testScope.runTest {
         val beforeCancelResult = CompletableDeferred<Int>()
         val afterCancelResult = CompletableDeferred<Int>()
 
@@ -154,14 +168,16 @@ class RestartableCoroutineScopeTest {
     }
 
     @Test
-    fun `thread-safety - concurrent launches`() = runTest {
+    fun `thread-safety - concurrent launches`() = testScope.runTest {
         val completedJobs = CompletableDeferred<Int>()
         var completed = 0
         val lock = SynchronizedObject()
 
         val jobs = List(100) {
             async {
-                val job = scope.launch {
+                val job = scope.launch(
+                    start = CoroutineStart.UNDISPATCHED,
+                ) {
                     delay(10)
                     kotlinx.atomicfu.locks.synchronized(lock) {
                         completed++
@@ -179,12 +195,14 @@ class RestartableCoroutineScopeTest {
     }
 
     @Test
-    fun `thread-safety - concurrent cancellations`() = runTest {
+    fun `thread-safety - concurrent cancellations`() = testScope.runTest {
         // Create tasks that will run if not cancelled
         val results = List(50) { CompletableDeferred<Boolean>() }
 
         results.forEachIndexed { index, deferred ->
-            scope.launch {
+            scope.launch(
+                start = CoroutineStart.UNDISPATCHED,
+            ) {
                 delay(100.milliseconds)
                 deferred.complete(true)
             }
@@ -194,7 +212,9 @@ class RestartableCoroutineScopeTest {
         val cancellationJobs = List(10) {
             async {
                 scope.restart()
-                scope.launch {
+                scope.launch(
+                    start = CoroutineStart.UNDISPATCHED,
+                ) {
                     // These should run
                     delay(10.milliseconds)
                 }
@@ -211,16 +231,20 @@ class RestartableCoroutineScopeTest {
     }
 
     @Test
-    fun `child job cancellation doesn't affect other children`() = runTest {
+    fun `child job cancellation doesn't affect other children`() = testScope.runTest {
         val result1 = CompletableDeferred<Int>()
         val result2 = CompletableDeferred<Int>()
 
-        val job1 = scope.launch {
+        val job1 = scope.launch(
+            start = CoroutineStart.UNDISPATCHED,
+        ) {
             delay(100)
             result1.complete(1)
         }
 
-        val job2 = scope.launch {
+        val job2 = scope.launch(
+            start = CoroutineStart.UNDISPATCHED,
+        ) {
             delay(100)
             result2.complete(2)
         }
@@ -236,7 +260,7 @@ class RestartableCoroutineScopeTest {
     }
 
     @Test
-    fun `cancelled scope doesn't leak memory`() = runTest {
+    fun `cancelled scope doesn't leak memory`() = testScope.runTest {
         val scope = RestartableCoroutineScope()
         val deferreds = mutableListOf<CompletableDeferred<Unit>>()
 
