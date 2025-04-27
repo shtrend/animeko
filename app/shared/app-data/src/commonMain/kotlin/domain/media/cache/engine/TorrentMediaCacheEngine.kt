@@ -670,11 +670,10 @@ class TorrentMediaCacheEngine(
     /**
      * 订阅 torrent engine 状态, torrent engine 状态改变后其 MediaCacheStorage 可能要重新 restore 缓存
      */
-    suspend fun whenServiceConnected(block: suspend () -> Unit) {
+    suspend fun whenServiceConnectionChanged(block: suspend (Boolean) -> Unit) {
         engineAccess.isServiceConnected
             .collectLatest { serviceConnected ->
-                if (!serviceConnected) return@collectLatest
-                block()
+                block(serviceConnected)
             }
     }
 

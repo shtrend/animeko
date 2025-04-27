@@ -12,7 +12,6 @@ package me.him188.ani.app.domain.media.cache.storage
 import androidx.datastore.core.DataStore
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -103,8 +102,8 @@ class DataStoreMediaCacheStorage(
     init {
         if (engine is TorrentMediaCacheEngine) {
             scope.launch {
-                engine.whenServiceConnected {
-                    if (!appStartupRestored) return@whenServiceConnected
+                engine.whenServiceConnectionChanged {
+                    if (!appStartupRestored) return@whenServiceConnectionChanged
                     logger.debug { "Refreshing torrent caches." }
 
                     statSubscriptionScope.restart()
