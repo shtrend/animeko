@@ -11,6 +11,8 @@ package me.him188.ani.utils.coroutines
 
 import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -243,7 +245,8 @@ class RestartableCoroutineScopeTest {
             val deferred = CompletableDeferred<Unit>()
             deferreds.add(deferred)
 
-            scope.launch {
+            @OptIn(DelicateCoroutinesApi::class)
+            scope.launch(start = CoroutineStart.ATOMIC) {
                 try {
                     delay(Long.MAX_VALUE)
                 } finally {

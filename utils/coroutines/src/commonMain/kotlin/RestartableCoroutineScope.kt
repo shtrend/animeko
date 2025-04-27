@@ -11,6 +11,7 @@ package me.him188.ani.utils.coroutines
 
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
@@ -42,8 +43,12 @@ class RestartableCoroutineScope(
      * @param block The coroutine code to execute
      * @return Job representing the launched coroutine
      */
-    fun launch(block: suspend CoroutineScope.() -> Unit): Job {
-        return childScope.launch(block = block)
+    fun launch(
+        context: CoroutineContext = EmptyCoroutineContext,
+        start: CoroutineStart = CoroutineStart.DEFAULT,
+        block: suspend CoroutineScope.() -> Unit
+    ): Job {
+        return childScope.launch(context, start, block)
     }
 
     /**
