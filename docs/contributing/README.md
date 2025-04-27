@@ -25,6 +25,9 @@
 
 ## 开发文档
 
+> 以下文档为人工编写，只覆盖部分内容。
+> 可以参考 DeepWiki (AI) 自动生成的全面在线文档（有很高正确性）：<https://deepwiki.com/open-ani/animeko>
+
 - [条目系统](code/subjects.md)
 - [Media Framework](code/media-framework.md)
     - [MediaSource](code/media/media-source.md)
