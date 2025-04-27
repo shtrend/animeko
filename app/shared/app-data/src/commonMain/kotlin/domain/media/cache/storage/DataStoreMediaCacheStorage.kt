@@ -228,7 +228,7 @@ class DataStoreMediaCacheStorage(
                 scope.coroutineContext,
             )
 
-            withContext(Dispatchers.IO) {
+            withContext(Dispatchers.IO_) {
                 store.updateData { list ->
                     list + MediaCacheSave(cache.origin, cache.metadata, engine.engineKey)
                 }
@@ -258,7 +258,7 @@ class DataStoreMediaCacheStorage(
         lock.withLock {
             val cache = listFlow.value.firstOrNull(predicate) ?: return false
             listFlow.update { minus(cache) }
-            withContext(Dispatchers.IO) {
+            withContext(Dispatchers.IO_) {
                 store.updateData { list ->
                     list.filterNot {
                         isSameMediaAndEpisode(cache, it)
