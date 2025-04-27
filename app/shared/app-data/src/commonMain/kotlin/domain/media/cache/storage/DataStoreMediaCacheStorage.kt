@@ -52,6 +52,7 @@ import me.him188.ani.datasources.api.source.MediaSourceInfo
 import me.him188.ani.datasources.api.source.MediaSourceKind
 import me.him188.ani.datasources.api.source.MediaSourceLocation
 import me.him188.ani.datasources.api.source.matches
+import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.coroutines.RestartableCoroutineScope
 import me.him188.ani.utils.coroutines.childScope
 import me.him188.ani.utils.coroutines.update
@@ -158,7 +159,7 @@ class DataStoreMediaCacheStorage(
         origin: Media,
         metadata: MediaCacheMetadata,
         reportRecovered: suspend (MediaCache) -> Unit,
-    ) = withContext(Dispatchers.IO) {
+    ) = withContext(Dispatchers.IO_) {
         try {
             val cache = engine.restore(origin, metadata, scope.coroutineContext)
             logger.info { "Cache restored: ${origin.mediaId}, result=${cache}" }
