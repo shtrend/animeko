@@ -35,7 +35,7 @@ import me.him188.ani.utils.io.length
  * [MediaCacheStorage] 可能会特殊处理此类型的 MediaCache, 例如 [DataStoreMediaCacheStorage].
  *
  * 调用 [LocalFileMediaCache] 的 [pause], [close] 和 [resume] 没有效果.
- * 调用 [closeAndDeleteFiles] 后会删除 [file] 对应的文件, 通过 [postFileDeleted] 来执行文件删除后的处理
+ * 调用 [closeAndDeleteFiles] 默认后会删除 [file] 对应的文件, 通过 [onCloseAndDeleteFiles] 来实现其他逻辑.
  * (例如 [TorrentMediaCacheEngine] 引擎需要删除对应的 fastresume 文件和其文件夹).
  *
  * @see MediaCacheEngine.restore
@@ -46,7 +46,7 @@ class LocalFileMediaCache(
     val file: SystemPath,
     uploadedSize: FileSize = 0.bytes,
     private val backedMediaSourceId: String = MediaCacheManager.LOCAL_FS_MEDIA_SOURCE_ID,
-    private val postFileDeleted: () -> Unit = { },
+    private val onCloseAndDeleteFiles: suspend LocalFileMediaCache.(SystemPath) -> Unit = { file.deleteRecursively() },
 ) : MediaCache {
     override val state: Flow<MediaCacheState> = MutableStateFlow(MediaCacheState.IN_PROGRESS)
     override val canPlay: Flow<Boolean> = MutableStateFlow(true)
@@ -89,7 +89,6 @@ class LocalFileMediaCache(
 
     override suspend fun closeAndDeleteFiles() {
         _isDeleted.value = true
-        file.deleteRecursively()
-        postFileDeleted()
+        onCloseAndDeleteFiles(file)
     }
 }

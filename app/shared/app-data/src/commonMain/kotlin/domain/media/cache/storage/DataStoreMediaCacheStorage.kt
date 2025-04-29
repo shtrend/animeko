@@ -256,9 +256,7 @@ class DataStoreMediaCacheStorage(
             listFlow.update { minus(cache) }
             withContext(Dispatchers.IO_) {
                 store.updateData { list ->
-                    list.filterNot {
-                        isSameMediaAndEpisode(cache, it)
-                    }
+                    list.filterNot { isSameMediaAndEpisode(cache, it) }
                 }
             }
             cache.closeAndDeleteFiles()
