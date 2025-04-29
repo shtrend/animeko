@@ -39,6 +39,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.io.files.FileNotFoundException
 import kotlinx.io.files.Path
+import me.him188.ani.app.domain.media.cache.LocalFileMediaCache
 import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.MediaCacheState
 import me.him188.ani.app.domain.media.cache.engine.TorrentMediaCacheEngine.Companion.EXTRA_TORRENT_CACHE_DIR
@@ -153,30 +154,7 @@ class TorrentMediaCacheEngine(
             MediaCacheState.IN_PROGRESS,
         )
 
-        // TODO: 2025/4/26 这里实际上应该在 commonMain 引入 torrent lifecycle 后监听实际 lifecycle.
-        private val isServiceStared = engineAccess.isServiceConnected
-
         override suspend fun getCachedMedia(): CachedMedia {
-            val useEngineAccess = isServiceStared.value
-            logger.info { "getCachedMedia: start, useEngine: $useEngineAccess" }
-
-            // 先判断是否使用 data store 的数据, 如果用就不 access file handle
-            if (!useEngineAccess) {
-                val localFile = resolveFromDataStore()
-                if (localFile != null) {
-                    return CachedMedia(
-                        origin,
-                        mediaSourceId,
-                        download = ResourceLocation.LocalFile(localFile.absolutePath),
-                    )
-                }
-
-                logger.warn {
-                    "Local torrent cache ${origin.mediaId} cannot be resumed with datastore save, " +
-                            "request to launch torrent engine."
-                }
-            }
-
             // 获取 cached media 不需要让 torrent engine 一直可用
             @OptIn(EnsureTorrentEngineIsAccessible::class)
             engineAccess.withServiceRequest("TorrentMediaCache#$this-getCachedMedia:${origin.mediaId}") {
@@ -203,82 +181,46 @@ class TorrentMediaCacheEngine(
             }
         }
 
-        override val fileStats: Flow<MediaCache.FileStats> = isServiceStared
-            .flatMapLatest { useEngine ->
-                // 先判断是否使用 data store 的数据, 如果用就不 access file handle
-                if (!useEngine) {
-                    val fileSize = metadata.torrentDownloaded
-                    return@flatMapLatest flowOf(MediaCache.FileStats(fileSize, fileSize))
-                }
-                fileHandle.entry.flatMapLatest lfh@{ entry ->
-                    if (entry == null) return@lfh unspecifiedFileStatsFlow
+        override val fileStats: Flow<MediaCache.FileStats> = fileHandle.entry.flatMapLatest { entry ->
+            if (entry == null) return@flatMapLatest unspecifiedFileStatsFlow
 
-                    entry.fileStats.map { stats ->
-                        MediaCache.FileStats(
-                            totalSize = entry.length.bytes,
-                            downloadedBytes = stats.downloadedBytes.bytes,
-                            downloadProgress = stats.downloadProgress.toProgress(),
-                        )
-                    }
-                }
+            entry.fileStats.map { stats ->
+                MediaCache.FileStats(
+                    totalSize = entry.length.bytes,
+                    downloadedBytes = stats.downloadedBytes.bytes,
+                    downloadProgress = stats.downloadProgress.toProgress(),
+                )
             }
-            .flowOn(flowDispatcher)
+        }.flowOn(flowDispatcher)
 
-        override val sessionStats: Flow<MediaCache.SessionStats> = isServiceStared
-            .flatMapLatest { useEngine ->
-                // 先判断是否使用 data store 的数据, 如果用就不 access file handle
-                if (!useEngine) {
-                    val downloaded = metadata.torrentDownloaded
-                    val uploaded = metadata.torrentUploaded
-                    return@flatMapLatest flowOf(
-                        MediaCache.SessionStats(
-                            totalSize = downloaded,
-                            downloadedBytes = downloaded,
-                            downloadSpeed = 0L.bytes,
-                            uploadedBytes = uploaded,
-                            uploadSpeed = 0L.bytes,
-                            downloadProgress = Progress.fromZeroToOne(1f),
-                        ),
+        override val sessionStats: Flow<MediaCache.SessionStats> = fileHandle.session.flatMapLatest { handle ->
+            if (handle == null) return@flatMapLatest unspecifiedSessionStatsFlow
+            handle.sessionStats
+                .map { stats ->
+                    if (stats == null) return@map MediaCache.SessionStats.Unspecified
+                    MediaCache.SessionStats(
+                        totalSize = stats.totalSizeRequested.bytes,
+                        downloadedBytes = stats.downloadedBytes.bytes,
+                        downloadSpeed = stats.downloadSpeed.bytes,
+                        uploadedBytes = stats.uploadedBytes.bytes,
+                        uploadSpeed = stats.uploadSpeed.bytes,
+                        downloadProgress = stats.downloadProgress.toProgress(),
                     )
                 }
-
-                fileHandle.session.flatMapLatest lfh@{ handle ->
-                    if (handle == null) return@lfh unspecifiedSessionStatsFlow
-                    handle.sessionStats
-                        .map { stats ->
-                            if (stats == null) return@map MediaCache.SessionStats.Unspecified
-                            MediaCache.SessionStats(
-                                totalSize = stats.totalSizeRequested.bytes,
-                                downloadedBytes = stats.downloadedBytes.bytes,
-                                downloadSpeed = stats.downloadSpeed.bytes,
-                                uploadedBytes = stats.uploadedBytes.bytes,
-                                uploadSpeed = stats.uploadSpeed.bytes,
-                                downloadProgress = stats.downloadProgress.toProgress(),
-                            )
-                        }
-                }
-            }
-            .flowOn(flowDispatcher)
+        }.flowOn(flowDispatcher)
 
         override suspend fun pause() {
-            if (!isServiceStared.value) return
             if (isDeleted.value) return
             fileHandle.handle.first()?.pause()
             state.value = MediaCacheState.PAUSED
         }
 
         override suspend fun close() {
-            if (!isServiceStared.value) return
             if (isDeleted.value) return
             fileHandle.close()
         }
 
         override suspend fun resume() {
-            if (!isServiceStared.value) {
-                // todo: 目前不支持已经完成的缓存继续手动开启做种
-                state.value = MediaCacheState.IN_PROGRESS
-                return
-            }
             if (isDeleted.value) return
             val file = fileHandle.handle.first()
             state.value = MediaCacheState.IN_PROGRESS
@@ -336,23 +278,11 @@ class TorrentMediaCacheEngine(
             }
         }
 
-        private fun resolveFromDataStore(): SystemPath? {
-            val cacheDir = metadata.extra[EXTRA_TORRENT_CACHE_DIR] ?: return null
-            val cacheRelativeFilePath = metadata.extra[EXTRA_TORRENT_CACHE_FILE] ?: return null
-
-            val file = Path(cacheDir, cacheRelativeFilePath).inSystem
-            if (!file.exists() || file.isDirectory()) {
-                return null
-            }
-
-            return file
-        }
-
         /**
          * 订阅当前 TorrentMediaCache 的统计信息以更新它的 metadata.
          */
         suspend fun subscribeStats(onUpdateMetadata: suspend (Map<MetadataKey, String>) -> Unit) {
-            isServiceStared.collectLatest { serviceStarted ->
+            engineAccess.isServiceConnected.collectLatest { serviceStarted ->
                 if (!serviceStarted) return@collectLatest
 
                 coroutineScope {
@@ -513,6 +443,12 @@ class TorrentMediaCacheEngine(
     ): MediaCache? {
         if (!supports(origin)) throw UnsupportedOperationException("Media is not supported by this engine $this: ${origin.download}")
         val data = metadata.extra[EXTRA_TORRENT_DATA]?.hexToByteArray() ?: return null
+
+        val localFile = metadata.resolveCompletedFromDataStore()
+        if (localFile != null) {
+            return LocalFileMediaCache(origin, metadata, localFile)
+        }
+
         return TorrentMediaCache(
             origin = origin,
             metadata = metadata,
@@ -680,6 +616,19 @@ class TorrentMediaCacheEngine(
 
     override fun close() {
         torrentEngine.close()
+    }
+
+    private fun MediaCacheMetadata.resolveCompletedFromDataStore(): SystemPath? {
+        if (extra[EXTRA_TORRENT_COMPLETED] != "true") return null
+        val cacheDir = extra[EXTRA_TORRENT_CACHE_DIR] ?: return null
+        val cacheRelativeFilePath = extra[EXTRA_TORRENT_CACHE_FILE] ?: return null
+
+        val file = Path(cacheDir, cacheRelativeFilePath).inSystem
+        if (!file.exists() || file.isDirectory()) {
+            return null
+        }
+
+        return file
     }
 }
 

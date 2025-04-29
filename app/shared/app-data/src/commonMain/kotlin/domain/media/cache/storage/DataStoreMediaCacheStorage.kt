@@ -31,6 +31,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerializationException
 import me.him188.ani.app.data.persistent.DataStoreJson
+import me.him188.ani.app.domain.media.cache.LocalFileMediaCache
 import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.engine.InvalidMediaCacheEngineKey
 import me.him188.ani.app.domain.media.cache.engine.MediaCacheEngine
@@ -108,8 +109,9 @@ class DataStoreMediaCacheStorage(
 
                     statSubscriptionScope.restart()
                     lock.withLock {
-                        listFlow.update { emptyList() }
-                        restorePersistedCachesImpl { }
+                        val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
+                        restorePersistedCachesImpl { allRecovered.update { plus(it) } }
+                        listFlow.update { allRecovered.value }
                     }
                 }
             }
@@ -121,6 +123,7 @@ class DataStoreMediaCacheStorage(
             lock.withLock {
                 val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
                 restorePersistedCachesImpl { allRecovered.update { plus(it) } }
+                listFlow.update { allRecovered.value }
                 engine.deleteUnusedCaches(allRecovered.value)
             }
         } finally {
@@ -139,14 +142,7 @@ class DataStoreMediaCacheStorage(
                 @OptIn(DelicateCoroutinesApi::class)
                 launch(start = CoroutineStart.ATOMIC) {
                     try {
-                        restoreFile(
-                            origin,
-                            metadata,
-                            reportRecovered = { cache ->
-                                listFlow.update { plus(cache) }
-                                reportRecovered(cache)
-                            },
-                        )
+                        restoreFile(origin, metadata, reportRecovered)
                     } finally {
                         semaphore.release()
                     }
