@@ -356,10 +356,11 @@ class TorrentMediaCacheEngine(
                 if (!serviceStarted) return@collectLatest
 
                 coroutineScope {
-                    val fileEntryFlow = fileHandle.entry.filterNotNull().shareIn(this, SharingStarted.Lazily)
+                    val fileEntryFlow = fileHandle.entry.filterNotNull()
+                        .shareIn(this, SharingStarted.Lazily, replay = 1)
                     val sessionStatsFlow = fileHandle.session.filterNotNull()
                         .flatMapLatest { it.sessionStats }.filterNotNull()
-                        .shareIn(this, SharingStarted.Lazily)
+                        .shareIn(this, SharingStarted.Lazily, replay = 1)
 
                     val fileEntry = fileEntryFlow.first()
                     val entryFileStats = fileEntry.fileStats.filterNotNull().first()
