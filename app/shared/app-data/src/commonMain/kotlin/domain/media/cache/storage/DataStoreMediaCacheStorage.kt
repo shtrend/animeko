@@ -10,6 +10,7 @@
 package me.him188.ani.app.domain.media.cache.storage
 
 import androidx.datastore.core.DataStore
+import kotlinx.collections.immutable.minus
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
 import kotlinx.coroutines.CompletableDeferred
@@ -105,6 +106,11 @@ class DataStoreMediaCacheStorage(
      */
     private val requestStartupRestoreFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
 
+    /**
+     * 已经恢复的 [LocalFileMediaCache], 不会重复恢复.
+     */
+    private val restoredLocalFileMediaCacheIds = MutableStateFlow(persistentListOf<String>())
+
     init {
         if (engine is TorrentMediaCacheEngine) {
             suspend fun refreshCache(): List<MediaCache> {
@@ -112,8 +118,19 @@ class DataStoreMediaCacheStorage(
 
                 return lock.withLock {
                     val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
-                    restorePersistedCachesImpl { allRecovered.update { plus(it) } }
-                    allRecovered.value.also { listFlow.update { it } }
+                    restorePersistedCachesImpl {
+                        if (it is LocalFileMediaCache) {
+                            restoredLocalFileMediaCacheIds.update { plus(it.origin.mediaId) }
+                        }
+                        allRecovered.update { plus(it) }
+                    }
+
+                    // 新 restore 的加上 list 中已经有的 LocalFileMediaCache
+                    listFlow.update {
+                        allRecovered.value +
+                                listFlow.value.filter { it.origin.mediaId in restoredLocalFileMediaCacheIds.value }
+                    }
+                    allRecovered.value
                 }
             }
 
@@ -154,6 +171,8 @@ class DataStoreMediaCacheStorage(
 
         supervisorScope {
             metadataFlowSnapshot.forEach { (origin, metadata, _) ->
+                if (origin.mediaId in restoredLocalFileMediaCacheIds.value) return@forEach
+
                 semaphore.acquire()
                 @OptIn(DelicateCoroutinesApi::class)
                 launch(start = CoroutineStart.ATOMIC) {
@@ -270,6 +289,7 @@ class DataStoreMediaCacheStorage(
         lock.withLock {
             val cache = listFlow.value.firstOrNull(predicate) ?: return false
             listFlow.update { minus(cache) }
+            restoredLocalFileMediaCacheIds.update { minus(cache.origin.mediaId) }
             withContext(Dispatchers.IO_) {
                 store.updateData { list ->
                     list.filterNot { isSameMediaAndEpisode(cache, it) }
