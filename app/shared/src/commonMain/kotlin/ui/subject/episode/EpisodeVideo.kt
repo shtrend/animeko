@@ -51,6 +51,7 @@ import me.him188.ani.app.ui.foundation.icons.AniIcons
 import me.him188.ani.app.ui.foundation.icons.Forward85
 import me.him188.ani.app.ui.foundation.icons.RightPanelClose
 import me.him188.ani.app.ui.foundation.icons.RightPanelOpen
+import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.interaction.WindowDragArea
 import me.him188.ani.app.ui.foundation.rememberDebugSettingsViewModel
 import me.him188.ani.app.ui.foundation.theme.AniTheme
@@ -217,7 +218,9 @@ internal fun EpisodeVideoImpl(
                     VideoPlayer(
                         playerState,
                         Modifier
-                            .offset(x = -statusBarHeight / 2, y = 0.dp)
+                            .ifThen(statusBarHeight != 0.dp) {
+                                offset(x = -statusBarHeight / 2, y = 0.dp)
+                            }
                             .matchParentSize(),
                     )
                 }
