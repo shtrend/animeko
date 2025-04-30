@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -11,7 +11,6 @@ package me.him188.ani.app.ui.subject.episode.video.components
 
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
@@ -33,26 +32,30 @@ import me.him188.ani.utils.platform.isMobile
 fun rememberStatusBarHeightAsState(
     isSystemInLandscapeMode: Boolean = isInLandscapeMode(),
 ): State<Dp> {
-    val isLandscapeModeUpdated by rememberUpdatedState(isSystemInLandscapeMode)
-    var statusBarHeight by rememberSaveable { mutableStateOf(0) }
-    val density by rememberUpdatedState(LocalDensity.current)
-    if (LocalPlatform.current.isMobile() && !isSystemInLandscapeMode) {
-        // TODO: 2024/12/28 We should actually consider insets from all sides and write a proper layout algorithm.
-        val insets = WindowInsets.displayCutout // composable
-        SideEffect {
-            statusBarHeight = insets.getTop(density)
-        }
-    }
-
-    return remember {
-        derivedStateOf {
-            if (isLandscapeModeUpdated) {
-                with(density) {
-                    statusBarHeight.toDp()
-                }
-            } else {
-                0.dp
+    if (LocalPlatform.current.isMobile()) {
+        val isLandscapeModeUpdated by rememberUpdatedState(isSystemInLandscapeMode)
+        var statusBarHeight by rememberSaveable { mutableStateOf(0) }
+        val density by rememberUpdatedState(LocalDensity.current)
+        if (!isSystemInLandscapeMode) {
+            // TODO: 2024/12/28 We should actually consider insets from all sides and write a proper layout algorithm.
+            val insets = WindowInsets.displayCutout // composable
+            SideEffect {
+                statusBarHeight = insets.getTop(density)
             }
         }
+
+        return remember {
+            derivedStateOf {
+                if (isLandscapeModeUpdated) {
+                    with(density) {
+                        statusBarHeight.toDp()
+                    }
+                } else {
+                    0.dp
+                }
+            }
+        }
+    } else {
+        return remember { mutableStateOf(0.dp) }
     }
 }
