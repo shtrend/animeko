@@ -11,18 +11,9 @@ package me.him188.ani.app.ui.foundation.layout
 
 import me.him188.ani.app.platform.Context
 import me.him188.ani.app.platform.MainViewControllerPropertyProvider
-import org.jetbrains.skiko.OS
-import org.jetbrains.skiko.OSVersion
-import org.jetbrains.skiko.available
+import me.him188.ani.app.platform.SwiftBridge
 import platform.Foundation.NSThread
-import platform.Foundation.setValue
-import platform.UIKit.UIApplication
-import platform.UIKit.UIDevice
-import platform.UIKit.UIDeviceOrientation
-import platform.UIKit.UIInterfaceOrientationMaskLandscape
-import platform.UIKit.UIInterfaceOrientationMaskPortrait
 import platform.UIKit.UINavigationController
-import platform.UIKit.UIWindowSceneGeometryPreferencesIOS
 import platform.UIKit.attemptRotationToDeviceOrientation
 import platform.UIKit.setNeedsUpdateOfHomeIndicatorAutoHidden
 import platform.darwin.dispatch_async
@@ -30,57 +21,13 @@ import platform.darwin.dispatch_get_main_queue
 
 actual suspend fun Context.setRequestFullScreen(window: PlatformWindowMP, fullscreen: Boolean) {
     ensureMainThread {
-        val orientation = if (fullscreen) {
-            UIDeviceOrientation.UIDeviceOrientationLandscapeLeft
-        } else {
-            UIDeviceOrientation.UIDeviceOrientationPortrait
-        }
-
-        if (available(OS.Ios to OSVersion(16))) {
-            // Get a UIWindowScene from the PlatformWindowMP if available
-            val scene = window.uiViewController.view.window?.windowScene
-            if (scene != null) {
-                val geometryPreferences = UIWindowSceneGeometryPreferencesIOS().apply {
-                    interfaceOrientations = if (fullscreen) {
-                        UIInterfaceOrientationMaskLandscape
-                    } else {
-                        UIInterfaceOrientationMaskPortrait
-                    }
-                }
-                scene.requestGeometryUpdateWithPreferences(geometryPreferences) { error ->
-                    // If there's an error or the request fails, fall back
-                    if (error != null) {
-                        UIDevice.currentDevice.setValue(orientation, forKey = "orientation")
-                        UINavigationController.attemptRotationToDeviceOrientation()
-                    }
-                }
-            } else {
-                // No scene? Fallback
-                UIDevice.currentDevice.setValue(orientation, forKey = "orientation")
-                UINavigationController.attemptRotationToDeviceOrientation()
-            }
-        } else {
-            if (fullscreen) {
-                // Attempt to force orientation to landscape
-                UIDevice.currentDevice.setValue(
-                    UIDeviceOrientation.UIDeviceOrientationLandscapeRight,
-                    forKey = "orientation",
-                )
-                // Prevent auto-lock (keep screen on)
-                UIApplication.sharedApplication.idleTimerDisabled = true
-            } else {
-                // Attempt to restore orientation “auto” or portrait
-                UIDevice.currentDevice.setValue(
-                    UIDeviceOrientation.UIDeviceOrientationPortrait,
-                    forKey = "orientation",
-                )
-                // Allow screen to lock
-                UIApplication.sharedApplication.idleTimerDisabled = false
-            }
-        }
+        SwiftBridge.setDeviceOrientation(window.uiViewController, fullscreen)
 
         // Trigger a rotation update
         UINavigationController.attemptRotationToDeviceOrientation()
+        // TODO: attemptRotationToDeviceOrientation was deprecated in ios 16, https://developer.apple.com/documentation/uikit/uiviewcontroller/attemptrotationtodeviceorientation()
+        //  we should use `window.uiViewController.setNeedsUpdateOfSupportedInterfaceOrientations()` installed, need testing.
+
     }
 }
 

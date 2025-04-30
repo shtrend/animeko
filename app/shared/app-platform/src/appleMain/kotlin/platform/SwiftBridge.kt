@@ -15,6 +15,11 @@ import platform.UIKit.UIViewController
 // This interface is implemented in Swift.
 interface ISwiftBridge {
     val UIViewController.navigationController: UINavigationController?
+
+    fun setDeviceOrientation(
+        uiViewController: AniHostingUIViewController,
+        fullscreen: Boolean
+    )
 }
 
 lateinit var SwiftBridge: ISwiftBridge // set from Swift
