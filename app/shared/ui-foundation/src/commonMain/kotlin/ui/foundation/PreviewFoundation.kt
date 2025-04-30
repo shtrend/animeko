@@ -96,6 +96,7 @@ inline fun ProvideCompositionLocalsForPreview(
             darkMode = darkMode,
         ),
         LocalViewModelStoreOwner provides viewModelStoreOwner,
+        LocalPlatformFontFamily providesDefault PlatformFontFamily(null),
     ) {
         val navController = rememberNavController()
         aniNavigator.setNavController(navController)
