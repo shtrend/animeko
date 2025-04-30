@@ -61,12 +61,9 @@ suspend fun IAnalytics.recordAppStart(startupTimeMonitor: StartupTimeMonitor) {
             Service("bangumi_next") {
                 bangumiClient.testConnectionNext() == ConnectionStatus.SUCCESS
             },
-        ) + AniServers.optimizedForCN.map { url ->
+        ) + AniServers.optimizedForCNWithName.map { (name, url) ->
             Service(
-                "ani_" + url.toString()
-                    .substringAfter("https://")
-                    .substringBefore(".myani.org")
-                    .substringBefore(".animeko.openani.org"),
+                "ani_$name",
             ) {
                 testAniServer(url)
             }

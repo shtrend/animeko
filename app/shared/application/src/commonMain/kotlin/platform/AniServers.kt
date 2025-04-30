@@ -11,29 +11,36 @@ package me.him188.ani.app.platform
 
 import io.ktor.http.Url
 
+data class AniServer(
+    val id: String,
+    val url: Url,
+)
+
 object AniServers {
-    val optimizedForCN: List<Url>
-    val optimizedForGlobal: List<Url>
+    val optimizedForCNWithName: List<AniServer>
+    val optimizedForGlobalWithName: List<AniServer>
 
     init {
         val cnServers = arrayOf(
-            Url("https://danmaku-cn.myani.org"),
-            Url("https://auth.myani.org"),
-            Url("https://s1.animeko.openani.org"),
-            Url("https://s2.animeko.openani.org"),
+            AniServer("api", Url("https://api.animeko.org")),
+            AniServer("danmaku-cn", Url("https://danmaku-cn.myani.org")),
+            AniServer("s1", Url("https://s1.animeko.openani.org")),
         )
 
         val globalServers = arrayOf(
-            Url("https://danmaku-global.myani.org"),
+            AniServer("danmaku-global", Url("https://danmaku-global.myani.org")),
         )
 
-        optimizedForCN = buildList(cnServers.size + globalServers.size) {
+        optimizedForCNWithName = buildList(cnServers.size + globalServers.size) {
             cnServers.forEach { add(it) }
             globalServers.forEach { add(it) }
         }
-        optimizedForGlobal = buildList(globalServers.size + cnServers.size) {
+        optimizedForGlobalWithName = buildList(globalServers.size + cnServers.size) {
             globalServers.forEach { add(it) }
             cnServers.forEach { add(it) }
         }
     }
+
+    val optimizedForCN: List<Url> = optimizedForCNWithName.map { it.url }
+    val optimizedForGlobal: List<Url> = optimizedForGlobalWithName.map { it.url }
 }
