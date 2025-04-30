@@ -12,17 +12,24 @@ package me.him188.ani.app.domain.media.cache.storage
 import androidx.datastore.core.DataStore
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.select
+import kotlinx.coroutines.selects.whileSelect
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
@@ -65,7 +72,6 @@ import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
-import kotlin.concurrent.Volatile
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -97,21 +103,40 @@ class DataStoreMediaCacheStorage(
     /**
      * App 必须先在启动时候恢复过一次之后才能 refresh caches
      */
-    @Volatile
-    private var appStartupRestored = false
+    private val requestStartupRestoreFlow = MutableSharedFlow<Boolean>(extraBufferCapacity = 1)
 
     init {
         if (engine is TorrentMediaCacheEngine) {
-            scope.launch {
-                engine.whenServiceConnectionChanged {
-                    if (!appStartupRestored) return@whenServiceConnectionChanged
-                    logger.debug { "Refreshing torrent caches." }
+            suspend fun refreshCache(): List<MediaCache> {
+                statSubscriptionScope.restart()
 
-                    statSubscriptionScope.restart()
-                    lock.withLock {
-                        val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
-                        restorePersistedCachesImpl { allRecovered.update { plus(it) } }
-                        listFlow.update { allRecovered.value }
+                return lock.withLock {
+                    val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
+                    restorePersistedCachesImpl { allRecovered.update { plus(it) } }
+                    allRecovered.value.also { listFlow.update { it } }
+                }
+            }
+
+            scope.launch {
+                val startupRestored = CompletableDeferred<Unit>()
+                val serviceConnected = engine.isServiceConnected.buffer(Channel.RENDEZVOUS).produceIn(this)
+                val requestStartupRestore = requestStartupRestoreFlow.produceIn(this)
+
+                while (true) {
+                    select<Unit> {
+                        // 如果在 APP 启动时 serviceConnected 状态变了, 忽略处理
+                        serviceConnected.onReceive {
+                            if (!startupRestored.isCompleted) return@onReceive
+                            logger.debug { "Refreshing torrent caches on service connection changed, connected: $it." }
+                            refreshCache()
+                        }
+
+                        requestStartupRestore.onReceive {
+                            logger.debug { "Restoring persisted torrent caches on startup." }
+                            val allRecovered = refreshCache()
+                            engine.deleteUnusedCaches(allRecovered)
+                            startupRestored.complete(Unit)
+                        }
                     }
                 }
             }
@@ -119,16 +144,7 @@ class DataStoreMediaCacheStorage(
     }
 
     override suspend fun restorePersistedCaches() {
-        try {
-            lock.withLock {
-                val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
-                restorePersistedCachesImpl { allRecovered.update { plus(it) } }
-                listFlow.update { allRecovered.value }
-                engine.deleteUnusedCaches(allRecovered.value)
-            }
-        } finally {
-            appStartupRestored = true
-        }
+        requestStartupRestoreFlow.emit(true)
     }
 
     // must be used under lock

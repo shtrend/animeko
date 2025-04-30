@@ -124,9 +124,11 @@ class TorrentMediaCacheEngine(
         private val unspecifiedFileSizeFlow = flowOf(FileSize.Unspecified)
     }
 
+    val isServiceConnected = engineAccess.isServiceConnected
+
     class FileHandle(
         val scope: CoroutineScope,
-        val state: SharedFlow<State?>, // suspend lazy or not
+        val state: Flow<State?>,
     ) {
         val handle = state.map { it?.handle } // single emit
         val entry = state.map { it?.entry } // single emit
@@ -286,7 +288,7 @@ class TorrentMediaCacheEngine(
          * 订阅当前 TorrentMediaCache 的统计信息以更新它的 metadata.
          */
         suspend fun subscribeStats(onUpdateMetadata: suspend (Map<MetadataKey, String>) -> Unit) {
-            engineAccess.isServiceConnected.collectLatest { serviceStarted ->
+            isServiceConnected.collectLatest { serviceStarted ->
                 if (!serviceStarted) return@collectLatest
 
                 coroutineScope {
@@ -475,73 +477,62 @@ class TorrentMediaCacheEngine(
             }
         }
 
-        return TorrentMediaCache(
-            origin = origin,
-            metadata = metadata,
-            // lazily handle, 在 TorrentEngineAccess.useEngine 为 false 时不启动
-            fileHandle = getFileHandle(EncodedTorrentInfo.createRaw(data), metadata, parentContext),
-        )
+        @OptIn(EnsureTorrentEngineIsAccessible::class)
+        return engineAccess.withServiceRequest("TorrentMediaCacheEngine#$this-restore:${origin.mediaId}") {
+            TorrentMediaCache(
+                origin = origin,
+                metadata = metadata,
+                fileHandle = getFileHandle(EncodedTorrentInfo.createRaw(data), metadata, parentContext),
+            )
+        }
     }
 
     private suspend fun getFileHandle(
         encoded: EncodedTorrentInfo,
         metadata: MediaCacheMetadata,
         parentContext: CoroutineContext,
-        lazilyStart: Boolean = true,
     ): FileHandle {
         val scope = CoroutineScope(parentContext + Job(parentContext[Job]))
 
-        val state = flow {
-            val downloader = torrentEngine.getDownloader()
-            val res = kotlinx.coroutines.withTimeoutOrNull(30_000) {
-                val session = downloader.startDownload(encoded, parentContext)
-                logger.info { "$mediaSourceId: waiting for files" }
-                onDownloadStarted(session)
+        val downloader = torrentEngine.getDownloader()
+        val res = kotlinx.coroutines.withTimeoutOrNull(30_000) {
+            val session = downloader.startDownload(encoded, parentContext)
+            logger.info { "$mediaSourceId: waiting for files" }
+            onDownloadStarted(session)
 
-                val files = session.getFiles()
-                val selectedFile = TorrentMediaResolver.selectVideoFileEntry(
-                    files,
-                    { fileName },
-                    listOf(metadata.episodeName),
-                    episodeSort = metadata.episodeSort,
-                    episodeEp = metadata.episodeEp,
-                )
+            val files = session.getFiles()
+            val selectedFile = TorrentMediaResolver.selectVideoFileEntry(
+                files,
+                { fileName },
+                listOf(metadata.episodeName),
+                episodeSort = metadata.episodeSort,
+                episodeEp = metadata.episodeEp,
+            )
 
-                if (selectedFile == null) {
-                    logger.error {
-                        """
+            if (selectedFile == null) {
+                logger.error {
+                    """
                             $mediaSourceId: Selected null file to download. Diagnosis:
                             - Files: ${files.map { it.fileName }}
                             - Metadata: $metadata
                         """.trimIndent()
-                    }
-                } else {
-                    logger.info { "$mediaSourceId: Selected file to download: $selectedFile" }
                 }
-
-                val handle = selectedFile?.createHandle()
-                if (handle == null) {
-                    session.closeIfNotInUse()
-                }
-                FileHandle.State(session, selectedFile, handle)
-            }
-            if (res == null) {
-                logger.error { "$mediaSourceId: Timed out while starting download or selecting file. Returning null handle. episode name: ${metadata.episodeName}" }
-                emit(null)
             } else {
-                emit(res)
+                logger.info { "$mediaSourceId: Selected file to download: $selectedFile" }
             }
+
+            val handle = selectedFile?.createHandle()
+            if (handle == null) {
+                session.closeIfNotInUse()
+            }
+            FileHandle.State(session, selectedFile, handle)
         }
-        return FileHandle(
-            scope,
-            state.run {
-                if (lazilyStart) {
-                    shareIn(scope, SharingStarted.Lazily, replay = 1)
-                } else {
-                    stateIn(scope)
-                }
-            },
-        )
+
+        if (res == null) {
+            logger.error { "$mediaSourceId: Timed out while starting download or selecting file. Returning null handle. episode name: ${metadata.episodeName}" }
+        }
+
+        return FileHandle(scope, flowOf(res))
     }
 
     @OptIn(ExperimentalStdlibApi::class)
@@ -567,8 +558,7 @@ class TorrentMediaCacheEngine(
             return TorrentMediaCache(
                 origin = origin,
                 metadata = newMetadata,
-                // 必须马上启动 torrent engine 来保证上面 withEngineAccessible 返回时 torrent engine 是可用的.
-                fileHandle = getFileHandle(data, newMetadata, parentContext, false),
+                fileHandle = getFileHandle(data, newMetadata, parentContext),
             )
         }
     }
@@ -628,16 +618,6 @@ class TorrentMediaCacheEngine(
                 }
             }
         }
-    }
-
-    /**
-     * 订阅 torrent engine 状态, torrent engine 状态改变后其 MediaCacheStorage 可能要重新 restore 缓存
-     */
-    suspend fun whenServiceConnectionChanged(block: suspend (Boolean) -> Unit) {
-        engineAccess.isServiceConnected
-            .collectLatest { serviceConnected ->
-                block(serviceConnected)
-            }
     }
 
     override fun close() {
