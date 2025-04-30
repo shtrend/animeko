@@ -46,7 +46,7 @@ class LocalFileMediaCache(
     val file: SystemPath,
     uploadedSize: FileSize = 0.bytes,
     private val backedMediaSourceId: String = MediaCacheManager.LOCAL_FS_MEDIA_SOURCE_ID,
-    private val onCloseAndDeleteFiles: suspend LocalFileMediaCache.(SystemPath) -> Unit = { file.deleteRecursively() },
+    private val onCloseAndDeleteFiles: LocalFileMediaCache.(SystemPath) -> Unit = { file.deleteRecursively() },
 ) : MediaCache {
     override val state: Flow<MediaCacheState> = MutableStateFlow(MediaCacheState.IN_PROGRESS)
     override val canPlay: Flow<Boolean> = MutableStateFlow(true)

@@ -14,7 +14,10 @@ import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
@@ -35,6 +38,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
 import kotlinx.io.files.FileNotFoundException
@@ -447,20 +451,27 @@ class TorrentMediaCacheEngine(
         val localFile = metadata.resolveCompletedFromDataStore()
         if (localFile != null) {
             return LocalFileMediaCache(origin, metadata, localFile) {
-                // 如果想删除 LocalFileMediaCache 类型的缓存, 需要启动 torrent engine 删除.
-                // 启动后马上恢复这个缓存并删除, 这个操作需要保证 torrent engine 可用, 删除完成后释放 torrent engine 可用性.
-                @OptIn(EnsureTorrentEngineIsAccessible::class)
-                engineAccess
-                    .withServiceRequest("LocalFileMediaCache#$this-closeAndDeleteFiles:${origin.mediaId}") {
-                        TorrentMediaCache(
-                            origin = origin,
-                            metadata = metadata,
-                            fileHandle = getFileHandle(EncodedTorrentInfo.createRaw(data), metadata, parentContext),
-                        ).apply {
-                            resume()
-                            closeAndDeleteFiles()
+                @OptIn(DelicateCoroutinesApi::class)
+                GlobalScope.launch {
+                    // 如果想删除 LocalFileMediaCache 类型的缓存, 需要启动 torrent engine 删除.
+                    // 启动后马上恢复这个缓存并删除, 这个操作需要保证 torrent engine 可用, 删除完成后释放 torrent engine 可用性.
+                    @OptIn(EnsureTorrentEngineIsAccessible::class)
+                    engineAccess
+                        .withServiceRequest("LocalFileMediaCache#$this-closeAndDeleteFiles:${origin.mediaId}") {
+                            TorrentMediaCache(
+                                origin = origin,
+                                metadata = metadata,
+                                fileHandle = getFileHandle(
+                                    EncodedTorrentInfo.createRaw(data),
+                                    metadata,
+                                    coroutineContext,
+                                ),
+                            ).apply {
+                                resume()
+                                closeAndDeleteFiles()
+                            }
                         }
-                    }
+                }
             }
         }
 
