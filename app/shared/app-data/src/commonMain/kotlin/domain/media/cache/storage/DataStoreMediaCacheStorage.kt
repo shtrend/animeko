@@ -173,7 +173,7 @@ class DataStoreMediaCacheStorage(
         reportRecovered: suspend (MediaCache) -> Unit,
     ) = withContext(Dispatchers.IO_) {
         try {
-            val cache = engine.restore(origin, metadata, scope.coroutineContext)
+            val cache = engine.restore(origin, metadata, statSubscriptionScope.currentCoroutineContext)
             logger.info { "Cache restored: ${origin.mediaId}, result=${cache}" }
             if (cache == null) return@withContext
 

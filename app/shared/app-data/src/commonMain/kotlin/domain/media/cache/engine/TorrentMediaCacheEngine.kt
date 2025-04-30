@@ -126,17 +126,13 @@ class TorrentMediaCacheEngine(
 
     val isServiceConnected = engineAccess.isServiceConnected
 
-    class FileHandle(
-        val scope: CoroutineScope,
-        val state: Flow<State?>,
-    ) {
+    class FileHandle(val state: Flow<State?>) {
         val handle = state.map { it?.handle } // single emit
         val entry = state.map { it?.entry } // single emit
         val session = state.map { it?.session }
 
         suspend fun close() {
             handle.first()?.close()
-            scope.coroutineContext.job.cancelAndJoin()
         }
 
         class State(
@@ -492,8 +488,6 @@ class TorrentMediaCacheEngine(
         metadata: MediaCacheMetadata,
         parentContext: CoroutineContext,
     ): FileHandle {
-        val scope = CoroutineScope(parentContext + Job(parentContext[Job]))
-
         val downloader = torrentEngine.getDownloader()
         val res = kotlinx.coroutines.withTimeoutOrNull(30_000) {
             val session = downloader.startDownload(encoded, parentContext)
@@ -532,7 +526,7 @@ class TorrentMediaCacheEngine(
             logger.error { "$mediaSourceId: Timed out while starting download or selecting file. Returning null handle. episode name: ${metadata.episodeName}" }
         }
 
-        return FileHandle(scope, flowOf(res))
+        return FileHandle(flowOf(res))
     }
 
     @OptIn(ExperimentalStdlibApi::class)

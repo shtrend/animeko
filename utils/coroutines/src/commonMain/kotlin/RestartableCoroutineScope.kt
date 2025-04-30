@@ -38,6 +38,9 @@ class RestartableCoroutineScope(
             return CoroutineScope(parentScope.coroutineContext + job)
         }
 
+    val currentCoroutineContext: CoroutineContext
+        get() = childJobRef.value
+
     /**
      * Launches a new coroutine in the current child scope in a thread-safe manner
      * @param block The coroutine code to execute
