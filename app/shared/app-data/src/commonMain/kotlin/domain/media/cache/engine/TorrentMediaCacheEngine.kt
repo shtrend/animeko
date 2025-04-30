@@ -14,6 +14,7 @@ import kotlinx.atomicfu.locks.SynchronizedObject
 import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -53,6 +54,7 @@ import me.him188.ani.app.domain.media.cache.storage.MediaCacheSave
 import me.him188.ani.app.domain.media.resolver.EpisodeMetadata
 import me.him188.ani.app.domain.media.resolver.TorrentMediaResolver
 import me.him188.ani.app.domain.torrent.TorrentEngine
+import me.him188.ani.app.tools.Progress
 import me.him188.ani.app.tools.toProgress
 import me.him188.ani.app.torrent.api.TorrentSession
 import me.him188.ani.app.torrent.api.files.EncodedTorrentInfo
@@ -628,7 +630,15 @@ class TorrentMediaCacheEngine(
         }
     }
 
-    val isServiceConnected = engineAccess.isServiceConnected
+    /**
+     * 订阅 torrent engine 状态, torrent engine 状态改变后其 MediaCacheStorage 可能要重新 restore 缓存
+     */
+    suspend fun whenServiceConnectionChanged(block: suspend (Boolean) -> Unit) {
+        engineAccess.isServiceConnected
+            .collectLatest { serviceConnected ->
+                block(serviceConnected)
+            }
+    }
 
     override fun close() {
         torrentEngine.close()

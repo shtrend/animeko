@@ -12,22 +12,17 @@ package me.him188.ani.app.domain.media.cache.storage
 import androidx.datastore.core.DataStore
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.plus
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
@@ -36,6 +31,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerializationException
 import me.him188.ani.app.data.persistent.DataStoreJson
+import me.him188.ani.app.domain.media.cache.LocalFileMediaCache
 import me.him188.ani.app.domain.media.cache.MediaCache
 import me.him188.ani.app.domain.media.cache.engine.InvalidMediaCacheEngineKey
 import me.him188.ani.app.domain.media.cache.engine.MediaCacheEngine
@@ -69,6 +65,7 @@ import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
+import kotlin.concurrent.Volatile
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -100,36 +97,21 @@ class DataStoreMediaCacheStorage(
     /**
      * App 必须先在启动时候恢复过一次之后才能 refresh caches
      */
-    private val appStarted = CompletableDeferred(Unit)
+    @Volatile
+    private var appStartupRestored = false
 
     init {
         if (engine is TorrentMediaCacheEngine) {
             scope.launch {
-                suspend fun doRestore() {
+                engine.whenServiceConnectionChanged {
+                    if (!appStartupRestored) return@whenServiceConnectionChanged
+                    logger.debug { "Refreshing torrent caches." }
+
+                    statSubscriptionScope.restart()
                     lock.withLock {
-                        statSubscriptionScope.restart()
                         val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
                         restorePersistedCachesImpl { allRecovered.update { plus(it) } }
                         listFlow.update { allRecovered.value }
-                    }
-                }
-
-                val serviceConnected = engine.isServiceConnected
-                    .buffer(Channel.RENDEZVOUS)
-                    .produceIn(this)
-
-                while (true) {
-                    select {
-                        // 如果在 APP 启动时 serviceConnected 状态变了, 忽略处理
-                        serviceConnected.onReceive {
-                            if (!appStarted.isCompleted) return@onReceive
-                            logger.debug { "Refreshing torrent caches." }
-                            doRestore()
-                        }
-
-                        appStarted.onAwait {
-                            doRestore()
-                        }
                     }
                 }
             }
@@ -137,7 +119,16 @@ class DataStoreMediaCacheStorage(
     }
 
     override suspend fun restorePersistedCaches() {
-        appStarted.complete(Unit)
+        try {
+            lock.withLock {
+                val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
+                restorePersistedCachesImpl { allRecovered.update { plus(it) } }
+                listFlow.update { allRecovered.value }
+                engine.deleteUnusedCaches(allRecovered.value)
+            }
+        } finally {
+            appStartupRestored = true
+        }
     }
 
     // must be used under lock
