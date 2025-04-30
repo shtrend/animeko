@@ -11,10 +11,10 @@ package me.him188.ani.app.ui.foundation
 
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.text.font.FontFamily
 
-val LocalPlatformFontFamily = staticCompositionLocalOf<PlatformFontFamily> {
+val LocalPlatformFontFamily = compositionLocalOf<PlatformFontFamily> {
     error("No PlatformFontFamily provided")
 }
 
