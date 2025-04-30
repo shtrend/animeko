@@ -11,16 +11,8 @@ package me.him188.ani.app.ui.foundation
 
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.platform.LocalFontFamilyResolver
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.platform.FontLoadResult
 
 val LocalPlatformFontFamily = staticCompositionLocalOf<PlatformFontFamily> {
     error("No PlatformFontFamily provided")
@@ -33,30 +25,10 @@ class PlatformFontFamily(
     val defaultFontFamily: FontFamily?
 )
 
-@OptIn(ExperimentalTextApi::class)
 @Composable
-fun rememberPlatformFontFamily(
+expect fun rememberPlatformFontFamily(
     fontName: String?,
-): PlatformFontFamily {
-    if (fontName == null) return PlatformFontFamily(null)
-
-    var resolvedFontFamily by remember { mutableStateOf<FontFamily?>(null) }
-    val fontFamilyResolver = LocalFontFamilyResolver.current
-
-    LaunchedEffect(fontFamilyResolver) {
-        val fontFamily = FontFamily(fontName)
-        resolvedFontFamily = runCatching {
-            val result = fontFamilyResolver.resolve(fontFamily).value as FontLoadResult
-            if (result.typeface == null || result.typeface?.familyName != fontName) {
-                null
-            } else {
-                fontFamily
-            }
-        }.getOrNull()
-    }
-
-    return PlatformFontFamily(resolvedFontFamily)
-}
+): PlatformFontFamily
 
 @Composable
 fun Typography.copyWithPlatformFontFamily(
