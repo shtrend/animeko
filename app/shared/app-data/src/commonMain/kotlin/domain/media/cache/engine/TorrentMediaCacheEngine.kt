@@ -394,40 +394,42 @@ class TorrentMediaCacheEngine(
 
     override val stats: Flow<MediaStats> = engineAccess.isServiceConnected
         .flatMapLatest { useEngine ->
-            // 先判断是否使用 data store 的数据, 如果用就不 downloader
-            if (!useEngine) {
-                var totalDownloaded = 0L.bytes
-                var totalUploaded = 0L.bytes
+            val finishedMediaStats = mediaCacheMetadataStore.data.map { saveList ->
+                var totalFinishedDownloaded = 0L.bytes
+                var totalFinishedUploaded = 0L.bytes
 
-                mediaCacheMetadataStore.data.first().map { save ->
-                    if (save.engine != engineKey) return@map
+                saveList.forEach { save ->
+                    if (save.engine != engineKey) return@forEach
 
                     val downloaded = save.metadata.torrentDownloaded
                     val uploaded = save.metadata.torrentUploaded
 
-                    if (downloaded != FileSize.Unspecified) totalDownloaded += downloaded
-                    if (uploaded != FileSize.Unspecified) totalUploaded += uploaded
+                    if (downloaded != FileSize.Unspecified) totalFinishedDownloaded += downloaded
+                    if (uploaded != FileSize.Unspecified) totalFinishedUploaded += uploaded
                 }
 
-                return@flatMapLatest flowOf(
-                    MediaStats(
-                        uploaded = totalUploaded,
-                        downloaded = totalDownloaded,
-                        uploadSpeed = 0L.bytes,
-                        downloadSpeed = 0L.bytes,
-                    ),
+                MediaStats(
+                    uploaded = totalFinishedUploaded,
+                    downloaded = totalFinishedDownloaded,
+                    uploadSpeed = 0L.bytes,
+                    downloadSpeed = 0L.bytes,
                 )
             }
+
+            if (!useEngine) {
+                return@flatMapLatest finishedMediaStats
+            }
+
             flow { emit(torrentEngine.getDownloader()) }
                 .flatMapLatest {
-                    it.totalStats
-                }.map {
-                    MediaStats(
-                        uploaded = it.uploadedBytes.bytes,
-                        downloaded = it.downloadedBytes.bytes,
-                        uploadSpeed = it.uploadSpeed.bytes,
-                        downloadSpeed = it.downloadSpeed.bytes,
-                    )
+                    combine(finishedMediaStats, it.totalStats) { finished, engineStats ->
+                        MediaStats(
+                            uploaded = engineStats.uploadedBytes.bytes + finished.uploaded,
+                            downloaded = engineStats.downloadedBytes.bytes + finished.downloaded,
+                            uploadSpeed = engineStats.uploadSpeed.bytes + finished.uploadSpeed,
+                            downloadSpeed = engineStats.downloadSpeed.bytes + finished.downloadSpeed,
+                        )
+                    }
                 }
         }
         .flowOn(flowDispatcher)
