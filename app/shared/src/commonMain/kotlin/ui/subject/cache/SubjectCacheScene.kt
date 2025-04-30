@@ -285,14 +285,9 @@ fun SubjectCacheScreen(
         },
         autoCacheGroup = {
             val navigator = LocalNavigator.current
-            AutoCacheGroup(
-                onClickGlobalCacheSettings = {
-                    navigator.navigateSettings(SettingsTab.CACHE)
-                },
-                onClickGlobalCacheManage = {
-                    navigator.navigateCaches()
-                },
-            )
+            AutoCacheGroup {
+                navigator.navigateCaches()
+            }
         },
         cacheListGroup = {
             EpisodeCacheListGroup(

@@ -39,7 +39,6 @@ import androidx.compose.material.icons.outlined.Subscriptions
 import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.VpnKey
-import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
@@ -105,7 +104,6 @@ import me.him188.ani.app.ui.lang.settings_debug_mode_enabled
 import me.him188.ani.app.ui.lang.settings_tab_about
 import me.him188.ani.app.ui.lang.settings_tab_appearance
 import me.him188.ani.app.ui.lang.settings_tab_bt
-import me.him188.ani.app.ui.lang.settings_tab_cache
 import me.him188.ani.app.ui.lang.settings_tab_danmaku
 import me.him188.ani.app.ui.lang.settings_tab_debug
 import me.him188.ani.app.ui.lang.settings_tab_log
@@ -127,7 +125,6 @@ import me.him188.ani.app.ui.settings.tabs.app.AppearanceGroup
 import me.him188.ani.app.ui.settings.tabs.app.PlayerGroup
 import me.him188.ani.app.ui.settings.tabs.app.SoftwareUpdateGroup
 import me.him188.ani.app.ui.settings.tabs.log.LogTab
-import me.him188.ani.app.ui.settings.tabs.media.AutoCacheGroup
 import me.him188.ani.app.ui.settings.tabs.media.CacheDirectoryGroup
 import me.him188.ani.app.ui.settings.tabs.media.MediaSelectionGroup
 import me.him188.ani.app.ui.settings.tabs.media.TorrentEngineGroup
@@ -202,7 +199,7 @@ fun SettingsScreen(
             Title(stringResource(Lang.settings_category_network_storage))
             Item(SettingsTab.PROXY)
             Item(SettingsTab.BT)
-            Item(SettingsTab.CACHE)
+//            Item(SettingsTab.CACHE)
             if (vm.cacheDirectoryGroupState.showThisTab) {
                 Item(SettingsTab.STORAGE)
             }
@@ -282,7 +279,7 @@ fun SettingsScreen(
                             SettingsTab.DANMAKU -> DanmakuGroup(vm.danmakuSettingsState, vm.danmakuServerTesters)
                             SettingsTab.PROXY -> GlobalProxyGroup(vm.proxySettingsState, vm.detectedProxy)
                             SettingsTab.BT -> TorrentEngineGroup(vm.torrentSettingsState)
-                            SettingsTab.CACHE -> AutoCacheGroup(vm.mediaCacheSettingsState)
+//                            SettingsTab.CACHE -> AutoCacheGroup(vm.mediaCacheSettingsState)
                             SettingsTab.STORAGE -> CacheDirectoryGroup(vm.cacheDirectoryGroupState)
                             SettingsTab.ABOUT -> {} // see above
                             SettingsTab.DEBUG -> {}
@@ -625,7 +622,7 @@ private fun getIcon(tab: SettingsTab): ImageVector {
         SettingsTab.DANMAKU -> Icons.Outlined.Subtitles
         SettingsTab.PROXY -> Icons.Outlined.VpnKey
         SettingsTab.BT -> Icons.Filled.P2p
-        SettingsTab.CACHE -> Icons.Rounded.Download // Icons.Outlined.Download 太 sharp 了
+//        SettingsTab.CACHE -> Icons.Rounded.Download // Icons.Outlined.Download 太 sharp 了
         SettingsTab.STORAGE -> Icons.Outlined.Storage
         SettingsTab.ABOUT -> Icons.Outlined.Info
         SettingsTab.LOG -> Icons.Outlined.Feedback
@@ -645,7 +642,7 @@ private fun getName(tab: SettingsTab): String {
         SettingsTab.DANMAKU -> stringResource(Lang.settings_tab_danmaku)
         SettingsTab.PROXY -> stringResource(Lang.settings_tab_proxy)
         SettingsTab.BT -> stringResource(Lang.settings_tab_bt)
-        SettingsTab.CACHE -> stringResource(Lang.settings_tab_cache)
+//        SettingsTab.CACHE -> stringResource(Lang.settings_tab_cache)
         SettingsTab.STORAGE -> stringResource(Lang.settings_tab_storage)
         SettingsTab.LOG -> stringResource(Lang.settings_tab_log)
         SettingsTab.UPDATE -> stringResource(Lang.settings_tab_update)

@@ -162,7 +162,8 @@ enum class SettingsTab {
 
     PROXY,
     BT,
-    CACHE,
+
+    //    CACHE, // 自动缓存, 4.10 删除
     STORAGE,
 
     ABOUT,

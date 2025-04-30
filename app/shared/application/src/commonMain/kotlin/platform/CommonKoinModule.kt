@@ -99,11 +99,8 @@ import me.him188.ani.app.domain.foundation.UserAgentFeature
 import me.him188.ani.app.domain.foundation.UserAgentFeatureHandler
 import me.him188.ani.app.domain.foundation.get
 import me.him188.ani.app.domain.foundation.withValue
-import me.him188.ani.app.domain.media.cache.DefaultMediaAutoCacheService
-import me.him188.ani.app.domain.media.cache.MediaAutoCacheService
 import me.him188.ani.app.domain.media.cache.MediaCacheManager
 import me.him188.ani.app.domain.media.cache.MediaCacheManagerImpl
-import me.him188.ani.app.domain.media.cache.createWithKoin
 import me.him188.ani.app.domain.media.cache.engine.DummyMediaCacheEngine
 import me.him188.ani.app.domain.media.cache.engine.HttpMediaCacheEngine
 import me.him188.ani.app.domain.media.cache.engine.InvalidMediaCacheEngineKey
@@ -506,11 +503,6 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
     }
 
     // Caching
-
-    single<MediaAutoCacheService> {
-        DefaultMediaAutoCacheService.createWithKoin()
-    }
-
     single<MeteredNetworkDetector> { createMeteredNetworkDetector(getContext()) }
     single<SubjectDetailsStateFactory> { DefaultSubjectDetailsStateFactory() }
 
@@ -621,8 +613,6 @@ fun KoinApplication.startCommonKoinModule(
              */
             if (restorePersistedCaches()) storage.restorePersistedCaches()
         }
-
-        koin.get<MediaAutoCacheService>().startRegularCheck(coroutineScope)
     }
 
     coroutineScope.launch {
