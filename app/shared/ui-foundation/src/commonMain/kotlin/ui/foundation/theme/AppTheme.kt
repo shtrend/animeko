@@ -32,7 +32,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.IntOffset
 import me.him188.ani.app.data.models.preference.DarkMode
 import me.him188.ani.app.data.models.preference.ThemeSettings
+import me.him188.ani.app.ui.foundation.LocalPlatformFontFamily
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
+import me.him188.ani.app.ui.foundation.copyWithPlatformFontFamily
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults.pageContentBackgroundColor
 
 val LocalThemeSettings = compositionLocalOf<ThemeSettings> {
@@ -67,6 +69,7 @@ fun AniTheme(
     darkModeOverride: DarkMode? = null,
     content: @Composable () -> Unit,
 ) {
+    val platformFontFamily = LocalPlatformFontFamily.current
     val isDark = when (darkModeOverride ?: LocalThemeSettings.current.darkMode) {
         DarkMode.LIGHT -> false
         DarkMode.DARK -> true
@@ -75,6 +78,7 @@ fun AniTheme(
 
     MaterialTheme(
         colorScheme = appColorScheme(isDark = isDark),
+        typography = MaterialTheme.typography.copyWithPlatformFontFamily(platformFontFamily),
         content = content,
     )
 }

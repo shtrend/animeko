@@ -16,8 +16,10 @@ import androidx.compose.ui.text.intl.Locale
 // Easier access
 val Lang get() = me.him188.ani.app.ui.lang.Res.string
 
+val LocaleZhCN = Locale("zh-CN")
+
 val SupportedLocales = listOf(
-    Locale("zh-CN"),
+    LocaleZhCN,
     Locale("zh-HK"),
     Locale("zh-TW"),
     Locale("en"),

@@ -24,6 +24,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.intl.Locale
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.ImageLoader
@@ -47,11 +48,16 @@ import me.him188.ani.app.tools.TimeFormatter
 import me.him188.ani.app.ui.foundation.AbstractViewModel
 import me.him188.ani.app.ui.foundation.LocalImageLoader
 import me.him188.ani.app.ui.foundation.LocalPlatform
+import me.him188.ani.app.ui.foundation.LocalPlatformFontFamily
 import me.him188.ani.app.ui.foundation.createDefaultImageLoader
 import me.him188.ani.app.ui.foundation.ifThen
+import me.him188.ani.app.ui.foundation.rememberPlatformFontFamily
 import me.him188.ani.app.ui.foundation.theme.AniTheme
 import me.him188.ani.app.ui.foundation.theme.LocalThemeSettings
+import me.him188.ani.app.ui.lang.LocaleZhCN
 import me.him188.ani.utils.ktor.ScopedHttpClient
+import me.him188.ani.utils.platform.Platform
+import me.him188.ani.utils.platform.currentPlatform
 import me.him188.ani.utils.platform.isMobile
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -63,6 +69,7 @@ class AniAppState(
     val themeSettings: ThemeSettings,
     val imageLoaderClient: ScopedHttpClient,
     val mediaCacheComposables: List<@Composable () -> Unit>,
+    val platformFont: String?
 )
 
 @Stable
@@ -95,6 +102,11 @@ class AniAppViewModel : AbstractViewModel(), KoinComponent {
             themeSettings,
             imageLoaderClient,
             mediaCacheComposables,
+            // Windows 并且 ani 语言为中文的话, 显式使用 Microsoft YaHei UI.
+            // 如果 Windows 语言不是中文, 那系统会使用 Microsoft JhengHei UI 作为中文字体, 这个字体对简体中文的支持不好.
+            if (currentPlatform() is Platform.Windows && uiSettings.appLanguage == LocaleZhCN) {
+                "Microsoft YaHei UI"
+            } else null,
         )
     }.shareInBackground(
         started = SharingStarted.Eagerly,
@@ -166,6 +178,7 @@ fun AniApp(
         LocalImageLoader provides rememberImageLoader(appState.imageLoaderClient),
         LocalTimeFormatter provides remember { TimeFormatter() },
         LocalThemeSettings provides appState.themeSettings,
+        LocalPlatformFontFamily provides rememberPlatformFontFamily(appState.platformFont),
     ) {
         val focusManager by rememberUpdatedState(LocalFocusManager.current)
         val keyboard by rememberUpdatedState(LocalSoftwareKeyboardController.current)
