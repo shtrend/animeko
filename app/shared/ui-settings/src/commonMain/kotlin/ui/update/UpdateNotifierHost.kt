@@ -148,7 +148,7 @@ fun BoxScope.UpdateNotifier(
             // 提示有新版本
 
             val onDetailsClick =
-                { uriHandler.openUri("https://github.com/open-ani/animeko/releases/tag/${newVersion.name}") }
+                { uriHandler.openUri("https://github.com/open-ani/animeko/releases/tag/v${newVersion.name}") }
 
             when (layoutKind) {
                 UpdateNotifierLayoutKind.POPUP -> {
