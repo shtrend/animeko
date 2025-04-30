@@ -34,51 +34,54 @@ expect fun rememberPlatformFontFamily(
 fun Typography.copyWithPlatformFontFamily(
     platformFontFamily: PlatformFontFamily,
 ): Typography {
+    if (platformFontFamily.defaultFontFamily == null) {
+        return this
+    }
     return copy(
         bodyLarge = bodyLarge.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: bodyLarge.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         bodyMedium = bodyMedium.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: bodyMedium.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         bodySmall = bodySmall.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: bodySmall.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         titleLarge = titleLarge.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: titleLarge.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         titleMedium = titleMedium.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: titleMedium.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         titleSmall = titleSmall.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: titleSmall.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         labelLarge = labelLarge.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: labelLarge.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         labelMedium = labelMedium.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: labelMedium.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         labelSmall = labelSmall.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: labelSmall.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         displayLarge = displayLarge.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: displayLarge.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         displayMedium = displayMedium.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: displayMedium.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         displaySmall = displaySmall.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: displaySmall.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         headlineLarge = headlineLarge.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: headlineLarge.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         headlineMedium = headlineMedium.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: headlineMedium.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
         headlineSmall = headlineSmall.copy(
-            fontFamily = platformFontFamily.defaultFontFamily ?: headlineSmall.fontFamily,
+            fontFamily = platformFontFamily.defaultFontFamily,
         ),
     )
 }
