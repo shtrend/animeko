@@ -51,6 +51,7 @@ import me.him188.ani.utils.logging.debug
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.warn
+import java.io.File
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -213,7 +214,14 @@ class TorrentServiceConnectionManager(
                 return@forEach
             }
 
-            if (save.metadata.extra[TorrentMediaCacheEngine.EXTRA_TORRENT_COMPLETED] != "true") {
+            val extra = save.metadata.extra
+
+            if (extra[TorrentMediaCacheEngine.EXTRA_TORRENT_COMPLETED] != "true") return false
+            val cacheDir = extra[TorrentMediaCacheEngine.EXTRA_TORRENT_CACHE_DIR] ?: return false
+            val cacheRelativeFilePath = extra[TorrentMediaCacheEngine.EXTRA_TORRENT_CACHE_FILE] ?: return false
+
+            val file = File(cacheDir, cacheRelativeFilePath)
+            if (!file.exists() || file.isDirectory()) {
                 return false
             }
         }

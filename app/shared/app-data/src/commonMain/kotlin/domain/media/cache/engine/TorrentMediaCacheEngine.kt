@@ -265,7 +265,7 @@ class TorrentMediaCacheEngine(
 
             withContext(Dispatchers.IO_) {
                 val file = handle.entry.resolveFileMaybeEmptyOrNull() ?: kotlin.run {
-                    logger.warn { "No file resolved for torrent entry '${handle.entry.pathInTorrent}'" }
+                    logger.warn { "No file resolved for torrent entry '${handle.entry.fileName}'" }
                     return@withContext
                 }
                 if (file.exists()) {
@@ -501,7 +501,7 @@ class TorrentMediaCacheEngine(
                 val files = session.getFiles()
                 val selectedFile = TorrentMediaResolver.selectVideoFileEntry(
                     files,
-                    { pathInTorrent },
+                    { fileName },
                     listOf(metadata.episodeName),
                     episodeSort = metadata.episodeSort,
                     episodeEp = metadata.episodeEp,
@@ -511,7 +511,7 @@ class TorrentMediaCacheEngine(
                     logger.error {
                         """
                             $mediaSourceId: Selected null file to download. Diagnosis:
-                            - Files: ${files.map { it.pathInTorrent }}
+                            - Files: ${files.map { it.fileName }}
                             - Metadata: $metadata
                         """.trimIndent()
                     }

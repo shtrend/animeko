@@ -219,20 +219,20 @@ class TorrentMediaDataProvider(
 
                 TorrentMediaResolver.selectVideoFileEntry(
                     files,
-                    { pathInTorrent },
+                    { fileName },
                     listOf(episodeMetadata.title),
                     episodeSort = episodeMetadata.sort,
                     episodeEp = episodeMetadata.ep,
                 )?.also {
                     logger.info {
-                        "TorrentVideoSource selected file: ${it.pathInTorrent}"
+                        "TorrentVideoSource selected file: ${it.fileName}"
                     }
                 }?.createHandle()?.also {
                     it.resume(FilePriority.HIGH)
                 } ?: throw MediaSourceOpenException(
                     OpenFailures.NO_MATCHING_FILE,
                     """
-                                Torrent files: ${files.joinToString { it.pathInTorrent }}
+                                Torrent files: ${files.joinToString { it.fileName }}
                                 Episode metadata: $episodeMetadata
                             """.trimIndent(),
                 )
@@ -241,7 +241,7 @@ class TorrentMediaDataProvider(
             // 如果上面发生了异常或被取消, 下面的 onClose 就永远不会被调用, 需要手动释放.
             @OptIn(UnsafeTorrentEngineAccessApi::class)
             engineAccess.requestService(requestToken, false)
-            
+
             throw ex // just re-throw it
         }
 

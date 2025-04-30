@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 OpenAni and contributors.
+ * Copyright (C) 2024-2025 OpenAni and contributors.
  *
  * 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
  * Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
@@ -14,7 +14,6 @@ import kotlinx.atomicfu.locks.synchronized
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
@@ -85,7 +84,12 @@ interface TorrentFileEntry { // 实现提示, 无 test mock
     val length: Long // get must be fast
 
     /**
-     * 在种子资源中的相对目录. 例如 `01.mp4`, `TV/01.mp4`
+     * 在种子资源的文件. 例如 `01.mp4`, 不包含目录.
+     */
+    val fileName: String
+
+    /**
+     * 在种子资源中的相对目录. 例如 `01.mp4`, `TV/01.mp4`. 相比于 [fileName], 包含了其目录.
      */
     val pathInTorrent: String
 
@@ -170,7 +174,7 @@ abstract class AbstractTorrentFileEntry(
                 if (closed) return
                 closed = true
 
-                logger.info { "[$torrentId] Close handle $pathInTorrent, remove priority request" }
+                logger.info { "[$torrentId] Close handle $fileName, remove priority request" }
                 removePriority()
 
                 if (isDebug) {
@@ -190,7 +194,7 @@ abstract class AbstractTorrentFileEntry(
 
         protected fun checkClosed() {
             if (closed) throw IllegalStateException(
-                "Attempting to pause but TorrentFile has already been closed: $pathInTorrent",
+                "Attempting to pause but TorrentFile has already been closed: $fileName",
                 closeException,
             )
         }
@@ -205,7 +209,7 @@ abstract class AbstractTorrentFileEntry(
 
         protected abstract fun resumeImpl(priority: FilePriority)
 
-        override fun toString(): String = "TorrentFileHandle(index=$index, filePath='$pathInTorrent')"
+        override fun toString(): String = "TorrentFileHandle(index=$index, filePath='$fileName')"
     }
 
     /**
@@ -215,7 +219,9 @@ abstract class AbstractTorrentFileEntry(
      */
     abstract override val pieces: PieceList
 
-    final override val pathInTorrent: String get() = relativePath.substringAfter("/")
+    final override val fileName: String get() = relativePath.substringAfter("/")
+
+    final override val pathInTorrent: String = relativePath
 
     protected val priorityRequests: MutableMap<TorrentFileHandle, FilePriority?> = mutableMapOf()
 

@@ -27,8 +27,8 @@ class TorrentMediaData(
     override val options: List<String> = emptyList(),
 ) : SeekableInputMediaData, DownloadingMediaData, FileMediaData {
     private inline val entry get() = handle.entry
-    override val filename: String get() = entry.pathInTorrent
-    override val uri: String get() = "torrent://dummy/${entry.pathInTorrent}"
+    override val filename: String get() = entry.fileName
+    override val uri: String get() = "torrent://dummy/${entry.fileName}"
 
     override fun fileLength(): Long = entry.length
 

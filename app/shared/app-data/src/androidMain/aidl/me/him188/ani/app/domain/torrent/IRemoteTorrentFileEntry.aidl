@@ -18,6 +18,8 @@ interface IRemoteTorrentFileEntry {
 	
 	String getPathInTorrent();
 	
+	String getFileName();
+	
 	IRemotePieceList getPieces();
 	
 	boolean getSupportsStreaming();
