@@ -64,8 +64,14 @@ val populateStringsLocales by tasks.registering(Copy::class) {
                     rename { file.name }
                 }
             }
+
+            from(file("src/androidMain/res/values-zh-rCN/${file.name}")) {
+                into("values-zh")
+                rename { file.name }
+            }
         }
     }
+
 }
 
 tasks.matching {
