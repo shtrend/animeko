@@ -86,9 +86,9 @@ enum class CacheEpisodePaused {
 fun CacheEpisodeItem(
     state: CacheEpisodeState,
     onPlay: () -> Unit,
-    onResume: suspend () -> Unit,
-    onPause: suspend () -> Unit,
-    onDelete: suspend () -> Unit,
+    onResume: () -> Unit,
+    onPause: () -> Unit,
+    onDelete: () -> Unit,
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surface,
 ) {
@@ -208,11 +208,11 @@ fun CacheEpisodeItem(
                     } else {
                         if (!state.isFinished) {
                             if (state.isPaused) {
-                                IconButton({ scope.launch { onResume() } }) {
+                                IconButton(onResume) {
                                     Icon(Icons.Rounded.Restore, "继续下载")
                                 }
                             } else {
-                                IconButton({ scope.launch { onPause() } }) {
+                                IconButton(onPause) {
                                     Icon(Icons.Rounded.Pause, "暂停下载", Modifier.size(28.dp))
                                 }
                             }
@@ -229,9 +229,9 @@ fun CacheEpisodeItem(
                 showDropdown, { showDropdown = false },
                 state,
                 onPlay = { onPlay() },
-                onResume = { scope.launch { onResume() } },
-                onPause = { scope.launch { onPause() } },
-                onDelete = { scope.launch { onDelete() } },
+                onResume = onResume,
+                onPause = onPause,
+                onDelete = onDelete,
             )
         },
         colors = listItemColors,

@@ -49,6 +49,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
@@ -286,20 +287,20 @@ class CacheManagementViewModel : AbstractViewModel(), KoinComponent {
         }
     }
 
-    suspend fun pauseCache(cache: CacheEpisodeState) {
-        withContext(Dispatchers.Default) {
+    fun pauseCache(cache: CacheEpisodeState) {
+        backgroundScope.launch {
             cacheManager.findFirstCache { it.cacheId == cache.cacheId }?.pause()
         }
     }
 
-    suspend fun resumeCache(cache: CacheEpisodeState) {
-        withContext(Dispatchers.Default) {
+    fun resumeCache(cache: CacheEpisodeState) {
+        backgroundScope.launch {
             cacheManager.findFirstCache { it.cacheId == cache.cacheId }?.resume()
         }
     }
 
-    suspend fun deleteCache(cache: CacheEpisodeState) {
-        withContext(Dispatchers.Default) {
+    fun deleteCache(cache: CacheEpisodeState) {
+        backgroundScope.launch {
             cacheManager.deleteFirstCache { it.cacheId == cache.cacheId }
         }
     }
@@ -360,9 +361,9 @@ fun CacheManagementScreen(
 fun CacheManagementScreen(
     state: CacheManagementState,
     onPlay: (CacheEpisodeState) -> Unit,
-    onResume: suspend (CacheEpisodeState) -> Unit,
-    onPause: suspend (CacheEpisodeState) -> Unit,
-    onDelete: suspend (CacheEpisodeState) -> Unit,
+    onResume: (CacheEpisodeState) -> Unit,
+    onPause: (CacheEpisodeState) -> Unit,
+    onDelete: (CacheEpisodeState) -> Unit,
     modifier: Modifier = Modifier,
     navigationIcon: @Composable () -> Unit = {},
     lazyGridState: CacheGroupGridLayoutState = rememberLazyStaggeredGridState(),

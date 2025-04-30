@@ -107,9 +107,9 @@ object CacheGroupCardDefaults {
 fun CacheGroupCard(
     state: CacheGroupState,
     onPlay: (CacheEpisodeState) -> Unit,
-    onResume: suspend (CacheEpisodeState) -> Unit,
-    onPause: suspend (CacheEpisodeState) -> Unit,
-    onDelete: suspend (CacheEpisodeState) -> Unit,
+    onResume: (CacheEpisodeState) -> Unit,
+    onPause: (CacheEpisodeState) -> Unit,
+    onDelete: (CacheEpisodeState) -> Unit,
     modifier: Modifier = Modifier,
     layoutProperties: CacheGroupCardLayoutProperties = CacheGroupCardDefaults.LayoutProperties,
     shape: Shape = MaterialTheme.shapes.large,
