@@ -38,6 +38,7 @@ import kotlin.concurrent.Volatile
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.IO
 
 /**
  * 表示 [BT 资源][TorrentSession] 中的一个文件.
