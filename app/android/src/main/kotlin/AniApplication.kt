@@ -90,8 +90,7 @@ class AniApplication : Application() {
          *
          * @see Context.getExternalFilesDir
          */
-        @Volatile
-        var requiresTorrentCacheMigration = false
+        val requiresTorrentCacheMigration = MutableStateFlow(false)
     }
 
     override fun onCreate() {
@@ -124,6 +123,7 @@ class AniApplication : Application() {
         val connectionManager = TorrentServiceConnectionManager(
             this,
             dataStoreFlow = mediaCacheDataStore,
+            requiresTorrentCacheMigration = instance.requiresTorrentCacheMigration,
             startServiceImpl = ::startAniTorrentService,
             stopServiceImpl = ::stopService,
             processLifecycle = ProcessLifecycleOwner.get().lifecycle,
@@ -154,7 +154,7 @@ class AniApplication : Application() {
             /**
              * If the torrent cache migration is required, we need to restore the caches.
              */
-            restorePersistedCaches = { !instance.requiresTorrentCacheMigration },
+            restorePersistedCaches = instance.requiresTorrentCacheMigration,
         )
         startupTimeMonitor.mark(StepName.Modules)
 

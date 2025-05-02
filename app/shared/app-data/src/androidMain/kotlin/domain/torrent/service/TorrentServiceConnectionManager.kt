@@ -79,6 +79,7 @@ import kotlin.coroutines.CoroutineContext
 class TorrentServiceConnectionManager(
     context: Context,
     private val dataStoreFlow: StateFlow<DataStore<List<MediaCacheSave>>>,
+    private val requiresTorrentCacheMigration: StateFlow<Boolean>,
     startServiceImpl: () -> ComponentName?,
     private val stopServiceImpl: () -> Unit,
     private val processLifecycle: Lifecycle,
@@ -172,11 +173,12 @@ class TorrentServiceConnectionManager(
         scope.launch {
             combine(
                 dataStoreFlow.flatMapLatest { it.data.map(::allTorrentMediaCacheCompleted) },
+                requiresTorrentCacheMigration,
                 requestQueue.map { it.isNotEmpty() },
                 isServiceConnected,
                 processLifecycle.currentStateFlow,
-            ) { allCompleted, keep, connected, currentState ->
-                Triple(currentState, keep || !allCompleted, connected)
+            ) { allCompleted, requiredMigration, keep, connected, currentState ->
+                Triple(currentState, !requiredMigration && (keep || !allCompleted), connected)
             }
                 .distinctUntilChanged()
                 .map { (currentState, shouldMoveToResumed, connected) ->

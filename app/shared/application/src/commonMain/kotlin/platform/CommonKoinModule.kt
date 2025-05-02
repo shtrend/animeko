@@ -17,6 +17,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -550,7 +552,7 @@ fun KoinApplication.startCommonKoinModule(
      *
      * This is only used on Android for cache migration.
      */
-    restorePersistedCaches: () -> Boolean = { true },
+    restorePersistedCaches: StateFlow<Boolean> = MutableStateFlow(true),
 ): KoinApplication {
     // Start the proxy provider very soon (before initialization of any other components)
     runBlocking {
@@ -608,10 +610,8 @@ fun KoinApplication.startCommonKoinModule(
 
         val manager = koin.get<MediaCacheManager>()
         for (storage in manager.storagesIncludingDisabled) {
-            /**
-             * Get `AniApplication.instance.requiresTorrentCacheMigration` lazily.
-             */
-            if (restorePersistedCaches()) storage.restorePersistedCaches()
+            // get MediaCacheManager 会 get TorrentManager, TorrentManager 初始化会立刻更新 restorePersistedCaches flow.
+            if (restorePersistedCaches.value) storage.restorePersistedCaches()
         }
     }
 

@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
@@ -36,6 +37,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import me.him188.ani.android.AniApplication
 import me.him188.ani.app.data.persistent.dataStores
@@ -139,7 +141,7 @@ class MainActivity : AniComponentActivity() {
          * This class should be called only `AniApplication.Instance.requiresTorrentCacheMigration` is true,
          * which means we are going to migrate torrent caches from internal storage to shared/external storage.
          */
-        if (AniApplication.instance.requiresTorrentCacheMigration) {
+        if (AniApplication.instance.requiresTorrentCacheMigration.value) {
             torrentCacheMigrator.migrateTorrentCache()
         }
 
@@ -154,7 +156,7 @@ class MainActivity : AniComponentActivity() {
                     AniAppContent(aniNavigator)
                 }
 
-                val requiresMigration by rememberUpdatedState(AniApplication.instance.requiresTorrentCacheMigration)
+                val requiresMigration by AniApplication.instance.requiresTorrentCacheMigration.collectAsState(false)
                 if (requiresMigration) {
                     val status by migrationStatus.collectAsStateWithLifecycle()
                     status?.let { MigrationDialog(status = it) }
