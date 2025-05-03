@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.produceIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
-import kotlinx.coroutines.selects.whileSelect
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
@@ -149,9 +148,8 @@ class DataStoreMediaCacheStorage(
     }
 
     private suspend fun refreshCache(): List<MediaCache> {
-        statSubscriptionScope.restart()
-
         return lock.withLock {
+            statSubscriptionScope.restart()
             val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
             val metadataFlowSnapshot = metadataFlow.first()
             val semaphore = Semaphore(8)
