@@ -28,7 +28,6 @@ object PreviewSessionManager : SessionManager {
                 aniAccessToken = "testToken",
                 expiresAtMillis = currentTimeMillis() + 1.days.inWholeMilliseconds,
             ),
-            expiresAtMillis = currentTimeMillis() + 1.days.inWholeMilliseconds,
         ),
     )
     override val state: Flow<SessionStatus> =

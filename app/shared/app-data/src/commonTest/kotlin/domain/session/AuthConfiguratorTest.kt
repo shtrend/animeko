@@ -580,5 +580,5 @@ class AuthConfiguratorTest : AbstractBangumiSessionManagerTest() {
     private fun AccessTokenSession(
         accessToken: String, // bangumi
         expiresAtMillis: Long,
-    ) = AccessTokenSession(tokens = AccessTokenPair(accessToken, accessToken, expiresAtMillis), expiresAtMillis)
+    ) = AccessTokenSession(tokens = AccessTokenPair(accessToken, accessToken, expiresAtMillis))
 }

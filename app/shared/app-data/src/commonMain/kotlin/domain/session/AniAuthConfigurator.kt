@@ -304,7 +304,6 @@ class AniAuthConfigurator(
                     aniAccessToken = aniAccessToken,
                     expiresAtMillis = expiresAtMillis,
                 ),
-                expiresAtMillis = expiresAtMillis,
             ),
         )
 

@@ -95,7 +95,7 @@ sealed class AbstractBangumiSessionManagerTest {
         tokenRepository.setSession(
             AccessTokenSession(
                 tokens = AccessTokenPair(ACCESS_TOKEN, ACCESS_TOKEN, 0),
-                expiresAtMillis = 0, // expired
+                // expired
             ),
         )
     }
@@ -105,7 +105,7 @@ sealed class AbstractBangumiSessionManagerTest {
         tokenRepository.setSession(
             AccessTokenSession(
                 tokens = AccessTokenPair(token, token, expiresAtMillis),
-                expiresAtMillis = expiresAtMillis, // not too large, avoid overflow.
+                // not too large, avoid overflow.
             ),
         )
     }
