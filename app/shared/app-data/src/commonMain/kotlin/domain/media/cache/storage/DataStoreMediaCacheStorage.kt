@@ -112,29 +112,27 @@ class DataStoreMediaCacheStorage(
     private val restoredLocalFileMediaCacheIds = MutableStateFlow(persistentListOf<String>())
 
     init {
-        scope.launch {
-            val startupRestored = CompletableDeferred<Unit>()
-            val serviceConnected = if (engine is TorrentMediaCacheEngine) {
-                engine.isServiceConnected.buffer(Channel.RENDEZVOUS).produceIn(this)
-            } else {
-                null
-            }
-            val requestStartupRestore = requestStartupRestoreFlow.produceIn(this)
+        if (engine is TorrentMediaCacheEngine) {
+            scope.launch {
+                val startupRestored = CompletableDeferred<Unit>()
+                val serviceConnected = engine.isServiceConnected.buffer(Channel.RENDEZVOUS).produceIn(this)
+                val requestStartupRestore = requestStartupRestoreFlow.produceIn(this)
 
-            while (true) {
-                select<Unit> {
-                    // 如果在 APP 启动时 serviceConnected 状态变了, 忽略处理
-                    serviceConnected?.onReceive {
-                        if (!startupRestored.isCompleted) return@onReceive
-                        logger.debug { "Refreshing torrent caches on service connection changed, connected: $it." }
-                        refreshCache()
-                    }
+                while (true) {
+                    select<Unit> {
+                        // 如果在 APP 启动时 serviceConnected 状态变了, 忽略处理
+                        serviceConnected.onReceive {
+                            if (!startupRestored.isCompleted) return@onReceive
+                            logger.debug { "Refreshing torrent caches on service connection changed, connected: $it." }
+                            refreshCache()
+                        }
 
-                    requestStartupRestore.onReceive {
-                        logger.debug { "Restoring persisted torrent caches on startup." }
-                        val allRecovered = refreshCache()
-                        engine.deleteUnusedCaches(allRecovered)
-                        startupRestored.complete(Unit)
+                        requestStartupRestore.onReceive {
+                            logger.debug { "Restoring persisted torrent caches on startup." }
+                            val allRecovered = refreshCache()
+                            engine.deleteUnusedCaches(allRecovered)
+                            startupRestored.complete(Unit)
+                        }
                     }
                 }
             }
@@ -142,7 +140,11 @@ class DataStoreMediaCacheStorage(
     }
 
     override suspend fun restorePersistedCaches() {
-        requestStartupRestoreFlow.emit(true)
+        if (engine is TorrentMediaCacheEngine) {
+            requestStartupRestoreFlow.emit(true)
+        } else {
+            refreshCache()
+        }
     }
 
     private suspend fun refreshCache(): List<MediaCache> {
