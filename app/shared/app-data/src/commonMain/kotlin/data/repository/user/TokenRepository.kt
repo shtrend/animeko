@@ -46,6 +46,7 @@ class TokenRepository(
                     AccessTokenPair(
                         bangumiAccessToken = save.accessTokens.bangumiAccessToken,
                         aniAccessToken = save.accessTokens.aniAccessToken,
+                        expiresAtMillis = save.accessTokens.expiresAtMillis,
                     ),
                     expiresAtMillis = save.accessTokens.expiresAtMillis,
                 )
@@ -177,6 +178,7 @@ class LegacyTokenRepository(
                 AccessTokenPair(
                     accessToken,
                     "",
+                    expiresAtMillis = expireAt,
                 ),
                 expiresAtMillis = expireAt,
             )

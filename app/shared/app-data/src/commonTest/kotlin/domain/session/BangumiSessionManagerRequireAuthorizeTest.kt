@@ -26,6 +26,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
 
 class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerTest() {
 
@@ -363,7 +364,10 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         assertEquals(2, getSelfInfoCalled.value)
     }
 
-    private fun successAccessTokenPair(): AccessTokenPair = AccessTokenPair(ACCESS_TOKEN, ACCESS_TOKEN)
+    private fun successAccessTokenPair(): AccessTokenPair = AccessTokenPair(
+        ACCESS_TOKEN, ACCESS_TOKEN,
+        expiresAtMillis = (currentTimeMillis().milliseconds + veryLongDuration).inWholeMilliseconds,
+    )
 
     @Test
     fun `requireAuthorize guest followed by successful oauth`() = runTest {
@@ -576,10 +580,22 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
     private val veryLongDuration = 100.days
 
     private fun createVerifying(token: String): SessionStatus.Verifying =
-        SessionStatus.Verifying(AccessTokenPair(token, token))
+        SessionStatus.Verifying(
+            AccessTokenPair(
+                token,
+                token,
+                expiresAtMillis = (currentTimeMillis().milliseconds + veryLongDuration).inWholeMilliseconds,
+            ),
+        )
 
     @Suppress("SameParameterValue")
     private fun createVerified(token: String, userInfo: UserInfo): SessionStatus.Verified =
-        SessionStatus.Verified(AccessTokenPair(token, token), userInfo)
+        SessionStatus.Verified(
+            AccessTokenPair(
+                token, token,
+                expiresAtMillis = (currentTimeMillis().milliseconds + veryLongDuration).inWholeMilliseconds,
+            ),
+            userInfo,
+        )
 
 }

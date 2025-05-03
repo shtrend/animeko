@@ -115,6 +115,7 @@ import me.him188.ani.app.domain.media.resolver.MediaResolver
 import me.him188.ani.app.domain.mediasource.codec.MediaSourceCodecManager
 import me.him188.ani.app.domain.mediasource.subscription.MediaSourceSubscriptionRequesterImpl
 import me.him188.ani.app.domain.mediasource.subscription.MediaSourceSubscriptionUpdater
+import me.him188.ani.app.domain.session.AccessTokenPair
 import me.him188.ani.app.domain.session.AniApiProvider
 import me.him188.ani.app.domain.session.AniAuthClient
 import me.him188.ani.app.domain.session.AniAuthClientImpl
@@ -715,7 +716,7 @@ fun KoinApplication.startCommonKoinModule(
                     val legacyBangumiToken = legacySession.tokens.bangumiAccessToken
                     // legacy aniAccessToken is always empty.
 
-                    val tokens = try {
+                    val aniToken = try {
                         authClient.getAccessTokensByBangumiToken(legacyBangumiToken)
                     } catch (e: Throwable) {
                         logger.warn(
@@ -731,7 +732,11 @@ fun KoinApplication.startCommonKoinModule(
 
                     newRepo.setSession(
                         AccessTokenSession(
-                            tokens = tokens,
+                            tokens = AccessTokenPair(
+                                bangumiAccessToken = legacyBangumiToken,
+                                aniAccessToken = aniToken,
+                                expiresAtMillis = legacySession.expiresAtMillis,
+                            ),
                             expiresAtMillis = legacySession.expiresAtMillis,
                         ),
                     )

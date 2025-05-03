@@ -26,6 +26,7 @@ object PreviewSessionManager : SessionManager {
             tokens = AccessTokenPair(
                 bangumiAccessToken = "testToken",
                 aniAccessToken = "testToken",
+                expiresAtMillis = currentTimeMillis() + 1.days.inWholeMilliseconds,
             ),
             expiresAtMillis = currentTimeMillis() + 1.days.inWholeMilliseconds,
         ),
@@ -36,6 +37,7 @@ object PreviewSessionManager : SessionManager {
                 AccessTokenPair(
                     bangumiAccessToken = "testToken",
                     aniAccessToken = "testToken",
+                    expiresAtMillis = currentTimeMillis() + 1.days.inWholeMilliseconds,
                 ),
                 UserInfo.EMPTY,
             ),
