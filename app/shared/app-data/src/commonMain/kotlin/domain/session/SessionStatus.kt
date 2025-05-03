@@ -110,7 +110,7 @@ data class AccessTokenPair(
 ) {
     override fun toString(): String {
         // 日志不打印 token
-        return "AccessTokenPair(bangumiAccessToken.hashCode=${bangumiAccessToken.hashCode()}, aniAccessToken.hashCode=${aniAccessToken.hashCode()})"
+        return "AccessTokenPair(bangumiAccessToken.hashCode=${bangumiAccessToken.hashCode()}, aniAccessToken.hashCode=${aniAccessToken.hashCode()}, expiresAtMillis=$expiresAtMillis)"
     }
 }
 

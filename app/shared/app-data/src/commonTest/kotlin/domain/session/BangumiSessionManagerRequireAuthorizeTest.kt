@@ -26,7 +26,6 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.milliseconds
 
 class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerTest() {
 
@@ -366,7 +365,7 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
 
     private fun successAccessTokenPair(): AccessTokenPair = AccessTokenPair(
         ACCESS_TOKEN, ACCESS_TOKEN,
-        expiresAtMillis = (currentTimeMillis().milliseconds + veryLongDuration).inWholeMilliseconds,
+        expiresAtMillis = validExpiresAtMillis,
     )
 
     @Test
@@ -584,7 +583,7 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
             AccessTokenPair(
                 token,
                 token,
-                expiresAtMillis = (currentTimeMillis().milliseconds + veryLongDuration).inWholeMilliseconds,
+                expiresAtMillis = validExpiresAtMillis,
             ),
         )
 
@@ -593,7 +592,7 @@ class BangumiSessionManagerRequireAuthorizeTest : AbstractBangumiSessionManagerT
         SessionStatus.Verified(
             AccessTokenPair(
                 token, token,
-                expiresAtMillis = (currentTimeMillis().milliseconds + veryLongDuration).inWholeMilliseconds,
+                expiresAtMillis = validExpiresAtMillis,
             ),
             userInfo,
         )

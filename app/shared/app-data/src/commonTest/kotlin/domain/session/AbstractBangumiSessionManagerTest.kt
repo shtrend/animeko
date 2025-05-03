@@ -100,8 +100,8 @@ sealed class AbstractBangumiSessionManagerTest {
         )
     }
 
-    internal suspend fun setValidToken(token: String = ACCESS_TOKEN) {
-        val expiresAtMillis = currentTimeMillis() + 100.days.inWholeMilliseconds
+    protected val validExpiresAtMillis = currentTimeMillis() + 100.days.inWholeMilliseconds
+    internal suspend fun setValidToken(token: String = ACCESS_TOKEN, expiresAtMillis: Long = validExpiresAtMillis) {
         tokenRepository.setSession(
             AccessTokenSession(
                 tokens = AccessTokenPair(token, token, expiresAtMillis),
