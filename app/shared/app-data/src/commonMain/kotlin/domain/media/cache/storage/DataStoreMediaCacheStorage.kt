@@ -112,48 +112,29 @@ class DataStoreMediaCacheStorage(
     private val restoredLocalFileMediaCacheIds = MutableStateFlow(persistentListOf<String>())
 
     init {
-        if (engine is TorrentMediaCacheEngine) {
-            suspend fun refreshCache(): List<MediaCache> {
-                statSubscriptionScope.restart()
-
-                return lock.withLock {
-                    val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
-                    restorePersistedCachesImpl {
-                        if (it is LocalFileMediaCache) {
-                            restoredLocalFileMediaCacheIds.update { plus(it.origin.mediaId) }
-                        }
-                        allRecovered.update { plus(it) }
-                    }
-
-                    // 新 restore 的加上 list 中已经有的 LocalFileMediaCache
-                    listFlow.update {
-                        allRecovered.value +
-                                listFlow.value.filter { it.origin.mediaId in restoredLocalFileMediaCacheIds.value }
-                    }
-                    allRecovered.value
-                }
+        scope.launch {
+            val startupRestored = CompletableDeferred<Unit>()
+            val serviceConnected = if (engine is TorrentMediaCacheEngine) {
+                engine.isServiceConnected.buffer(Channel.RENDEZVOUS).produceIn(this)
+            } else {
+                null
             }
+            val requestStartupRestore = requestStartupRestoreFlow.produceIn(this)
 
-            scope.launch {
-                val startupRestored = CompletableDeferred<Unit>()
-                val serviceConnected = engine.isServiceConnected.buffer(Channel.RENDEZVOUS).produceIn(this)
-                val requestStartupRestore = requestStartupRestoreFlow.produceIn(this)
+            while (true) {
+                select<Unit> {
+                    // 如果在 APP 启动时 serviceConnected 状态变了, 忽略处理
+                    serviceConnected?.onReceive {
+                        if (!startupRestored.isCompleted) return@onReceive
+                        logger.debug { "Refreshing torrent caches on service connection changed, connected: $it." }
+                        refreshCache()
+                    }
 
-                while (true) {
-                    select<Unit> {
-                        // 如果在 APP 启动时 serviceConnected 状态变了, 忽略处理
-                        serviceConnected.onReceive {
-                            if (!startupRestored.isCompleted) return@onReceive
-                            logger.debug { "Refreshing torrent caches on service connection changed, connected: $it." }
-                            refreshCache()
-                        }
-
-                        requestStartupRestore.onReceive {
-                            logger.debug { "Restoring persisted torrent caches on startup." }
-                            val allRecovered = refreshCache()
-                            engine.deleteUnusedCaches(allRecovered)
-                            startupRestored.complete(Unit)
-                        }
+                    requestStartupRestore.onReceive {
+                        logger.debug { "Restoring persisted torrent caches on startup." }
+                        val allRecovered = refreshCache()
+                        engine.deleteUnusedCaches(allRecovered)
+                        startupRestored.complete(Unit)
                     }
                 }
             }
@@ -164,25 +145,41 @@ class DataStoreMediaCacheStorage(
         requestStartupRestoreFlow.emit(true)
     }
 
-    // must be used under lock
-    private suspend fun restorePersistedCachesImpl(reportRecovered: (MediaCache) -> Unit) {
-        val metadataFlowSnapshot = metadataFlow.first()
-        val semaphore = Semaphore(8)
+    private suspend fun refreshCache(): List<MediaCache> {
+        statSubscriptionScope.restart()
 
-        supervisorScope {
-            metadataFlowSnapshot.forEach { (origin, metadata, _) ->
-                if (origin.mediaId in restoredLocalFileMediaCacheIds.value) return@forEach
+        return lock.withLock {
+            val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
+            val metadataFlowSnapshot = metadataFlow.first()
+            val semaphore = Semaphore(8)
 
-                semaphore.acquire()
-                @OptIn(DelicateCoroutinesApi::class)
-                launch(start = CoroutineStart.ATOMIC) {
-                    try {
-                        restoreFile(origin, metadata, reportRecovered)
-                    } finally {
-                        semaphore.release()
+            supervisorScope {
+                metadataFlowSnapshot.forEach { (origin, metadata, _) ->
+                    if (origin.mediaId in restoredLocalFileMediaCacheIds.value) return@forEach
+
+                    semaphore.acquire()
+                    @OptIn(DelicateCoroutinesApi::class)
+                    launch(start = CoroutineStart.ATOMIC) {
+                        try {
+                            restoreFile(origin, metadata) {
+                                if (it is LocalFileMediaCache) {
+                                    restoredLocalFileMediaCacheIds.update { plus(it.origin.mediaId) }
+                                }
+                                allRecovered.update { plus(it) }
+                            }
+                        } finally {
+                            semaphore.release()
+                        }
                     }
                 }
             }
+
+            // 新 restore 的加上 list 中已经有的 LocalFileMediaCache
+            listFlow.update {
+                allRecovered.value +
+                        listFlow.value.filter { it.origin.mediaId in restoredLocalFileMediaCacheIds.value }
+            }
+            allRecovered.value
         }
     }
 
