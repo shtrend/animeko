@@ -143,7 +143,8 @@ class DataStoreMediaCacheStorage(
         if (engine is TorrentMediaCacheEngine) {
             requestStartupRestoreFlow.emit(true)
         } else {
-            refreshCache()
+            val allRecovered = refreshCache()
+            engine.deleteUnusedCaches(allRecovered)
         }
     }
 
