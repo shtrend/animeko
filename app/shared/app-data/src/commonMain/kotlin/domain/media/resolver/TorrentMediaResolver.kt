@@ -16,6 +16,7 @@ import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
+import kotlinx.io.files.SystemPathSeparator
 import me.him188.ani.app.domain.media.cache.engine.EnsureTorrentEngineIsAccessible
 import me.him188.ani.app.domain.media.cache.engine.TorrentEngineAccess
 import me.him188.ani.app.domain.media.cache.engine.UnsafeTorrentEngineAccessApi
@@ -150,7 +151,7 @@ class TorrentMediaResolver(
             val parsedTitles = buildMap { // similar to `associateWith`, but ignores nulls
                 for (entry in videos) {
                     val title = RawTitleParser.getDefault().parse(
-                        entry.getPath().substringBeforeLast("."),
+                        entry.getPath().substringBeforeLast(".").substringAfterLast(SystemPathSeparator),
                         null,
                     ).episodeRange
                     if (title != null) { // difference between `associateWith`

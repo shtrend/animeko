@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
+import kotlinx.io.files.SystemPathSeparator
 import me.him188.ani.app.torrent.api.TorrentSession
 import me.him188.ani.app.torrent.api.pieces.Piece
 import me.him188.ani.app.torrent.api.pieces.PieceList
@@ -38,7 +39,6 @@ import kotlin.concurrent.Volatile
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.IO
 
 /**
  * 表示 [BT 资源][TorrentSession] 中的一个文件.
@@ -220,7 +220,7 @@ abstract class AbstractTorrentFileEntry(
      */
     abstract override val pieces: PieceList
 
-    final override val fileName: String get() = relativePath.substringAfter("/")
+    final override val fileName: String get() = relativePath.substringAfterLast(SystemPathSeparator)
 
     final override val pathInTorrent: String = relativePath
 
