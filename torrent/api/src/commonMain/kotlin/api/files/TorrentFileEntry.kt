@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.withContext
 import kotlinx.io.IOException
-import kotlinx.io.files.SystemPathSeparator
 import me.him188.ani.app.torrent.api.TorrentSession
 import me.him188.ani.app.torrent.api.pieces.Piece
 import me.him188.ani.app.torrent.api.pieces.PieceList
@@ -221,7 +220,10 @@ abstract class AbstractTorrentFileEntry(
      */
     abstract override val pieces: PieceList
 
-    final override val fileName: String get() = relativePath.substringAfterLast(SystemPathSeparator)
+    final override val fileName: String
+        get() = relativePath
+            .substringAfterLast("\\")
+            .substringAfterLast("/")
 
     final override val pathInTorrent: String = relativePath
 
