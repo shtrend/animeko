@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.2.0-Beta2"
-android-gradle-plugin = "8.6.1"
+android-gradle-plugin = "8.9.2"
 
 ### KOTLINX ###
 kotlinx-coroutines = "1.10.2" # https://github.com/Kotlin/kotlinx.coroutines/releases
