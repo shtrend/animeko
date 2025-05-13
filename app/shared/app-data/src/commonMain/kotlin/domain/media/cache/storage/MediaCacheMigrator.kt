@@ -89,10 +89,14 @@ class MediaCacheMigrator(
             if (requiresMigration) {
                 scope.launch(Dispatchers.IO_) {
                     migrateMediaCacheDownloads(migrateTorrent, migrateWebM3u)
+                    delay(500)
+                    appTerminator.exitApp(context, 0)
                 }
+            } else {
+                // 无条件尝试迁移元数据
+                migratePathInMetadataToRelative()
             }
 
-            migratePathInMetadataToRelative() // 无条件尝试迁移元数据
 
             return requiresMigration
         } catch (e: Exception) {
@@ -154,6 +158,8 @@ class MediaCacheMigrator(
             return
         }
 
+        logger.info { "[migration] Migrating path in metadata to relative." }
+
         val torrentStorage = mediaCacheManager.storagesIncludingDisabled
             .find { it is DataStoreMediaCacheStorage && it.engine is TorrentMediaCacheEngine }
         val webStorage = mediaCacheManager.storagesIncludingDisabled
@@ -161,6 +167,13 @@ class MediaCacheMigrator(
 
         val baseSaveDir = mediaCacheBaseDirProvider.saveDir
         val webBaseSaveDir = Path(baseSaveDir, HttpMediaCacheEngine.MEDIA_CACHE_DIR).inSystem.absolutePath
+
+        fun String.subWebCacheDir(): String {
+            return substringAfter(webBaseSaveDir)
+                .substringAfter(HttpMediaCacheEngine.LEGACY_MEDIA_CACHE_DIR)
+                .substringAfter(HttpMediaCacheEngine.MEDIA_CACHE_DIR)
+                .also { logger.info { "[migration] Prev path: $this, new path: $it" } }
+        }
 
         metadataStore.updateData { original ->
             original.map { save ->
@@ -173,7 +186,12 @@ class MediaCacheMigrator(
                                     extra = save.metadata.extra.toMutableMap().apply {
                                         put(
                                             TorrentMediaCacheEngine.EXTRA_TORRENT_CACHE_DIR,
-                                            torrentCacheDir.substringAfter(baseSaveDir),
+                                            torrentCacheDir
+                                                .substringAfter(baseSaveDir)
+                                                .substringAfter(TorrentMediaCacheEngine.LEGACY_MEDIA_CACHE_DIR)
+                                                .also {
+                                                    logger.info { "[migration] Prev path: $torrentCacheDir, new path: $it" }
+                                                },
                                         )
                                     },
                                 ),
@@ -189,7 +207,7 @@ class MediaCacheMigrator(
                                     extra = save.metadata.extra.toMutableMap().apply {
                                         put(
                                             HttpMediaCacheEngine.EXTRA_OUTPUT_PATH,
-                                            outputPath.substringAfter(webBaseSaveDir),
+                                            outputPath.subWebCacheDir(),
                                         )
                                     },
                                 ),
@@ -205,16 +223,18 @@ class MediaCacheMigrator(
         m3u8DownloaderStore.updateData { states ->
             states.map { state ->
                 state.copy(
-                    relativeOutputPath = state.relativeOutputPath.substringAfter(webBaseSaveDir),
-                    relativeSegmentCacheDir = state.relativeSegmentCacheDir.substringAfter(webBaseSaveDir),
+                    relativeOutputPath = state.relativeOutputPath.subWebCacheDir(),
+                    relativeSegmentCacheDir = state.relativeSegmentCacheDir.subWebCacheDir(),
                     segments = state.segments.map { seg ->
                         seg.copy(
-                            relativeTempFilePath = seg.relativeTempFilePath.substringAfter(webBaseSaveDir),
+                            relativeTempFilePath = seg.relativeTempFilePath.subWebCacheDir(),
                         )
                     },
                 )
             }
         }
+
+        logger.info { "[migration] Migration path in metadata is completed." }
 
         settingsRepo.oneshotActionConfig.update { copy(metadataMigratedFor411 = true) }
     }
@@ -247,6 +267,7 @@ class MediaCacheMigrator(
                     var migratedSize = 0L
 
                     prevPath.moveDirectoryRecursively(newBasePath) {
+                        logger.info { "[migration] Moving file ${it.absolutePath}" }
                         _status.value = Status.TorrentCache(it.name, totalSize, migratedSize)
                         migratedSize += it.actualSize()
                     }
@@ -278,6 +299,7 @@ class MediaCacheMigrator(
                     var migratedSize = 0L
 
                     prevPath.moveDirectoryRecursively(newPath) {
+                        logger.info { "[migration] Moving file ${it.absolutePath}" }
                         _status.value = Status.WebM3uCache(it.name, totalSize, migratedSize)
                         migratedSize += it.actualSize()
                     }
@@ -299,9 +321,6 @@ class MediaCacheMigrator(
 
             settingsRepo.mediaCacheSettings.update { copy(saveDir = newBasePath.absolutePath) }
             logger.info { "[migration] Migration success." }
-
-            delay(500)
-            appTerminator.exitApp(context, 0)
         } catch (e: Exception) {
             _status.value = Status.Error(e)
             logger.error(e) { "[migration] Failed to migrate torrent cache." }
