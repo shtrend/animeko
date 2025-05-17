@@ -24,7 +24,6 @@
 
 package me.him188.ani.client.apis
 
-
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngine
@@ -34,8 +33,9 @@ import me.him188.ani.client.infrastructure.HttpResponse
 import me.him188.ani.client.infrastructure.RequestConfig
 import me.him188.ani.client.infrastructure.RequestMethod
 import me.him188.ani.client.infrastructure.wrap
+import me.him188.ani.client.models.AniPeerFilterRule
 
-open class SubscriptionsAniApi : ApiClient {
+open class PeerFilterRuleAniApi : ApiClient {
 
     constructor(
         baseUrl: String = ApiClient.BASE_URL,
@@ -55,29 +55,27 @@ open class SubscriptionsAniApi : ApiClient {
     ) : super(baseUrl = baseUrl, httpClient = httpClient)
 
     /**
-     * 获取订阅数据
-     * 获取订阅数据
-     * @param url
-     * @return kotlin.String
+     *
+     *
+     * @return AniPeerFilterRule
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun proxy(url: kotlin.String): HttpResponse<kotlin.String> {
+    open suspend fun get(): HttpResponse<AniPeerFilterRule> {
 
-        val localVariableAuthNames = listOf<String>()
+        val localVariableAuthNames = listOf<String>("auth-jwt")
 
-        val localVariableBody = 
+        val localVariableBody =
             io.ktor.client.utils.EmptyContent
 
         val localVariableQuery = mutableMapOf<String, List<String>>()
-        url?.apply { localVariableQuery["url"] = listOf("$url") }
         val localVariableHeaders = mutableMapOf<String, String>()
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
             RequestMethod.GET,
-            "/v1/subs/proxy",
+            "/v2/pfrule",
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = false,
+            requiresAuthentication = true,
         )
 
         return request(

@@ -32,14 +32,14 @@ import me.him188.ani.client.infrastructure.ApiClient
 import me.him188.ani.client.infrastructure.HttpResponse
 import me.him188.ani.client.infrastructure.RequestConfig
 import me.him188.ani.client.infrastructure.RequestMethod
-import me.him188.ani.client.infrastructure.toMultiValue
 import me.him188.ani.client.infrastructure.wrap
-import me.him188.ani.client.models.AniAnimeSchedule
-import me.him188.ani.client.models.AniAnimeSeasonIdList
-import me.him188.ani.client.models.AniBatchGetSubjectRecurrenceResponse
-import me.him188.ani.client.models.AniLatestAnimeSchedules
+import me.him188.ani.client.models.AniAuthenticationResponse
+import me.him188.ani.client.models.AniRegisterOrLoginByEmailOtpRequest
+import me.him188.ani.client.models.AniSendEmailOtpRequest
+import me.him188.ani.client.models.AniSendOptResponse
+import me.him188.ani.client.models.AniSetPasswordRequest
 
-open class ScheduleAniApi : ApiClient {
+open class UserAuthenticationAniApi : ApiClient {
 
     constructor(
         baseUrl: String = ApiClient.BASE_URL,
@@ -59,31 +59,30 @@ open class ScheduleAniApi : ApiClient {
     ) : super(baseUrl = baseUrl, httpClient = httpClient)
 
     /**
-     * 获取一个季度的新番时间表
-     * 获取一个季度的新番时间表
-     * @param seasonId 
-     * @return AniAnimeSchedule
+     * 使用邮箱验证码登录或注册
+     * 使用邮箱验证码登录或注册
+     * @param aniRegisterOrLoginByEmailOtpRequest
+     * @return AniAuthenticationResponse
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun getAnimeSeason(seasonId: kotlin.String): HttpResponse<AniAnimeSchedule> {
+    open suspend fun registerOrLoginByEmailOtp(aniRegisterOrLoginByEmailOtpRequest: AniRegisterOrLoginByEmailOtpRequest): HttpResponse<AniAuthenticationResponse> {
 
-        val localVariableAuthNames = listOf<String>()
+        val localVariableAuthNames = listOf<String>("auth-jwt")
 
-        val localVariableBody = 
-            io.ktor.client.utils.EmptyContent
+        val localVariableBody = aniRegisterOrLoginByEmailOtpRequest
 
         val localVariableQuery = mutableMapOf<String, List<String>>()
         val localVariableHeaders = mutableMapOf<String, String>()
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
-            RequestMethod.GET,
-            "/v1/schedule/season/{seasonId}".replace("{" + "seasonId" + "}", "$seasonId"),
+            RequestMethod.POST,
+            "/v2/users/auth/email",
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = false,
+            requiresAuthentication = true,
         )
 
-        return request(
+        return jsonRequest(
             localVariableConfig,
             localVariableBody,
             localVariableAuthNames,
@@ -92,30 +91,30 @@ open class ScheduleAniApi : ApiClient {
 
 
     /**
-     * 获取新番季度列表
-     * 获取新番季度列表
-     * @return AniAnimeSeasonIdList
+     * 发送邮箱验证码
+     * 发送邮箱验证码
+     * @param aniSendEmailOtpRequest
+     * @return AniSendOptResponse
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun getAnimeSeasons(): HttpResponse<AniAnimeSeasonIdList> {
+    open suspend fun sendEmailOtp(aniSendEmailOtpRequest: AniSendEmailOtpRequest): HttpResponse<AniSendOptResponse> {
 
-        val localVariableAuthNames = listOf<String>()
+        val localVariableAuthNames = listOf<String>("auth-jwt")
 
-        val localVariableBody = 
-            io.ktor.client.utils.EmptyContent
+        val localVariableBody = aniSendEmailOtpRequest
 
         val localVariableQuery = mutableMapOf<String, List<String>>()
         val localVariableHeaders = mutableMapOf<String, String>()
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
-            RequestMethod.GET,
-            "/v1/schedule/seasons",
+            RequestMethod.POST,
+            "/v2/users/auth/email/otp",
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = false,
+            requiresAuthentication = true,
         )
 
-        return request(
+        return jsonRequest(
             localVariableConfig,
             localVariableBody,
             localVariableAuthNames,
@@ -124,64 +123,30 @@ open class ScheduleAniApi : ApiClient {
 
 
     /**
-     * 获取最近几个季度的列表
-     * 获取最近几个季度的列表
-     * @return AniLatestAnimeSchedules
+     * 老用户设置密码. 只能设置一次, 之后要使用邮箱修改密码.
+     * 老用户设置密码. 只能设置一次, 之后要使用邮箱修改密码.
+     * @param aniSetPasswordRequest
+     * @return AniAuthenticationResponse
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun getLatestAnimeSeasons(): HttpResponse<AniLatestAnimeSchedules> {
+    open suspend fun setPassword(aniSetPasswordRequest: AniSetPasswordRequest): HttpResponse<AniAuthenticationResponse> {
 
-        val localVariableAuthNames = listOf<String>()
+        val localVariableAuthNames = listOf<String>("auth-jwt")
 
-        val localVariableBody = 
-            io.ktor.client.utils.EmptyContent
+        val localVariableBody = aniSetPasswordRequest
 
         val localVariableQuery = mutableMapOf<String, List<String>>()
         val localVariableHeaders = mutableMapOf<String, String>()
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
-            RequestMethod.GET,
-            "/v1/schedule/seasons/latest",
+            RequestMethod.PUT,
+            "/v2/users/auth/password",
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = false,
+            requiresAuthentication = true,
         )
 
-        return request(
-            localVariableConfig,
-            localVariableBody,
-            localVariableAuthNames,
-        ).wrap()
-    }
-
-
-    /**
-     * 查询一些条目的连载信息
-     * 查询一些条目的连载信息
-     * @param ids 
-     * @return AniBatchGetSubjectRecurrenceResponse
-     */
-    @Suppress("UNCHECKED_CAST")
-    open suspend fun getSubjectRecurrences(ids: kotlin.collections.List<kotlin.Int>): HttpResponse<AniBatchGetSubjectRecurrenceResponse> {
-
-        val localVariableAuthNames = listOf<String>()
-
-        val localVariableBody = 
-            io.ktor.client.utils.EmptyContent
-
-        val localVariableQuery = mutableMapOf<String, List<String>>()
-        ids?.apply { localVariableQuery["ids"] = toMultiValue(this, "csv") }
-        val localVariableHeaders = mutableMapOf<String, String>()
-
-        val localVariableConfig = RequestConfig<kotlin.Any?>(
-            RequestMethod.GET,
-            "/v1/schedule/subjects",
-            query = localVariableQuery,
-            headers = localVariableHeaders,
-            requiresAuthentication = false,
-        )
-
-        return request(
+        return jsonRequest(
             localVariableConfig,
             localVariableBody,
             localVariableAuthNames,

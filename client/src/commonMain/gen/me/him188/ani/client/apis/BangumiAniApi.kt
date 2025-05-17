@@ -24,22 +24,20 @@
 
 package me.him188.ani.client.apis
 
+import me.him188.ani.client.models.AniLoginResponse
+
+import me.him188.ani.client.infrastructure.*
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.request.forms.formData
 import io.ktor.client.engine.HttpClientEngine
 import kotlinx.serialization.json.Json
-import me.him188.ani.client.infrastructure.ApiClient
-import me.him188.ani.client.infrastructure.HttpResponse
-import me.him188.ani.client.infrastructure.RequestConfig
-import me.him188.ani.client.infrastructure.RequestMethod
-import me.him188.ani.client.infrastructure.toMultiValue
-import me.him188.ani.client.infrastructure.wrap
-import me.him188.ani.client.models.AniAnimeSchedule
-import me.him188.ani.client.models.AniAnimeSeasonIdList
-import me.him188.ani.client.models.AniBatchGetSubjectRecurrenceResponse
-import me.him188.ani.client.models.AniLatestAnimeSchedules
+import io.ktor.http.ParametersBuilder
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
 
-open class ScheduleAniApi : ApiClient {
+open class BangumiAniApi : ApiClient {
 
     constructor(
         baseUrl: String = ApiClient.BASE_URL,
@@ -59,28 +57,32 @@ open class ScheduleAniApi : ApiClient {
     ) : super(baseUrl = baseUrl, httpClient = httpClient)
 
     /**
-     * 获取一个季度的新番时间表
-     * 获取一个季度的新番时间表
-     * @param seasonId 
-     * @return AniAnimeSchedule
+     * 绑定 Bangumi 账号
+     * 绑定 Bangumi 账号
+     * @param requestId
+     * @param os
+     * @param arch
+     * @return void
      */
-    @Suppress("UNCHECKED_CAST")
-    open suspend fun getAnimeSeason(seasonId: kotlin.String): HttpResponse<AniAnimeSchedule> {
+    open suspend fun bind(requestId: kotlin.String, os: kotlin.String, arch: kotlin.String): HttpResponse<Unit> {
 
-        val localVariableAuthNames = listOf<String>()
+        val localVariableAuthNames = listOf<String>("auth-jwt")
 
-        val localVariableBody = 
+        val localVariableBody =
             io.ktor.client.utils.EmptyContent
 
         val localVariableQuery = mutableMapOf<String, List<String>>()
+        requestId?.apply { localVariableQuery["requestId"] = listOf("$requestId") }
+        os?.apply { localVariableQuery["os"] = listOf("$os") }
+        arch?.apply { localVariableQuery["arch"] = listOf("$arch") }
         val localVariableHeaders = mutableMapOf<String, String>()
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
             RequestMethod.GET,
-            "/v1/schedule/season/{seasonId}".replace("{" + "seasonId" + "}", "$seasonId"),
+            "/v2/users/bangumi/bind",
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = false,
+            requiresAuthentication = true,
         )
 
         return request(
@@ -92,27 +94,29 @@ open class ScheduleAniApi : ApiClient {
 
 
     /**
-     * 获取新番季度列表
-     * 获取新番季度列表
-     * @return AniAnimeSeasonIdList
+     * 获取登录结果
+     * 获取登录结果
+     * @param requestId
+     * @return AniLoginResponse
      */
     @Suppress("UNCHECKED_CAST")
-    open suspend fun getAnimeSeasons(): HttpResponse<AniAnimeSeasonIdList> {
+    open suspend fun getToken(requestId: kotlin.String): HttpResponse<AniLoginResponse> {
 
-        val localVariableAuthNames = listOf<String>()
+        val localVariableAuthNames = listOf<String>("auth-jwt")
 
-        val localVariableBody = 
+        val localVariableBody =
             io.ktor.client.utils.EmptyContent
 
         val localVariableQuery = mutableMapOf<String, List<String>>()
+        requestId?.apply { localVariableQuery["requestId"] = listOf("$requestId") }
         val localVariableHeaders = mutableMapOf<String, String>()
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
             RequestMethod.GET,
-            "/v1/schedule/seasons",
+            "/v2/users/bangumi/result",
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = false,
+            requiresAuthentication = true,
         )
 
         return request(
@@ -124,27 +128,32 @@ open class ScheduleAniApi : ApiClient {
 
 
     /**
-     * 获取最近几个季度的列表
-     * 获取最近几个季度的列表
-     * @return AniLatestAnimeSchedules
+     * 获取 Bangumi OAuth 授权链接
+     * 获取 Bangumi OAuth 授权链接
+     * @param requestId
+     * @param os
+     * @param arch
+     * @return void
      */
-    @Suppress("UNCHECKED_CAST")
-    open suspend fun getLatestAnimeSeasons(): HttpResponse<AniLatestAnimeSchedules> {
+    open suspend fun oauth(requestId: kotlin.String, os: kotlin.String, arch: kotlin.String): HttpResponse<Unit> {
 
-        val localVariableAuthNames = listOf<String>()
+        val localVariableAuthNames = listOf<String>("auth-jwt")
 
-        val localVariableBody = 
+        val localVariableBody =
             io.ktor.client.utils.EmptyContent
 
         val localVariableQuery = mutableMapOf<String, List<String>>()
+        requestId?.apply { localVariableQuery["requestId"] = listOf("$requestId") }
+        os?.apply { localVariableQuery["os"] = listOf("$os") }
+        arch?.apply { localVariableQuery["arch"] = listOf("$arch") }
         val localVariableHeaders = mutableMapOf<String, String>()
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
             RequestMethod.GET,
-            "/v1/schedule/seasons/latest",
+            "/v2/users/bangumi/oauth",
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = false,
+            requiresAuthentication = true,
         )
 
         return request(
@@ -156,29 +165,30 @@ open class ScheduleAniApi : ApiClient {
 
 
     /**
-     * 查询一些条目的连载信息
-     * 查询一些条目的连载信息
-     * @param ids 
-     * @return AniBatchGetSubjectRecurrenceResponse
+     * Bangumi OAuth 回调
+     * Bangumi OAuth 回调
+     * @param code
+     * @param state
+     * @return void
      */
-    @Suppress("UNCHECKED_CAST")
-    open suspend fun getSubjectRecurrences(ids: kotlin.collections.List<kotlin.Int>): HttpResponse<AniBatchGetSubjectRecurrenceResponse> {
+    open suspend fun oauthCallback(code: kotlin.String, state: kotlin.String): HttpResponse<Unit> {
 
-        val localVariableAuthNames = listOf<String>()
+        val localVariableAuthNames = listOf<String>("auth-jwt")
 
-        val localVariableBody = 
+        val localVariableBody =
             io.ktor.client.utils.EmptyContent
 
         val localVariableQuery = mutableMapOf<String, List<String>>()
-        ids?.apply { localVariableQuery["ids"] = toMultiValue(this, "csv") }
+        code?.apply { localVariableQuery["code"] = listOf("$code") }
+        state?.apply { localVariableQuery["state"] = listOf("$state") }
         val localVariableHeaders = mutableMapOf<String, String>()
 
         val localVariableConfig = RequestConfig<kotlin.Any?>(
             RequestMethod.GET,
-            "/v1/schedule/subjects",
+            "/v2/users/bangumi/oauth/callback",
             query = localVariableQuery,
             headers = localVariableHeaders,
-            requiresAuthentication = false,
+            requiresAuthentication = true,
         )
 
         return request(

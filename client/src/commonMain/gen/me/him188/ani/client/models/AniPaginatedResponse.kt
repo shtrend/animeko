@@ -24,30 +24,23 @@
 
 package me.him188.ani.client.models
 
-
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param version 
- * @param downloadUrlAlternativesMap 
- * @param publishTime 
- * @param qrcodeUrls 
+ *
+ * @param total
+ * @param items
  */
 @Serializable
 
-data class AniLatestVersionInfo(
+data class AniPaginatedResponse(
 
-    @SerialName(value = "version") @Required val version: kotlin.String,
+    @SerialName(value = "total") @Required val total: kotlin.Long,
 
-    @SerialName(value = "downloadUrlAlternativesMap") @Required val downloadUrlAlternativesMap: kotlin.collections.Map<kotlin.String, kotlin.collections.List<kotlin.String>>,
-
-    @SerialName(value = "publishTime") @Required val publishTime: kotlin.Long,
-
-    @SerialName(value = "qrcodeUrls") @Required val qrcodeUrls: kotlin.collections.List<kotlin.String>
+    @SerialName(value = "items") @Required val items: kotlin.collections.List<AniSubjectCollectionEntity>
 
 ) {
 

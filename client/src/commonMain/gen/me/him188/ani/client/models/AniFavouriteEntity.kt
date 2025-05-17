@@ -30,24 +30,27 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * 
  *
- * @param version 
- * @param downloadUrlAlternativesMap 
- * @param publishTime 
- * @param qrcodeUrls 
+ *
+ * @param wish
+ * @param done
+ * @param doing
+ * @param onHold
+ * @param dropped
  */
 @Serializable
 
-data class AniLatestVersionInfo(
+data class AniFavouriteEntity(
 
-    @SerialName(value = "version") @Required val version: kotlin.String,
+    @SerialName(value = "wish") @Required val wish: kotlin.Int,
 
-    @SerialName(value = "downloadUrlAlternativesMap") @Required val downloadUrlAlternativesMap: kotlin.collections.Map<kotlin.String, kotlin.collections.List<kotlin.String>>,
+    @SerialName(value = "done") @Required val done: kotlin.Int,
 
-    @SerialName(value = "publishTime") @Required val publishTime: kotlin.Long,
+    @SerialName(value = "doing") @Required val doing: kotlin.Int,
 
-    @SerialName(value = "qrcodeUrls") @Required val qrcodeUrls: kotlin.collections.List<kotlin.String>
+    @SerialName(value = "onHold") @Required val onHold: kotlin.Int,
+
+    @SerialName(value = "dropped") @Required val dropped: kotlin.Int
 
 ) {
 
