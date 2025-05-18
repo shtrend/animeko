@@ -360,11 +360,11 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
     }
 
     single<PeerFilterSubscriptionRepository> {
-        val client = koin.get<HttpClientProvider>().get(ScopedHttpClientUserAgent.ANI)
         PeerFilterSubscriptionRepository(
             dataStore = getContext().dataStores.peerFilterSubscriptionStore,
             ruleSaveDir = getContext().files.dataDir.resolve("peerfilter-subs"),
-            httpClient = client,
+            httpClient = get<HttpClientProvider>().get(ScopedHttpClientUserAgent.ANI),
+            builtinPeerFilterRuleApi = get<AniApiProvider>().pfRuleApi,
         )
     }
     single<BangumiProfileService> { BangumiProfileService() }
@@ -578,7 +578,7 @@ fun KoinApplication.startCommonKoinModule(
 
     coroutineScope.launch {
         val peerFilterRepo = koin.get<PeerFilterSubscriptionRepository>()
-        peerFilterRepo.loadOrUpdateAll()
+        peerFilterRepo.updateOrLoadAll()
     }
 
     // TODO: For ThemeSettings migration. Delete in the future.
