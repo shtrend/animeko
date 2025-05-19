@@ -7,7 +7,7 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.domain.session
+package me.him188.ani.app.data.network
 
 import me.him188.ani.app.domain.foundation.ServerListFeatureConfig
 import me.him188.ani.client.apis.BangumiAniApi
@@ -41,5 +41,5 @@ class AniApiProvider(
     val userApi = ApiInvoker(client) { UserAniApi(baseurl, it) }
     val userAuthApi = ApiInvoker(client) { UserAuthenticationAniApi(baseurl, it) }
 
-    private inline val baseurl get() = ServerListFeatureConfig.MAGIC_ANI_SERVER
+    private inline val baseurl get() = ServerListFeatureConfig.Companion.MAGIC_ANI_SERVER
 }
