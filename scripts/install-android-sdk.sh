@@ -38,7 +38,7 @@ yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null 
 SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
 yes | "$SDKMANAGER" \
       "platforms;android-35" \
-      "build-tools;35.0.0-rc1" \
+      "build-tools;35.0.0" \
       "platform-tools"             || [[ $? -eq 141 ]]
 
 echo "✅ Android SDK API 35 installed."

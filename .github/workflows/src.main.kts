@@ -728,8 +728,8 @@ workflow(
         // Including: 
         // - pushing directly to main
         // - pushing to a branch that has an associated PR
-        Push(pathsIgnore = listOf("**/*.md")),
-        PullRequest(pathsIgnore = listOf("**/*.md")),
+        Push(pathsIgnore = listOf("**/*.md", "scrips/*")),
+        PullRequest(pathsIgnore = listOf("**/*.md", "scrips/*")),
     ),
     sourceFile = __FILE__,
     targetFileName = "build.yml",
