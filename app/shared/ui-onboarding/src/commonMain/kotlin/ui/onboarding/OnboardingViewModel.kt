@@ -9,12 +9,9 @@
 
 package me.him188.ani.app.ui.onboarding
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import io.ktor.http.encodeURLParameter
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -31,10 +28,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.preference.DarkMode
-import me.him188.ani.app.data.models.preference.MediaSourceProxySettings
-import me.him188.ani.app.data.models.preference.ProxyAuthorization
 import me.him188.ani.app.data.models.preference.ProxyMode
-import me.him188.ani.app.data.models.preference.ProxySettings
 import me.him188.ani.app.data.repository.user.SettingsRepository
 import me.him188.ani.app.domain.foundation.HttpClientProvider
 import me.him188.ani.app.domain.session.AniAuthClient
@@ -52,23 +46,21 @@ import me.him188.ani.app.platform.ContextMP
 import me.him188.ani.app.platform.GrantedPermissionManager
 import me.him188.ani.app.platform.PermissionManager
 import me.him188.ani.app.platform.currentAniBuildConfig
-import me.him188.ani.app.ui.foundation.icons.Animeko
-import me.him188.ani.app.ui.foundation.icons.AnimekoIconColor
-import me.him188.ani.app.ui.foundation.icons.BangumiNext
-import me.him188.ani.app.ui.foundation.icons.BangumiNextIconColor
 import me.him188.ani.app.ui.foundation.launchInBackground
 import me.him188.ani.app.ui.onboarding.navigation.WizardController
-import me.him188.ani.app.ui.onboarding.step.ConfigureProxyUIState
 import me.him188.ani.app.ui.onboarding.step.GrantNotificationPermissionState
-import me.him188.ani.app.ui.onboarding.step.ProxyTestCaseState
-import me.him188.ani.app.ui.onboarding.step.ProxyTestItem
-import me.him188.ani.app.ui.onboarding.step.ProxyTestState
-import me.him188.ani.app.ui.onboarding.step.ProxyUIConfig
-import me.him188.ani.app.ui.onboarding.step.ProxyUIMode
 import me.him188.ani.app.ui.onboarding.step.ThemeSelectUIState
 import me.him188.ani.app.ui.settings.framework.AbstractSettingsViewModel
 import me.him188.ani.app.ui.settings.framework.SettingsState
+import me.him188.ani.app.ui.settings.tabs.network.ConfigureProxyState
+import me.him188.ani.app.ui.settings.tabs.network.ConfigureProxyUIState
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestCase
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestCaseState
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestItem
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestState
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyPresentation
+import me.him188.ani.app.ui.settings.tabs.network.toDataSettings
+import me.him188.ani.app.ui.settings.tabs.network.toUIConfig
 import me.him188.ani.utils.analytics.Analytics
 import me.him188.ani.utils.analytics.AnalyticsEvent
 import me.him188.ani.utils.coroutines.SingleTaskExecutor
@@ -149,7 +141,7 @@ class OnboardingViewModel : AbstractSettingsViewModel(), KoinComponent {
             SharingStarted.WhileSubscribed(),
         )
 
-    private val configureProxyState = ConfigureProxyStepState(
+    private val configureProxyState = ConfigureProxyState(
         state = configureProxyUiState,
         onUpdateConfig = { newConfig ->
             launchInBackground {
@@ -307,7 +299,7 @@ class OnboardingViewModel : AbstractSettingsViewModel(), KoinComponent {
 @Stable
 class OnboardingPresentationState(
     val themeSelectState: ThemeSelectStepState,
-    val configureProxyState: ConfigureProxyStepState,
+    val configureProxyState: ConfigureProxyState,
     val bitTorrentFeatureState: BitTorrentFeatureStepState,
     val bangumiAuthorizeState: BangumiAuthorizeStepState,
 )
@@ -319,76 +311,6 @@ class ThemeSelectStepState(
     val onUpdateUseDynamicTheme: (Boolean) -> Unit,
     val onUpdateSeedColor: (Color) -> Unit,
 )
-
-@Stable
-class ConfigureProxyStepState(
-    val state: Flow<ConfigureProxyUIState>,
-    private val onUpdateConfig: (ProxyUIConfig) -> Unit,
-    val onRequestReTest: () -> Unit,
-) {
-    fun updateConfig(
-        currentConfig: ProxyUIConfig,
-        newConfig: ProxyUIConfig,
-        currentSystemProxy: SystemProxyPresentation
-    ) {
-        if (shouldRerunProxyTestManually(currentConfig, newConfig, currentSystemProxy)) {
-            onRequestReTest()
-        }
-        onUpdateConfig(newConfig)
-    }
-
-    private fun shouldRerunProxyTestManually(
-        prev: ProxyUIConfig,
-        curr: ProxyUIConfig,
-        systemProxy: SystemProxyPresentation
-    ): Boolean {
-        if (prev == curr) return true
-
-        val prevMode = prev.mode
-        val currMode = curr.mode
-        val noSystemProxy = systemProxy is SystemProxyPresentation.NotDetected
-
-        if (prevMode == ProxyUIMode.SYSTEM && currMode == ProxyUIMode.DISABLED && noSystemProxy) {
-            return true
-        }
-        if (prevMode == ProxyUIMode.DISABLED && currMode == ProxyUIMode.SYSTEM && noSystemProxy) {
-            return true
-        }
-        return false
-    }
-}
-
-@Immutable
-enum class ProxyTestCaseEnums {
-    ANI,
-    BANGUMI,
-    BANGUMI_NEXT,
-}
-
-@Immutable
-sealed class ProxyTestCase(
-    val name: ProxyTestCaseEnums,
-    val icon: ImageVector,
-    val color: Color
-) {
-    data object AniDanmakuApi : ProxyTestCase(
-        name = ProxyTestCaseEnums.ANI,
-        icon = Icons.Default.Animeko,
-        color = AnimekoIconColor,
-    )
-
-    data object BangumiApi : ProxyTestCase(
-        name = ProxyTestCaseEnums.BANGUMI,
-        icon = Icons.Default.BangumiNext,
-        color = BangumiNextIconColor,
-    )
-
-    data object BangumiNextApi : ProxyTestCase(
-        name = ProxyTestCaseEnums.BANGUMI_NEXT,
-        icon = Icons.Default.BangumiNext,
-        color = BangumiNextIconColor,
-    )
-}
 
 @Stable
 class BitTorrentFeatureStepState(
@@ -409,49 +331,6 @@ class BangumiAuthorizeStepState(
     val onClickNavigateToBangumiDev: (ContextMP) -> Unit,
     val onUseGuestMode: suspend () -> Unit,
 )
-
-// region transform between ui ProxyUIConfig and data ProxySettings
-
-internal fun ProxyMode.toUIMode(): ProxyUIMode {
-    return when (this) {
-        ProxyMode.DISABLED -> ProxyUIMode.DISABLED
-        ProxyMode.SYSTEM -> ProxyUIMode.SYSTEM
-        ProxyMode.CUSTOM -> ProxyUIMode.CUSTOM
-    }
-}
-
-internal fun ProxyUIMode.toDataMode(): ProxyMode {
-    return when (this) {
-        ProxyUIMode.DISABLED -> ProxyMode.DISABLED
-        ProxyUIMode.SYSTEM -> ProxyMode.SYSTEM
-        ProxyUIMode.CUSTOM -> ProxyMode.CUSTOM
-    }
-}
-
-internal fun ProxySettings.toUIConfig(): ProxyUIConfig {
-    return ProxyUIConfig(
-        mode = default.mode.toUIMode(),
-        manualUrl = default.customConfig.url,
-        manualUsername = default.customConfig.authorization?.username,
-        manualPassword = default.customConfig.authorization?.password,
-    )
-}
-
-internal fun ProxyUIConfig.toDataSettings(): ProxySettings {
-    return ProxySettings(
-        default = MediaSourceProxySettings(
-            mode = mode.toDataMode(),
-            customConfig = MediaSourceProxySettings.Default.customConfig.copy(
-                url = manualUrl,
-                authorization = if (manualUsername != null && manualPassword != null) {
-                    ProxyAuthorization(manualUsername, manualPassword)
-                } else null,
-            ),
-        ),
-    )
-}
-
-// endregion
 
 private fun Map<String, ServiceConnectionTester.TestState>.toUIState(): List<ProxyTestItem> {
     return buildList {

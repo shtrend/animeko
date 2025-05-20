@@ -12,6 +12,7 @@ package me.him188.ani.app.ui.onboarding.step
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
+import me.him188.ani.app.ui.settings.tabs.network.ConfigureProxyUIState
 
 @Preview(showBackground = true)
 @Composable

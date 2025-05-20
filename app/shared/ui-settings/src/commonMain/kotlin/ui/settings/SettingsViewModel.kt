@@ -12,8 +12,10 @@ package me.him188.ani.app.ui.settings
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import io.ktor.client.request.get
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import me.him188.ani.app.data.models.danmaku.DanmakuFilterConfig
 import me.him188.ani.app.data.models.preference.AnitorrentConfig
 import me.him188.ani.app.data.models.preference.DanmakuSettings
@@ -21,7 +23,7 @@ import me.him188.ani.app.data.models.preference.DebugSettings
 import me.him188.ani.app.data.models.preference.MediaCacheSettings
 import me.him188.ani.app.data.models.preference.MediaPreference
 import me.him188.ani.app.data.models.preference.MediaSelectorSettings
-import me.him188.ani.app.data.models.preference.ProxySettings
+import me.him188.ani.app.data.models.preference.ProxyMode
 import me.him188.ani.app.data.models.preference.ThemeSettings
 import me.him188.ani.app.data.models.preference.UISettings
 import me.him188.ani.app.data.models.preference.UpdateSettings
@@ -38,7 +40,10 @@ import me.him188.ani.app.domain.media.fetch.MediaSourceManager
 import me.him188.ani.app.domain.mediasource.codec.MediaSourceCodecManager
 import me.him188.ani.app.domain.mediasource.codec.serializeSubscriptionToString
 import me.him188.ani.app.domain.mediasource.subscription.MediaSourceSubscriptionUpdater
-import me.him188.ani.app.domain.settings.ProxyProvider
+import me.him188.ani.app.domain.settings.ProxySettingsFlowProxyProvider
+import me.him188.ani.app.domain.settings.ProxyTester
+import me.him188.ani.app.domain.settings.ServiceConnectionTester
+import me.him188.ani.app.domain.settings.ServiceConnectionTesters
 import me.him188.ani.app.platform.PermissionManager
 import me.him188.ani.app.platform.currentAniBuildConfig
 import me.him188.ani.app.ui.foundation.launchInBackground
@@ -56,9 +61,18 @@ import me.him188.ani.app.ui.settings.tabs.media.source.EditMediaSourceState
 import me.him188.ani.app.ui.settings.tabs.media.source.MediaSourceGroupState
 import me.him188.ani.app.ui.settings.tabs.media.source.MediaSourceLoader
 import me.him188.ani.app.ui.settings.tabs.media.source.MediaSourceSubscriptionGroupState
+import me.him188.ani.app.ui.settings.tabs.network.ConfigureProxyState
+import me.him188.ani.app.ui.settings.tabs.network.ConfigureProxyUIState
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestCase
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestCaseState
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestItem
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestState
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyPresentation
+import me.him188.ani.app.ui.settings.tabs.network.toDataSettings
+import me.him188.ani.app.ui.settings.tabs.network.toUIConfig
 import me.him188.ani.datasources.api.source.ConnectionStatus
 import me.him188.ani.datasources.bangumi.BangumiClient
+import me.him188.ani.utils.coroutines.SingleTaskExecutor
 import me.him188.ani.utils.platform.currentPlatform
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -74,8 +88,10 @@ class SettingsViewModel : AbstractSettingsViewModel(), KoinComponent {
     private val mediaSourceSubscriptionRepository: MediaSourceSubscriptionRepository by inject()
     private val mediaSourceSubscriptionUpdater: MediaSourceSubscriptionUpdater by inject()
     private val mediaSourceCodecManager: MediaSourceCodecManager by inject()
-    private val proxyProvider: ProxyProvider by inject()
     private val clientProvider: HttpClientProvider by inject()
+    private val proxyProvider = ProxySettingsFlowProxyProvider(settingsRepository.proxySettings.flow, backgroundScope)
+
+    private val loopTasker = SingleTaskExecutor(backgroundScope.coroutineContext)
 
     val softwareUpdateGroupState: SoftwareUpdateGroupState = SoftwareUpdateGroupState(
         updateSettings = settingsRepository.updateSettings.stateInBackground(UpdateSettings.Default.copy(_placeholder = -1)),
@@ -121,18 +137,46 @@ class SettingsViewModel : AbstractSettingsViewModel(), KoinComponent {
         debugSettingsState.value.enabled
     }
 
+    // region ConfigureProxy
+    private val proxyTester = ProxyTester(
+        clientProvider = clientProvider,
+        flowScope = backgroundScope,
+    )
 
-    val proxySettingsState =
-        settingsRepository.proxySettings.stateInBackground(ProxySettings.Default.copy(_placeHolder = -1))
+    private val configureProxyUiState = combine(
+        settingsRepository.proxySettings.flow,
+        proxyProvider.proxy,
+        proxyTester.testRunning,
+        proxyTester.testResult,
+    ) { settings, proxy, running, result ->
+        ConfigureProxyUIState(
+            config = settings.toUIConfig(),
+            systemProxy = if (settings.default.mode == ProxyMode.SYSTEM && proxy != null) {
+                SystemProxyPresentation.Detected(proxy)
+            } else {
+                SystemProxyPresentation.NotDetected
+            },
+            testState = ProxyTestState(
+                testRunning = running,
+                items = result.idToStateMap.toUIState(),
+            ),
+        )
+    }
+        .stateInBackground(
+            ConfigureProxyUIState.Placeholder,
+            SharingStarted.WhileSubscribed(),
+        )
 
-    val detectedProxy = proxyProvider.proxy
-        .map {
-            if (it == null) SystemProxyPresentation.NotDetected else SystemProxyPresentation.Detected(it)
-        }
-        .onStart {
-            emit(SystemProxyPresentation.Detecting)
-        }
-        .shareInBackground()
+    val configureProxyState = ConfigureProxyState(
+        state = configureProxyUiState,
+        onUpdateConfig = { newConfig ->
+            launchInBackground {
+                settingsRepository.proxySettings.update { newConfig.toDataSettings() }
+            }
+        },
+        onRequestReTest = { proxyTester.restartTest() },
+    )
+    // endregion
 
     val danmakuSettingsState =
         settingsRepository.danmakuSettings.stateInBackground(placeholder = DanmakuSettings(_placeholder = -1))
@@ -238,4 +282,31 @@ class SettingsViewModel : AbstractSettingsViewModel(), KoinComponent {
 
     val debugTriggerState = DebugTriggerState(debugSettingsState, backgroundScope)
     val aboutTabInfo = AboutTabInfo(currentAniBuildConfig.versionName)
+
+    suspend fun startProxyTesterLoop() {
+        loopTasker.invoke {
+            launch { proxyTester.testRunnerLoop() }
+        }
+    }
+}
+
+private fun Map<String, ServiceConnectionTester.TestState>.toUIState(): List<ProxyTestItem> {
+    return buildList {
+        this@toUIState.forEach { (id, state) ->
+            val case = when (id) {
+                ServiceConnectionTesters.ID_ANI -> ProxyTestCase.AniDanmakuApi
+                ServiceConnectionTesters.ID_BANGUMI -> ProxyTestCase.BangumiApi
+                ServiceConnectionTesters.ID_BANGUMI_NEXT -> ProxyTestCase.BangumiNextApi
+                else -> return@forEach
+            }
+            val result = when (state) {
+                is ServiceConnectionTester.TestState.Idle -> ProxyTestCaseState.INIT
+                is ServiceConnectionTester.TestState.Testing -> ProxyTestCaseState.RUNNING
+                is ServiceConnectionTester.TestState.Success -> ProxyTestCaseState.SUCCESS
+                is ServiceConnectionTester.TestState.Failed -> ProxyTestCaseState.FAILED
+                is ServiceConnectionTester.TestState.Error -> ProxyTestCaseState.FAILED // todo
+            }
+            add(ProxyTestItem(case, result))
+        }
+    }
 }

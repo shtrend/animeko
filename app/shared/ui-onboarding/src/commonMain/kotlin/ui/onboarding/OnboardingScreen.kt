@@ -41,16 +41,18 @@ import me.him188.ani.app.ui.onboarding.navigation.WizardDefaults
 import me.him188.ani.app.ui.onboarding.navigation.WizardNavHost
 import me.him188.ani.app.ui.onboarding.step.BangumiAuthorizeStep
 import me.him188.ani.app.ui.onboarding.step.ConfigureProxyStep
-import me.him188.ani.app.ui.onboarding.step.ConfigureProxyUIState
 import me.him188.ani.app.ui.onboarding.step.GrantNotificationPermissionState
-import me.him188.ani.app.ui.onboarding.step.ProxyOverallTestState
-import me.him188.ani.app.ui.onboarding.step.ProxyTestCaseState
-import me.him188.ani.app.ui.onboarding.step.ProxyTestItem
-import me.him188.ani.app.ui.onboarding.step.ProxyTestState
-import me.him188.ani.app.ui.onboarding.step.ProxyUIConfig
 import me.him188.ani.app.ui.onboarding.step.ThemeSelectStep
 import me.him188.ani.app.ui.onboarding.step.ThemeSelectUIState
 import me.him188.ani.app.ui.settings.framework.SettingsState
+import me.him188.ani.app.ui.settings.tabs.network.ConfigureProxyState
+import me.him188.ani.app.ui.settings.tabs.network.ConfigureProxyUIState
+import me.him188.ani.app.ui.settings.tabs.network.ProxyOverallTestState
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestCase
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestCaseState
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestItem
+import me.him188.ani.app.ui.settings.tabs.network.ProxyTestState
+import me.him188.ani.app.ui.settings.tabs.network.ProxyUIConfig
 import me.him188.ani.app.ui.settings.tabs.network.SystemProxyPresentation
 import me.him188.ani.utils.analytics.Analytics
 import me.him188.ani.utils.analytics.AnalyticsEvent
@@ -332,7 +334,7 @@ internal fun createTestOnboardingPresentationState(scope: CoroutineScope): Onboa
             onUpdateUseDynamicTheme = { },
             onUpdateSeedColor = { },
         ),
-        configureProxyState = ConfigureProxyStepState(
+        configureProxyState = ConfigureProxyState(
             state = flowOf(
                 ConfigureProxyUIState(
                     config = ProxyUIConfig.Default,

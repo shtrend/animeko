@@ -130,8 +130,8 @@ import me.him188.ani.app.ui.settings.tabs.media.MediaSelectionGroup
 import me.him188.ani.app.ui.settings.tabs.media.TorrentEngineGroup
 import me.him188.ani.app.ui.settings.tabs.media.source.MediaSourceGroup
 import me.him188.ani.app.ui.settings.tabs.media.source.MediaSourceSubscriptionGroup
+import me.him188.ani.app.ui.settings.tabs.network.ConfigureProxyGroup
 import me.him188.ani.app.ui.settings.tabs.network.DanmakuGroup
-import me.him188.ani.app.ui.settings.tabs.network.GlobalProxyGroup
 import me.him188.ani.app.ui.settings.tabs.theme.ThemeGroup
 import me.him188.ani.utils.platform.hasScrollingBug
 import org.jetbrains.compose.resources.getString
@@ -277,7 +277,11 @@ fun SettingsScreen(
 
                             SettingsTab.MEDIA_SELECTOR -> MediaSelectionGroup(vm.mediaSelectionGroupState)
                             SettingsTab.DANMAKU -> DanmakuGroup(vm.danmakuSettingsState, vm.danmakuServerTesters)
-                            SettingsTab.PROXY -> GlobalProxyGroup(vm.proxySettingsState, vm.detectedProxy)
+                            SettingsTab.PROXY -> ConfigureProxyGroup(
+                                state = vm.configureProxyState,
+                                onStartProxyTestLoop = { vm.startProxyTesterLoop() },
+                            )
+
                             SettingsTab.BT -> TorrentEngineGroup(vm.torrentSettingsState)
 //                            SettingsTab.CACHE -> AutoCacheGroup(vm.mediaCacheSettingsState)
                             SettingsTab.STORAGE -> CacheDirectoryGroup(vm.cacheDirectoryGroupState)
