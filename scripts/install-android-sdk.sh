@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 #
 # Copyright (C) 2024-2025 OpenAni and contributors.
-#
-# 此源代码的使用受 GNU AFFERO GENERAL PUBLIC LICENSE version 3 许可证的约束, 可以在以下链接找到该许可证.
-# Use of this source code is governed by the GNU AGPLv3 license, which can be found at the following link.
-#
-# https://github.com/open-ani/ani/blob/main/LICENSE
+# Licence: GNU AGPL v3  – see project root for details.
 #
 
 set -euo pipefail
 
+# --------------------------------------------------------------------
 # Base SDK from Debian/Ubuntu repos
 apt -qq update
 apt -qq install -y --install-recommends android-sdk unzip curl
@@ -34,12 +31,14 @@ rm cmdline-tools.zip
 
 # --------------------------------------------------------------------
 # Accept licences required by Gradle / Android build-tools
-yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null
+# `yes` may get SIGPIPE when sdkmanager closes stdin early → exit-status 141.
+# We treat that as success so the script doesn’t abort under `pipefail`.
+yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || [[ $? -eq 141 ]]
 
 SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
 yes | "$SDKMANAGER" \
-    "platforms;android-35" \
-    "build-tools;35.0.0-rc1" \
-    "platform-tools"
+      "platforms;android-35" \
+      "build-tools;35.0.0-rc1" \
+      "platform-tools"             || [[ $? -eq 141 ]]
 
 echo "✅ Android SDK API 35 installed."
