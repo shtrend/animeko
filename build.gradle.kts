@@ -74,3 +74,20 @@ idea {
         excludeDirs.add(file(".kotlin"))
     }
 }
+
+// Note: this task does not support configuration cache
+tasks.register("downloadAllDependencies") {
+    notCompatibleWithConfigurationCache("Filters configurations at execution time")
+    description = "Resolves every resolvable configuration in every project"
+    group = "help"
+
+    doLast {
+        rootProject.allprojects.forEach { p ->
+            p.configurations
+                .filter { it.isCanBeResolved }
+                .forEach {
+                    runCatching { it.resolve() }
+                }
+        }
+    }
+}
