@@ -61,7 +61,7 @@ fun Project.configureFlattenMppSourceSets() {
 
         setForTarget("common")
 
-        allKotlinTargets().all {
+        allKotlinTargets().configureEach {
             val targetName = name
             setForTarget(targetName)
         }

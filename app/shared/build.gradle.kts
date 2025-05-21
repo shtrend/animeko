@@ -198,12 +198,10 @@ idea {
 
 // AS 问题 since Compose 1.7.0-beta03
 afterEvaluate {
-    tasks.matching { it.name.contains("generateReleaseLintVitalModel") }.all {
-        dependsOn("releaseAssetsCopyForAGP")
+    tasks.matching { it.name.contains("generateReleaseLintVitalModel") }.configureEach {
         mustRunAfter("releaseAssetsCopyForAGP")
     }
-    tasks.matching { it.name.contains("lintVitalAnalyzeRelease") }.all {
-        dependsOn("releaseAssetsCopyForAGP")
+    tasks.matching { it.name.contains("lintVitalAnalyzeRelease") }.configureEach {
         mustRunAfter("releaseAssetsCopyForAGP")
     }
 }
