@@ -17,26 +17,38 @@
  */
 
 plugins {
-    kotlin("jvm")
+    kotlin("multiplatform")
+    `android-library`
     kotlin("plugin.serialization")
+    `ani-mpp-lib-targets`
+
     id("org.jetbrains.kotlinx.atomicfu")
-    `flatten-source-sets`
 }
 
-dependencies {
-    api(projects.datasource.datasourceApi)
+android {
+    namespace = "me.him188.ani.datasource.dmhy"
+}
 
-    api(libs.kotlinx.coroutines.core)
-    api(libs.ktor.client.core)
+kotlin {
+    sourceSets {
+        getByName("jvmMain") {
+            dependencies {
+                api(projects.datasource.datasourceApi)
 
-    implementation(libs.ktor.client.content.negotiation)
-    implementation(libs.ktor.client.logging)
-    implementation(libs.ktor.serialization.kotlinx.json)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.jsoup)
-    implementation(libs.slf4j.api)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.ktor.client.core)
 
-    implementation(projects.utils.logging)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.client.logging)
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.jsoup)
+                implementation(libs.slf4j.api)
+
+                implementation(projects.utils.logging)
+            }
+        }
+    }
 }
 
 tasks.withType<Jar> {
