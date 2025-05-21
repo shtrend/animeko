@@ -69,7 +69,7 @@ data class StyledDanmaku(
         softWrap = false,
     )
 
-    internal var imageBitmap: ImageBitmap? = null
+    private var imageBitmap: ImageBitmapWithOffset? = null
 
     override val danmakuWidth: Int = solidTextLayout.size.width.coerceAtLeast(1)
     override val danmakuHeight: Int = solidTextLayout.size.height.coerceAtLeast(1)
@@ -78,9 +78,14 @@ data class StyledDanmaku(
         val cachedImage = imageBitmap ?: createDanmakuImageBitmap(solidTextLayout, borderTextLayout)
             .also { imageBitmap = it }
 
-        drawImage(cachedImage, Offset(screenPosX, screenPosY))
+        drawImage(cachedImage.bitmap, Offset(screenPosX, screenPosY) + cachedImage.offset)
     }
 }
+
+class ImageBitmapWithOffset(
+    val bitmap: ImageBitmap,
+    val offset: Offset,
+)
 
 /**
  * Create image snapshot of danmaku text.
@@ -88,7 +93,7 @@ data class StyledDanmaku(
 internal expect fun createDanmakuImageBitmap(
     solidTextLayout: TextLayoutResult,
     borderTextLayout: TextLayoutResult?,
-): ImageBitmap
+): ImageBitmapWithOffset
 
 internal fun Canvas.paintIfNotEmpty(layout: TextLayoutResult) {
     if (layout.size.width != 0 && layout.size.height != 0) {
