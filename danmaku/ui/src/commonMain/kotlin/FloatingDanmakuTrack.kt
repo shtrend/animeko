@@ -21,7 +21,6 @@ import kotlin.random.Random
  * FloatingDanmakuTrack 中的弹幕在以下情况会移除:
  * - tick 中的逻辑帧检测
  * - 调用 [DanmakuTrack.clearAll]
- * 移除时必须调用 [onRemoveDanmaku] 避免内存泄露.
  *
  * @param baseSpeedPxPerSecond 放到这个轨道的弹幕里.
  *     长度大于此基础长度才会加速弹幕运动, 等于此长度的弹幕速度为 1 倍 [baseSpeedPxPerSecond].
@@ -42,8 +41,6 @@ internal class FloatingDanmakuTrack<T : SizeSpecifiedDanmaku>(
     var baseSpeedTextWidth: Int,
     val speedMultiplier: FloatState,
     private val randomizeSpeedFluctuation: Float = 0.0875f,
-    // 某个弹幕需要消失, 必须调用此函数避免内存泄漏.
-    private val onRemoveDanmaku: (FloatingDanmaku<T>) -> Unit
 ) : DanmakuTrack<T, FloatingDanmaku<T>> {
     private val danmakuList: MutableList<FloatingDanmaku<T>> = mutableListOf()
 
@@ -73,17 +70,12 @@ internal class FloatingDanmakuTrack<T : SizeSpecifiedDanmaku>(
     }
 
     override fun clearAll() {
-        danmakuList.removeAll {
-            onRemoveDanmaku(it)
-            true
-        }
+        danmakuList.clear()
     }
 
     override fun tick() {
         if (danmakuList.isEmpty()) return
-        danmakuList.removeAll { danmaku ->
-            danmaku.isGone().also { if (it) onRemoveDanmaku(danmaku) }
-        }
+        danmakuList.removeAll { danmaku -> danmaku.isGone() }
     }
 
     /**
@@ -198,6 +190,26 @@ internal class FloatingDanmakuTrack<T : SizeSpecifiedDanmaku>(
      */
     internal fun getLastDanmaku(): FloatingDanmaku<T>? {
         return danmakuList.lastOrNull()
+    }
+
+    /**
+     * 这个迭代器不是线程安全的, 访问迭代器时不保证 danmakuList.
+     *
+     * 因为这里需要在性能敏感的场景使用, 所以不创建 danmakuList 的拷贝.
+     */
+    override fun iterator(): Iterator<FloatingDanmaku<T>> {
+        return object : Iterator<FloatingDanmaku<T>> {
+            private var index = 0
+
+            override fun hasNext(): Boolean {
+                return index < danmakuList.size
+            }
+
+            override fun next(): FloatingDanmaku<T> {
+                if (!hasNext()) throw NoSuchElementException()
+                return danmakuList[index++]
+            }
+        }
     }
 
     override fun toString(): String {

@@ -72,7 +72,7 @@ fun DanmakuHost(
         ) {
             state.danmakuUpdateSubscription // subscribe changes
 
-            for (danmaku in state.presentFloatingDanmaku) {
+            for (danmaku in DanmakuCollectionIterator(state.floatingTrack)) {
                 // don't draw uninitialized danmaku
                 if (danmaku.y.isNaN()) continue
 
@@ -83,7 +83,7 @@ fun DanmakuHost(
                     )
                 }
             }
-            for (danmaku in state.presentFixedDanmaku) {
+            for (danmaku in DanmakuCollectionIterator(state.fixedTrack)) {
                 // don't draw uninitialized danmaku
                 if (danmaku.y.isNaN()) continue
 
@@ -102,18 +102,23 @@ fun DanmakuHost(
                     Text("DanmakuHost state: ")
                     Text("  hostSize: ${state.hostWidth}x${state.hostHeight}, trackHeight: ${state.trackHeight}")
                     Text("  paused: ${state.paused}, elapsedFrameTimeMillis: ${state.elapsedFrameTimeNanos / 1_000_000}, frameTimeDeltaMillis: ${state.currentFrameTimeDeltaNanos / 1_000_000}")
-                    Text("  presentDanmakuCount: ${state.presentFixedDanmaku.size + state.presentFloatingDanmaku.size}")
+                    Text(
+                        "  presentDanmakuCount: ${
+                            DanmakuCollectionIterator(state.floatingTrack).toList().size +
+                                    DanmakuCollectionIterator(state.fixedTrack).toList().size
+                        }",
+                    )
                     HorizontalDivider()
                     Text("  floating tracks: ")
                     for (track in state.floatingTrack) {
                         Text("    $track")
                     }
                     Text("  top tracks: ")
-                    for (track in state.topTrack) {
+                    for (track in state.fixedTrack.filterNot { it.fromBottom }) {
                         Text("    $track")
                     }
                     Text("  bottom tracks: ")
-                    for (track in state.bottomTrack) {
+                    for (track in state.fixedTrack.filter { it.fromBottom }) {
                         Text("    $track")
                     }
                 }
