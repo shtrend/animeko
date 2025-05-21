@@ -204,15 +204,15 @@ if (android != null) {
     }
     if (composeExtension != null) {
         tasks.named("generateComposeResClass") {
-            dependsOn("generateResourceAccessorsForAndroidUnitTest")
+            mustRunAfter("generateResourceAccessorsForAndroidUnitTest")
         }
         tasks.withType(KotlinCompilationTask::class) {
-            dependsOn(tasks.matching { it.name == "generateComposeResClass" })
-            dependsOn(tasks.matching { it.name == "generateResourceAccessorsForAndroidRelease" })
-            dependsOn(tasks.matching { it.name == "generateResourceAccessorsForAndroidUnitTest" })
-            dependsOn(tasks.matching { it.name == "generateResourceAccessorsForAndroidUnitTestRelease" })
-            dependsOn(tasks.matching { it.name == "generateResourceAccessorsForAndroidUnitTestDebug" })
-            dependsOn(tasks.matching { it.name == "generateResourceAccessorsForAndroidDebug" })
+            mustRunAfter(tasks.matching { it.name == "generateComposeResClass" })
+            mustRunAfter(tasks.matching { it.name == "generateResourceAccessorsForAndroidRelease" })
+            mustRunAfter(tasks.matching { it.name == "generateResourceAccessorsForAndroidUnitTest" })
+            mustRunAfter(tasks.matching { it.name == "generateResourceAccessorsForAndroidUnitTestRelease" })
+            mustRunAfter(tasks.matching { it.name == "generateResourceAccessorsForAndroidUnitTestDebug" })
+            mustRunAfter(tasks.matching { it.name == "generateResourceAccessorsForAndroidDebug" })
         }
     }
 

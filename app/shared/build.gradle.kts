@@ -200,9 +200,11 @@ idea {
 afterEvaluate {
     tasks.matching { it.name.contains("generateReleaseLintVitalModel") }.all {
         dependsOn("releaseAssetsCopyForAGP")
+        mustRunAfter("releaseAssetsCopyForAGP")
     }
     tasks.matching { it.name.contains("lintVitalAnalyzeRelease") }.all {
         dependsOn("releaseAssetsCopyForAGP")
+        mustRunAfter("releaseAssetsCopyForAGP")
     }
 }
 
