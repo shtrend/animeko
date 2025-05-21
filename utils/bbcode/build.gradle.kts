@@ -39,7 +39,7 @@ android {
     namespace = "me.him188.ani.utils.bbcode"
 }
 
-val generatedRoot = layout.buildDirectory.dir("gen").get().asFile
+val generatedRoot = projectDir.resolve("src/commonMain/generatedKotlin")
 
 kotlin {
     sourceSets.commonMain {
@@ -69,5 +69,5 @@ val generateBBCodeGrammarSource = tasks.register<AntlrKotlinTask>("generateBBCod
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool> {
-    dependsOn(generateBBCodeGrammarSource)
+    mustRunAfter(generateBBCodeGrammarSource)
 }
