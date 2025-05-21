@@ -49,7 +49,6 @@ import me.him188.ani.datasources.api.topic.EpisodeRange
 import me.him188.ani.datasources.api.topic.FileSize.Companion.megaBytes
 import me.him188.ani.datasources.api.topic.ResourceLocation
 import me.him188.ani.datasources.api.unwrapCached
-import me.him188.ani.utils.io.absolutePath
 import me.him188.ani.utils.io.inSystem
 import me.him188.ani.utils.io.toKtPath
 import me.him188.ani.utils.ktor.asScopedHttpClient
@@ -382,6 +381,36 @@ class DirectoryMediaCacheStorageTest {
         assertEquals("$CACHE_MEDIA_SOURCE_ID:${media.mediaId}", cachedMedia.mediaId)
         assertEquals(CACHE_MEDIA_SOURCE_ID, cachedMedia.mediaSourceId)
         assertEquals(media, cachedMedia.origin)
+    }
+
+    @Test
+    fun `create two caches with same episode id`() = runTest {
+        val storage = createStorage(
+            createEngine(
+                onDownloadStarted = {
+                    it.onTorrentChecked()
+                },
+            ),
+        )
+
+        val metadata = mediaCacheMetadata()
+        val media2 = createTestDefaultMedia(
+            mediaId = "dmhy.3",
+            mediaSourceId = "dmhy",
+            originalTitle = "夜晚的水母不会游泳 02 测试剧集2",
+            download = ResourceLocation.MagnetLink("magnet:?xt=urn:btih:2"),
+            originalUrl = "https://example.com/2",
+            publishedTime = 1724493292759,
+            episodeRange = EpisodeRange.single(EpisodeSort(2)),
+            properties = createTestMediaProperties(),
+            kind = MediaSourceKind.BitTorrent,
+            location = MediaSourceLocation.Online,
+        )
+
+        storage.cache(media, metadata, resume = false)
+        storage.cache(media2, metadata, resume = false)
+
+        assertEquals(2, storage.listFlow.first().size)
     }
 
     ///////////////////////////////////////////////////////////////////////////
