@@ -273,7 +273,7 @@ val macOSExtraPlistKeys: String
 
 // workaround for CMP resources bug
 tasks.withType(KotlinCompilationTask::class) {
-    dependsOn("generateComposeResClass")
+    mustRunAfter("generateComposeResClass")
 }
 
 //kotlin.sourceSets.main.get().resources.srcDir(project(":common").projectDir.resolve("src/androidMain/res/raw"))
