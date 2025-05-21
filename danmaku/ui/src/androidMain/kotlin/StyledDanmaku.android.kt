@@ -9,13 +9,13 @@
 
 package me.him188.ani.danmaku.ui
 
+import android.graphics.Bitmap
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.text.TextLayoutResult
 import kotlin.math.max
 import android.graphics.Canvas as AndroidCanvas
-import androidx.core.graphics.createBitmap
 
 // create a gpu-accelerated bitmap
 internal actual fun createDanmakuImageBitmap(
@@ -28,7 +28,11 @@ internal actual fun createDanmakuImageBitmap(
     val extraMargin = height shr 1
     val extraMarginFloat = extraMargin.toFloat()
 
-    val destBitmap = createBitmap(width + extraMargin * 2, height + extraMargin * 2)
+    val destBitmap = Bitmap.createBitmap(
+        width + extraMargin * 2,
+        height + extraMargin * 2,
+        Bitmap.Config.ARGB_8888,
+    )
     val destCanvas = Canvas(AndroidCanvas(destBitmap))
 
     destCanvas.translate(extraMarginFloat, extraMarginFloat)
