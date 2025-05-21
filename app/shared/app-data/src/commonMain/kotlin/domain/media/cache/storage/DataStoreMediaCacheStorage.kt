@@ -144,6 +144,7 @@ class DataStoreMediaCacheStorage(
             statSubscriptionScope.restart()
             val allRecovered = MutableStateFlow(persistentListOf<MediaCache>())
             val metadataFlowSnapshot = metadataFlow.first()
+            logger.info { "Restoring media cache, cache count in datastore: ${metadataFlowSnapshot.size}" }
             val semaphore = Semaphore(8)
 
             supervisorScope {
@@ -260,6 +261,8 @@ class DataStoreMediaCacheStorage(
                 statSubscriptionScope.launch {
                     cache.subscribeStats { cache.appendExtra(it) }
                 }
+            } else {
+                logger.info { "Cache created: $cache." }
             }
 
             listFlow.update { plus(cache) }
