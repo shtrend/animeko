@@ -1,5 +1,21 @@
 package me.him188.ani.datasources.dmhy
 
+import me.him188.ani.datasources.api.paging.SizedSource
+import me.him188.ani.datasources.api.source.ConnectionStatus
+import me.him188.ani.datasources.api.source.DownloadSearchQuery
+import me.him188.ani.datasources.api.source.FactoryId
+import me.him188.ani.datasources.api.source.MediaSource
+import me.him188.ani.datasources.api.source.MediaSourceConfig
+import me.him188.ani.datasources.api.source.MediaSourceFactory
+import me.him188.ani.datasources.api.source.MediaSourceInfo
+import me.him188.ani.datasources.api.source.TopicMediaSource
+import me.him188.ani.datasources.api.topic.Topic
+import me.him188.ani.datasources.dmhy.impl.DmhyPagedSourceImpl
+import me.him188.ani.datasources.dmhy.impl.protocol.Network
+import me.him188.ani.utils.ktor.ScopedHttpClient
+import me.him188.ani.utils.logging.error
+import kotlin.coroutines.cancellation.CancellationException
+
 class DmhyMediaSource(
     private val client: ScopedHttpClient,
 ) : TopicMediaSource() {
@@ -42,7 +58,7 @@ class DmhyMediaSource(
         }
     }
 
-    override suspend fun startSearch(query: DownloadSearchQuery): PagedSource<Topic> {
+    override suspend fun startSearch(query: DownloadSearchQuery): SizedSource<Topic> {
         return DmhyPagedSourceImpl(query, network)
     }
 }
