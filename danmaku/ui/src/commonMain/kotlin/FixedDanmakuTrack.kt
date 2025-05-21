@@ -62,13 +62,13 @@ internal class FixedDanmakuTrack<T : SizeSpecifiedDanmaku>(
         // 未放置的弹幕一定可以放置
         if (placeFrameTimeNanos == DanmakuTrack.NOT_PLACED) return true
         // 当前没有正在显示的弹幕并且弹幕可以被显示
-        return frameTimeNanosState.value - placeFrameTimeNanos < durationMillis.value
+        return frameTimeNanosState.longValue - placeFrameTimeNanos < durationMillis.longValue
     }
 
     /**
      * 设置待发送的弹幕. 当前弹幕显示完后一定显示这条弹幕.
-     * 
-     * 如果已经有 pending, 那已有 pending 会立刻替换 current 并返回被放置的 pending 
+     *
+     * 如果已经有 pending, 那已有 pending 会立刻替换 current 并返回被放置的 pending
      */
     internal fun setPending(danmaku: T): FixedDanmaku<T>? {
         val lastPending = pendingDanmaku?.let { place(it) }
@@ -84,10 +84,10 @@ internal class FixedDanmakuTrack<T : SizeSpecifiedDanmaku>(
     override fun tick() {
         val current = currentDanmaku ?: return
         val danmakuTime = current.placeFrameTimeNanos
-        if (frameTimeNanosState.value - danmakuTime >= durationMillis.value * 1_000_000) {
+        if (frameTimeNanosState.longValue - danmakuTime >= durationMillis.longValue * 1_000_000) {
             onRemoveDanmaku(current)
             currentDanmaku = null
-            
+
             val pending = pendingDanmaku
             if (pending != null) {
                 onTickReplacePending(place(pending))
@@ -119,9 +119,9 @@ internal class FixedDanmaku<T : SizeSpecifiedDanmaku>(
 
     internal fun calculatePosY(): Float {
         return if (fromBottom) {
-            hostHeight.value - (trackIndex + 1) * trackHeight.value.toFloat()
+            hostHeight.intValue - (trackIndex + 1) * trackHeight.intValue.toFloat()
         } else {
-            trackIndex * trackHeight.value.toFloat()
+            trackIndex * trackHeight.intValue.toFloat()
         }
     }
 

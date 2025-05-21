@@ -786,7 +786,7 @@ internal class DanmakuRepopulator(
      * @param list 要填充到屏幕的弹幕, 必须按发送时间戳排序.
      */
     suspend fun repopulate(list: List<DanmakuPresentation>, currentPlayMillis: Long) {
-        val currentElapsedFrameTimeNanos = currentFrameTimeNanosState.value // take snapshot
+        val currentElapsedFrameTimeNanos = currentFrameTimeNanosState.longValue // take snapshot
         val sortedList = list.sortedBy { it.danmaku.playTimeMillis }
 
         val isFloatingDanmaku = { danmaku: DanmakuPresentation ->
