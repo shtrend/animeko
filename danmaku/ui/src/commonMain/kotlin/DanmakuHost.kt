@@ -101,7 +101,7 @@ fun DanmakuHost(
                 Column(modifier = Modifier.padding(4.dp).fillMaxSize()) {
                     Text("DanmakuHost state: ")
                     Text("  hostSize: ${state.hostWidth}x${state.hostHeight}, trackHeight: ${state.trackHeight}")
-                    Text("  paused: ${state.paused}, elapsedFrameTimeMillis: ${state.elapsedFrameTimeNanos / 1_000_000}")
+                    Text("  paused: ${state.paused}, elapsedFrameTimeMillis: ${state.elapsedFrameTimeNanos / 1_000_000}, frameTimeDeltaMillis: ${state.currentFrameTimeDeltaNanos / 1_000_000}")
                     Text("  presentDanmakuCount: ${state.presentFixedDanmaku.size + state.presentFloatingDanmaku.size}")
                     HorizontalDivider()
                     Text("  floating tracks: ")

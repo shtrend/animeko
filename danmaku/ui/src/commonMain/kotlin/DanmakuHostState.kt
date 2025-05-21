@@ -129,6 +129,12 @@ class DanmakuHostState(
     internal var elapsedFrameTimeNanos by elapsedFrameTimeNanoState
 
     /**
+     * 当前的帧生成时间
+     */
+    internal var currentFrameTimeDeltaNanos by mutableLongStateOf(0L)
+        private set
+
+    /**
      * A timestamp-like value used to manually prompt updates (e.g., after config changes).
      */
     internal var danmakuUpdateSubscription by mutableLongStateOf(0L)
@@ -473,7 +479,7 @@ class DanmakuHostState(
                         val delta = nanos - currentFrameTimeNanos
 
                         elapsedFrameTimeNanos += delta
-                        // avgFrameTimeNanos += delta
+                        currentFrameTimeDeltaNanos = delta
                         currentFrameTimeNanos = nanos
 
                         calculateDanmakuInFrame(delta, currentFloatingTrackSpeed)
