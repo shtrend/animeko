@@ -131,10 +131,7 @@ internal fun EpisodeVideoImpl(
     playbackSpeedControllerState: PlaybackSpeedControllerState?,
     leftBottomTips: @Composable () -> Unit,
     fullscreenSwitchButton: @Composable () -> Unit,
-    sideSheets: @Composable (
-        controller: VideoSideSheetsController<EpisodeVideoSideSheetPage>,
-        contentPadding: PaddingValues
-    ) -> Unit,
+    sideSheets: @Composable (controller: VideoSideSheetsController<EpisodeVideoSideSheetPage>) -> Unit,
     modifier: Modifier = Modifier,
     maintainAspectRatio: Boolean = !expanded,
     gestureFamily: GestureFamily = LocalPlatform.current.mouseFamily,
@@ -409,7 +406,7 @@ internal fun EpisodeVideoImpl(
             },
             detachedProgressSlider = detachedProgressSlider,
             floatingBottomEnd = { fullscreenSwitchButton() },
-            rhsSheet = { sideSheets(sheetsController, it) },
+            rhsSheet = { sideSheets(sheetsController) },
             leftBottomTips = leftBottomTips,
         )
     }

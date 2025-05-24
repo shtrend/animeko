@@ -373,7 +373,7 @@ private fun EpisodeScreenContent(
     if (showMediaSelectorSheet && page != null) {
         EpisodeMediaSelectorDialog(
             { showMediaSelectorSheet = false },
-        ) { requestDismiss ->
+        ) { surfaceColor, requestDismiss ->
             val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(page.initialMediaSelectorViewKind) }
 
             SideSheetLayout(
@@ -387,7 +387,7 @@ private fun EpisodeScreenContent(
                     .desktopTitleBarPadding()
                     .statusBarsPadding()
                     .fillMaxWidth(),
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = surfaceColor,
             ) {
                 MediaSelectorView(
                     page.mediaSelectorState,
@@ -399,7 +399,7 @@ private fun EpisodeScreenContent(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     onRefresh = { vm.refreshFetch() },
                     onRestartSource = { vm.restartSource(it) },
-                    stickyHeaderBackgroundColor = MaterialTheme.colorScheme.surface,
+                    stickyHeaderBackgroundColor = surfaceColor,
                     onClickItem = {
                         page.mediaSelectorState.select(it)
                         requestDismiss()
@@ -983,13 +983,12 @@ private fun EpisodeVideo(
                 onClickFullScreen,
             )
         },
-        sideSheets = { sheetsController, contentPadding ->
+        sideSheets = { sheetsController ->
             EpisodeVideoDefaults.SideSheets(
                 sheetsController,
                 playerControllerState,
                 playerSettingsPage = {
                     EpisodeVideoSideSheets.DanmakuSettingsSheet(
-                        contentPadding = contentPadding,
                         onDismissRequest = { goBack() },
                         onNavigateToFilterSettings = {
                             sheetsController.navigateTo(EpisodeVideoSideSheetPage.EDIT_DANMAKU_REGEX_FILTER)
@@ -999,7 +998,6 @@ private fun EpisodeVideo(
                 editDanmakuRegexFilterPage = {
                     EpisodeVideoSideSheets.DanmakuRegexFilterSettings(
                         state = vm.danmakuRegexFilterState,
-                        contentPadding = contentPadding,
                         onDismissRequest = { goBack() },
                         expanded = expanded,
                     )
@@ -1027,6 +1025,7 @@ private fun EpisodeMediaSelectorDialog(
     modifier: Modifier = Modifier,
     windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass,
     content: @Composable (
+        surfaceColor: Color,
         requestDismiss: () -> Unit,
     ) -> Unit,
 ) {
@@ -1037,7 +1036,7 @@ private fun EpisodeMediaSelectorDialog(
             state = sideSheetState,
             modifier = modifier,
             content = {
-                content { sideSheetState.close() }
+                content(MaterialTheme.colorScheme.surface) { sideSheetState.close() }
             },
         )
     } else {
@@ -1049,7 +1048,7 @@ private fun EpisodeMediaSelectorDialog(
             modifier = modifier.desktopTitleBarPadding().statusBarsPadding(),
             contentWindowInsets = { BottomSheetDefaults.windowInsets.add(WindowInsets.desktopTitleBar()) },
             content = {
-                content {
+                content(MaterialTheme.colorScheme.surfaceContainerLow) {
                     scope.launch {
                         bottomSheetState.hide()
                         onDismiss()

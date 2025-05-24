@@ -96,7 +96,7 @@ fun VideoScaffold(
     bottomBar: @Composable RowScope.() -> Unit = {},
     detachedProgressSlider: @Composable () -> Unit = {},
     floatingBottomEnd: @Composable RowScope.() -> Unit = {},
-    rhsSheet: @Composable (PaddingValues) -> Unit = {},
+    rhsSheet: @Composable () -> Unit = {},
     leftBottomTips: @Composable () -> Unit = {},
 ) {
     val controllerVisibility = controllerState.visibility
@@ -331,8 +331,8 @@ fun VideoScaffold(
             }
 
             // 右侧 sheet
-            Box(Modifier.matchParentSize()) {
-                rhsSheet(contentWindowInsets.asPaddingValues())
+            Box(Modifier.matchParentSize().windowInsetsPadding(contentWindowInsets)) {
+                rhsSheet()
             }
         }
     }

@@ -216,7 +216,7 @@ class EpisodeVideoControllerTest {
                         onClickFullScreen = {},
                     )
                 },
-                sideSheets = { sheetsController, _ ->
+                sideSheets = { sheetsController ->
                     EpisodeVideoDefaults.SideSheets(
                         sheetsController,
                         playerControllerState,

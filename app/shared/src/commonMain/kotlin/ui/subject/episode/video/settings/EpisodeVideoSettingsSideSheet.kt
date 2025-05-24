@@ -41,7 +41,6 @@ fun SideSheetLayout(
     title: @Composable () -> Unit,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerHigh,
     navigationButton: @Composable () -> Unit = { },
     closeButton: @Composable () -> Unit = {},
@@ -75,7 +74,7 @@ fun SideSheetLayout(
                 .width((this.maxWidth * 0.28f)),
             color = containerColor,
         ) {
-            Column(modifier = Modifier.padding(contentPadding)) {
+            Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Row(
                         Modifier.padding(start = 16.dp, end = 12.dp).padding(vertical = 16.dp).weight(1f),

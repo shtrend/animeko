@@ -62,7 +62,6 @@ fun EpisodeVideoSideSheets.DanmakuRegexFilterSettings(
     state: DanmakuRegexFilterState,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
     expanded: Boolean = true,  // Use the expanded parameter
 ) {
     val focusManager = LocalFocusManager.current
@@ -92,7 +91,6 @@ fun EpisodeVideoSideSheets.DanmakuRegexFilterSettings(
 
     SideSheetLayout(
         title = { Text(text = "正则弹幕过滤管理") },
-        contentPadding = contentPadding,
         onDismissRequest = onDismissRequest,
         closeButton = {
             IconButton(onClick = onDismissRequest) {

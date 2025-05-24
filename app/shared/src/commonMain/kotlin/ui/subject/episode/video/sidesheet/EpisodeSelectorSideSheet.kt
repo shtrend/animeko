@@ -123,12 +123,10 @@ fun EpisodeVideoSideSheets.EpisodeSelectorSheet(
     state: EpisodeSelectorState,
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     SideSheetLayout(
         onDismissRequest = onDismissRequest,
         modifier = modifier.testTag(TAG_EPISODE_SELECTOR_SHEET),
-        contentPadding = contentPadding,
         title = { Text(text = "选择剧集") },
         closeButton = {
             IconButton(onClick = onDismissRequest) {

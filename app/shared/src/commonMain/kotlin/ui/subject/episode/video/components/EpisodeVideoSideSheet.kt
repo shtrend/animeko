@@ -87,13 +87,11 @@ fun EpisodeVideoSideSheets.DanmakuSettingsSheet(
     onDismissRequest: () -> Unit,
     onNavigateToFilterSettings: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     SideSheetLayout(
         title = { Text(text = "弹幕设置") },
         onDismissRequest = onDismissRequest,
         modifier,
-        contentPadding = contentPadding,
         closeButton = {
             IconButton(onClick = onDismissRequest) {
                 Icon(Icons.Rounded.Close, contentDescription = "关闭")
@@ -119,13 +117,11 @@ fun EpisodeVideoSideSheets.DanmakuSettingsSheet(
 
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     SideSheetLayout(
         title = { Text(text = "弹幕设置") },
         onDismissRequest = onDismissRequest,
         modifier,
-        contentPadding = contentPadding,
         closeButton = {
             IconButton(onClick = onDismissRequest) {
                 Icon(Icons.Rounded.Close, contentDescription = "关闭")
