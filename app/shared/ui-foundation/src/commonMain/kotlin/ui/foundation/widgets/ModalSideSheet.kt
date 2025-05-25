@@ -159,7 +159,6 @@ fun ModalSideSheet(
             Surface(
                 modifier = modifier
                     .fillMaxHeight()
-                    .widthIn(min = 300.dp, max = 400.dp)
                     .align(if (side == SheetSide.End) Alignment.CenterEnd else Alignment.CenterStart)
                     .graphicsLayer { translationX = sheetOffset }
                     .onSizeChanged { sheetWidth = it.width },

@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.safeContent
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
@@ -39,8 +40,11 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -98,6 +102,7 @@ import me.him188.ani.app.ui.danmaku.PlayerDanmakuEditor
 import me.him188.ani.app.ui.danmaku.PlayerDanmakuHost
 import me.him188.ani.app.ui.episode.danmaku.MatchingDanmakuDialog
 import me.him188.ani.app.ui.external.placeholder.placeholder
+import me.him188.ani.app.ui.foundation.IconButton
 import me.him188.ani.app.ui.foundation.ImageViewer
 import me.him188.ani.app.ui.foundation.LocalImageViewerHandler
 import me.him188.ani.app.ui.foundation.LocalIsPreviewing
@@ -378,15 +383,18 @@ private fun EpisodeScreenContent(
 
             SideSheetLayout(
                 title = { Text("选择数据源") },
-                onDismissRequest = requestDismiss,
                 navigationButton = {
                     BackNavigationIconButton(requestDismiss)
+                },
+                closeButton = {
+                    IconButton(requestDismiss) {
+                        Icon(Icons.Rounded.Close, contentDescription = "关闭")
+                    }
                 },
                 modifier = Modifier
                     .navigationBarsPadding()
                     .desktopTitleBarPadding()
-                    .statusBarsPadding()
-                    .fillMaxWidth(),
+                    .statusBarsPadding(),
                 containerColor = surfaceColor,
             ) {
                 MediaSelectorView(
@@ -1036,11 +1044,19 @@ private fun EpisodeMediaSelectorDialog(
             state = sideSheetState,
             modifier = modifier,
             content = {
-                content(MaterialTheme.colorScheme.surface) { sideSheetState.close() }
+                BoxWithConstraints {
+                    Box(
+                        modifier = Modifier
+                            .widthIn(300.dp, 400.dp)
+                            .width(maxWidth * 0.28f),
+                    ) {
+                        content(MaterialTheme.colorScheme.surface) { sideSheetState.close() }
+                    }
+                }
             },
         )
     } else {
-        val bottomSheetState = rememberModalBottomSheetState(true)
+        val bottomSheetState = rememberModalBottomSheetState()
         val scope = rememberCoroutineScope()
         ModalBottomSheet(
             onDismiss,

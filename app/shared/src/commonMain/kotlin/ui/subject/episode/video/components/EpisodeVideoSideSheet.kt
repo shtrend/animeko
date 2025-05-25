@@ -25,6 +25,7 @@ import kotlinx.serialization.Serializable
 import me.him188.ani.app.ui.subject.episode.EpisodeVideoDefaults
 import me.him188.ani.app.ui.subject.episode.video.settings.EpisodeVideoSettings
 import me.him188.ani.app.ui.subject.episode.video.settings.EpisodeVideoSettingsViewModel
+import me.him188.ani.app.ui.subject.episode.video.settings.SideSheetFullScreenLayout
 import me.him188.ani.app.ui.subject.episode.video.settings.SideSheetLayout
 import me.him188.ani.app.videoplayer.ui.PlayerControllerState
 import me.him188.ani.app.videoplayer.ui.VideoSideSheetScope
@@ -88,7 +89,7 @@ fun EpisodeVideoSideSheets.DanmakuSettingsSheet(
     onNavigateToFilterSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SideSheetLayout(
+    SideSheetFullScreenLayout(
         title = { Text(text = "弹幕设置") },
         onDismissRequest = onDismissRequest,
         modifier,
@@ -118,7 +119,7 @@ fun EpisodeVideoSideSheets.DanmakuSettingsSheet(
     onDismissRequest: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SideSheetLayout(
+    SideSheetFullScreenLayout(
         title = { Text(text = "弹幕设置") },
         onDismissRequest = onDismissRequest,
         modifier,
