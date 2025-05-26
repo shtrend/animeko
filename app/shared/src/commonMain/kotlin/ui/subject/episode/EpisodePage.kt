@@ -381,40 +381,23 @@ private fun EpisodeScreenContent(
         ) { surfaceColor, requestDismiss ->
             val (viewKind, onViewKindChange) = rememberSaveable { mutableStateOf(page.initialMediaSelectorViewKind) }
 
-            SideSheetLayout(
-                title = { Text("选择数据源") },
-                navigationButton = {
-                    BackNavigationIconButton(requestDismiss)
+            MediaSelectorView(
+                page.mediaSelectorState,
+                viewKind,
+                onViewKindChange,
+                page.fetchRequest,
+                { vm.updateFetchRequest(it) },
+                page.mediaSourceResultListPresentation,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                onRefresh = { vm.refreshFetch() },
+                onRestartSource = { vm.restartSource(it) },
+                stickyHeaderBackgroundColor = surfaceColor,
+                onClickItem = {
+                    page.mediaSelectorState.select(it)
+                    requestDismiss()
                 },
-                closeButton = {
-                    IconButton(requestDismiss) {
-                        Icon(Icons.Rounded.Close, contentDescription = "关闭")
-                    }
-                },
-                modifier = Modifier
-                    .navigationBarsPadding()
-                    .desktopTitleBarPadding()
-                    .statusBarsPadding(),
-                containerColor = surfaceColor,
-            ) {
-                MediaSelectorView(
-                    page.mediaSelectorState,
-                    viewKind,
-                    onViewKindChange,
-                    page.fetchRequest,
-                    { vm.updateFetchRequest(it) },
-                    page.mediaSourceResultListPresentation,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    onRefresh = { vm.refreshFetch() },
-                    onRestartSource = { vm.restartSource(it) },
-                    stickyHeaderBackgroundColor = surfaceColor,
-                    onClickItem = {
-                        page.mediaSelectorState.select(it)
-                        requestDismiss()
-                    },
-                    scrollable = true,
-                )
-            }
+                scrollable = true,
+            )
         }
     }
 
@@ -1050,7 +1033,22 @@ private fun EpisodeMediaSelectorDialog(
                             .widthIn(300.dp, 400.dp)
                             .width(maxWidth * 0.28f),
                     ) {
-                        content(MaterialTheme.colorScheme.surface) { sideSheetState.close() }
+                        SideSheetLayout(
+                            title = { Text("选择数据源") },
+                            closeButton = {
+                                IconButton({ sideSheetState.close() }) {
+                                    Icon(Icons.Rounded.Close, contentDescription = "关闭")
+                                }
+                            },
+                            modifier = Modifier
+                                .navigationBarsPadding()
+                                .desktopTitleBarPadding()
+                                .statusBarsPadding(),
+                            containerColor = MaterialTheme.colorScheme.surface,
+                        ) {
+                            content(MaterialTheme.colorScheme.surface) { sideSheetState.close() }
+                        }
+
                     }
                 }
             },

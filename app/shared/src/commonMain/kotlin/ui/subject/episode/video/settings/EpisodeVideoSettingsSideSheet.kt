@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -64,7 +65,7 @@ fun SideSheetLayout(
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    Modifier.padding(start = 16.dp, end = 12.dp).padding(vertical = 16.dp).weight(1f),
+                    Modifier.padding(start = 24.dp).padding(vertical = 16.dp).weight(1f),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -82,7 +83,7 @@ fun SideSheetLayout(
                     }
                 }
 
-                Box(Modifier.padding(start = 12.dp)) {
+                Box(Modifier.padding(end = 12.dp)) {
                     closeButton()
                 }
             }
