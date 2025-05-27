@@ -113,6 +113,7 @@ import me.him188.ani.app.ui.foundation.effects.OnLifecycleEvent
 import me.him188.ani.app.ui.foundation.effects.OverrideCaptionButtonAppearance
 import me.him188.ani.app.ui.foundation.effects.ScreenOnEffect
 import me.him188.ani.app.ui.foundation.effects.ScreenRotationEffect
+import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.LocalPlatformWindow
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.desktopTitleBar
@@ -1040,10 +1041,7 @@ private fun EpisodeMediaSelectorDialog(
                                     Icon(Icons.Rounded.Close, contentDescription = "关闭")
                                 }
                             },
-                            modifier = Modifier
-                                .navigationBarsPadding()
-                                .desktopTitleBarPadding()
-                                .statusBarsPadding(),
+                            modifier = Modifier.windowInsetsPadding(AniWindowInsets.safeDrawing),
                             containerColor = MaterialTheme.colorScheme.surface,
                         ) {
                             content(MaterialTheme.colorScheme.surface) { sideSheetState.close() }

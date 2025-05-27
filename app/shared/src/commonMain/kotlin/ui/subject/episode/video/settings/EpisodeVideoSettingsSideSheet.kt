@@ -54,7 +54,8 @@ fun SideSheetLayout(
     // https://m3.material.io/components/side-sheets/guidelines#96245186-bae4-4a33-b41f-17833bb2e2d7
 
     Surface(
-        modifier
+        Modifier
+            .fillMaxHeight()
             .clickable(
                 onClick = { }, // just to intercept clicks
                 interactionSource = remember { MutableInteractionSource() },
@@ -62,7 +63,7 @@ fun SideSheetLayout(
             ),
         color = containerColor,
     ) {
-        Column {
+        Column(modifier) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Row(
                     Modifier.padding(start = 24.dp).padding(vertical = 16.dp).weight(1f),

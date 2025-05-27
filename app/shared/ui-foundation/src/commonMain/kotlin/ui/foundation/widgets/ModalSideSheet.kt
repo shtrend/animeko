@@ -141,9 +141,6 @@ fun ModalSideSheet(
         onDismissRequest = animateToDismiss,
         properties = PlatformPopupProperties(
             focusable = true,
-            usePlatformDefaultWidth = false,
-            excludeFromSystemGesture = false,
-            clippingEnabled = false,
         ),
     ) {
         BoxWithConstraints {
