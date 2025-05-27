@@ -1029,24 +1029,23 @@ private fun EpisodeMediaSelectorDialog(
             modifier = modifier,
             content = {
                 BoxWithConstraints {
-                    Box(
+                    SideSheetLayout(
+                        title = { Text("选择数据源") },
+                        closeButton = {
+                            IconButton({ sideSheetState.close() }) {
+                                Icon(Icons.Rounded.Close, contentDescription = "关闭")
+                            }
+                        },
                         modifier = Modifier
+                            .windowInsetsPadding(
+                                AniWindowInsets.safeDrawing
+                                    .only(WindowInsetsSides.Vertical + WindowInsetsSides.End),
+                            )
                             .widthIn(300.dp, 400.dp)
                             .width(maxWidth * 0.28f),
+                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                     ) {
-                        SideSheetLayout(
-                            title = { Text("选择数据源") },
-                            closeButton = {
-                                IconButton({ sideSheetState.close() }) {
-                                    Icon(Icons.Rounded.Close, contentDescription = "关闭")
-                                }
-                            },
-                            modifier = Modifier.windowInsetsPadding(AniWindowInsets.safeDrawing),
-                            containerColor = MaterialTheme.colorScheme.surface,
-                        ) {
-                            content(MaterialTheme.colorScheme.surface) { sideSheetState.close() }
-                        }
-
+                        content(MaterialTheme.colorScheme.surfaceContainerLow) { sideSheetState.close() }
                     }
                 }
             },
