@@ -740,7 +740,8 @@ class EpisodeVideoControllerTest {
         )
     }
 
-    @Test
+    // MediaSelector side sheet 现在使用 modal dialog, 不再支持 alwaysOnRequester
+    /*@Test
     @Disabled // Sometimes fail on CI
     fun `touch - hover to always on - media selector sheet`() = runAniComposeUiTest {
         testSideSheetRequestAlwaysOn(
@@ -749,7 +750,7 @@ class EpisodeVideoControllerTest {
             waitForSideSheetOpen = { waitUntil(timeoutMillis = WAIT_TIMEOUT) { onNodeWithTag(TAG_MEDIA_SELECTOR_SHEET).exists() } },
             waitForSideSheetClose = { waitUntil(timeoutMillis = WAIT_TIMEOUT) { onNodeWithTag(TAG_MEDIA_SELECTOR_SHEET).doesNotExist() } },
         )
-    }
+    }*/
 
     @Test
     fun `touch - hover to always on - episode selector sheet`() = runAniComposeUiTest {
@@ -966,7 +967,8 @@ class EpisodeVideoControllerTest {
         )
     }
 
-    @Test
+    // MediaSelector side sheet 现在使用 modal dialog, 不再支持 alwaysOnRequester
+    /*@Test
     @Disabled // Sometimes fail on CI
     fun `mouse - hover to always on - media selector sheet`() = runAniComposeUiTest {
         testSideSheetRequestAlwaysOn(
@@ -975,7 +977,7 @@ class EpisodeVideoControllerTest {
             waitForSideSheetOpen = { waitUntil(timeoutMillis = WAIT_TIMEOUT) { onNodeWithTag(TAG_MEDIA_SELECTOR_SHEET).exists() } },
             waitForSideSheetClose = { waitUntil(timeoutMillis = WAIT_TIMEOUT) { onNodeWithTag(TAG_MEDIA_SELECTOR_SHEET).doesNotExist() } },
         )
-    }
+    }*/
 
     @Test
     fun `mouse - hover to always on - episode selector sheet`() = runAniComposeUiTest {

@@ -9,19 +9,16 @@
 
 package me.him188.ani.app.ui.subject.episode.video.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -105,7 +102,7 @@ fun SideSheetFullScreenLayout(
     content: @Composable () -> Unit,
 ) {
     BoxWithConstraints(
-        Modifier
+        modifier
             .fillMaxSize()
             .windowInsetsPadding(BottomSheetDefaults.windowInsets)
             .clickable(
@@ -120,7 +117,7 @@ fun SideSheetFullScreenLayout(
             modifier = Modifier
                 .widthIn(min = 300.dp, max = 400.dp)
                 .width(maxWidth * 0.28f)
-                .then(modifier),
+                .fillMaxHeight(),
             containerColor = containerColor,
             navigationButton = navigationButton,
             closeButton = closeButton,
