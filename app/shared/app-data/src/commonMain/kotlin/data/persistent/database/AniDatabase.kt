@@ -92,7 +92,6 @@ import me.him188.ani.app.data.persistent.database.entity.SubjectReviewEntity
     DurationConverter::class,
     InstantConverter::class,
     EpisodeSortConverter::class,
-    ProtoConverters::class,
 )
 abstract class AniDatabase : RoomDatabase() {
     abstract fun searchHistory(): SearchHistoryDao

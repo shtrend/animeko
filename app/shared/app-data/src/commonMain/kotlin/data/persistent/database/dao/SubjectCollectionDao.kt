@@ -20,6 +20,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Transaction
+import androidx.room.TypeConverters
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import me.him188.ani.app.data.models.schedule.AnimeRecurrence
@@ -28,6 +29,7 @@ import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionStats
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.Tag
+import me.him188.ani.app.data.persistent.database.ProtoConverters
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.currentTimeMillis
@@ -56,7 +58,9 @@ data class SubjectCollectionEntity(
      */
     val totalEpisodes: Int,
     val airDate: PackedDate,
+    @all:TypeConverters(ProtoConverters.StringList::class)
     val aliases: List<String>,
+    @all:TypeConverters(ProtoConverters.TagList::class)
     val tags: List<Tag>,
     @Embedded(prefix = "collection_stats_")
     val collectionStats: SubjectCollectionStats,
@@ -100,12 +104,16 @@ data class SubjectCollectionEntity(
 @Immutable // don't change field name, stored in database
 data class SubjectRelations(
     @ColumnInfo(defaultValue = "'[]'")
+    @all:TypeConverters(ProtoConverters.IntList::class)
     val seriesMainSubjectIds: List<Int>,
     @ColumnInfo(defaultValue = "'[]'")
+    @all:TypeConverters(ProtoConverters.StringList::class)
     val seriesMainSubjectNames: List<String>,
     @ColumnInfo(defaultValue = "'[]'")
+    @all:TypeConverters(ProtoConverters.IntList::class)
     val sequelSubjects: List<Int>,
     @ColumnInfo(defaultValue = "'[]'")
+    @all:TypeConverters(ProtoConverters.StringList::class)
     val sequelSubjectNames: List<String>,
 ) {
     companion object {
