@@ -59,10 +59,10 @@ import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.data.models.subject.SubjectRecurrence
 import me.him188.ani.app.data.models.subject.Tag
-import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.BatchSubjectCollection
 import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.network.EpisodeService
+import me.him188.ani.app.data.network.SubjectService
 import me.him188.ani.app.data.network.toSelfRatingInfo
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionEntity
@@ -192,7 +192,7 @@ sealed class SubjectCollectionRepository(
 
 class SubjectCollectionRepositoryImpl(
     private val api: ApiInvoker<DefaultApi>,
-    private val bangumiSubjectService: BangumiSubjectService,
+    private val subjectService: SubjectService,
     private val subjectCollectionDao: SubjectCollectionDao,
     private val subjectRelationsDao: SubjectRelationsDao,
     private val episodeCollectionRepository: EpisodeCollectionRepository,
@@ -207,7 +207,7 @@ class SubjectCollectionRepositoryImpl(
     private val cacheExpiry: Duration = 1.hours,
 ) : SubjectCollectionRepository(defaultDispatcher) {
     override fun subjectCollectionCountsFlow(): Flow<SubjectCollectionCounts?> {
-        return (bangumiSubjectService.subjectCollectionCountsFlow() as Flow<SubjectCollectionCounts?>)
+        return (subjectService.subjectCollectionCountsFlow() as Flow<SubjectCollectionCounts?>)
             .restartOnNewLogin(sessionManager)
             .retry(2) { e ->
                 RepositoryException.shouldRetry(e)
@@ -245,7 +245,7 @@ class SubjectCollectionRepositoryImpl(
             .onEach { existing ->
                 // 如果没有缓存, 则 fetch 然后插入 subject 缓存
                 if (existing == null || existing.isExpired()) {
-                    val subject = bangumiSubjectService.getSubjectCollection(subjectId)
+                    val subject = subjectService.getSubjectCollection(subjectId)
                     val entity = subject?.toEntity(
                         lastFetched = currentTimeMillis(),
                     )
@@ -405,7 +405,7 @@ class SubjectCollectionRepositoryImpl(
         require(limit > 0) { "limit must be positive" }
 
         // 执行网络请求查询好需要的 subject 和 episodes
-        val items = bangumiSubjectService.getSubjectCollections(
+        val items = subjectService.getSubjectCollections(
             type = type?.toSubjectCollectionType(),
             offset = offset,
             limit = limit,
@@ -442,7 +442,7 @@ class SubjectCollectionRepositoryImpl(
         isPrivate: Boolean?,
     ) {
         withContext(defaultDispatcher) {
-            bangumiSubjectService.patchSubjectCollection(
+            subjectService.patchSubjectCollection(
                 subjectId,
                 BangumiUserSubjectCollectionModifyPayload(
                     rate = score,
@@ -508,7 +508,7 @@ class SubjectCollectionRepositoryImpl(
     }
 
     private suspend fun batchGetLightSubjectEpisodes(subjectIds: IntList): List<LightSubjectAndEpisodes> {
-        return bangumiSubjectService.batchGetLightSubjectAndEpisodes(subjectIds)
+        return subjectService.batchGetLightSubjectAndEpisodes(subjectIds)
     }
 
     private suspend fun batchGetSubjectEpisodes(items: List<BatchSubjectCollection>): List<EpisodeCollectionEntity> {
@@ -563,14 +563,14 @@ class SubjectCollectionRepositoryImpl(
         payload: BangumiUserSubjectCollectionModifyPayload,
     ) {
         withContext(defaultDispatcher) {
-            bangumiSubjectService.patchSubjectCollection(subjectId, payload)
+            subjectService.patchSubjectCollection(subjectId, payload)
             subjectCollectionDao.updateType(subjectId, payload.type.toCollectionType())
         }
     }
 
     private suspend fun deleteSubjectCollection(subjectId: Int) {
         withContext(defaultDispatcher) {
-            bangumiSubjectService.deleteSubjectCollection(subjectId)
+            subjectService.deleteSubjectCollection(subjectId)
         }
     }
 

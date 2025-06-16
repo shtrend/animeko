@@ -32,11 +32,11 @@ import me.him188.ani.app.data.network.BangumiCommentService
 import me.him188.ani.app.data.network.BangumiProfileService
 import me.him188.ani.app.data.network.BangumiRelatedPeopleService
 import me.him188.ani.app.data.network.BangumiSubjectSearchService
-import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.EpisodeService
 import me.him188.ani.app.data.network.EpisodeServiceImpl
 import me.him188.ani.app.data.network.RecommendationRepository
-import me.him188.ani.app.data.network.RemoteBangumiSubjectService
+import me.him188.ani.app.data.network.RemoteSubjectService
+import me.him188.ani.app.data.network.SubjectService
 import me.him188.ani.app.data.network.TrendsRepository
 import me.him188.ani.app.data.persistent.dataStores
 import me.him188.ani.app.data.persistent.database.AniDatabase
@@ -202,7 +202,7 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
     single<SubjectCollectionRepository> {
         SubjectCollectionRepositoryImpl(
             api = client.api,
-            bangumiSubjectService = get(),
+            subjectService = get(),
             subjectCollectionDao = database.subjectCollection(),
 //            characterDao = database.character(),
 //            characterActorDao = database.characterActor(),
@@ -254,15 +254,15 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
         DefaultSubjectRelationsRepository(
             database.subjectCollection(),
             database.subjectRelations(),
-            bangumiSubjectService = get(),
+            subjectService = get(),
             subjectCollectionRepository = get(),
             aniSubjectRelationIndexService = get(),
         )
     }
 
     // Data layer network services
-    single<BangumiSubjectService> {
-        RemoteBangumiSubjectService(
+    single<SubjectService> {
+        RemoteSubjectService(
             client,
             client.api,
             aniApiProvider.subjectApi,

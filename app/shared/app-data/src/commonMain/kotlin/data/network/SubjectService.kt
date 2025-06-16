@@ -66,7 +66,7 @@ import kotlin.coroutines.CoroutineContext
  * Performs network requests.
  * Use [SubjectManager] instead.
  */
-interface BangumiSubjectService {
+interface SubjectService {
     suspend fun getSubject(id: Int): BangumiSubject
 
     suspend fun getSubjectCollections(
@@ -116,7 +116,7 @@ data class BatchSubjectCollection(
     val collection: BangumiUserSubjectCollection?,
 )
 
-suspend inline fun BangumiSubjectService.setSubjectCollectionTypeOrDelete(
+suspend inline fun SubjectService.setSubjectCollectionTypeOrDelete(
     subjectId: Int,
     type: BangumiSubjectCollectionType?
 ) {
@@ -127,14 +127,14 @@ suspend inline fun BangumiSubjectService.setSubjectCollectionTypeOrDelete(
     }
 }
 
-class RemoteBangumiSubjectService(
+class RemoteSubjectService(
     private val client: BangumiClient,
     private val api: ApiInvoker<DefaultApi>,
     private val subjectApi: ApiInvoker<SubjectsAniApi>,
     private val sessionManager: SessionStateProvider,
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
-) : BangumiSubjectService, KoinComponent {
-    private val logger = logger<RemoteBangumiSubjectService>()
+) : SubjectService, KoinComponent {
+    private val logger = logger<RemoteSubjectService>()
 
     override suspend fun getSubject(id: Int): BangumiSubject = withContext(ioDispatcher) {
         api { getSubjectById(id).body() }
