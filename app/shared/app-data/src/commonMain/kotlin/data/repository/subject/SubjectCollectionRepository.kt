@@ -37,9 +37,7 @@ import kotlinx.coroutines.flow.retry
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
@@ -75,7 +73,6 @@ import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
 import me.him188.ani.app.data.repository.episode.AnimeScheduleRepository
 import me.him188.ani.app.data.repository.episode.EpisodeCollectionRepository
-import me.him188.ani.app.data.repository.episode.toEntity
 import me.him188.ani.app.data.repository.episode.toEpisodeCollectionInfo
 import me.him188.ani.app.data.repository.shouldRetry
 import me.him188.ani.app.domain.search.SubjectType
@@ -296,7 +293,7 @@ class SubjectCollectionRepositoryImpl(
                         .toList()
                 }
                 val fromMissingDeferred = async {
-                    batchGetLightSubjectEpisodes(missingIds) // TODO: 2025/1/14 batchGetLightSubjectEpisodes 没有按 epType 过滤
+                    subjectService.batchGetLightSubjectAndEpisodes(missingIds) // TODO: 2025/1/14 batchGetLightSubjectEpisodes 没有按 epType 过滤
                 }
                 emit(fromExistingDeferred.await() + fromMissingDeferred.await())
             }
@@ -504,32 +501,6 @@ class SubjectCollectionRepositoryImpl(
             }
         } catch (e: Exception) {
             MediatorResult.Error(RepositoryException.wrapOrThrowCancellation(e))
-        }
-    }
-
-    private suspend fun batchGetLightSubjectEpisodes(subjectIds: IntList): List<LightSubjectAndEpisodes> {
-        return subjectService.batchGetLightSubjectAndEpisodes(subjectIds)
-    }
-
-    private suspend fun batchGetSubjectEpisodes(items: List<BatchSubjectCollection>): List<EpisodeCollectionEntity> {
-        return coroutineScope {
-            // 并发
-            val concurrency = Semaphore(4)
-            items.mapNotNull { subjectCollection ->
-                subjectCollection.collection?.subjectId?.let { subjectId ->
-                    async {
-                        concurrency.withPermit {
-                            episodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null)
-                                .map {
-                                    it.toEntity(subjectId)
-                                }
-                                .toList()
-                        }
-                    }
-                }
-            }.flatMap {
-                it.await()
-            }
         }
     }
 

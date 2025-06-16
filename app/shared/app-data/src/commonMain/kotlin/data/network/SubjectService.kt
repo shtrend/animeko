@@ -33,7 +33,6 @@ import me.him188.ani.app.data.models.subject.LightSubjectInfo
 import me.him188.ani.app.data.models.subject.PersonInfo
 import me.him188.ani.app.data.models.subject.PersonPosition
 import me.him188.ani.app.data.models.subject.RatingCounts
-import me.him188.ani.app.data.models.subject.RatingInfo
 import me.him188.ani.app.data.models.subject.RelatedCharacterInfo
 import me.him188.ani.app.data.models.subject.RelatedPersonInfo
 import me.him188.ani.app.data.models.subject.SelfRatingInfo
@@ -50,8 +49,6 @@ import me.him188.ani.datasources.bangumi.BangumiClient
 import me.him188.ani.datasources.bangumi.apis.DefaultApi
 import me.him188.ani.datasources.bangumi.models.BangumiCount
 import me.him188.ani.datasources.bangumi.models.BangumiPerson
-import me.him188.ani.datasources.bangumi.models.BangumiRating
-import me.him188.ani.datasources.bangumi.models.BangumiSubject
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectCollectionType
 import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollection
 import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollectionModifyPayload
@@ -67,8 +64,6 @@ import kotlin.coroutines.CoroutineContext
  * Use [SubjectManager] instead.
  */
 interface SubjectService {
-    suspend fun getSubject(id: Int): BangumiSubject
-
     suspend fun getSubjectCollections(
         type: BangumiSubjectCollectionType?,
         offset: Int,
@@ -128,17 +123,13 @@ suspend inline fun SubjectService.setSubjectCollectionTypeOrDelete(
 }
 
 class RemoteSubjectService(
-    private val client: BangumiClient,
+    private val client: BangumiClient, // only used by GraphQL executor
     private val api: ApiInvoker<DefaultApi>,
     private val subjectApi: ApiInvoker<SubjectsAniApi>,
     private val sessionManager: SessionStateProvider,
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
 ) : SubjectService, KoinComponent {
     private val logger = logger<RemoteSubjectService>()
-
-    override suspend fun getSubject(id: Int): BangumiSubject = withContext(ioDispatcher) {
-        api { getSubjectById(id).body() }
-    }
 
     override suspend fun getSubjectCollections(
         type: BangumiSubjectCollectionType?,
@@ -428,13 +419,6 @@ class RemoteSubjectService(
     }
 }
 
-
-private fun BangumiRating.toRatingInfo(): RatingInfo = RatingInfo(
-    rank = rank,
-    total = total,
-    count = count.toRatingCounts(),
-    score = score.toString(),
-)
 
 private fun BangumiCount.toRatingCounts() = RatingCounts(
     _1 ?: 0,
