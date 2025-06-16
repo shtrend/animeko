@@ -57,7 +57,7 @@ import kotlin.coroutines.CoroutineContext
 /**
  * 执行网络请求查询.
  */
-sealed interface BangumiEpisodeService {
+sealed interface EpisodeService {
     /**
      * 获取用户在这个条目下的所有剧集的收藏状态. 当用户没有收藏此条目时返回 [collectionType] 均为 [UnifiedCollectionType.NOT_COLLECTED].
      *
@@ -96,12 +96,12 @@ sealed interface BangumiEpisodeService {
     ): Boolean
 }
 
-class BangumiEpisodeServiceImpl(
+class EpisodeServiceImpl(
     private val subjectApi: ApiInvoker<SubjectsAniApi>,
     private val ioDispatcher: CoroutineContext = Dispatchers.IO_,
-) : BangumiEpisodeService, KoinComponent {
+) : EpisodeService, KoinComponent {
     private val client by inject<BangumiClient>()
-    private val logger = logger<BangumiEpisodeServiceImpl>()
+    private val logger = logger<EpisodeServiceImpl>()
     private val sessionManager: SessionStateProvider by inject()
 
     // TODO: 2025/6/15 当 subjectId 无效时, 这个 flow 会 silently 不 emit 

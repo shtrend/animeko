@@ -59,10 +59,10 @@ import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.data.models.subject.SubjectRecurrence
 import me.him188.ani.app.data.models.subject.Tag
-import me.him188.ani.app.data.network.BangumiEpisodeService
 import me.him188.ani.app.data.network.BangumiSubjectService
 import me.him188.ani.app.data.network.BatchSubjectCollection
 import me.him188.ani.app.data.network.BatchSubjectDetails
+import me.him188.ani.app.data.network.EpisodeService
 import me.him188.ani.app.data.network.toSelfRatingInfo
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionEntity
@@ -197,7 +197,7 @@ class SubjectCollectionRepositoryImpl(
     private val subjectRelationsDao: SubjectRelationsDao,
     private val episodeCollectionRepository: EpisodeCollectionRepository,
     private val animeScheduleRepository: AnimeScheduleRepository,
-    private val bangumiEpisodeService: BangumiEpisodeService,
+    private val episodeService: EpisodeService,
     private val episodeCollectionDao: EpisodeCollectionDao,
     private val sessionManager: SessionStateProvider,
     private val nsfwModeSettingsFlow: Flow<NsfwMode>,
@@ -519,7 +519,7 @@ class SubjectCollectionRepositoryImpl(
                 subjectCollection.collection?.subjectId?.let { subjectId ->
                     async {
                         concurrency.withPermit {
-                            bangumiEpisodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null)
+                            episodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null)
                                 .map {
                                     it.toEntity(subjectId)
                                 }

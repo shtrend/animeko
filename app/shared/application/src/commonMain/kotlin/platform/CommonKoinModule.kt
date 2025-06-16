@@ -29,12 +29,12 @@ import me.him188.ani.app.data.network.AniSubjectRelationIndexService
 import me.him188.ani.app.data.network.AnimeScheduleService
 import me.him188.ani.app.data.network.BangumiBangumiCommentServiceImpl
 import me.him188.ani.app.data.network.BangumiCommentService
-import me.him188.ani.app.data.network.BangumiEpisodeService
-import me.him188.ani.app.data.network.BangumiEpisodeServiceImpl
 import me.him188.ani.app.data.network.BangumiProfileService
 import me.him188.ani.app.data.network.BangumiRelatedPeopleService
 import me.him188.ani.app.data.network.BangumiSubjectSearchService
 import me.him188.ani.app.data.network.BangumiSubjectService
+import me.him188.ani.app.data.network.EpisodeService
+import me.him188.ani.app.data.network.EpisodeServiceImpl
 import me.him188.ani.app.data.network.RecommendationRepository
 import me.him188.ani.app.data.network.RemoteBangumiSubjectService
 import me.him188.ani.app.data.network.TrendsRepository
@@ -212,7 +212,7 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
             subjectRelationsDao = database.subjectRelations(),
             episodeCollectionRepository = get(),
             animeScheduleRepository = get(),
-            bangumiEpisodeService = get(),
+            episodeService = get(),
             episodeCollectionDao = database.episodeCollection(),
             sessionManager = get(),
             nsfwModeSettingsFlow = settingsRepository.uiSettings.flow.map { it.searchSettings.nsfwMode },
@@ -269,7 +269,7 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
             sessionManager = get(),
         )
     }
-    single<BangumiEpisodeService> { BangumiEpisodeServiceImpl(aniApiProvider.subjectApi) }
+    single<EpisodeService> { EpisodeServiceImpl(aniApiProvider.subjectApi) }
 
     single<BangumiRelatedPeopleService> { BangumiRelatedPeopleService(get()) }
     single<AnimeScheduleRepository> { AnimeScheduleRepository(get()) }
@@ -284,7 +284,7 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
         EpisodeCollectionRepository(
             subjectDao = database.subjectCollection(),
             episodeCollectionDao = database.episodeCollection(),
-            bangumiEpisodeService = get(),
+            episodeService = get(),
             animeScheduleRepository = get(),
             subjectCollectionRepository = inject(),
             getEpisodeTypeFiltersUseCase = get(),
