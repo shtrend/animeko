@@ -26,6 +26,7 @@ import me.him188.ani.app.domain.session.canAccessAniApiNow
 import me.him188.ani.client.apis.SubjectsAniApi
 import me.him188.ani.client.models.AniBatchUpdateEpisodeCollectionsRequest
 import me.him188.ani.client.models.AniEpisodeCollectionType
+import me.him188.ani.client.models.AniEpisodeCollectionTypeUpdate
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.EpisodeType.ED
@@ -260,7 +261,7 @@ class EpisodeServiceImpl(
                     subjectId.toLong(),
                     AniBatchUpdateEpisodeCollectionsRequest(
                         episodeIds = episodeId.map { it.toLong() },
-                        episodeCollectionType = type.toAniEpisodeCollectionType(),
+                        episodeCollectionType = type.toAniEpisodeCollectionTypeUpdate(),
                     ),
                 ).body()
             }
@@ -365,13 +366,24 @@ private fun getEpisodeTypeByBangumiCode(code: Int): EpisodeType? {
     }
 }
 
-fun UnifiedCollectionType.toAniEpisodeCollectionType(): AniEpisodeCollectionType {
+fun UnifiedCollectionType.toAniEpisodeCollectionType(): AniEpisodeCollectionType? {
     return when (this) {
-        UnifiedCollectionType.NOT_COLLECTED -> AniEpisodeCollectionType.WISH
-        UnifiedCollectionType.WISH -> AniEpisodeCollectionType.WISH
-        UnifiedCollectionType.DOING -> AniEpisodeCollectionType.WISH
+        UnifiedCollectionType.NOT_COLLECTED -> null
+        UnifiedCollectionType.WISH -> null
+        UnifiedCollectionType.DOING -> null
         UnifiedCollectionType.DONE -> AniEpisodeCollectionType.DONE
-        UnifiedCollectionType.ON_HOLD -> AniEpisodeCollectionType.WISH
-        UnifiedCollectionType.DROPPED -> AniEpisodeCollectionType.WISH
+        UnifiedCollectionType.ON_HOLD -> null
+        UnifiedCollectionType.DROPPED -> null
+    }
+}
+
+fun UnifiedCollectionType.toAniEpisodeCollectionTypeUpdate(): AniEpisodeCollectionTypeUpdate {
+    return when (this) {
+        UnifiedCollectionType.NOT_COLLECTED -> AniEpisodeCollectionTypeUpdate.NOT_COLLECTED
+        UnifiedCollectionType.WISH -> AniEpisodeCollectionTypeUpdate.NOT_COLLECTED
+        UnifiedCollectionType.DOING -> AniEpisodeCollectionTypeUpdate.NOT_COLLECTED
+        UnifiedCollectionType.DONE -> AniEpisodeCollectionTypeUpdate.DONE
+        UnifiedCollectionType.ON_HOLD -> AniEpisodeCollectionTypeUpdate.NOT_COLLECTED
+        UnifiedCollectionType.DROPPED -> AniEpisodeCollectionTypeUpdate.NOT_COLLECTED
     }
 }

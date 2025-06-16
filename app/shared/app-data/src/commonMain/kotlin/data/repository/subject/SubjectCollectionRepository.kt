@@ -57,15 +57,13 @@ import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.SubjectProgressInfo
 import me.him188.ani.app.data.models.subject.SubjectRecurrence
 import me.him188.ani.app.data.models.subject.Tag
-import me.him188.ani.app.data.network.BatchSubjectCollection
-import me.him188.ani.app.data.network.BatchSubjectDetails
 import me.him188.ani.app.data.network.EpisodeService
 import me.him188.ani.app.data.network.SubjectService
-import me.him188.ani.app.data.network.toSelfRatingInfo
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.EpisodeCollectionEntity
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
+import me.him188.ani.app.data.persistent.database.dao.SubjectRelations
 import me.him188.ani.app.data.persistent.database.dao.SubjectRelationsDao
 import me.him188.ani.app.data.persistent.database.dao.deleteAll
 import me.him188.ani.app.data.persistent.database.dao.filterMostRecentUpdated
@@ -87,6 +85,7 @@ import me.him188.ani.client.models.AniEpisodeType
 import me.him188.ani.client.models.AniFavourite
 import me.him188.ani.client.models.AniSelfRatingInfo
 import me.him188.ani.client.models.AniSubjectCollection
+import me.him188.ani.client.models.AniSubjectRelations
 import me.him188.ani.client.models.AniTag
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.EpisodeType
@@ -615,56 +614,7 @@ private fun SubjectCollectionEntity.toSubjectCollectionInfo(
         cachedCharactersUpdated = cachedCharactersUpdated,
         lastUpdated = lastUpdated,
         nsfwMode = if (nsfw) nsfwModeSettings else NsfwMode.DISPLAY,
-    )
-}
-
-
-internal fun BatchSubjectDetails.toEntity(
-    collectionType: UnifiedCollectionType,
-    selfRatingInfo: SelfRatingInfo,
-    recurrence: SubjectRecurrence?,
-    lastUpdated: Long,
-    lastFetched: Long,
-): SubjectCollectionEntity =
-    subjectInfo.run {
-        SubjectCollectionEntity(
-            subjectId = subjectId,
-//            subjectType = SubjectType.ANIME,
-            name = name,
-            nameCn = nameCn,
-            summary = summary,
-            nsfw = nsfw,
-            imageLarge = imageLarge,
-            totalEpisodes =
-                @Suppress("DEPRECATION")
-                totalEpisodes,
-            airDate = airDate,
-            tags = tags,
-            aliases = aliases,
-            ratingInfo = ratingInfo,
-            collectionStats = collectionStats,
-            completeDate = completeDate,
-            selfRatingInfo = selfRatingInfo,
-            collectionType = collectionType,
-            recurrence = recurrence,
-            lastUpdated = lastUpdated,
-            lastFetched = lastFetched,
-            cachedStaffUpdated = 0,
-            cachedCharactersUpdated = 0,
-        )
-    }
-
-internal fun BatchSubjectCollection.toEntity(
-    lastFetched: Long,
-    recurrence: SubjectRecurrence?,
-): SubjectCollectionEntity {
-    val subject = batchSubjectDetails
-    return subject.toEntity(
-        collection?.type.toCollectionType(),
-        collection.toSelfRatingInfo(),
-        lastUpdated = collection?.updatedAt?.toEpochMilliseconds() ?: 0,
-        lastFetched = lastFetched,
-        recurrence = recurrence,
+        relations = relations ?: SubjectRelations.Empty,
     )
 }
 
@@ -762,10 +712,20 @@ fun AniSubjectCollection.toEntity(
         selfRatingInfo = selfRating.toSelfRatingInfo(),
         collectionType = collectionType.toUnifiedCollectionType(),
         recurrence = airingInfo?.recurrence?.toSubjectRecurrence(),
+        relations = relations.toSubjectRelationsEntity(),
         lastUpdated = updatedAt?.let { Instant.parse(it) }?.toEpochMilliseconds() ?: 0,
         lastFetched = lastFetched,
         cachedStaffUpdated = lastFetched,
         cachedCharactersUpdated = lastFetched,
+    )
+}
+
+fun AniSubjectRelations.toSubjectRelationsEntity(): SubjectRelations {
+    return SubjectRelations(
+        seriesMainSubjectIds,
+        seriesMainSubjectNames,
+        sequelSubjects,
+        sequelSubjectNames,
     )
 }
 
@@ -836,9 +796,8 @@ fun AniEpisodeType.toEpisodeType(): EpisodeType? {
 
 fun AniEpisodeCollectionType?.toUnifiedCollectionType(): UnifiedCollectionType {
     return when (this) {
-        AniEpisodeCollectionType.WISH -> UnifiedCollectionType.WISH
-        AniEpisodeCollectionType.DONE -> UnifiedCollectionType.DONE
         null -> UnifiedCollectionType.NOT_COLLECTED
+        AniEpisodeCollectionType.DONE -> UnifiedCollectionType.DONE
     }
 }
 

@@ -29,7 +29,7 @@ import kotlinx.serialization.Serializable
 
 data class AniUpdateEpisodeCollectionRequest (
 
-    @SerialName(value = "episodeCollectionType") @Required val episodeCollectionType: AniEpisodeCollectionType
+    @SerialName(value = "episodeCollectionType") @Required val episodeCollectionType: AniEpisodeCollectionTypeUpdate
 
 ) {
 

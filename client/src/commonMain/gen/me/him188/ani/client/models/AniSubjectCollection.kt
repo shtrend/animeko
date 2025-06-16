@@ -37,13 +37,13 @@ import kotlinx.serialization.Serializable
  * @param scoreDetails 
  * @param selfRating 
  * @param episodes 条目对应的剧集的收藏状态
+ * @param relations 
  * @param infobox 
  * @param platform 
  * @param score 如果不为空, 则必定为浮点
  * @param rank 
  * @param collectionType 
  * @param airingInfo 
- * @param relations 
  * @param updatedAt 收藏更新的时间. 如果没有收藏, 则为 `null`.
  */
 @Serializable
@@ -79,6 +79,8 @@ data class AniSubjectCollection (
     /* 条目对应的剧集的收藏状态 */
     @SerialName(value = "episodes") @Required val episodes: kotlin.collections.List<AniEpisodeCollection>,
 
+    @SerialName(value = "relations") @Required val relations: AniSubjectRelations,
+
     @SerialName(value = "infobox") val infobox: AniInfobox? = null,
 
     @SerialName(value = "platform") val platform: kotlin.Int? = null,
@@ -91,8 +93,6 @@ data class AniSubjectCollection (
     @SerialName(value = "collectionType") val collectionType: AniCollectionType? = null,
 
     @SerialName(value = "airingInfo") val airingInfo: AniSubjectAiringInfo? = null,
-
-    @SerialName(value = "relations") val relations: AniSubjectRelations? = null,
 
     /* 收藏更新的时间. 如果没有收藏, 则为 `null`. */
     @SerialName(value = "updatedAt") val updatedAt: kotlin.String? = null

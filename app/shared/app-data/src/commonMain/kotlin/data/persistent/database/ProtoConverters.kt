@@ -30,6 +30,17 @@ class ProtoConverters {
         return protobuf.encodeToByteArray(ListSerializer(String.serializer()), list)
     }
 
+    // List<Int>
+
+    @TypeConverter
+    fun intListToByteArray(list: List<Int>): ByteArray =
+        protobuf.encodeToByteArray(ListSerializer(Int.serializer()), list)
+
+    @TypeConverter
+    fun byteArrayToIntList(value: ByteArray): List<Int> =
+        protobuf.decodeFromByteArray(ListSerializer(Int.serializer()), value)
+
+    // List<Tag>
 
     @TypeConverter
     fun byteArrayToListTag(value: ByteArray): List<Tag> {

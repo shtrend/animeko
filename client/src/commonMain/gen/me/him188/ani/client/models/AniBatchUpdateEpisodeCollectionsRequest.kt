@@ -16,9 +16,11 @@
 
 package me.him188.ani.client.models
 
-import kotlinx.serialization.Required
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
+import me.him188.ani.client.models.AniEpisodeCollectionTypeUpdate
+
+import kotlinx.serialization.*
+import kotlinx.serialization.descriptors.*
+import kotlinx.serialization.encoding.*
 
 /**
  * 
@@ -32,7 +34,7 @@ data class AniBatchUpdateEpisodeCollectionsRequest (
 
     @SerialName(value = "episodeIds") @Required val episodeIds: kotlin.collections.List<kotlin.Long>,
 
-    @SerialName(value = "episodeCollectionType") @Required val episodeCollectionType: AniEpisodeCollectionType
+    @SerialName(value = "episodeCollectionType") @Required val episodeCollectionType: AniEpisodeCollectionTypeUpdate
 
 ) {
 

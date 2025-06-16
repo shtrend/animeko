@@ -117,8 +117,6 @@ class DefaultSubjectRelationsRepository(
         ) { subjectCollectionInfos ->
             SubjectSeriesInfo.compute(
                 requestingSubject = requestingSubject,
-                seriesSubjects = subjectCollectionInfos.filter { it.subjectId in relations.seriesMainSubjectIds },
-                sequelSubjects = subjectCollectionInfos.filter { it.subjectId in relations.sequelSubjects },
             )
         }
     }.flatMapLatest {

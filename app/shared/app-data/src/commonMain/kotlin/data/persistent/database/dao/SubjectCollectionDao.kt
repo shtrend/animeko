@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.data.persistent.database.dao
 
+import androidx.compose.runtime.Immutable
 import androidx.paging.PagingSource
 import androidx.room.ColumnInfo
 import androidx.room.Dao
@@ -19,7 +20,6 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Relation
 import androidx.room.Transaction
-import androidx.room.TypeConverters
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import me.him188.ani.app.data.models.schedule.AnimeRecurrence
@@ -28,9 +28,6 @@ import me.him188.ani.app.data.models.subject.SelfRatingInfo
 import me.him188.ani.app.data.models.subject.SubjectCollectionStats
 import me.him188.ani.app.data.models.subject.SubjectInfo
 import me.him188.ani.app.data.models.subject.Tag
-import me.him188.ani.app.data.persistent.database.converters.DurationConverter
-import me.him188.ani.app.data.persistent.database.converters.InstantConverter
-import me.him188.ani.app.data.persistent.database.converters.PackedDateConverter
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.platform.currentTimeMillis
@@ -45,7 +42,6 @@ import kotlin.time.Duration.Companion.hours
         Index(value = ["lastUpdated"], unique = false, orders = [Index.Order.DESC]),
     ],
 )
-@TypeConverters(PackedDateConverter::class, DurationConverter::class, InstantConverter::class)
 data class SubjectCollectionEntity(
     @PrimaryKey val subjectId: Int,
 
@@ -80,6 +76,12 @@ data class SubjectCollectionEntity(
     val recurrence: AnimeRecurrence?,
 
     /**
+     * @since 5.0.0
+     */
+    @Embedded(prefix = "relations_")
+    val relations: SubjectRelations = SubjectRelations.Empty,
+
+    /**
      * 此条目最后被修改的时间 (如修改收藏状态). 与服务器同步.
      */
     @ColumnInfo(defaultValue = "0")
@@ -94,6 +96,27 @@ data class SubjectCollectionEntity(
     @ColumnInfo(defaultValue = "0")
     val cachedCharactersUpdated: Long,
 )
+
+@Immutable // don't change field name, stored in database
+data class SubjectRelations(
+    @ColumnInfo(defaultValue = "'[]'")
+    val seriesMainSubjectIds: List<Int>,
+    @ColumnInfo(defaultValue = "'[]'")
+    val seriesMainSubjectNames: List<String>,
+    @ColumnInfo(defaultValue = "'[]'")
+    val sequelSubjects: List<Int>,
+    @ColumnInfo(defaultValue = "'[]'")
+    val sequelSubjectNames: List<String>,
+) {
+    companion object {
+        val Empty = SubjectRelations(
+            seriesMainSubjectIds = emptyList(),
+            seriesMainSubjectNames = emptyList(),
+            sequelSubjects = emptyList(),
+            sequelSubjectNames = emptyList(),
+        )
+    }
+}
 
 @Dao
 interface SubjectCollectionDao {

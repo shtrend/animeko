@@ -17,30 +17,22 @@
 package me.him188.ani.client.models
 
 
-import kotlinx.serialization.*
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 /**
  * 
  *
- * Values: WISH,DONE,DOING,ON_HOLD,DROPPED
+ * Values: NOT_COLLECTED,DONE
  */
 @Serializable
-enum class AniCollectionType(val value: kotlin.String) {
+enum class AniEpisodeCollectionTypeUpdate(val value: kotlin.String) {
 
-    @SerialName(value = "WISH")
-    WISH("WISH"),
+    @SerialName(value = "NOT_COLLECTED")
+    NOT_COLLECTED("NOT_COLLECTED"),
 
     @SerialName(value = "DONE")
-    DONE("DONE"),
-
-    @SerialName(value = "DOING")
-    DOING("DOING"),
-
-    @SerialName(value = "ON_HOLD")
-    ON_HOLD("ON_HOLD"),
-
-    @SerialName(value = "DROPPED")
-    DROPPED("DROPPED");
+    DONE("DONE");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use
@@ -55,12 +47,12 @@ enum class AniCollectionType(val value: kotlin.String) {
         /**
          * Converts the provided [data] to a [String] on success, null otherwise.
          */
-        fun encode(data: kotlin.Any?): kotlin.String? = if (data is AniCollectionType) "$data" else null
+        fun encode(data: kotlin.Any?): kotlin.String? = if (data is AniEpisodeCollectionTypeUpdate) "$data" else null
 
         /**
-         * Returns a valid [AniCollectionType] for [data], null otherwise.
+         * Returns a valid [AniEpisodeCollectionTypeUpdate] for [data], null otherwise.
          */
-        fun decode(data: kotlin.Any?): AniCollectionType? = data?.let {
+        fun decode(data: kotlin.Any?): AniEpisodeCollectionTypeUpdate? = data?.let {
           val normalizedData = "$it".lowercase()
           values().firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()

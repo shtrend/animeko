@@ -712,12 +712,6 @@ class EpisodeViewModel(
                 subjectLoadError?.let {
                     return EpisodePageLoadError.SubjectError(subjectLoadError)
                 }
-                subjectEpisodeBundle?.seriesInfoLoadError?.let {
-                    return EpisodePageLoadError.SeriesError(it)
-                }
-                subjectEpisodeBundle?.subjectCompletedLoadError?.let {
-                    return EpisodePageLoadError.SeriesError(it)
-                }
                 return null
             }
 

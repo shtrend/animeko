@@ -23,13 +23,10 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: WISH,DONE
+ * Values: DONE
  */
 @Serializable
 enum class AniEpisodeCollectionType(val value: kotlin.String) {
-
-    @SerialName(value = "WISH")
-    WISH("WISH"),
 
     @SerialName(value = "DONE")
     DONE("DONE");
