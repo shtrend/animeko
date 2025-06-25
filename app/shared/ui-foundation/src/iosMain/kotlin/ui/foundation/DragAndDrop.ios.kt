@@ -7,20 +7,10 @@
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
 
-package me.him188.ani.app.data.models.user
+package me.him188.ani.app.ui.foundation
 
-import kotlinx.serialization.Serializable
-import kotlin.uuid.Uuid
+import androidx.compose.ui.draganddrop.DragAndDropEvent
 
-/**
- * @since 5.0
- */
-@Serializable
-data class SelfInfo(
-    val id: Uuid,
-    val nickname: String,
-    val email: String?,
-    val hasPassword: Boolean,
-    val avatarUrl: String?,
-    val bangumiUsername: String?
-)
+actual fun processDragAndDropEventImpl(event: DragAndDropEvent): DragAndDropContent {
+    return DragAndDropContent.Unsupported
+}
