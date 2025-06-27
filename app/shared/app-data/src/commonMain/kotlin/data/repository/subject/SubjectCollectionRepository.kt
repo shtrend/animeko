@@ -736,8 +736,8 @@ fun AniSubjectCollection.toEntity(
         relations = relations.toSubjectRelationsEntity(),
         lastUpdated = updatedAt?.let { Instant.parse(it) }?.toEpochMilliseconds() ?: 0,
         lastFetched = lastFetched,
-        cachedStaffUpdated = lastFetched,
-        cachedCharactersUpdated = lastFetched,
+        cachedStaffUpdated = 0,
+        cachedCharactersUpdated = 0,
     )
 }
 
