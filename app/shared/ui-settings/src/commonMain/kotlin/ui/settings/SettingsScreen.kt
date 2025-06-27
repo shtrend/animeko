@@ -68,6 +68,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -118,6 +119,7 @@ import me.him188.ani.app.ui.lang.settings_tab_storage
 import me.him188.ani.app.ui.lang.settings_tab_theme
 import me.him188.ani.app.ui.lang.settings_tab_update
 import me.him188.ani.app.ui.settings.account.AccountSettingsViewModel
+import me.him188.ani.app.ui.settings.account.SelfInfoBanner
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.rendering.P2p
 import me.him188.ani.app.ui.settings.tabs.AniHelpNavigator
@@ -174,15 +176,19 @@ fun SettingsScreen(
 
     val accountSettingsViewModel = viewModel { AccountSettingsViewModel() }
 
+    fun navigateToTab(tab: SettingsTab) {
+        coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
+            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
+            lastSelectedTab = tab
+        }
+    }
+
     SettingsPageLayout(
         navigator,
         // TODO: 2025/2/14 We should have a SettingsNavController or so to control the tab state 
         { lastSelectedTab },
         onSelectedTab = { tab ->
-            coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
-                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail)
-                lastSelectedTab = tab
-            }
+            navigateToTab(tab)
         },
         onClickBackOnListPage = {
             coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -195,8 +201,17 @@ fun SettingsScreen(
             }
         },
         navItems = {
+            val selfInfoState by vm.selfInfoFlow.collectAsStateWithLifecycle()
+            SelfInfoBanner(
+                selfInfoState,
+                { navigateToTab(SettingsTab.PROFILE) },
+                onNavigateToLogin,
+                Modifier.fillMaxWidth(),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            )
+
             Title(stringResource(Lang.settings_category_app_ui))
-            Item(SettingsTab.ACCOUNT)
+            Item(SettingsTab.PROFILE)
             Item(SettingsTab.APPEARANCE)
             Item(SettingsTab.THEME)
 
@@ -265,7 +280,7 @@ fun SettingsScreen(
                         tabModifier,
                     ) {
                         when (currentTab) {
-                            SettingsTab.ACCOUNT -> AccountSettingsGroup(
+                            SettingsTab.PROFILE -> AccountSettingsGroup(
                                 accountSettingsViewModel,
                                 onNavigateToLogin,
                                 onNavigateToBangumiOAuth,
@@ -435,7 +450,7 @@ internal fun SettingsPageLayout(
 
                 val verticalPadding = currentWindowAdaptiveInfo1().windowSizeClass.paneVerticalPadding
 
-                Spacer(Modifier.height(verticalPadding)) // scrollable
+                Spacer(Modifier.height(verticalPadding - 8.dp)) // scrollable
                 navItems(scope)
                 Spacer(Modifier.height(verticalPadding)) // scrollable
             }
@@ -634,7 +649,7 @@ abstract class SettingsDrawerScope internal constructor() : ColumnScope {
 @Stable
 private fun getIcon(tab: SettingsTab): ImageVector {
     return when (tab) {
-        SettingsTab.ACCOUNT -> Icons.Outlined.AccountCircle
+        SettingsTab.PROFILE -> Icons.Outlined.AccountCircle
         SettingsTab.APPEARANCE -> Icons.Outlined.SettingsApplications
         SettingsTab.THEME -> Icons.Outlined.Palette
         SettingsTab.UPDATE -> Icons.Outlined.Update
@@ -656,7 +671,7 @@ private fun getIcon(tab: SettingsTab): ImageVector {
 @Composable
 private fun getName(tab: SettingsTab): String {
     return when (tab) {
-        SettingsTab.ACCOUNT -> stringResource(Lang.settings_tab_account)
+        SettingsTab.PROFILE -> stringResource(Lang.settings_tab_account)
         SettingsTab.APPEARANCE -> stringResource(Lang.settings_tab_appearance)
         SettingsTab.THEME -> stringResource(Lang.settings_tab_theme)
         SettingsTab.PLAYER -> stringResource(Lang.settings_tab_player)

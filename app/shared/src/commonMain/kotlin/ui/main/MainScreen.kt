@@ -281,7 +281,7 @@ private fun MainScreenContent(
             },
             onNavigateToAccountSettings = {
                 showAccountSettingsPopup = false
-                onNavigateToSettings(SettingsTab.ACCOUNT)
+                onNavigateToSettings(SettingsTab.PROFILE)
             },
             onNavigateToLogin = {
                 showAccountSettingsPopup = false
