@@ -42,13 +42,15 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @Composable
 internal fun SelfInfoBanner(
     state: SelfInfoUiState,
-    onClick: () -> Unit,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
     onLoginClick: () -> Unit,
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surface
 ) {
     Surface(
-        onClick,
+        checked = checked,
+        onCheckedChange = onCheckedChange,
         modifier,
         color = containerColor,
         shape = MaterialTheme.shapes.large,
@@ -104,8 +106,9 @@ private fun PreviewSelfInfoBanner() = ProvideCompositionLocalsForPreview {
     Surface {
         SelfInfoBanner(
             state = TestSelfInfoUiState,
+            true,
             {},
-            onLoginClick = {},
+            {},
         )
     }
 }

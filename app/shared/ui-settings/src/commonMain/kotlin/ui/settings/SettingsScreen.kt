@@ -55,6 +55,7 @@ import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -202,8 +203,14 @@ fun SettingsScreen(
         },
         navItems = {
             val selfInfoState by vm.selfInfoFlow.collectAsStateWithLifecycle()
+            val bannerChecked by remember {
+                derivedStateOf {
+                    lastSelectedTab == SettingsTab.PROFILE
+                }
+            }
             SelfInfoBanner(
                 selfInfoState,
+                checked = bannerChecked,
                 { navigateToTab(SettingsTab.PROFILE) },
                 onNavigateToLogin,
                 Modifier.fillMaxWidth(),
@@ -211,7 +218,6 @@ fun SettingsScreen(
             )
 
             Title(stringResource(Lang.settings_category_app_ui))
-            Item(SettingsTab.PROFILE)
             Item(SettingsTab.APPEARANCE)
             Item(SettingsTab.THEME)
 
