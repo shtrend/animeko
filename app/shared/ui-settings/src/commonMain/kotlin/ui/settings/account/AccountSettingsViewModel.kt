@@ -54,14 +54,11 @@ class AccountSettingsViewModel : AbstractViewModel(), KoinComponent {
     private val avatarUploadState =
         MutableStateFlow<EditProfileState.UploadAvatarState>(EditProfileState.UploadAvatarState.Default)
 
-    private val bangumiSyncState = MutableStateFlow<BangumiSyncState>(BangumiSyncState.Idle)
-
     val stateFlow = combine(
         sessionManager.stateProvider.stateFlow,
         userRepo.selfInfoFlow(),
         avatarUploadState,
-        bangumiSyncState,
-    ) { sessionState, selfInfo, avatarState, syncState ->
+    ) { sessionState, selfInfo, avatarState ->
         val isSessionValid = sessionState is SessionState.Valid
         AccountSettingsState(
             selfInfo = SelfInfoUiState(
@@ -71,7 +68,6 @@ class AccountSettingsViewModel : AbstractViewModel(), KoinComponent {
             ),
             boundBangumi = isSessionValid && sessionState.bangumiConnected,
             avatarUploadState = avatarState,
-            bangumiSyncState = syncState,
         )
     }
         .restartable(stateRefresher)
@@ -156,20 +152,8 @@ class AccountSettingsViewModel : AbstractViewModel(), KoinComponent {
         stateRefresher.restart()
     }
 
-    fun bangumiFullSync() {
-        if (fullSyncTasker.isRunning.value) return
-        fullSyncTasker.launch {
-            bangumiSyncState.value = BangumiSyncState.Syncing
-            subjectCollectionRepo.performBangumiFullSync()
-            bangumiSyncState.value = BangumiSyncState.Success
-        }.invokeOnCompletion {
-            if (it == null) return@invokeOnCompletion
-            if (it is CancellationException) {
-                bangumiSyncState.value = BangumiSyncState.Idle
-            } else {
-                bangumiSyncState.value = BangumiSyncState.Failed(LoadError.fromException(it))
-            }
-        }
+    suspend fun bangumiFullSync() {
+        subjectCollectionRepo.performBangumiFullSync()
     }
 
     companion object {
@@ -182,14 +166,12 @@ class AccountSettingsState(
     val selfInfo: SelfInfoUiState,
     val boundBangumi: Boolean,
     val avatarUploadState: EditProfileState.UploadAvatarState,
-    val bangumiSyncState: BangumiSyncState,
 ) {
     companion object {
         val Empty = AccountSettingsState(
             selfInfo = SelfInfoUiState(null, true, null),
             boundBangumi = false,
             avatarUploadState = EditProfileState.UploadAvatarState.Default,
-            bangumiSyncState = BangumiSyncState.Idle,
         )
     }
 }
@@ -222,24 +204,12 @@ class EditProfileState(
     }
 }
 
-@Immutable
-sealed interface BangumiSyncState {
-    data object Idle : BangumiSyncState
-
-    data object Syncing : BangumiSyncState
-
-    data class Failed(val loadError: LoadError) : BangumiSyncState
-
-    data object Success : BangumiSyncState
-}
-
 @OptIn(TestOnly::class)
 val TestAccountSettingsState
     get() = AccountSettingsState(
         TestSelfInfoUiState,
         false,
         EditProfileState.UploadAvatarState.Default,
-        BangumiSyncState.Idle,
     )
 
 private object AvatarImageProcessor {

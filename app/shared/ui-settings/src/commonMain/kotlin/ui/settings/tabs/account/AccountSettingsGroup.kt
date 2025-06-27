@@ -19,14 +19,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material3.Button
@@ -63,6 +61,7 @@ import io.github.vinceglb.filekit.dialogs.compose.rememberFilePickerLauncher
 import me.him188.ani.app.ui.external.placeholder.placeholder
 import me.him188.ani.app.ui.foundation.DragAndDropContent
 import me.him188.ani.app.ui.foundation.DragAndDropHoverState
+import me.him188.ani.app.ui.foundation.IconButton
 import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.avatar.AvatarImage
@@ -80,7 +79,6 @@ import me.him188.ani.app.ui.search.renderLoadErrorMessage
 import me.him188.ani.app.ui.settings.account.AccountLogoutDialog
 import me.him188.ani.app.ui.settings.account.AccountSettingsState
 import me.him188.ani.app.ui.settings.account.AccountSettingsViewModel
-import me.him188.ani.app.ui.settings.account.BangumiSyncState
 import me.him188.ani.app.ui.settings.account.EditProfileState
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.framework.components.TextFieldItem
@@ -104,6 +102,7 @@ fun SettingsScope.AccountSettingsGroup(
     var editingProfile by rememberSaveable { mutableStateOf(false) }
 
     val asyncHandler = rememberAsyncHandler()
+    val bangumiSyncHandler = rememberAsyncHandler()
 
     Column(modifier) {
         Column(
@@ -130,14 +129,18 @@ fun SettingsScope.AccountSettingsGroup(
                 if (!editing) {
                     AccountInfo(
                         state.selfInfo,
-                        state.bangumiSyncState,
+                        isBangumiSyncing = bangumiSyncHandler.isWorking,
                         state.boundBangumi,
                         onClickLogin = onNavigateToLogin,
                         onClickLogout = { showLogoutDialog = true },
                         onClickEditProfile = { editingProfile = true },
                         onClickBindBangumi = onNavigateToBangumiOAuth,
                         onClickBindEmail = onNavigateToLogin,
-                        onClickBangumiSync = { vm.bangumiFullSync() },
+                        onClickBangumiSync = {
+                            bangumiSyncHandler.launch {
+                                vm.bangumiFullSync()
+                            }
+                        },
                     )
                 } else {
                     EditProfile(
@@ -173,7 +176,7 @@ fun SettingsScope.AccountSettingsGroup(
 @Composable
 private fun SettingsScope.AccountInfo(
     selfInfo: SelfInfoUiState,
-    bangumiSyncState: BangumiSyncState,
+    isBangumiSyncing: Boolean,
     boundBangumi: Boolean,
     onClickLogin: () -> Unit,
     onClickLogout: () -> Unit,
@@ -182,6 +185,7 @@ private fun SettingsScope.AccountInfo(
     onClickBindEmail: () -> Unit,
     onClickBangumiSync: () -> Unit,
     modifier: Modifier = Modifier,
+    bangumiSyncEnabled: Boolean = true,
 ) {
     val currentInfo = remember(selfInfo) { selfInfo.selfInfo }
     val isLogin = remember(selfInfo) { selfInfo.isSessionValid == true }
@@ -189,7 +193,12 @@ private fun SettingsScope.AccountInfo(
     Column(modifier) {
         if (isLogin) {
             if (currentInfo != null) {
-                UserProfileItem("昵称", currentInfo.nickname.takeIf { it.isNotBlank() } ?: "未设置")
+                UserProfileItem(
+                    "昵称", currentInfo.nickname.takeIf { it.isNotBlank() } ?: "未设置",
+                    {
+
+                    },
+                )
                 UserProfileItem("邮箱", currentInfo.email ?: "未设置")
                 UserProfileItem("用户 ID", currentInfo.id.toString())
                 if (boundBangumi && currentInfo.bangumiUsername != null) {
@@ -270,33 +279,21 @@ private fun SettingsScope.AccountInfo(
         if (boundBangumi) {
             Group({ Text("同步") }) {
                 TextItem(
-                    icon = {
-                        when (bangumiSyncState) {
-                            BangumiSyncState.Idle -> Spacer(Modifier.width(24.dp))
-
-                            BangumiSyncState.Syncing -> CircularProgressIndicator(Modifier.size(24.dp))
-
-                            is BangumiSyncState.Failed ->
-                                Icon(Icons.Default.Warning, contentDescription = "Bangumi sync error")
-
-                            BangumiSyncState.Success ->
-                                Icon(Icons.Default.Check, contentDescription = "Bangumi sync success")
-                        }
-                    },
-                    title = { Text("同步 Bangumi 收藏数据至 Ani") },
-                    description = {
-                        when (bangumiSyncState) {
-                            BangumiSyncState.Idle -> Text("注意: 你存储在 Ani 中的收藏数据将会被覆盖")
-
-                            BangumiSyncState.Syncing -> Text("正在同步...")
-
-                            is BangumiSyncState.Failed ->
-                                Text("同步失败: ${renderLoadErrorMessage(bangumiSyncState.loadError)}")
-
-                            BangumiSyncState.Success -> Text("同步成功")
-                        }
+                    title = {
+                        Text("下载 Bangumi 数据")
                     },
                     onClick = onClickBangumiSync,
+                    onClickEnabled = bangumiSyncEnabled,
+                    description = {
+                        Text("将 Bangumi 上的收藏数据下载到 Animeko 收藏服务。通常来说不需要进行这个操作，Animeko 能自动完成同步。仅在你有发现数据不一致的情况时才需要手动下载")
+                    },
+                    action = {
+                        if (isBangumiSyncing) {
+                            CircularProgressIndicator(Modifier.size(24.dp))
+                        } else {
+                            Icon(Icons.Rounded.ErrorOutline, contentDescription = "Bangumi sync")
+                        }
+                    },
                 )
             }
         }
@@ -461,7 +458,9 @@ private fun renderAvatarUploadMessage(
 private fun SettingsScope.UserProfileItem(
     title: String,
     content: String,
-    modifier: Modifier = Modifier.padding(vertical = 2.dp),
+    onEdit: (() -> Unit)? = null,
+    editEnabled: Boolean = true,
+    modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyMedium,
 ) {
     val clipboardManager = LocalClipboardManager.current
@@ -483,10 +482,21 @@ private fun SettingsScope.UserProfileItem(
                 overflow = TextOverflow.MiddleEllipsis,
             )
         },
+        modifier = modifier,
         onClick = {
             clipboardManager.setText(AnnotatedString(content))
             toaster.toast("已复制到剪切板: $content")
         },
-        modifier = modifier,
+        action = if (onEdit != null) {
+            {
+                IconButton(
+                    onClick = onEdit,
+                    enabled = editEnabled,
+                    modifier = Modifier.size(ButtonDefaults.MinHeight),
+                ) {
+                    Icon(Icons.Default.Edit, contentDescription = "编辑")
+                }
+            }
+        } else null,
     )
 }
