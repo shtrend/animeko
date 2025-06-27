@@ -6,116 +6,132 @@
  *
  * https://github.com/open-ani/ani/blob/main/LICENSE
  */
-@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 
 package me.him188.ani.app.ui.settings.account
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Logout
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.DrawerDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheetDialog
-import androidx.compose.material3.ModalBottomSheetProperties
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.window.core.layout.WindowSizeClass
-import me.him188.ani.app.ui.foundation.IconButton
+import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 
 @Composable
 fun AccountSettingsPopup(
     vm: AccountSettingsViewModel,
-    onDismiss: () -> Unit,
+    onDismissRequest: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToAccountSettings: () -> Unit,
-    modifier: Modifier = Modifier,
-    shape: Shape = MaterialTheme.shapes.extraLarge,
-    containerColor: Color = BottomSheetDefaults.ContainerColor,
-    contentColor: Color = contentColorFor(containerColor),
-    tonalElevation: Dp = 0.dp,
-    scrimColor: Color = DrawerDefaults.scrimColor,
-    mediumSizeMaxWidth: Dp = 360.dp,
-    windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass
+    windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass,
 ) {
     val state by vm.stateFlow.collectAsStateWithLifecycle()
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
+    val content = @Composable {
+        AccountSettingsPopupLayout(
+            state,
+            onClickLogin = onNavigateToLogin,
+            onClickEditAvatar = onNavigateToAccountSettings,
+            onClickEditProfile = onNavigateToAccountSettings,
+            onClickSettings = onNavigateToSettings,
+            { showLogoutDialog = true },
+            Modifier.padding(vertical = 16.dp, horizontal = 8.dp)
+                .ifThen(windowSizeClass.isWidthAtLeastMedium) {
+                    padding(horizontal = 8.dp)
+                }
+                .ifThen(windowSizeClass.isHeightAtLeastMedium) {
+                    padding(vertical = 8.dp)
+                },
+        )
+    }
+
     if (windowSizeClass.isWidthAtLeastMedium) {
-        AccountSettingsPopupMedium(
-            onDismiss = onDismiss,
-            shape = shape,
-            containerColor = containerColor,
-            contentColor = contentColor,
-            tonalElevation = tonalElevation,
-            scrimColor = scrimColor,
-            maxWidth = mediumSizeMaxWidth,
+        val density = LocalDensity.current
+        Popup(
+            alignment = Alignment.TopEnd,
+            offset = with(density) {
+                IntOffset(0, 32.dp.roundToPx())
+            },
+            properties = PopupProperties(),
+            onDismissRequest = onDismissRequest,
         ) {
-            AccountSettingsPopupLayout(
-                state,
-                onClickLogin = onNavigateToLogin,
-                onClickEditAvatar = onNavigateToAccountSettings,
-                onClickEditProfile = onNavigateToAccountSettings,
-                onClickSettings = onNavigateToSettings,
-                { showLogoutDialog = true },
-                modifier.padding(bottom = 16.dp),
-            )
+            // 模拟点击外面关闭 popup, 否则事件会被广播到下层
+            Box(
+                Modifier.fillMaxSize()
+                    .clickable(interactionSource = null, indication = null, onClick = onDismissRequest)
+                    .background(Color.Black.copy(alpha = 0.32f)),
+                contentAlignment = Alignment.TopEnd,
+            ) {
+
+                // 实际内容
+                Surface(
+                    modifier = Modifier
+                        .windowInsetsPadding(AniWindowInsets.safeDrawing)
+                        .padding(horizontal = 24.dp)
+                        .widthIn(max = 360.dp)
+                        .clickable(interactionSource = null, indication = null, onClick = {}), // 避免触发 onDismissRequest
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = BottomSheetDefaults.ContainerColor,
+                    contentColor = contentColorFor(BottomSheetDefaults.ContainerColor),
+                    tonalElevation = 0.dp,
+                ) {
+                    content()
+                }
+            }
         }
+
+//                IconButton(
+//                    onDismiss,
+//                    Modifier.align(Alignment.TopEnd)
+//                        .padding(horizontal = 24.dp)
+//                        .padding(top = 24.dp),
+//                ) {
+//                    Icon(Icons.Default.Close, contentDescription = "关闭")
+//                }
     } else {
-        AccountSettingsPopupCompact(
-            onDismiss = onDismiss,
-            shape = shape,
-            containerColor = containerColor,
-            contentColor = contentColor,
-            tonalElevation = tonalElevation,
-            maxWidth = mediumSizeMaxWidth,
-        ) {
-            AccountSettingsPopupLayout(
-                state,
-                onClickLogin = onNavigateToLogin,
-                onClickEditAvatar = onNavigateToAccountSettings,
-                onClickEditProfile = onNavigateToAccountSettings,
-                onClickSettings = onNavigateToSettings,
-                { showLogoutDialog = true },
-                modifier.padding(vertical = 16.dp),
-            )
+        BasicAlertDialog(onDismissRequest) {
+            Surface(
+                modifier = Modifier,
+                shape = MaterialTheme.shapes.extraLarge,
+                color = BottomSheetDefaults.ContainerColor,
+                contentColor = contentColorFor(BottomSheetDefaults.ContainerColor),
+                tonalElevation = 0.dp,
+            ) {
+                content()
+            }
         }
     }
 
@@ -127,105 +143,6 @@ fun AccountSettingsPopup(
             },
             onCancel = { showLogoutDialog = false },
         )
-    }
-}
-
-@Composable
-private fun AccountSettingsPopupMedium(
-    onDismiss: () -> Unit,
-    shape: Shape = MaterialTheme.shapes.extraLarge,
-    containerColor: Color = BottomSheetDefaults.ContainerColor,
-    contentColor: Color = contentColorFor(containerColor),
-    tonalElevation: Dp = 0.dp,
-    scrimColor: Color = DrawerDefaults.scrimColor,
-    maxWidth: Dp = 360.dp,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    ModalBottomSheetDialog(
-        onDismissRequest = onDismiss,
-        properties = ModalBottomSheetProperties(),
-        predictiveBackProgress = remember { Animatable(initialValue = 0f) },
-    ) {
-        Box {
-            Canvas(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                        onClick = onDismiss,
-                    ),
-            ) {
-                drawRect(color = scrimColor)
-            }
-            Box(
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .windowInsetsPadding(AniWindowInsets.safeDrawing)
-                    .padding(horizontal = 24.dp),
-            ) {
-                Surface(
-                    modifier = Modifier.widthIn(max = maxWidth),
-                    shape = shape,
-                    color = containerColor,
-                    contentColor = contentColor,
-                    tonalElevation = tonalElevation,
-                ) {
-                    Column {
-                        CenterAlignedTopAppBar(
-                            title = { },
-                            actions = {
-                                IconButton(onDismiss) {
-                                    Icon(Icons.Default.Close, contentDescription = "Close account sheet")
-                                }
-                            },
-                            colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = Color.Transparent,
-                                scrolledContainerColor = Color.Transparent,
-                            ),
-                            modifier = Modifier
-                                .padding(horizontal = 8.dp)
-                                .padding(top = 4.dp)
-                                .fillMaxWidth(),
-                        )
-
-                        content()
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AccountSettingsPopupCompact(
-    onDismiss: () -> Unit,
-    shape: Shape = MaterialTheme.shapes.extraLarge,
-    containerColor: Color = BottomSheetDefaults.ContainerColor,
-    contentColor: Color = contentColorFor(containerColor),
-    tonalElevation: Dp = 0.dp,
-    maxWidth: Dp = 360.dp,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    Dialog(
-        onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            dismissOnBackPress = true,
-            dismissOnClickOutside = true,
-            usePlatformDefaultWidth = true,
-        ),
-    ) {
-        Surface(
-            modifier = Modifier.widthIn(max = maxWidth),
-            shape = shape,
-            color = containerColor,
-            contentColor = contentColor,
-            tonalElevation = tonalElevation,
-        ) {
-            Column {
-                content()
-            }
-        }
     }
 }
 

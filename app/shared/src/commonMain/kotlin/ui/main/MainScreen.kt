@@ -274,7 +274,7 @@ private fun MainScreenContent(
     if (showAccountSettingsPopup) {
         AccountSettingsPopup(
             vm = accountSettingsViewModel,
-            onDismiss = { showAccountSettingsPopup = false },
+            onDismissRequest = { showAccountSettingsPopup = false },
             onNavigateToSettings = {
                 showAccountSettingsPopup = false
                 onNavigateToSettings(null)

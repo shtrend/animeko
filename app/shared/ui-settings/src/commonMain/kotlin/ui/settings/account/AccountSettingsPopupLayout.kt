@@ -112,7 +112,7 @@ internal fun AccountSettingsPopupLayout(
 
         SettingsTab(
             modifier = Modifier
-                .padding(top = 16.dp)
+                .padding(top = 32.dp)
                 .fillMaxWidth(),
         ) {
             Column {
@@ -216,14 +216,16 @@ private fun EditableSelfAvatar(
 @Preview
 private fun PreviewAccountSettingsPopupLayout() {
     ProvideCompositionLocalsForPreview {
-        AccountSettingsPopupLayout(
-            TestAccountSettingsState,
-            { },
-            { },
-            { },
-            { },
-            { },
-            modifier = Modifier.widthIn(max = 360.dp),
-        )
+        Surface {
+            AccountSettingsPopupLayout(
+                TestAccountSettingsState,
+                { },
+                { },
+                { },
+                { },
+                { },
+                modifier = Modifier.widthIn(max = 360.dp),
+            )
+        }
     }
 }
