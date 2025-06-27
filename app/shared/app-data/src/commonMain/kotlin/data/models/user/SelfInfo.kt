@@ -9,6 +9,7 @@
 
 package me.him188.ani.app.data.models.user
 
+import androidx.compose.runtime.Stable
 import kotlinx.serialization.Serializable
 import kotlin.uuid.Uuid
 
@@ -24,3 +25,27 @@ data class SelfInfo(
     val avatarUrl: String?,
     val bangumiUsername: String?
 )
+
+data class SelfInfoDisplay(
+    val title: String,
+    val subtitle: String, // can be ""
+)
+
+/**
+ * 计算用于显示的昵称和 email.
+ */
+@Stable
+fun SelfInfo?.calculateDisplay(): SelfInfoDisplay {
+    val selfInfo = this
+    if (selfInfo == null) {
+        return SelfInfoDisplay("加载中...", "foo@animeko.org") // placeholder, no need to be localized
+    }
+
+    if (selfInfo.nickname.isNotEmpty()) {
+        return SelfInfoDisplay(selfInfo.nickname, selfInfo.email ?: "")
+    }
+
+    // 如果没有昵称, 则使用 email 作为显示名
+    return (selfInfo.email ?: selfInfo.bangumiUsername)?.let { SelfInfoDisplay(it, "") }
+        ?: SelfInfoDisplay(selfInfo.id.toString(), "")
+}

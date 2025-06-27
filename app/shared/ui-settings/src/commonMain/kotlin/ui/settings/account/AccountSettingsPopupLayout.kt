@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import me.him188.ani.app.data.models.user.calculateDisplay
 import me.him188.ani.app.ui.external.placeholder.placeholder
 import me.him188.ani.app.ui.foundation.IconButton
 import me.him188.ani.app.ui.foundation.ProvideCompositionLocalsForPreview
@@ -64,7 +65,6 @@ internal fun AccountSettingsPopupLayout(
     modifier: Modifier = Modifier,
 ) {
     val isLogin = remember(state) { state.selfInfo.isSessionValid == true }
-    val showEmail = isLogin && state.selfInfo.selfInfo?.email != null
     Column(modifier) {
         Box(
             modifier = Modifier
@@ -75,9 +75,12 @@ internal fun AccountSettingsPopupLayout(
         ) {
             EditableSelfAvatar(state.selfInfo, onClickEditAvatar)
         }
+        val (title, subtitle) = state.selfInfo.selfInfo.calculateDisplay()
+        val showEmail = subtitle.isNotBlank()
+
         Text(
             if (isLogin) {
-                state.selfInfo.selfInfo?.nickname?.takeIf { it.isNotBlank() } ?: "未设置昵称"
+                title
             } else {
                 "未登录"
             },
@@ -87,7 +90,7 @@ internal fun AccountSettingsPopupLayout(
                 .padding(horizontal = 16.dp)
                 .padding(
                     top = 8.dp,
-                    bottom = if (showEmail) 2.dp else 8.dp,
+                    bottom = if (showEmail) 4.dp else 8.dp,
                 )
                 .fillMaxWidth(),
             maxLines = 1,
