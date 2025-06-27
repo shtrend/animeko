@@ -24,14 +24,19 @@ import coil3.ImageLoader
 import coil3.PlatformContext
 import coil3.annotation.ExperimentalCoilApi
 import coil3.compose.AsyncImagePainter
+import coil3.compose.LocalPlatformContext
 import coil3.memory.MemoryCache
 import coil3.network.NetworkFetcher
 import coil3.request.CachePolicy
+import coil3.request.ImageRequest
 import coil3.request.crossfade
+import coil3.size.Precision
+import coil3.size.Size
 import coil3.svg.SvgDecoder
 import kotlinx.coroutines.Dispatchers
 import me.him188.ani.utils.ktor.ScopedHttpClient
 import me.him188.ani.utils.platform.currentPlatform
+import me.him188.ani.utils.platform.isAndroid
 import me.him188.ani.utils.platform.isDesktop
 import me.him188.ani.utils.platform.isIos
 
@@ -61,7 +66,7 @@ fun AsyncImage(
     clipToBounds: Boolean = true,
 ) {
     return coil3.compose.AsyncImage(
-        model = model,
+        model = buildModel(model),
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = Modifier.then(modifier),
@@ -101,7 +106,7 @@ fun AsyncImage(
     clipToBounds: Boolean = true,
 ) {
     return coil3.compose.AsyncImage(
-        model = model,
+        model = buildModel(model),
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = modifier,
@@ -136,7 +141,7 @@ fun AsyncImage(
     clipToBounds: Boolean = true,
 ) {
     return coil3.compose.AsyncImage(
-        model = model,
+        model = buildModel(model),
         contentDescription = contentDescription,
         imageLoader = imageLoader,
         modifier = modifier,
@@ -150,6 +155,20 @@ fun AsyncImage(
         clipToBounds = clipToBounds,
     )
 }
+
+@Composable
+private fun buildModel(model: Any?): Any? {
+    return if (!LocalPlatform.current.isAndroid()) {
+        ImageRequest.Builder(LocalPlatformContext.current)
+            .data(model)
+            .size(Size.ORIGINAL) // Desktop 下采样会导致很模糊. See https://github.com/coil-kt/coil/issues/2983
+            .precision(Precision.EXACT)
+            .build()
+    } else {
+        model
+    }
+}
+
 
 @OptIn(ExperimentalCoilApi::class)
 fun createDefaultImageLoader(
