@@ -63,7 +63,7 @@ class SelfInfoStateProducer(
     val flow = combine(sessionStateProvider.stateFlow, userRepository.selfInfoFlow()) { sessionState, selfInfo ->
         val isSessionValid = sessionState is SessionState.Valid
         SelfInfoUiState(
-            selfInfo = selfInfo,
+            selfInfo = if (isSessionValid) selfInfo else null,
             isLoading = false,
             isSessionValid = isSessionValid,
         )
