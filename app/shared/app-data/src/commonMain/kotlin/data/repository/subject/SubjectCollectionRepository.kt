@@ -89,14 +89,13 @@ import me.him188.ani.client.models.AniSelfRatingInfo
 import me.him188.ani.client.models.AniSubjectCollection
 import me.him188.ani.client.models.AniSubjectRelations
 import me.him188.ani.client.models.AniTag
+import me.him188.ani.client.models.AniUpdateSubjectCollectionRequest
 import me.him188.ani.datasources.api.EpisodeSort
 import me.him188.ani.datasources.api.EpisodeType
 import me.him188.ani.datasources.api.PackedDate
 import me.him188.ani.datasources.api.UTC9
 import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.datasources.bangumi.apis.DefaultApi
-import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollectionModifyPayload
-import me.him188.ani.datasources.bangumi.processing.toCollectionType
 import me.him188.ani.datasources.bangumi.processing.toSubjectCollectionType
 import me.him188.ani.utils.coroutines.combine
 import me.him188.ani.utils.coroutines.flows.flowOfEmptyList
@@ -453,11 +452,13 @@ class SubjectCollectionRepositoryImpl(
         withContext(defaultDispatcher) {
             subjectService.patchSubjectCollection(
                 subjectId,
-                BangumiUserSubjectCollectionModifyPayload(
-                    rate = score,
-                    comment = comment,
-                    tags = tags,
-                    private = isPrivate,
+                AniUpdateSubjectCollectionRequest(
+                    selfRating = AniSelfRatingInfo(
+                        score = score ?: 0,
+                        comment = comment,
+                        tags = tags.orEmpty(),
+                        isPrivate = isPrivate ?: false,
+                    ),
                 ),
             )
 
@@ -527,7 +528,7 @@ class SubjectCollectionRepositoryImpl(
             } else {
                 patchSubjectCollection(
                     subjectId,
-                    BangumiUserSubjectCollectionModifyPayload(type.toSubjectCollectionType()),
+                    AniUpdateSubjectCollectionRequest(collectionType = type.toAniSubjectCollectionType()),
                 )
             }
         }
@@ -543,11 +544,11 @@ class SubjectCollectionRepositoryImpl(
 
     private suspend fun patchSubjectCollection(
         subjectId: Int,
-        payload: BangumiUserSubjectCollectionModifyPayload,
+        payload: AniUpdateSubjectCollectionRequest,
     ) {
         withContext(defaultDispatcher) {
             subjectService.patchSubjectCollection(subjectId, payload)
-            subjectCollectionDao.updateType(subjectId, payload.type.toCollectionType())
+            subjectCollectionDao.updateType(subjectId, payload.collectionType.toUnifiedCollectionType())
         }
     }
 
@@ -826,4 +827,15 @@ fun AniSelfRatingInfo.toSelfRatingInfo(): SelfRatingInfo {
     return SelfRatingInfo(
         score = score, comment = comment, tags = tags, isPrivate = isPrivate,
     )
+}
+
+fun UnifiedCollectionType.toAniSubjectCollectionType(): AniCollectionType? {
+    return when (this) {
+        UnifiedCollectionType.WISH -> AniCollectionType.WISH
+        UnifiedCollectionType.DOING -> AniCollectionType.DOING
+        UnifiedCollectionType.DONE -> AniCollectionType.DONE
+        UnifiedCollectionType.ON_HOLD -> AniCollectionType.ON_HOLD
+        UnifiedCollectionType.DROPPED -> AniCollectionType.DROPPED
+        UnifiedCollectionType.NOT_COLLECTED -> null
+    }
 }

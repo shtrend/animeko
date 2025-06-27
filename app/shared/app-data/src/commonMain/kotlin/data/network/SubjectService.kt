@@ -51,7 +51,6 @@ import me.him188.ani.datasources.bangumi.models.BangumiCount
 import me.him188.ani.datasources.bangumi.models.BangumiPerson
 import me.him188.ani.datasources.bangumi.models.BangumiSubjectCollectionType
 import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollection
-import me.him188.ani.datasources.bangumi.models.BangumiUserSubjectCollectionModifyPayload
 import me.him188.ani.utils.coroutines.IO_
 import me.him188.ani.utils.ktor.ApiInvoker
 import me.him188.ani.utils.logging.logger
@@ -94,7 +93,7 @@ interface SubjectService {
      */
     fun subjectCollectionById(subjectId: Int): Flow<AniSubjectCollection?>
 
-    suspend fun patchSubjectCollection(subjectId: Int, payload: BangumiUserSubjectCollectionModifyPayload)
+    suspend fun patchSubjectCollection(subjectId: Int, payload: AniUpdateSubjectCollectionRequest)
     suspend fun deleteSubjectCollection(subjectId: Int)
 
     /**
@@ -118,12 +117,12 @@ data class BatchSubjectCollection(
 
 suspend inline fun SubjectService.setSubjectCollectionTypeOrDelete(
     subjectId: Int,
-    type: BangumiSubjectCollectionType?
+    type: AniCollectionType?
 ) {
     return if (type == null) {
         deleteSubjectCollection(subjectId)
     } else {
-        patchSubjectCollection(subjectId, BangumiUserSubjectCollectionModifyPayload(type))
+        patchSubjectCollection(subjectId, AniUpdateSubjectCollectionRequest(collectionType = type))
     }
 }
 
@@ -354,15 +353,13 @@ class RemoteSubjectService(
     }
 
 
-    override suspend fun patchSubjectCollection(subjectId: Int, payload: BangumiUserSubjectCollectionModifyPayload) {
+    override suspend fun patchSubjectCollection(subjectId: Int, payload: AniUpdateSubjectCollectionRequest) {
         sessionManager.checkAccessAniApiNow()
         withContext(ioDispatcher) {
             subjectApi {
                 this.updateSubjectCollection(
                     subjectId.toLong(),
-                    AniUpdateSubjectCollectionRequest(
-                        collectionType = payload.type?.toAniCollectionType(),
-                    ),
+                    payload,
                 )
                 Unit
             }
