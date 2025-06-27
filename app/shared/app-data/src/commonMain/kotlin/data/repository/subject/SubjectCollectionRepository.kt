@@ -523,7 +523,7 @@ class SubjectCollectionRepositoryImpl(
     ) {
         return withContext(defaultDispatcher) {
             sessionManager.checkAccessAniApiNow()
-            if (type == null) {
+            if (type == null || type == UnifiedCollectionType.NOT_COLLECTED) {
                 deleteSubjectCollection(subjectId)
             } else {
                 patchSubjectCollection(
@@ -555,6 +555,7 @@ class SubjectCollectionRepositoryImpl(
     private suspend fun deleteSubjectCollection(subjectId: Int) {
         withContext(defaultDispatcher) {
             subjectService.deleteSubjectCollection(subjectId)
+            subjectCollectionDao.delete(subjectId)
         }
     }
 
