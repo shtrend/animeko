@@ -10,22 +10,15 @@
 package me.him188.ani.app.data.repository.episode
 
 import androidx.paging.LoadType
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import androidx.paging.map
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.data.models.episode.EpisodeCollectionInfo
 import me.him188.ani.app.data.models.episode.EpisodeInfo
@@ -37,7 +30,6 @@ import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionDao
 import me.him188.ani.app.data.persistent.database.dao.SubjectCollectionEntity
 import me.him188.ani.app.data.repository.Repository
 import me.him188.ani.app.data.repository.RepositoryException
-import me.him188.ani.app.data.repository.RepositoryUnknownException
 import me.him188.ani.app.data.repository.subject.GetEpisodeTypeFiltersUseCase
 import me.him188.ani.app.data.repository.subject.SubjectCollectionRepository
 import me.him188.ani.app.domain.episode.EpisodeCollections
@@ -45,7 +37,6 @@ import me.him188.ani.datasources.api.topic.UnifiedCollectionType
 import me.him188.ani.utils.logging.warn
 import me.him188.ani.utils.platform.currentTimeMillis
 import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
@@ -95,95 +86,12 @@ class EpisodeCollectionRepository(
      *
      * 当网络错误时, 总是会使用缓存.
      */
-    fun subjectEpisodeCollectionInfosFlow(
-        subjectId: Int,
-        allowCached: Boolean = true,
-    ): Flow<List<EpisodeCollectionInfo>> = getEpisodeTypeFiltersUseCase().flatMapLatest { epTypes ->
-        episodeCollectionDao
-            .filterBySubjectId(subjectId, epTypes)
-            .distinctUntilChanged()
-            .transformLatest { cachedEpisodes ->
-                if (shouldUseCache(allowCached, cachedEpisodes, subjectId)) {
-                    // 有有效缓存则直接返回
-                    emit(cachedEpisodes.map { it.toEpisodeCollectionInfo() })
-                    return@transformLatest
-                }
-
-                try {
-                    emit(
-                        episodeService.getEpisodeCollectionInfosBySubjectId(subjectId, null) // 总是缓存所有类型
-                            .toList() // 目前先直接全拿了, 反正一般情况下剧集数量很少
-                            .also { list ->
-                                if (subjectDao.findById(subjectId).first() != null) {
-                                    // 插入后会立即触发 filterBySubjectId 更新 (emit 新的)
-                                    episodeCollectionDao.upsert(list.map { it.toEntity(subjectId) })
-                                }
-                            }
-                            // 过滤需要的类型
-                            .let { list ->
-                                list.filter { it.episodeInfo.type in epTypes }
-                            },
-                    )
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    // 失败则返回缓存
-                    val errorToLog = if (e is RepositoryException && e !is RepositoryUnknownException) {
-                        null
-                    } else {
-                        e
-                    }
-                    logger.warn(errorToLog) { "Failed to get episode collection infos for subject $subjectId with $e" }
-                    emit(cachedEpisodes.map { it.toEpisodeCollectionInfo() })
-                    return@transformLatest
-                }
+    fun subjectEpisodeCollectionInfosFlow(subjectId: Int): Flow<List<EpisodeCollectionInfo>> =
+        getEpisodeTypeFiltersUseCase().flatMapLatest { epTypes ->
+            subjectCollectionRepository.subjectCollectionFlow(subjectId).map {
+                it.episodes
             }
-    }.flowOn(defaultDispatcher)
-
-    private suspend fun shouldUseCache(
-        allowCached: Boolean,
-        cachedEpisodes: List<EpisodeCollectionEntity>,
-        subjectId: Int,
-    ): Boolean {
-        if (!allowCached) return false
-        if (cachedEpisodes.isEmpty()) {
-            subjectDao.findById(subjectId).first()
-                ?.takeIf { !it.isExpired() }
-                ?.totalEpisodes
-                ?: // 无法确定条目是否有剧集, 无法确认缓存是否有效, 保守判定为无效
-                return false
-
-            // 不能这样判断, 因为 bangumi 数据上 subjectTotalEpisodes 可能一直都是 0, 但是实际上有剧集.
-//            if (subjectTotalEpisodes == 0) {
-//                // 条目没有剧集, 缓存有效 (为空)
-//                return true
-//            }
-
-            // 条目有剧集而缓存未空. 缓存肯定无效. 已经无效了就不用再判断时间了
-            return false
-        }
-
-        val lastUpdated = cachedEpisodes.maxOf { it.lastFetched }
-        return (currentTimeMillis() - lastUpdated).milliseconds <= cacheExpiry
-    }
-
-    fun subjectEpisodeCollectionsPager(
-        subjectId: Int,
-        pagingConfig: PagingConfig = defaultPagingConfig,
-    ): Flow<PagingData<EpisodeCollectionInfo>> = Pager(
-        config = pagingConfig,
-        remoteMediator = EpisodeCollectionsRemoteMediator(
-            episodeCollectionDao, episodeService,
-            subjectId,
-        ),
-        pagingSourceFactory = {
-            episodeCollectionDao.filterBySubjectIdPaging(subjectId)
-        },
-    ).flow.map { data ->
-        data.map {
-            it.toEpisodeCollectionInfo()
-        }
-    }.flowOn(defaultDispatcher)
+        }.flowOn(defaultDispatcher)
 
     /**
      * 设置指定条目的所有剧集为已看.
