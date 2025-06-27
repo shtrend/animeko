@@ -98,7 +98,6 @@ import me.him188.ani.app.ui.lang.Lang
 import me.him188.ani.app.ui.lang.acknowledgements
 import me.him188.ani.app.ui.lang.developer_list
 import me.him188.ani.app.ui.lang.settings
-import me.him188.ani.app.ui.lang.settings_category_account
 import me.him188.ani.app.ui.lang.settings_category_app_ui
 import me.him188.ani.app.ui.lang.settings_category_data_playback
 import me.him188.ani.app.ui.lang.settings_category_network_storage
@@ -196,10 +195,8 @@ fun SettingsScreen(
             }
         },
         navItems = {
-            Title(stringResource(Lang.settings_category_account), paddingTop = 0.dp)
-            Item(SettingsTab.ACCOUNT)
-
             Title(stringResource(Lang.settings_category_app_ui))
+            Item(SettingsTab.ACCOUNT)
             Item(SettingsTab.APPEARANCE)
             Item(SettingsTab.THEME)
 
