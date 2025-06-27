@@ -84,7 +84,7 @@ internal fun AccountSettingsPopupLayout(
             } else {
                 "未登录"
             },
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
