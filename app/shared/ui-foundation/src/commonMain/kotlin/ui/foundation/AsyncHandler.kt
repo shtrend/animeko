@@ -20,6 +20,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.him188.ani.app.domain.foundation.LoadError
@@ -53,6 +54,11 @@ interface AsyncHandler {
         coroutineContext: CoroutineContext = EmptyCoroutineContext,
         block: suspend CoroutineScope.() -> Unit,
     ): Job
+
+    /**
+     * 取消上一个 [launch] 启动的任务. 注意, 这只能取消上一个任务, 如果有多个任务正在进行中, 只会取消最后一个.
+     */
+    fun cancelLast()
 }
 
 /**
@@ -88,19 +94,22 @@ fun rememberAsyncHandler(
         object : AsyncHandler {
             private val workingTaskCount = mutableIntStateOf(0)
             override val isWorking: Boolean get() = workingTaskCount.intValue > 0
+            private var lastJob: Job? = null
 
             override fun launch(
                 coroutineContext: CoroutineContext,
                 block: suspend CoroutineScope.() -> Unit,
             ): Job {
                 workingTaskCount.intValue++
+                val dispatcher = coroutineContext[ContinuationInterceptor] ?: Dispatchers.Main.immediate
                 return scope.launch(
-                    Dispatchers.Main.immediate + coroutineContext, // 保证默认使用 Main
+                    Dispatchers.Main.immediate + coroutineContext, // 默认使用 Main
                     start = CoroutineStart.UNDISPATCHED,
                 ) {
+                    val myJob = this.coroutineContext.job
+                    lastJob = myJob
                     // UNDISPATCHED, 所以会在当前线程立即执行, 注意, 这可能是非期望的线程.
                     try {
-                        val dispatcher = coroutineContext[ContinuationInterceptor] ?: Dispatchers.Main.immediate
                         withContext(dispatcher) {
                             // 如果 [coroutineContext] 没有指定 ContinuationInterceptor, 而且 launch 是在 Main 线程调用的, 则此处会立即开始执行 block, 没有 dispatch latency.
                             block()
@@ -109,8 +118,15 @@ fun rememberAsyncHandler(
                         onExceptionState.value(e)
                     } finally {
                         workingTaskCount.intValue--
+                        if (lastJob === myJob) {
+                            lastJob = null
+                        }
                     }
                 }
+            }
+
+            override fun cancelLast() {
+                lastJob?.cancel()
             }
         }
     }
