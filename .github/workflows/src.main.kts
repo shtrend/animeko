@@ -440,7 +440,7 @@ run {
     )
 
     buildMatrixInstances = listOf(
-        selfWin10,
+//        selfWin10,
         ghWin2019,
         ghUbuntu2404,
         ghMac13,
