@@ -75,8 +75,8 @@ internal fun ProfilePopupLayout(
         ) {
             EditableSelfAvatar(state.selfInfo, onClickEditAvatar)
         }
-        val (title, subtitle) = state.selfInfo.selfInfo.calculateDisplay()
-        val showEmail = subtitle.isNotBlank()
+        val (title, _) = state.selfInfo.selfInfo.calculateDisplay()
+        val showEmail = false
 
         Text(
             if (isLogin) {
@@ -90,7 +90,7 @@ internal fun ProfilePopupLayout(
                 .padding(horizontal = 16.dp)
                 .padding(
                     top = 8.dp,
-                    bottom = if (showEmail) 4.dp else 8.dp,
+                    bottom = if (showEmail) 4.dp else 0.dp,
                 )
                 .fillMaxWidth(),
             maxLines = 1,
