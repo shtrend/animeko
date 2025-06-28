@@ -89,6 +89,7 @@ import me.him188.ani.app.ui.adaptive.TopAppBarSize
 import me.him188.ani.app.ui.foundation.LocalPlatform
 import me.him188.ani.app.ui.foundation.animation.LocalAniMotionScheme
 import me.him188.ani.app.ui.foundation.animation.NavigationMotionScheme
+import me.him188.ani.app.ui.foundation.ifThen
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastExpanded
@@ -482,7 +483,10 @@ internal fun SettingsPageLayout(
                 val detailPaneNavController = rememberNavController()
 
                 @Composable
-                fun PaneScope.RouteContent(content: @Composable SettingsDetailPaneScope.() -> Unit) {
+                fun PaneScope.RouteContent(
+                    scrollable: Boolean = true,
+                    content: @Composable SettingsDetailPaneScope.() -> Unit,
+                ) {
                     val paneScope = this
                     val scope = remember(paneScope, detailPaneNavController) {
                         object : SettingsDetailPaneScope, PaneScope by paneScope {
@@ -493,7 +497,9 @@ internal fun SettingsPageLayout(
                     }
                     Column(
                         Modifier
-                            .verticalScroll(rememberScrollState())
+                            .ifThen(scrollable) {
+                                verticalScroll(rememberScrollState())
+                            }
                             .padding(horizontal = SettingsScope.itemExtraHorizontalPadding)
                             .fillMaxWidth()
                             .wrapContentWidth()
@@ -598,7 +604,7 @@ internal fun SettingsPageLayout(
                             },
                             detailPaneTopAppBarScrollBehavior,
                         ) {
-                            RouteContent {
+                            RouteContent(scrollable = false) {
                                 BangumiSyncTab()
                             }
                         }
