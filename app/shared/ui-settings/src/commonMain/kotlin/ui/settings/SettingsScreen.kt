@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -492,7 +494,10 @@ internal fun SettingsPageLayout(
                     Column(
                         Modifier
                             .verticalScroll(rememberScrollState())
-                            .padding(horizontal = SettingsScope.itemExtraHorizontalPadding),
+                            .padding(horizontal = SettingsScope.itemExtraHorizontalPadding)
+                            .fillMaxWidth()
+                            .wrapContentWidth()
+                            .widthIn(max = 1000.dp),
                     ) {
                         scope.content()
                     }
