@@ -163,7 +163,7 @@ fun AccountLogoutDialog(
         text = { Text("确定要退出登录吗?") },
         confirmButton = {
             TextButton(onConfirm, enabled = confirmEnabled) {
-                Text("确定", color = MaterialTheme.colorScheme.error)
+                Text("退出登录", color = MaterialTheme.colorScheme.error)
             }
         },
         dismissButton = {
