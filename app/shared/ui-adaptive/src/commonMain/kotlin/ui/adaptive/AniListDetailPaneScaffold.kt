@@ -209,9 +209,14 @@ fun <T> AniListDetailPaneScaffold(
                             }
 
                         CompositionLocalProvider(
-                            LocalSharedTransitionScopeProvider provides SharedTransitionScopeProvider(
-                                this@SharedTransitionLayout, this@ListDetailAnimatedPane,
-                            ),
+                            LocalSharedTransitionScopeProvider provides remember(
+                                this@SharedTransitionLayout,
+                                this@ListDetailAnimatedPane,
+                            ) {
+                                SharedTransitionScopeProvider(
+                                    this@SharedTransitionLayout, this@ListDetailAnimatedPane,
+                                )
+                            },
                         ) {
                             val decoratedPaneContent = @Composable {
                                 Column(Modifier.fillMaxWidth().wrapContentWidth().widthIn(max = 1300.dp)) {
