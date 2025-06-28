@@ -159,7 +159,7 @@ fun AccountLogoutDialog(
 ) {
     AlertDialog(
         onCancel,
-        icon = { Icon(Icons.AutoMirrored.Outlined.Logout, "Logout dialog icon") },
+        icon = { Icon(Icons.AutoMirrored.Outlined.Logout, null) },
         text = { Text("确定要退出登录吗?") },
         confirmButton = {
             TextButton(onConfirm, enabled = confirmEnabled) {
