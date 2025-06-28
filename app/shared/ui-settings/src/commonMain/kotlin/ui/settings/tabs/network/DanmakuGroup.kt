@@ -9,18 +9,25 @@
 
 package me.him188.ani.app.ui.settings.tabs.network
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import me.him188.ani.app.data.models.preference.DanmakuSettings
 import me.him188.ani.app.data.network.danmaku.AniBangumiSeverBaseUrls
+import me.him188.ani.app.platform.AniServers
 import me.him188.ani.app.ui.lang.Lang
 import me.him188.ani.app.ui.lang.settings_network_danmaku
 import me.him188.ani.app.ui.lang.settings_network_danmaku_connection_test
@@ -38,7 +45,6 @@ import me.him188.ani.app.ui.settings.framework.ConnectionTesterResultIndicator
 import me.him188.ani.app.ui.settings.framework.ConnectionTesterRunner
 import me.him188.ani.app.ui.settings.framework.SettingsState
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
-import me.him188.ani.app.ui.settings.framework.components.SwitchItem
 import me.him188.ani.app.ui.settings.framework.components.TextButtonItem
 import me.him188.ani.app.ui.settings.framework.components.TextItem
 import org.jetbrains.compose.resources.stringResource
@@ -52,81 +58,114 @@ internal fun SettingsScope.DanmakuGroup(
         title = { Text(stringResource(Lang.settings_network_danmaku)) },
     ) {
         val danmakuSettings by danmakuSettingsState
-        SwitchItem(
-            checked = danmakuSettings.useGlobal,
-            onCheckedChange = { danmakuSettingsState.update(danmakuSettings.copy(useGlobal = it)) },
-            title = { Text(stringResource(Lang.settings_network_danmaku_global_acceleration)) },
-            description = { Text(stringResource(Lang.settings_network_danmaku_global_acceleration_description)) },
+
+        // Danmaku source selection: null = automatic, true = global, false = mainland/HK
+        val options = listOf(
+            null to "自动",
+            true to stringResource(Lang.settings_network_danmaku_global_acceleration),
+            false to stringResource(Lang.settings_network_danmaku_mainland),
         )
 
-        SubGroup {
-            Group(
-                title = { Text(stringResource(Lang.settings_network_danmaku_connection_test)) },
-                useThinHeader = true,
-            ) {
-                for (tester in danmakuServerTesters.testers) {
-                    val currentlySelected by derivedStateOf {
-                        danmakuSettings.useGlobal == (tester.id == AniBangumiSeverBaseUrls.GLOBAL)
-                    }
-                    TextItem(
-                        description = when {
-                            currentlySelected -> {
-                                { Text(stringResource(Lang.settings_network_danmaku_currently_using)) }
-                            }
-
-                            tester.id == AniBangumiSeverBaseUrls.GLOBAL -> {
-                                { Text(stringResource(Lang.settings_network_danmaku_recommended_other_regions)) }
-                            }
-
-                            else -> {
-                                { Text(stringResource(Lang.settings_network_danmaku_recommended_mainland_hk)) }
-                            }
-                        },
-                        icon = {
-                            if (tester.id == AniBangumiSeverBaseUrls.GLOBAL)
-                                Icon(
-                                    Icons.Rounded.Public, null,
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                )
-                            else Text("CN", fontFamily = FontFamily.Monospace)
-
-                        },
-                        action = {
-                            ConnectionTesterResultIndicator(
-                                tester,
-                                showTime = true,
-                            )
-                        },
-                        title = {
-                            val textColor =
-                                if (currentlySelected) {
-                                    MaterialTheme.colorScheme.primary
+        options.forEach { (value, label) ->
+            ListItem(
+                headlineContent = { Text(label) },
+                supportingContent = {
+                    Text(
+                        when (value) {
+                            null -> {
+                                val autoSelected = if (AniServers.shouldUseGlobalServer()) {
+                                    stringResource(Lang.settings_network_danmaku_global_acceleration)
                                 } else {
-                                    Color.Unspecified
+                                    stringResource(Lang.settings_network_danmaku_mainland)
                                 }
-                            if (tester.id == AniBangumiSeverBaseUrls.GLOBAL) {
-                                Text(stringResource(Lang.settings_network_danmaku_global), color = textColor)
-                            } else {
-                                Text(stringResource(Lang.settings_network_danmaku_mainland), color = textColor)
+                                "自动选择：$autoSelected"
                             }
+
+                            true -> stringResource(Lang.settings_network_danmaku_global_acceleration_description)
+                            false -> ""
                         },
                     )
-                }
+                },
+                trailingContent = {
+                    RadioButton(
+                        selected = danmakuSettings.useGlobal == value,
+                        onClick = { danmakuSettingsState.update(danmakuSettings.copy(useGlobal = value)) },
+                    )
+                },
+                colors = ListItemDefaults.colors(
+                    containerColor = Color.Transparent,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { danmakuSettingsState.update(danmakuSettings.copy(useGlobal = value)) },
+            )
+        }
 
-                TextButtonItem(
-                    onClick = {
-                        danmakuServerTesters.toggleTest()
+        Group(
+            title = { Text(stringResource(Lang.settings_network_danmaku_connection_test)) },
+            useThinHeader = true,
+        ) {
+            for (tester in danmakuServerTesters.testers) {
+                val currentlySelected by derivedStateOf {
+                    danmakuSettings.useGlobal == (tester.id == AniBangumiSeverBaseUrls.GLOBAL)
+                }
+                TextItem(
+                    description = when {
+                        currentlySelected -> {
+                            { Text(stringResource(Lang.settings_network_danmaku_currently_using)) }
+                        }
+
+                        tester.id == AniBangumiSeverBaseUrls.GLOBAL -> {
+                            { Text(stringResource(Lang.settings_network_danmaku_recommended_other_regions)) }
+                        }
+
+                        else -> {
+                            { Text(stringResource(Lang.settings_network_danmaku_recommended_mainland_hk)) }
+                        }
+                    },
+                    icon = {
+                        if (tester.id == AniBangumiSeverBaseUrls.GLOBAL)
+                            Icon(
+                                Icons.Rounded.Public, null,
+                                tint = MaterialTheme.colorScheme.onSurface,
+                            )
+                        else Text("CN", fontFamily = FontFamily.Monospace)
+
+                    },
+                    action = {
+                        ConnectionTesterResultIndicator(
+                            tester,
+                            showTime = true,
+                        )
                     },
                     title = {
-                        if (danmakuServerTesters.anyTesting) {
-                            Text(stringResource(Lang.settings_network_danmaku_stop_test))
+                        val textColor =
+                            if (currentlySelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                Color.Unspecified
+                            }
+                        if (tester.id == AniBangumiSeverBaseUrls.GLOBAL) {
+                            Text(stringResource(Lang.settings_network_danmaku_global), color = textColor)
                         } else {
-                            Text(stringResource(Lang.settings_network_danmaku_start_test))
+                            Text(stringResource(Lang.settings_network_danmaku_mainland), color = textColor)
                         }
                     },
                 )
             }
 
+            TextButtonItem(
+                onClick = {
+                    danmakuServerTesters.toggleTest()
+                },
+                title = {
+                    if (danmakuServerTesters.anyTesting) {
+                        Text(stringResource(Lang.settings_network_danmaku_stop_test))
+                    } else {
+                        Text(stringResource(Lang.settings_network_danmaku_start_test))
+                    }
+                },
+            )
         }
     }
 }
