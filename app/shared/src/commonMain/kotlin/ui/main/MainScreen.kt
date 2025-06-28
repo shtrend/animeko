@@ -70,8 +70,8 @@ import me.him188.ani.app.ui.foundation.layout.setRequestFullScreen
 import me.him188.ani.app.ui.foundation.theme.AniThemeDefaults
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.foundation.widgets.showLoadError
-import me.him188.ani.app.ui.settings.account.AccountSettingsPopup
-import me.him188.ani.app.ui.settings.account.AccountSettingsViewModel
+import me.him188.ani.app.ui.settings.account.ProfilePopup
+import me.him188.ani.app.ui.settings.account.ProfileViewModel
 import me.him188.ani.app.ui.subject.collection.CollectionPage
 import me.him188.ani.app.ui.subject.collection.UserCollectionsViewModel
 import me.him188.ani.app.ui.update.UpdateNotifier
@@ -128,7 +128,7 @@ private fun MainScreenContent(
     val scope = rememberCoroutineScope()
 
     var showAccountSettingsPopup: Boolean by remember { mutableStateOf(false) }
-    val accountSettingsViewModel = viewModel { AccountSettingsViewModel() }
+    val profileViewModel = viewModel { ProfileViewModel() }
 
     val navigatorState = rememberUpdatedState(LocalNavigator.current)
     val navigator by navigatorState
@@ -272,8 +272,8 @@ private fun MainScreenContent(
     }
 
     if (showAccountSettingsPopup) {
-        AccountSettingsPopup(
-            vm = accountSettingsViewModel,
+        ProfilePopup(
+            vm = profileViewModel,
             onDismissRequest = { showAccountSettingsPopup = false },
             onNavigateToSettings = {
                 showAccountSettingsPopup = false

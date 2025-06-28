@@ -49,9 +49,12 @@ import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
 import me.him188.ani.app.ui.foundation.rememberAsyncHandler
 
+/**
+ * 在右上角显示的个人信息弹窗
+ */
 @Composable
-fun AccountSettingsPopup(
-    vm: AccountSettingsViewModel,
+fun ProfilePopup(
+    vm: ProfileViewModel,
     onDismissRequest: () -> Unit,
     onNavigateToLogin: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -62,7 +65,7 @@ fun AccountSettingsPopup(
     var showLogoutDialog by rememberSaveable { mutableStateOf(false) }
 
     val content = @Composable {
-        AccountSettingsPopupLayout(
+        ProfilePopupLayout(
             state,
             onClickLogin = onNavigateToLogin,
             onClickEditAvatar = onNavigateToAccountSettings,

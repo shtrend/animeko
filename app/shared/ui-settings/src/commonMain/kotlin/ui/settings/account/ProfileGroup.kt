@@ -76,7 +76,7 @@ fun SettingsScope.ProfileGroup(
     onNavigateToEmail: () -> Unit,
     onNavigateToBangumiSync: () -> Unit,
     onNavigateToBangumiOAuth: () -> Unit,
-    vm: AccountSettingsViewModel = viewModel<AccountSettingsViewModel> { AccountSettingsViewModel() },
+    vm: ProfileViewModel = viewModel<ProfileViewModel> { ProfileViewModel() },
     modifier: Modifier = Modifier
 ) {
     val state by vm.stateFlow.collectAsStateWithLifecycle(initialValue = AccountSettingsState.Empty)

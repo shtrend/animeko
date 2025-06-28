@@ -40,7 +40,7 @@ import org.koin.core.component.inject
 /**
  * It is used on both [AccountSettingsPopupMedium] and [AccountS].
  */
-class AccountSettingsViewModel : AbstractViewModel(), KoinComponent {
+class ProfileViewModel : AbstractViewModel(), KoinComponent {
     private val sessionManager: SessionManager by inject()
     private val subjectCollectionRepo: SubjectCollectionRepository by inject()
     private val userRepo: UserRepository by inject()

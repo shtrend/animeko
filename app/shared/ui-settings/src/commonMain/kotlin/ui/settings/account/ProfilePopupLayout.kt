@@ -55,7 +55,7 @@ import me.him188.ani.app.ui.user.SelfInfoUiState
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
-internal fun AccountSettingsPopupLayout(
+internal fun ProfilePopupLayout(
     state: AccountSettingsState,
     onClickLogin: () -> Unit,
     onClickEditAvatar: () -> Unit,
@@ -220,7 +220,7 @@ private fun EditableSelfAvatar(
 private fun PreviewAccountSettingsPopupLayout() {
     ProvideCompositionLocalsForPreview {
         Surface {
-            AccountSettingsPopupLayout(
+            ProfilePopupLayout(
                 TestAccountSettingsState,
                 { },
                 { },
