@@ -28,6 +28,7 @@ import me.him188.ani.app.ui.foundation.widgets.showLoadError
 import kotlin.coroutines.ContinuationInterceptor
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * 一个简单的异步任务处理器. 设计为了处理 `onClick` 等回调时调用后台任务.
@@ -115,6 +116,8 @@ fun rememberAsyncHandler(
                     lastJob = myJob
                     try {
                         block()
+                    } catch (e: CancellationException) {
+                        throw e
                     } catch (e: Throwable) {
                         onExceptionState.value(e)
                     } finally {
