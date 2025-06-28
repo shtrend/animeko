@@ -32,19 +32,19 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param userId 
- * @param tokens 
- * @param user 
+ * @param id 
+ * @param op 
+ * @param createdAt 
  */
 @Serializable
 
-data class AniAuthenticationResponse (
+data class AniBangumiSyncCommandEntity (
 
-    @SerialName(value = "userId") @Required val userId: kotlin.String,
+    @SerialName(value = "id") @Required val id: kotlin.String,
 
-    @SerialName(value = "tokens") @Required val tokens: AniAniTokens,
+    @SerialName(value = "op") @Required val op: AniBangumiSyncOp,
 
-    @SerialName(value = "user") @Required val user: AniAniSelfUser
+    @SerialName(value = "createdAt") @Required val createdAt: kotlin.String
 
 ) {
 

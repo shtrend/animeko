@@ -25,6 +25,7 @@
 
 package me.him188.ani.client.models
 
+
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -32,19 +33,16 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param userId 
- * @param tokens 
- * @param user 
+ * @param opType 
+ * @param subjectId 
  */
 @Serializable
 
-data class AniAuthenticationResponse (
+data class AniDeleteCollection (
 
-    @SerialName(value = "userId") @Required val userId: kotlin.String,
+    @SerialName(value = "opType") @Required val opType: kotlin.String,
 
-    @SerialName(value = "tokens") @Required val tokens: AniAniTokens,
-
-    @SerialName(value = "user") @Required val user: AniAniSelfUser
+    @SerialName(value = "subjectId") @Required val subjectId: kotlin.Long
 
 ) {
 

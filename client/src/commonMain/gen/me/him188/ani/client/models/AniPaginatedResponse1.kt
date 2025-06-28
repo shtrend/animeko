@@ -32,19 +32,16 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param userId 
- * @param tokens 
- * @param user 
+ * @param total 
+ * @param items 
  */
 @Serializable
 
-data class AniAuthenticationResponse (
+data class AniPaginatedResponse1 (
 
-    @SerialName(value = "userId") @Required val userId: kotlin.String,
+    @SerialName(value = "total") @Required val total: kotlin.Long,
 
-    @SerialName(value = "tokens") @Required val tokens: AniAniTokens,
-
-    @SerialName(value = "user") @Required val user: AniAniSelfUser
+    @SerialName(value = "items") @Required val items: kotlin.collections.List<AniBangumiSyncCommandEntity>
 
 ) {
 

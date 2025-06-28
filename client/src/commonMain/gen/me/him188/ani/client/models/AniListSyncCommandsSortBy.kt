@@ -32,22 +32,16 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * Values: WINTER,SPRING,SUMMER,AUTUMN
+ * Values: CREATED_AT_DESC,CREATED_AT_ASC
  */
 @Serializable
-enum class AniAnimeSeason(val value: kotlin.String) {
+enum class AniListSyncCommandsSortBy(val value: kotlin.String) {
 
-    @SerialName(value = "WINTER")
-    WINTER("WINTER"),
+    @SerialName(value = "CREATED_AT_DESC")
+    CREATED_AT_DESC("CREATED_AT_DESC"),
 
-    @SerialName(value = "SPRING")
-    SPRING("SPRING"),
-
-    @SerialName(value = "SUMMER")
-    SUMMER("SUMMER"),
-
-    @SerialName(value = "AUTUMN")
-    AUTUMN("AUTUMN");
+    @SerialName(value = "CREATED_AT_ASC")
+    CREATED_AT_ASC("CREATED_AT_ASC");
 
     /**
      * Override [toString()] to avoid using the enum variable name as the value, and instead use
@@ -62,12 +56,12 @@ enum class AniAnimeSeason(val value: kotlin.String) {
         /**
          * Converts the provided [data] to a [String] on success, null otherwise.
          */
-        fun encode(data: kotlin.Any?): kotlin.String? = if (data is AniAnimeSeason) "$data" else null
+        fun encode(data: kotlin.Any?): kotlin.String? = if (data is AniListSyncCommandsSortBy) "$data" else null
 
         /**
-         * Returns a valid [AniAnimeSeason] for [data], null otherwise.
+         * Returns a valid [AniListSyncCommandsSortBy] for [data], null otherwise.
          */
-        fun decode(data: kotlin.Any?): AniAnimeSeason? = data?.let {
+        fun decode(data: kotlin.Any?): AniListSyncCommandsSortBy? = data?.let {
           val normalizedData = "$it".lowercase()
           values().firstOrNull { value ->
             it == value || normalizedData == "$value".lowercase()

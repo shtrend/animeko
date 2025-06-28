@@ -32,19 +32,28 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param userId 
- * @param tokens 
- * @param user 
+ * @param opType 
+ * @param subjectId 
+ * @param collectionType 
+ * @param episodeId 
+ * @param rating 
+ * @param episodeCollectionType 
  */
 @Serializable
 
-data class AniAuthenticationResponse (
+data class AniBangumiSyncOp (
 
-    @SerialName(value = "userId") @Required val userId: kotlin.String,
+    @SerialName(value = "opType") @Required val opType: kotlin.String,
 
-    @SerialName(value = "tokens") @Required val tokens: AniAniTokens,
+    @SerialName(value = "subjectId") @Required val subjectId: kotlin.Long,
 
-    @SerialName(value = "user") @Required val user: AniAniSelfUser
+    @SerialName(value = "collectionType") @Required val collectionType: AniCollectionType,
+
+    @SerialName(value = "episodeId") @Required val episodeId: kotlin.Long,
+
+    @SerialName(value = "rating") val rating: AniSelfRatingInfo? = null,
+
+    @SerialName(value = "episodeCollectionType") val episodeCollectionType: AniEpisodeCollectionType? = null
 
 ) {
 

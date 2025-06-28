@@ -32,19 +32,22 @@ import kotlinx.serialization.Serializable
 /**
  * 
  *
- * @param userId 
- * @param tokens 
- * @param user 
+ * @param opType 
+ * @param subjectId 
+ * @param collectionType 
+ * @param rating 
  */
 @Serializable
 
-data class AniAuthenticationResponse (
+data class AniUpdateCollection (
 
-    @SerialName(value = "userId") @Required val userId: kotlin.String,
+    @SerialName(value = "opType") @Required val opType: kotlin.String,
 
-    @SerialName(value = "tokens") @Required val tokens: AniAniTokens,
+    @SerialName(value = "subjectId") @Required val subjectId: kotlin.Long,
 
-    @SerialName(value = "user") @Required val user: AniAniSelfUser
+    @SerialName(value = "collectionType") val collectionType: AniCollectionType? = null,
+
+    @SerialName(value = "rating") val rating: AniSelfRatingInfo? = null
 
 ) {
 
