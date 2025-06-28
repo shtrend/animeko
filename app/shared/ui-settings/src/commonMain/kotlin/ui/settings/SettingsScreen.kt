@@ -70,7 +70,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -119,7 +118,8 @@ import me.him188.ani.app.ui.lang.settings_tab_proxy
 import me.him188.ani.app.ui.lang.settings_tab_storage
 import me.him188.ani.app.ui.lang.settings_tab_theme
 import me.him188.ani.app.ui.lang.settings_tab_update
-import me.him188.ani.app.ui.settings.account.AccountSettingsViewModel
+import me.him188.ani.app.ui.settings.account.BangumiSyncTab
+import me.him188.ani.app.ui.settings.account.ProfileGroup
 import me.him188.ani.app.ui.settings.account.SelfInfoBanner
 import me.him188.ani.app.ui.settings.framework.components.SettingsScope
 import me.him188.ani.app.ui.settings.rendering.P2p
@@ -128,7 +128,6 @@ import me.him188.ani.app.ui.settings.tabs.DebugTab
 import me.him188.ani.app.ui.settings.tabs.about.AboutTab
 import me.him188.ani.app.ui.settings.tabs.about.AcknowledgementsTab
 import me.him188.ani.app.ui.settings.tabs.about.DevelopersTab
-import me.him188.ani.app.ui.settings.tabs.account.AccountSettingsGroup
 import me.him188.ani.app.ui.settings.tabs.app.AppearanceGroup
 import me.him188.ani.app.ui.settings.tabs.app.PlayerGroup
 import me.him188.ani.app.ui.settings.tabs.app.SoftwareUpdateGroup
@@ -153,7 +152,7 @@ typealias SettingsTab = me.him188.ani.app.navigation.SettingsTab
 @Composable
 fun SettingsScreen(
     vm: SettingsViewModel,
-    onNavigateToLogin: () -> Unit,
+    onNavigateToEmailLogin: () -> Unit,
     onNavigateToBangumiOAuth: () -> Unit,
     modifier: Modifier = Modifier,
     initialTab: SettingsTab? = null,
@@ -174,8 +173,6 @@ fun SettingsScreen(
     val layoutParameters = ListDetailLayoutParameters.calculate(navigator.scaffoldDirective)
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
-
-    val accountSettingsViewModel = viewModel { AccountSettingsViewModel() }
 
     fun navigateToTab(tab: SettingsTab) {
         coroutineScope.launch(start = CoroutineStart.UNDISPATCHED) {
@@ -212,7 +209,7 @@ fun SettingsScreen(
                 selfInfoState,
                 checked = bannerChecked,
                 { navigateToTab(SettingsTab.PROFILE) },
-                onNavigateToLogin,
+                onNavigateToEmailLogin,
                 Modifier.fillMaxWidth(),
                 containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
             )
@@ -286,10 +283,12 @@ fun SettingsScreen(
                         tabModifier,
                     ) {
                         when (currentTab) {
-                            SettingsTab.PROFILE -> AccountSettingsGroup(
-                                accountSettingsViewModel,
-                                onNavigateToLogin,
-                                onNavigateToBangumiOAuth,
+                            SettingsTab.PROFILE -> ProfileGroup(
+                                onNavigateToEmail = onNavigateToEmailLogin,
+                                onNavigateToBangumiSync = {
+                                    detailPaneNavController.navigate(DetailPaneRoutes.BangumiSync)
+                                },
+                                onNavigateToBangumiOAuth = onNavigateToBangumiOAuth,
                             )
 
                             SettingsTab.APPEARANCE -> AppearanceGroup(vm.uiSettings)
@@ -578,6 +577,27 @@ internal fun SettingsPageLayout(
                             }
                         }
                     }
+                    composable<DetailPaneRoutes.BangumiSync> {
+                        DetailPaneRoute(
+                            topAppBar = {
+                                AniTopAppBar(
+                                    title = { AniTopAppBarDefaults.Title("Bangumi 同步") },
+                                    navigationIcon = {
+                                        BackNavigationIconButton({ detailPaneNavController.navigateUp() })
+                                    },
+                                    colors = topAppBarColors,
+                                    windowInsets = topAppBarWindowInsets,
+                                    size = topAppBarSize,
+                                    scrollBehavior = detailPaneTopAppBarScrollBehavior,
+                                )
+                            },
+                            detailPaneTopAppBarScrollBehavior,
+                        ) {
+                            RouteContent {
+                                BangumiSyncTab()
+                            }
+                        }
+                    }
                 }
             }
         },
@@ -633,6 +653,9 @@ internal sealed class DetailPaneRoutes {
 
     @Serializable
     data object Developers : DetailPaneRoutes()
+
+    @Serializable
+    data object BangumiSync : DetailPaneRoutes()
 }
 
 @Stable

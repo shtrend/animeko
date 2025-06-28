@@ -561,7 +561,9 @@ class SubjectCollectionRepositoryImpl(
 
     override suspend fun performBangumiFullSync() {
         try {
-            subjectService.performBangumiFullSync()
+            withContext(defaultDispatcher) {
+                subjectService.performBangumiFullSync()
+            }
         } catch (e: Exception) {
             throw RepositoryException.wrapOrThrowCancellation(e)
         }

@@ -450,7 +450,7 @@ private fun AniAppContentImpl(
                     viewModel {
                         SettingsViewModel()
                     },
-                    onNavigateToLogin = { aniNavigator.navigateLogin() },
+                    onNavigateToEmailLogin = { aniNavigator.navigateLogin() },
                     onNavigateToBangumiOAuth = { aniNavigator.navigateBangumiAuthorize() },
                     Modifier.fillMaxSize(),
                     route.tab,

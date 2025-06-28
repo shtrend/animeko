@@ -45,7 +45,6 @@ class AccountSettingsViewModel : AbstractViewModel(), KoinComponent {
     private val subjectCollectionRepo: SubjectCollectionRepository by inject()
     private val userRepo: UserRepository by inject()
 
-    private val logoutTasker = MonoTasker(backgroundScope)
     private val avatarUploadTasker = MonoTasker(backgroundScope)
     private val fullSyncTasker = MonoTasker(backgroundScope)
 
@@ -76,8 +75,8 @@ class AccountSettingsViewModel : AbstractViewModel(), KoinComponent {
             started = SharingStarted.WhileSubscribed(5_000),
         )
 
-    fun logout() {
-        logoutTasker.launch {
+    suspend fun logout() {
+        withContext(Dispatchers.Default) {
             sessionManager.clearSession()
         }
     }
@@ -86,7 +85,7 @@ class AccountSettingsViewModel : AbstractViewModel(), KoinComponent {
         avatarUploadState.value = EditProfileState.UploadAvatarState.Default
     }
 
-    fun uploadAvatar(file: PlatformFile) {
+    suspend fun uploadAvatar(file: PlatformFile) {
         avatarUploadTasker.launch {
             avatarUploadState.value = EditProfileState.UploadAvatarState.Uploading
 
@@ -125,19 +124,19 @@ class AccountSettingsViewModel : AbstractViewModel(), KoinComponent {
             }
 
             stateRefresher.restart()
-        }
+        }.join()
     }
 
-    fun validateUsername(username: String): Boolean {
-        if (username.isEmpty()) {
+    fun validateNickname(nickname: String): Boolean {
+        if (nickname.isEmpty()) {
             return true
         }
 
-        if (username.isBlank() || !USERNAME_MATCHER.matches(username)) {
+        if (nickname.isBlank() || !NICKNAME_MATCHER.matches(nickname)) {
             return false
         }
 
-        val length = username.foldRight(0) { char, acc ->
+        val length = nickname.foldRight(0) { char, acc ->
             acc + if (char.code < 256) 1 else 2 // ASCII characters count as 1, others count as 2
         }
 
@@ -157,7 +156,7 @@ class AccountSettingsViewModel : AbstractViewModel(), KoinComponent {
     }
 
     companion object {
-        private val USERNAME_MATCHER = Regex("^[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FFa-zA-Z\\d_]+$")
+        private val NICKNAME_MATCHER = Regex("^[\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FFa-zA-Z\\d_]+$")
     }
 }
 

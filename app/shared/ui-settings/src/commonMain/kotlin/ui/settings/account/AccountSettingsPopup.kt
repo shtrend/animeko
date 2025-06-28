@@ -47,6 +47,7 @@ import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
 import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastMedium
 import me.him188.ani.app.ui.foundation.layout.isWidthAtLeastMedium
+import me.him188.ani.app.ui.foundation.rememberAsyncHandler
 
 @Composable
 fun AccountSettingsPopup(
@@ -136,12 +137,16 @@ fun AccountSettingsPopup(
     }
 
     if (showLogoutDialog) {
+        val asyncHandler = rememberAsyncHandler()
         AccountLogoutDialog(
             {
-                vm.logout()
-                showLogoutDialog = false
+                asyncHandler.launch {
+                    vm.logout()
+                    showLogoutDialog = false
+                }
             },
             onCancel = { showLogoutDialog = false },
+            confirmEnabled = !asyncHandler.isWorking,
         )
     }
 }
@@ -150,13 +155,14 @@ fun AccountSettingsPopup(
 fun AccountLogoutDialog(
     onConfirm: () -> Unit,
     onCancel: () -> Unit,
+    confirmEnabled: Boolean = true,
 ) {
     AlertDialog(
         onCancel,
         icon = { Icon(Icons.AutoMirrored.Outlined.Logout, "Logout dialog icon") },
         text = { Text("确定要退出登录吗?") },
         confirmButton = {
-            TextButton(onConfirm) {
+            TextButton(onConfirm, enabled = confirmEnabled) {
                 Text("确定", color = MaterialTheme.colorScheme.error)
             }
         },
