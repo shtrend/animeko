@@ -15,6 +15,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.draganddrop.dragAndDropTarget
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -55,9 +56,11 @@ import me.him188.ani.app.ui.foundation.animation.AniAnimatedVisibility
 import me.him188.ani.app.ui.foundation.avatar.AvatarImage
 import me.him188.ani.app.ui.foundation.icons.BangumiNext
 import me.him188.ani.app.ui.foundation.layout.currentWindowAdaptiveInfo1
+import me.him188.ani.app.ui.foundation.layout.isHeightAtLeastExpanded
 import me.him188.ani.app.ui.foundation.layout.isWidthCompact
 import me.him188.ani.app.ui.foundation.rememberAsyncHandler
 import me.him188.ani.app.ui.foundation.rememberDragAndDropState
+import me.him188.ani.app.ui.foundation.widgets.HeroIcon
 import me.him188.ani.app.ui.search.LoadErrorCard
 import me.him188.ani.app.ui.search.LoadErrorCardLayout
 import me.him188.ani.app.ui.search.LoadErrorCardRole
@@ -137,20 +140,23 @@ internal fun SettingsScope.ProfileGroupImpl(
             horizontalAlignment = if (windowSizeClass.isWidthCompact)
                 Alignment.CenterHorizontally else Alignment.Start,
         ) {
-            AvatarImage(
-                url = state.selfInfo.selfInfo?.avatarUrl,
-                modifier
-                    .padding(vertical = 16.dp, horizontal = 8.dp)
-                    .clip(CircleShape)
-                    .clickable {
-                        if (currentState.isSessionValid == true) {
-                            // 仅当已登录时才允许编辑头像
-                            showUploadAvatarDialog = true
+            HeroIcon(
+                Modifier.padding(vertical = if (windowSizeClass.isHeightAtLeastExpanded) 36.dp else 24.dp),
+            ) {
+                AvatarImage(
+                    url = state.selfInfo.selfInfo?.avatarUrl,
+                    modifier
+                        .clip(CircleShape)
+                        .clickable {
+                            if (currentState.isSessionValid == true) {
+                                // 仅当已登录时才允许编辑头像
+                                showUploadAvatarDialog = true
+                            }
                         }
-                    }
-                    .size(96.dp)
-                    .placeholder(state.selfInfo.isLoading),
-            )
+                        .fillMaxSize()
+                        .placeholder(state.selfInfo.isLoading),
+                )
+            }
 
             Column {
                 // TODO: 2025/6/28 handle user info error
