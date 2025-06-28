@@ -22,7 +22,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import me.him188.ani.app.domain.foundation.LoadError
 import me.him188.ani.app.ui.foundation.widgets.LocalToaster
 import me.him188.ani.app.ui.foundation.widgets.showLoadError
@@ -43,11 +42,11 @@ interface AsyncHandler {
     val isWorking: Boolean
 
     /**
-     * 在 UI 线程启动一个异步任务.
+     * 在 UI 线程启动一个异步任务. 此函数不是线程安全的, 设计上只能由 UI 线程调用.
      *
      * [block] 内的任何异常 [Throwable] 将被捕获, 通过 [rememberAsyncHandler] 时传入的 `onException` 处理.
      *
-     * 如果 [coroutineContext] 没有指定 [ContinuationInterceptor], 且 [launch] 是在 UI 线程调用的, 则会立即在当前线程执行 [block] 直到第一个 suspension point.
+     * 这个函数会立即在当前线程 ([Dispatchers.Main]) 执行 [block] 直到第一个 suspension point.
      * 这样没有 dispatch latency, 可以协助完成 UI 的防抖等操作.
      */
     fun launch(
@@ -100,20 +99,22 @@ fun rememberAsyncHandler(
                 coroutineContext: CoroutineContext,
                 block: suspend CoroutineScope.() -> Unit,
             ): Job {
+                coroutineContext[ContinuationInterceptor]?.let {
+                    if (it !== Dispatchers.Main.immediate) {
+                        throw IllegalArgumentException("ContinuationInterceptor for AsyncHandler.launch must be Dispatchers.Main.immediate, but was: $it")
+                    }
+                }
+
                 workingTaskCount.intValue++
-                val dispatcher = coroutineContext[ContinuationInterceptor] ?: Dispatchers.Main.immediate
+
                 return scope.launch(
-                    Dispatchers.Main.immediate + coroutineContext, // 默认使用 Main
-                    start = CoroutineStart.UNDISPATCHED,
+                    coroutineContext + Dispatchers.Main.immediate,
+                    start = CoroutineStart.UNDISPATCHED, // It's guaranteed by the function contract that we're on Main.
                 ) {
                     val myJob = this.coroutineContext.job
                     lastJob = myJob
-                    // UNDISPATCHED, 所以会在当前线程立即执行, 注意, 这可能是非期望的线程.
                     try {
-                        withContext(dispatcher) {
-                            // 如果 [coroutineContext] 没有指定 ContinuationInterceptor, 而且 launch 是在 Main 线程调用的, 则此处会立即开始执行 block, 没有 dispatch latency.
-                            block()
-                        }
+                        block()
                     } catch (e: Throwable) {
                         onExceptionState.value(e)
                     } finally {
