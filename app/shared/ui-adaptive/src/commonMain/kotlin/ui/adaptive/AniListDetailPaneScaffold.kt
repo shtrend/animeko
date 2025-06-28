@@ -59,6 +59,7 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.launch
 import me.him188.ani.app.ui.foundation.layout.AniWindowInsets
@@ -120,9 +121,9 @@ fun <T> AniListDetailPaneScaffold(
     modifier: Modifier = Modifier,
     contentWindowInsets: WindowInsets = ListDetailPaneScaffoldDefaults.windowInsets,
     useSharedTransition: Boolean = false,
-    listPanePreferredWidth: Dp = Dp.Unspecified,
-    minListPaneWidth: Dp = 360.dp,
-    minDetailPaneWidth: Dp = 360.dp,
+    listPanePreferredWidth: Dp = calculateMinimumPaneWidth(),
+    minListPaneWidth: Dp = calculateMinimumPaneWidth(),
+    minDetailPaneWidth: Dp = minListPaneWidth,
     paneExpansionDragHandle: (@Composable ThreePaneScaffoldScope.(PaneExpansionState) -> Unit)? = { state ->
         val interactionSource = remember { MutableInteractionSource() }
         VerticalDragHandle(
@@ -294,6 +295,20 @@ fun <T> AniListDetailPaneScaffold(
             ),
             paneExpansionDragHandle = paneExpansionDragHandle,
         )
+    }
+}
+
+@Composable
+private fun calculateMinimumPaneWidth(
+    windowSizeClass: WindowSizeClass = currentWindowAdaptiveInfo1().windowSizeClass
+): Dp {
+    return when {
+        windowSizeClass.containsWidthDp(1200) -> 412.dp // Large, M3 spec 
+        windowSizeClass.containsWidthDp(840) -> 360.dp // Expanded, M3 spec
+        else -> {
+            // M3 spec
+            (((windowSizeClass.minWidthDp - 24 * 3).toFloat() / 2).dp).coerceAtLeast(360.dp)
+        }
     }
 }
 
