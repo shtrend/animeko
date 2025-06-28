@@ -20,7 +20,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,7 +30,6 @@ import me.him188.ani.app.platform.AniServers
 import me.him188.ani.app.ui.lang.Lang
 import me.him188.ani.app.ui.lang.settings_network_danmaku
 import me.him188.ani.app.ui.lang.settings_network_danmaku_connection_test
-import me.him188.ani.app.ui.lang.settings_network_danmaku_currently_using
 import me.him188.ani.app.ui.lang.settings_network_danmaku_global
 import me.him188.ani.app.ui.lang.settings_network_danmaku_global_acceleration
 import me.him188.ani.app.ui.lang.settings_network_danmaku_global_acceleration_description
@@ -106,15 +104,8 @@ internal fun SettingsScope.ServerSelectionGroup(
             useThinHeader = true,
         ) {
             for (tester in danmakuServerTesters.testers) {
-                val currentlySelected by derivedStateOf {
-                    danmakuSettings.useGlobal == (tester.id == AniBangumiSeverBaseUrls.GLOBAL)
-                }
                 TextItem(
                     description = when {
-                        currentlySelected -> {
-                            { Text(stringResource(Lang.settings_network_danmaku_currently_using)) }
-                        }
-
                         tester.id == AniBangumiSeverBaseUrls.GLOBAL -> {
                             { Text(stringResource(Lang.settings_network_danmaku_recommended_other_regions)) }
                         }
@@ -139,16 +130,10 @@ internal fun SettingsScope.ServerSelectionGroup(
                         )
                     },
                     title = {
-                        val textColor =
-                            if (currentlySelected) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                Color.Unspecified
-                            }
                         if (tester.id == AniBangumiSeverBaseUrls.GLOBAL) {
-                            Text(stringResource(Lang.settings_network_danmaku_global), color = textColor)
+                            Text(stringResource(Lang.settings_network_danmaku_global))
                         } else {
-                            Text(stringResource(Lang.settings_network_danmaku_mainland), color = textColor)
+                            Text(stringResource(Lang.settings_network_danmaku_mainland))
                         }
                     },
                 )
