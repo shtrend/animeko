@@ -441,31 +441,60 @@ private fun calculatePaneAnchors(
     minListPaneWidth: Dp = Dp.Unspecified,
     preferredListPaneWidth: Dp = Dp.Unspecified,
     minDetailPaneWidth: Dp = Dp.Unspecified,
+    stepDp: Dp = 32.dp // 中间每间隔这么多加一个 anchor
 ): List<PaneExpansionAnchor> {
-    val screenWidth = LocalWindowInfo.current.containerSize.width
+    val screenWidthPx = LocalWindowInfo.current.containerSize.width
     val density = LocalDensity.current
 
-    return remember(density, screenWidth, minListPaneWidth, preferredListPaneWidth, minDetailPaneWidth) {
-        if (screenWidth <= 0) return@remember emptyList()
+    return remember(density, screenWidthPx, minListPaneWidth, preferredListPaneWidth, minDetailPaneWidth, stepDp) {
+        if (screenWidthPx <= 0) return@remember emptyList()
 
-        buildList {
-            if (minListPaneWidth != Dp.Unspecified) {
-                val minListPaneWidthPx = with(density) { minListPaneWidth.roundToPx() }
-                add(PaneExpansionAnchor.Proportion((minListPaneWidthPx / screenWidth.toFloat()).coerceIn(0f, 1f)))
-            }
-            if (preferredListPaneWidth != Dp.Unspecified) {
-                val preferredListPaneWidthPx = with(density) { preferredListPaneWidth.roundToPx() }
-                add(PaneExpansionAnchor.Proportion((preferredListPaneWidthPx / screenWidth.toFloat()).coerceIn(0f, 1f)))
-            }
-            if (minDetailPaneWidth != Dp.Unspecified) {
-                val minDetailPaneWidthPx = with(density) { minDetailPaneWidth.roundToPx() }
-                add(
-                    PaneExpansionAnchor.Proportion(
-                        ((screenWidth - minDetailPaneWidthPx) / screenWidth.toFloat())
-                            .coerceIn(0f, 1f),
-                    ),
-                )
+        // 计算下界：minListRatio（若未指定则为 0）
+        val minRatio = if (minListPaneWidth != Dp.Unspecified) {
+            val px = with(density) { minListPaneWidth.roundToPx() }
+            (px / screenWidthPx.toFloat()).coerceIn(0f, 1f)
+        } else 0f
+
+        // 计算上界：maxRatio（若未指定 minDetailPaneWidth 则为 1）
+        val maxRatio = if (minDetailPaneWidth != Dp.Unspecified) {
+            val px = with(density) { minDetailPaneWidth.roundToPx() }
+            ((screenWidthPx - px) / screenWidthPx.toFloat()).coerceIn(0f, 1f)
+        } else 1f
+
+        // 收集所有比例值
+        val ratios = mutableListOf<Float>()
+
+        // 1. 每隔 stepDp 加一个锚点
+        val stepPx = with(density) { stepDp.roundToPx() }
+        if (stepPx > 0) {
+            val count = (screenWidthPx / stepPx).coerceAtLeast(1)
+            for (i in 1..count) {
+                val p = (i * stepPx / screenWidthPx.toFloat()).coerceIn(0f, 1f)
+                ratios += p
             }
         }
+
+        // 2. 原 minListPaneWidth
+        if (minListPaneWidth != Dp.Unspecified) {
+            val px = with(density) { minListPaneWidth.roundToPx() }
+            ratios += (px / screenWidthPx.toFloat()).coerceIn(0f, 1f)
+        }
+        // 3. 原 preferredListPaneWidth
+        if (preferredListPaneWidth != Dp.Unspecified) {
+            val px = with(density) { preferredListPaneWidth.roundToPx() }
+            ratios += (px / screenWidthPx.toFloat()).coerceIn(0f, 1f)
+        }
+        // 4. 原 minDetailPaneWidth
+        if (minDetailPaneWidth != Dp.Unspecified) {
+            val px = with(density) { minDetailPaneWidth.roundToPx() }
+            ratios += ((screenWidthPx - px) / screenWidthPx.toFloat()).coerceIn(0f, 1f)
+        }
+
+        // 去重、过滤（在 [minRatio, maxRatio] 之间）、排序并映射回 Anchor
+        ratios
+            .distinct()
+            .filter { it in minRatio..maxRatio }
+            .sorted()
+            .map { PaneExpansionAnchor.Proportion(it) }
     }
 }
