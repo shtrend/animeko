@@ -50,7 +50,7 @@ import me.him188.ani.app.ui.settings.framework.components.TextItem
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun SettingsScope.DanmakuGroup(
+internal fun SettingsScope.ServerSelectionGroup(
     danmakuSettingsState: SettingsState<DanmakuSettings>,
     danmakuServerTesters: ConnectionTesterRunner<ConnectionTester>,
 ) {

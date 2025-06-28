@@ -34,12 +34,12 @@ import androidx.compose.material.icons.outlined.Feedback
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Palette
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.SettingsApplications
 import androidx.compose.material.icons.outlined.SmartDisplay
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Subscriptions
-import androidx.compose.material.icons.outlined.Subtitles
 import androidx.compose.material.icons.outlined.Update
 import androidx.compose.material.icons.outlined.VpnKey
 import androidx.compose.material3.Icon
@@ -141,7 +141,7 @@ import me.him188.ani.app.ui.settings.tabs.media.TorrentEngineGroup
 import me.him188.ani.app.ui.settings.tabs.media.source.MediaSourceGroup
 import me.him188.ani.app.ui.settings.tabs.media.source.MediaSourceSubscriptionGroup
 import me.him188.ani.app.ui.settings.tabs.network.ConfigureProxyGroup
-import me.him188.ani.app.ui.settings.tabs.network.DanmakuGroup
+import me.him188.ani.app.ui.settings.tabs.network.ServerSelectionGroup
 import me.him188.ani.app.ui.settings.tabs.theme.ThemeGroup
 import me.him188.ani.utils.platform.hasScrollingBug
 import org.jetbrains.compose.resources.getString
@@ -225,9 +225,9 @@ fun SettingsScreen(
             Item(SettingsTab.PLAYER)
             Item(SettingsTab.MEDIA_SOURCE)
             Item(SettingsTab.MEDIA_SELECTOR)
-            Item(SettingsTab.DANMAKU)
 
             Title(stringResource(Lang.settings_category_network_storage))
+            Item(SettingsTab.SERVER)
             Item(SettingsTab.PROXY)
             Item(SettingsTab.BT)
 //            Item(SettingsTab.CACHE)
@@ -315,7 +315,7 @@ fun SettingsScreen(
                             }
 
                             SettingsTab.MEDIA_SELECTOR -> MediaSelectionGroup(vm.mediaSelectionGroupState)
-                            SettingsTab.DANMAKU -> DanmakuGroup(vm.danmakuSettingsState, vm.danmakuServerTesters)
+                            SettingsTab.SERVER -> ServerSelectionGroup(vm.danmakuSettingsState, vm.danmakuServerTesters)
                             SettingsTab.PROXY -> ConfigureProxyGroup(
                                 state = vm.configureProxyState,
                                 onStartProxyTestLoop = { vm.startProxyTesterLoop() },
@@ -695,7 +695,7 @@ private fun getIcon(tab: SettingsTab): ImageVector {
         SettingsTab.PLAYER -> Icons.Outlined.SmartDisplay
         SettingsTab.MEDIA_SOURCE -> Icons.Outlined.Subscriptions
         SettingsTab.MEDIA_SELECTOR -> Icons.Outlined.FilterList
-        SettingsTab.DANMAKU -> Icons.Outlined.Subtitles
+        SettingsTab.SERVER -> Icons.Outlined.Public
         SettingsTab.PROXY -> Icons.Outlined.VpnKey
         SettingsTab.BT -> Icons.Filled.P2p
 //        SettingsTab.CACHE -> Icons.Rounded.Download // Icons.Outlined.Download 太 sharp 了
@@ -716,7 +716,7 @@ private fun getName(tab: SettingsTab): String {
         SettingsTab.PLAYER -> stringResource(Lang.settings_tab_player)
         SettingsTab.MEDIA_SOURCE -> stringResource(Lang.settings_tab_media_source)
         SettingsTab.MEDIA_SELECTOR -> stringResource(Lang.settings_tab_media_selector)
-        SettingsTab.DANMAKU -> stringResource(Lang.settings_tab_danmaku)
+        SettingsTab.SERVER -> stringResource(Lang.settings_tab_danmaku)
         SettingsTab.PROXY -> stringResource(Lang.settings_tab_proxy)
         SettingsTab.BT -> stringResource(Lang.settings_tab_bt)
 //        SettingsTab.CACHE -> stringResource(Lang.settings_tab_cache)
