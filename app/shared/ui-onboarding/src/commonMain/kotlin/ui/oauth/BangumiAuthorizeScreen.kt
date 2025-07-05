@@ -17,6 +17,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import me.him188.ani.app.platform.LocalContext
+import me.him188.ani.app.platform.navigation.rememberAsyncBrowserNavigator
 import me.him188.ani.app.ui.login.EmailLoginScreenLayout
 
 @Composable
@@ -29,6 +30,7 @@ fun BangumiAuthorizeScreen(
 ) {
     val state by vm.state.collectAsStateWithLifecycle(AuthState.NoAniAccount)
     val scope = rememberCoroutineScope()
+    val browserNavigator = rememberAsyncBrowserNavigator()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -44,7 +46,9 @@ fun BangumiAuthorizeScreen(
                 val currentState = state
                 if (currentState is AuthState.AwaitingResult) return@launch
 
-                vm.startOAuth(context, state is AuthState.NoAniAccount)
+                vm.startOAuth(state is AuthState.NoAniAccount) {
+                    browserNavigator.openBrowser(context, it)
+                }
             }
         },
         onCancelAuthorize = { vm.cancelCurrentOAuth() },
