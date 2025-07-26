@@ -321,10 +321,13 @@ class SessionManager(
             val tokenRepository = koin.get<TokenRepository>()
 
             val session = tokenRepository.session.first()
-            val needReLogin = settings.oneshotActionConfig.flow.map { it.needReLoginAfter500 }
+            val needReLogin = settings.oneshotActionConfig.flow.map { it.needReLoginAfter500 }.first()
 
             // 如果是 guest (未登录或新用户) 或者已经迁移过了, 就不迁移
-            if (session is GuestSession || !needReLogin.first()) {
+            if (session is GuestSession || !needReLogin) {
+                if (!needReLogin) {
+                    settings.oneshotActionConfig.update { copy(needReLoginAfter500 = false) }
+                }
                 return MigrationResult.NoExtraAction
             }
 
