@@ -74,7 +74,7 @@ sealed interface AuthState {
     data object AwaitingResult : AuthState
 
     data object Success : AuthState
-    class Failed(val error: LoadError) : AuthState
+    class Failed(val error: LoadError, val loggedIn: Boolean) : AuthState
 }
 
 @Composable
