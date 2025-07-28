@@ -94,39 +94,6 @@ open class BangumiAniApi : ApiClient {
 
 
     /**
-     * 使用已有的 Bangumi refresh token 绑定账号
-     * 使用已有的 Bangumi refresh token 绑定账号
-     * @param aniLoginWithRefreshTokenRequest 
-     * @return AniAuthenticationResponse
-     */
-    @Suppress("UNCHECKED_CAST")
-    open suspend fun loginWithRefreshToken(aniLoginWithRefreshTokenRequest: AniLoginWithRefreshTokenRequest): HttpResponse<AniAuthenticationResponse> {
-
-        val localVariableAuthNames = listOf<String>("auth-jwt")
-
-        val localVariableBody = aniLoginWithRefreshTokenRequest
-
-        val localVariableQuery = mutableMapOf<String, List<String>>()
-        val localVariableHeaders = mutableMapOf<String, String>()
-
-        val localVariableConfig = RequestConfig<kotlin.Any?>(
-            RequestMethod.POST,
-            "/v2/users/bangumi/loginWithRefreshToken",
-            query = localVariableQuery,
-            headers = localVariableHeaders,
-            requiresAuthentication = true,
-        )
-
-        return jsonRequest(
-            localVariableConfig,
-            localVariableBody,
-            localVariableAuthNames
-        ).wrap()
-    }
-
-
-
-    /**
      * 执行队列中的命令
      * 执行队列中的命令
      * @return kotlin.Any
@@ -228,6 +195,39 @@ open class BangumiAniApi : ApiClient {
             localVariableAuthNames
         ).wrap()
     }
+
+
+    /**
+     * 使用已有的 Bangumi refresh token 绑定账号
+     * 使用已有的 Bangumi refresh token 绑定账号
+     * @param aniLoginWithRefreshTokenRequest 
+     * @return AniAuthenticationResponse
+     */
+    @Suppress("UNCHECKED_CAST")
+    open suspend fun loginWithRefreshToken(aniLoginWithRefreshTokenRequest: AniLoginWithRefreshTokenRequest): HttpResponse<AniAuthenticationResponse> {
+
+        val localVariableAuthNames = listOf<String>("auth-jwt")
+
+        val localVariableBody = aniLoginWithRefreshTokenRequest
+
+        val localVariableQuery = mutableMapOf<String, List<String>>()
+        val localVariableHeaders = mutableMapOf<String, String>()
+
+        val localVariableConfig = RequestConfig<kotlin.Any?>(
+            RequestMethod.POST,
+            "/v2/users/bangumi/loginWithRefreshToken",
+            query = localVariableQuery,
+            headers = localVariableHeaders,
+            requiresAuthentication = true,
+        )
+
+        return jsonRequest(
+            localVariableConfig,
+            localVariableBody,
+            localVariableAuthNames
+        ).wrap()
+    }
+
 
 
     /**
