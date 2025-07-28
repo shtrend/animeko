@@ -358,6 +358,12 @@ private fun KoinApplication.otherModules(getContext: () -> Context, coroutineSco
     single<AniDatabase> {
         getContext().createDatabaseBuilder()
             .fallbackToDestructiveMigrationOnDowngrade(true)
+            .fallbackToDestructiveMigrationFrom(
+                dropAllTables = true,
+                startVersions = buildList {
+                    addAll(1..15) // 16 is destructive
+                }.toIntArray(),
+            )
             .setDriver(BundledSQLiteDriver())
             .setQueryCoroutineContext(Dispatchers.IO_)
             .build()
