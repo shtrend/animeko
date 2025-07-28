@@ -455,7 +455,7 @@ private fun SubjectCollectionItem(
     val navigator = LocalNavigator.current
     if (showEpisodeProgressDialog) {
         EpisodeListDialog(
-            remember(subjectCollection.subjectId) {
+            remember(subjectCollection.episodes) {
                 EpisodeListUiState.from(subjectCollection, Clock.System.now())
             },
             onDismissRequest = { showEpisodeProgressDialog = false },
