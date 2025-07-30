@@ -105,6 +105,7 @@ import me.him188.ani.utils.logging.debug
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.platform.collections.toIntArray
 import me.him188.ani.utils.platform.currentTimeMillis
+import me.him188.ani.utils.serialization.BigNum
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -807,7 +808,7 @@ fun AniEpisodeCollection.toEntity1(
         airDate = airdate?.let { PackedDate.parseFromDate(it) } ?: PackedDate.Invalid,
         comment = 0,
         desc = description,
-        sort = EpisodeSort(sort),
+        sort = EpisodeSort(BigNum(sort), type.toEpisodeType()),
         sortNumber = sort.toFloatOrNull() ?: 0f,
         selfCollectionType = collectionType.toUnifiedCollectionType(),
         lastFetched = lastFetched,
