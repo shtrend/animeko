@@ -19,6 +19,7 @@ import kotlinx.datetime.toLocalDateTime
 import me.him188.ani.datasources.api.PackedDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
@@ -53,6 +54,21 @@ class SubjectRecurrenceTest {
         val result = sut.calculateEpisodeAirTime(startDate.packed())
 
         assertEquals(startInstant, result, "Should return the first airing instant")
+    }
+
+    @Test
+    fun `yesterday - first-episode - returns-startTime`() {
+        val startDate = LocalDate(2025, 1, 3)
+        val startInstant = startDate.atStartOfDayIn(zone)
+
+        val sut = SubjectRecurrence(
+            startTime = startInstant,
+            interval = 7.days,           // weekly
+        )
+
+        val result = sut.calculateEpisodeAirTime(PackedDate(2025, 1, 2))
+
+        assertNotEquals(startInstant, result, "Should return the first airing instant")
     }
 
     @Test
