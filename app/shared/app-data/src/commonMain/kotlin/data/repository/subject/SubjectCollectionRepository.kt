@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
@@ -239,7 +240,9 @@ class SubjectCollectionRepositoryImpl(
         return (currentTimeMillis() - lastFetched).milliseconds > cacheExpiry
     }
 
-    override fun subjectCollectionFlow(subjectId: Int): Flow<SubjectCollectionInfo> =
+    override fun subjectCollectionFlow(
+        subjectId: Int
+    ): Flow<SubjectCollectionInfo> = getEpisodeTypeFiltersUseCase().flatMapLatest { epTypes ->
         subjectCollectionDao.findById(subjectId)
             .restartOnNewLogin(sessionManager)
             .onEach { existing ->
@@ -266,7 +269,10 @@ class SubjectCollectionRepositoryImpl(
             .filterNotNull()
             // 有 subject 缓存后才能从 episodeCollectionRepository fetch episodes
             .combine(
-                episodeCollectionRepository.subjectEpisodeCollectionInfosFlow(subjectId),
+                episodeCollectionDao
+                    .filterBySubjectId(subjectId, epTypes)
+                    .map { list -> list.map { it.toEpisodeCollectionInfo() } }
+                    .distinctUntilChanged(),
                 nsfwModeSettingsFlow,
             ) { entity, episodes, nsfwModeSettings ->
                 entity.toSubjectCollectionInfo(
@@ -274,7 +280,8 @@ class SubjectCollectionRepositoryImpl(
                     currentDate = getCurrentDate(),
                     nsfwModeSettings = nsfwModeSettings,
                 )
-            }.flowOn(defaultDispatcher)
+            }
+    }.flowOn(defaultDispatcher)
 
     override fun batchLightSubjectAndEpisodesFlow(subjectIds: IntList): Flow<List<LightSubjectAndEpisodes>> {
         return flow {
