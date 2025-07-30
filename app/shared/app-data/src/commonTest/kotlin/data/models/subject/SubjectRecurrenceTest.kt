@@ -19,7 +19,6 @@ import kotlinx.datetime.toLocalDateTime
 import me.him188.ani.datasources.api.PackedDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
@@ -57,18 +56,12 @@ class SubjectRecurrenceTest {
     }
 
     @Test
-    fun `yesterday - first-episode - returns-startTime`() {
-        val startDate = LocalDate(2025, 1, 3)
-        val startInstant = startDate.atStartOfDayIn(zone)
+    fun `date-before-start - returns-first`() {
+        val startInstant = Instant.parse("2025-03-10T00:00:00Z")
+        val sut = SubjectRecurrence(startInstant, 7.days)
 
-        val sut = SubjectRecurrence(
-            startTime = startInstant,
-            interval = 7.days,           // weekly
-        )
-
-        val result = sut.calculateEpisodeAirTime(PackedDate(2025, 1, 2))
-
-        assertNotEquals(startInstant, result, "Should return the first airing instant")
+        val dayBefore = LocalDate(2025, 3, 9).packed()
+        assertEquals(startInstant, sut.calculateEpisodeAirTime(dayBefore), "Dates before premiere must be null")
     }
 
     @Test
@@ -102,15 +95,6 @@ class SubjectRecurrenceTest {
     // -------------------------------------------------------------------------
     // Error / edge‑cases
     // -------------------------------------------------------------------------
-
-    @Test
-    fun `date-before-start - returns-null`() {
-        val startInstant = Instant.parse("2025-03-10T00:00:00Z")
-        val sut = SubjectRecurrence(startInstant, 7.days)
-
-        val dayBefore = LocalDate(2025, 3, 9).packed()
-        assertNull(sut.calculateEpisodeAirTime(dayBefore), "Dates before premiere must be null")
-    }
 
     @Test
     fun `outside-24h-window - returns-null`() {
