@@ -62,6 +62,7 @@ internal fun EmailLoginScreenLayout(
                 navigationIcon = { BackNavigationIconButton(onNavigateBack) },
                 scrollBehavior = scrollBehavior,
                 actions = { IconButton(onNavigateSettings) { Icon(Icons.Outlined.Settings, "设置") } },
+                windowInsets = AniWindowInsets.forTopAppBar(),
             )
         },
         contentWindowInsets = AniWindowInsets.forPageContent(),
