@@ -123,7 +123,7 @@ internal fun SettingsScope.ProfileGroupImpl(
     state: AccountSettingsState,
     isNicknameErrorProvider: (String) -> Boolean,
     onSaveNickname: (String) -> Unit,
-    onAvatarUpload: suspend (PlatformFile) -> Unit,
+    onAvatarUpload: suspend (PlatformFile) -> Boolean,
     onResetAvatarUploadState: () -> Unit,
     onLogout: () -> Unit,
     onNavigateToEmail: () -> Unit,
@@ -245,8 +245,7 @@ internal fun SettingsScope.ProfileGroupImpl(
             state.avatarUploadState,
             onAvatarUpload = { file ->
                 asyncHandler.launch {
-                    onAvatarUpload(file)
-                    showUploadAvatarDialog = false
+                    showUploadAvatarDialog = !onAvatarUpload(file)
                 }
             },
             onResetAvatarUploadState = onResetAvatarUploadState,
